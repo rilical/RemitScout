@@ -53,10 +53,10 @@ const COUNTRY_CODE_MAP: Record<string, string> = { XK: 'KV' }
 const mapCountry = (code: string) => COUNTRY_CODE_MAP[code] ?? code
 
 // High-traffic destinations to probe
-const PROBE_DESTINATIONS = [
+export const RIA_PROBE_DESTINATIONS = [
   'MX', 'PH', 'IN', 'NG', 'PK', 'BD', 'LK', 'GH', 'KE', 'VN',
   'TH', 'CN', 'ID', 'BR', 'CO', 'PE', 'EG', 'MA', 'TZ', 'UG',
-  'GT', 'HN', 'SV', 'DO', 'JM', 'TR', 'UA', 'NP', 'EC',
+  'GT', 'HN', 'SV', 'DO', 'JM', 'TR', 'UA', 'NP', 'EC', 'AL',
   'RW',
 ]
 
@@ -106,7 +106,7 @@ export class RiaDiscovery extends ProviderDiscovery {
     const destinations: string[] = []
     const srcCurrency = COUNTRY_CURRENCY[sourceCountry] ?? 'USD'
 
-    for (const dest of PROBE_DESTINATIONS) {
+    for (const dest of RIA_PROBE_DESTINATIONS) {
       if (dest === sourceCountry) continue
       const destCurrency = COUNTRY_CURRENCY[dest]
       if (!destCurrency) continue

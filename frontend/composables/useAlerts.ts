@@ -1,5 +1,6 @@
 import { createId } from '~/utils/id'
 import type { Alert, AlertHistoryEvent, AlertRule, WatchTarget } from '~/types/tracking'
+import { extractPlanStateFailure, mapPlanStateFailureMessage, resolvePlanStateFailureCode } from '~/composables/usePlanStateError'
 
 export type CreateAlertResult
   = | {
@@ -156,15 +157,33 @@ export const useAlerts = () => {
     frequency: Alert['frequency']
     enabled: boolean
   }): Promise<CreateAlertResult> {
-    const response = await request<AlertsApiResponse>('/alerts', {
-      method: 'POST',
-      body: {
-        watchlistItemId: payload.watchlistItemId,
-        rule: payload.rule,
-        frequency: payload.frequency,
-        enabled: payload.enabled,
-      },
-    })
+    let response: AlertsApiResponse
+    try {
+      response = await request<AlertsApiResponse>('/alerts', {
+        method: 'POST',
+        body: {
+          watchlistItemId: payload.watchlistItemId,
+          rule: payload.rule,
+          frequency: payload.frequency,
+          enabled: payload.enabled,
+        },
+      })
+    }
+    catch (error) {
+      const failure = extractPlanStateFailure(error)
+      const failureCode = resolvePlanStateFailureCode(failure)
+      if (failureCode === 'plus_required' || failureCode === 'enterprise_required' || failureCode === 'plan_inactive') {
+        return {
+          status: 'error',
+          message: mapPlanStateFailureMessage(error, 'This alert is not available on your current plan.', {
+            plus_required: 'This alert requires Plus.',
+            enterprise_required: 'This alert requires Enterprise.',
+            plan_inactive: 'Your paid plan is inactive. Reactivate billing to use this alert.',
+          }),
+        }
+      }
+      throw error
+    }
 
     if (response.success && response.alert) {
       upsertAlert(response.alert)

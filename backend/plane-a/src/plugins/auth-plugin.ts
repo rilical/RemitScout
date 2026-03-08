@@ -7,7 +7,7 @@ import { DailyUsageCounterRepository } from '../repositories'
 import { formatCorridorId, parseCorridorId } from '../../../shared/corridor'
 import { verifyPlaneAAdminJwt, isPlaneAAdminAccessClaims } from '../auth/admin-jwt'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
-import { validateApiKey } from '../services/api-keys'
+import { validateApiKeyToken } from '../services/api-keys'
 import { resolveAdminAccess } from '../services/admin-access'
 import { isAdminJtiRevoked } from '../services/admin-sessions'
 import {
@@ -15,13 +15,28 @@ import {
   isInstitutionalClientActive,
   validateInstitutionalClientApiKey,
 } from '../services/institutional-clients'
-import { getEntitlementsForPlan, type Entitlements, type PlanCode } from '../services/entitlements'
+import { getEntitlementsForPlan, type Entitlements } from '../services/entitlements'
+import { resolveEffectiveEntitlements } from '../services/effective-entitlements'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import { initUsageLogBuffer, pushUsageLogEntry } from '../services/usage-log-buffer'
+import {
+  apiKeyAudienceAllows,
+  isInstitutionalApiKeyRoute,
+  resolveApiKeyAccessPolicy,
+} from '../routes/api-key-access'
+import { createCapabilityAccessDeniedResponse } from '../services/plan-state'
 
-type EntitlementType = 'pulse' | 'pulse_full' | 'exports' | 'alerts' | 'history' | 'api_access'
+type EntitlementType =
+  | 'pulse'
+  | 'pulse_full'
+  | 'pulse_embed'
+  | 'indices_embed'
+  | 'exports'
+  | 'alerts'
+  | 'history'
+  | 'api_access'
 
 type RateLimitEntry = {
   count: number
@@ -37,51 +52,14 @@ const normalizeScope = (value: string) => value.trim().toLowerCase()
 const toUtcDateString = (value: Date) => value.toISOString().slice(0, 10)
 
 const resolveRequiredApiKeyScopes = (request: FastifyRequest): string[] => {
-  const rawPath = request.routeOptions?.url || request.url.split('?')[0] || ''
-  if (!rawPath) return []
-
-  const path = rawPath.startsWith('/api/v1') ? rawPath.slice('/api/v1'.length) || '/' : rawPath
-
-  // Ops/admin routes should never be accessible via API keys.
-  if (
-    path.startsWith('/ops')
-    || path.startsWith('/admin')
-    || path.startsWith('/audit')
-    || path.startsWith('/analytics')
-    || path.startsWith('/telemetry/analytics')
-  ) {
-    return ['__forbidden__']
-  }
-
-  if (path.startsWith('/indices')) return ['indices:read']
-  if (
-    path.startsWith('/providers')
-    || path.startsWith('/quotes')
-    || path.startsWith('/corridor-currencies')
-    || path.startsWith('/corridor-limits')
-    || path.startsWith('/rates')
-    || path.startsWith('/pulse')
-    || path.startsWith('/popular-corridors')
-    || path.startsWith('/geo')
-  ) {
-    return ['corridors:read']
-  }
-  if (path.startsWith('/exports')) return ['exports:read']
-  return []
+  const requiredScope = resolveApiKeyAccessPolicy(request).requiredScope
+  return requiredScope ? [requiredScope] : []
 }
 
 const hasAllScopes = (scopes: string[] | undefined, required: string[]) => {
   if (!required.length) return true
   const set = new Set((scopes ?? []).map(normalizeScope))
   return required.every((scope) => set.has(normalizeScope(scope)))
-}
-
-const resolveInstitutionalSurfacePath = (request: FastifyRequest): string => {
-  return request.url.split('?')[0] || ''
-}
-
-const isInstitutionalSurface = (path: string): boolean => {
-  return path.startsWith('/api/v1/indices') || path === '/api/v1/usage'
 }
 
 const resolveNormalizedCorridorId = (raw: unknown): string | null => {
@@ -112,12 +90,28 @@ const resolveCorridorIdFromRequest = (request: FastifyRequest): string | null =>
 
 /**
  * Check whether the corridors_allowed field effectively restricts access.
- * Returns true when the allowlist is non-null (i.e. there are explicit
- * corridor restrictions). Only null means "allow all"; an empty array
- * means "deny all" (restricted to zero corridors).
+ * Returns true when the allowlist is non-null. Only null means "allow all";
+ * an empty array means "deny all" (restricted to zero corridors).
  */
 const hasCorridorRestrictions = (corridorsAllowed: string[] | null): corridorsAllowed is string[] => {
   return corridorsAllowed !== null
+}
+
+const sendApiKeyAuthError = (reply: FastifyReply, code: string, message: string) => {
+  reply.code(401)
+  return reply.send({
+    error: 'unauthorized',
+    code,
+    message,
+  })
+}
+
+const sendApiKeyRouteNotAllowed = (reply: FastifyReply) => {
+  reply.code(403)
+  return reply.send({
+    error: 'forbidden',
+    code: 'api_key_route_not_allowed',
+  })
 }
 
 const getSecondsUntilNextUtcMidnight = (now: Date): number => {
@@ -270,25 +264,32 @@ export const authPlugin = (app: FastifyInstance) => {
   app.addHook('preHandler', async (request: FastifyRequest) => {
     const apiKeyToken = resolveApiKeyToken(request)
     if (apiKeyToken) {
+      request.apiKeyPresented = true
+
       const institutional = await validateInstitutionalClientApiKey(planeAPool, apiKeyToken)
       if (institutional) {
         request.institutionalClient = institutional
         return
       }
 
-      const apiKey = await validateApiKey(planeAPool, apiKeyToken)
-      if (apiKey) {
-        request.apiKey = apiKey
+      const apiKey = await validateApiKeyToken(planeAPool, apiKeyToken)
+      if (apiKey.status === 'active') {
+        request.userApiKey = apiKey.apiKey
+        request.apiKey = apiKey.apiKey
         return
       }
 
-      request.apiKeyError = { code: 'invalid_api_key', message: 'Invalid API key.' }
+      request.apiKeyError = apiKey.status === 'revoked'
+        ? { code: 'revoked_api_key', message: 'API key has been revoked.' }
+        : { code: 'invalid_api_key', message: 'Invalid API key.' }
+      return
     }
 
     const header = request.headers.authorization
     if (!header) {
       return
     }
+
     const adminResult = await verifyPlaneAAdminJwt(header)
     if (!('code' in adminResult)) {
       const claims = adminResult.claims as Record<string, unknown> | undefined
@@ -354,46 +355,66 @@ export const authPlugin = (app: FastifyInstance) => {
   })
 
   // Institutional-only enforcement that must apply even to routes that don't use requireEntitlement.
-  // Runs after auth has identified the institutional client.
+  // Runs after auth has identified the API-key principal so invalid and out-of-policy
+  // requests fail before public or bearer-token behavior can take effect.
   app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
-    if (!request.institutionalClient) return
+    if (!request.apiKeyPresented) return
 
-    // Global guard: reject expired or inactive institutional clients on ALL routes.
-    if (!isInstitutionalClientActive(request.institutionalClient)) {
-      reply.code(403)
-      reply.send({ error: 'forbidden', code: 'institutional_inactive' })
-      return
+    if (request.apiKeyError) {
+      return sendApiKeyAuthError(reply, request.apiKeyError.code, request.apiKeyError.message)
     }
 
-    // Global guard: enforce corridor allowlist on ALL routes when a corridor_id is present.
-    // Resolves corridor from both query params (?corridor_id=) and path params (/:corridorId).
-    const corridorsAllowed = request.institutionalClient.corridors_allowed
-    if (hasCorridorRestrictions(corridorsAllowed)) {
-      const corridorId = resolveCorridorIdFromRequest(request)
-      if (corridorId && !corridorsAllowed.includes(corridorId)) {
-        logger.warn('institutional_corridor_blocked', {
-          client_id: request.institutionalClient.id,
-          corridor_id: corridorId,
-          allowed_count: corridorsAllowed.length,
-        })
+    const policy = resolveApiKeyAccessPolicy(request)
+
+    if (request.institutionalClient) {
+      if (!isInstitutionalClientActive(request.institutionalClient)) {
         reply.code(403)
-        reply.send({ error: 'corridor_not_allowed', corridor_id: corridorId })
+        return reply.send({ error: 'forbidden', code: 'institutional_inactive' })
+      }
+
+      if (!apiKeyAudienceAllows(policy, 'institutional')) {
+        return sendApiKeyRouteNotAllowed(reply)
+      }
+
+      const corridorsAllowed = request.institutionalClient.corridors_allowed
+      if (hasCorridorRestrictions(corridorsAllowed)) {
+        const corridorId = resolveCorridorIdFromRequest(request)
+        if (corridorId && !corridorsAllowed.includes(corridorId)) {
+          logger.warn('institutional_corridor_blocked', {
+            client_id: request.institutionalClient.id,
+            corridor_id: corridorId,
+            allowed_count: corridorsAllowed.length,
+          })
+          reply.code(403)
+          return reply.send({ error: 'corridor_not_allowed', corridor_id: corridorId })
+        }
+      }
+
+      const scopes = getInstitutionalClientScopes(request.institutionalClient.tier)
+      const requiredScopes = resolveRequiredApiKeyScopes(request)
+      if (!hasAllScopes(scopes, requiredScopes)) {
+        reply.code(403)
+        return reply.send({
+          error: 'insufficient_scope',
+          requiredScopes,
+        })
+      }
+
+      const allowed = await applyInstitutionalDailyRateLimit(
+        request,
+        reply,
+        request.institutionalClient.id,
+        Math.max(0, Number(request.institutionalClient.rate_limit_daily) || 0),
+      )
+      if (!allowed) {
         return
       }
+      return
     }
 
-    const path = resolveInstitutionalSurfacePath(request)
-    if (!isInstitutionalSurface(path)) return
-
-    // Daily limiter counts authenticated institutional traffic, regardless of downstream 4xx.
-    const allowed = await applyInstitutionalDailyRateLimit(
-      request,
-      reply,
-      request.institutionalClient.id,
-      Math.max(0, Number(request.institutionalClient.rate_limit_daily) || 0),
-    )
-    if (!allowed) {
-      return
+    const userApiKey = request.userApiKey ?? request.apiKey
+    if (userApiKey && !apiKeyAudienceAllows(policy, 'retail')) {
+      return sendApiKeyRouteNotAllowed(reply)
     }
   })
 
@@ -402,11 +423,10 @@ export const authPlugin = (app: FastifyInstance) => {
   // to reduce per-request write contention on public.api_usage_log.
   app.addHook('onResponse', (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.institutionalClient) return
-    const path = resolveInstitutionalSurfacePath(request)
-    if (!isInstitutionalSurface(path)) return
+    if (!isInstitutionalApiKeyRoute(request)) return
 
     const corridorId = resolveCorridorIdFromRequest(request)
-    const endpoint = request.routeOptions?.url || path
+    const endpoint = request.routeOptions?.url || (request.url.split('?')[0] || '')
     const responseTimeMs = Number.isFinite(reply.elapsedTime) ? Math.round(reply.elapsedTime) : null
 
     pushUsageLogEntry({
@@ -443,12 +463,7 @@ export const requireAuth = () => {
 
     if (!request.user) {
       if (request.apiKeyError) {
-        reply.code(401)
-        return reply.send({
-          error: 'unauthorized',
-          code: request.apiKeyError.code,
-          message: request.apiKeyError.message,
-        })
+        return sendApiKeyAuthError(reply, request.apiKeyError.code, request.apiKeyError.message)
       }
       reply.code(401)
       return reply.send({ error: 'unauthorized' })
@@ -487,6 +502,7 @@ export const requireAdmin = () => {
       pool: planeAPool,
       userId: request.user.user_id,
       email: request.user.email ?? null,
+      supabaseRole: request.user.role ?? null,
     })
 
     if (!access.allowed) {
@@ -509,7 +525,10 @@ export const requireAdmin = () => {
       }
 
       reply.code(403)
-      return reply.send({ error: 'forbidden' })
+      return reply.send({
+        error: 'forbidden',
+        code: access.denyReason ?? 'forbidden',
+      })
     }
 
     if (adminMfaRequired) {
@@ -546,6 +565,18 @@ export const requireSuperAdmin = () => {
     }
 
     const claims = request.user.claims as Record<string, unknown> | undefined
+    if (isPlaneAAdminAccessClaims(claims)) {
+      const jti = typeof claims?.jti === 'string' ? claims.jti : ''
+      if (jti && await isAdminJtiRevoked(jti)) {
+        reply.code(401)
+        return reply.send({
+          error: 'unauthorized',
+          code: 'revoked_token',
+          message: 'Session has been revoked. Please sign in again.',
+        })
+      }
+    }
+
     if (adminMfaRequired) {
       const mfaVerifiedClaim = claims?.mfa_verified === true
       const hasTotpAmr = hasTotpMfaAmr(claims)
@@ -561,25 +592,55 @@ export const requireSuperAdmin = () => {
       }
     }
 
-    try {
-      const result = await query<{ app_role: string | null }>(
-        `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
-        [request.user.user_id],
-        planeAPool,
-      )
-      const appRole = result.rows[0]?.app_role
-      if (appRole === 'super_admin') {
-        return
+    const access = await resolveAdminAccess({
+      pool: planeAPool,
+      userId: request.user.user_id,
+      email: request.user.email ?? null,
+      supabaseRole: request.user.role ?? null,
+    })
+
+    if (!access.allowed) {
+      if (access.denyReason === 'admin_allowlist_required_but_unconfigured') {
+        logger.error('super_admin_allowlist_required_but_unconfigured', {
+          env: config.env,
+          user_id: request.user.user_id,
+        })
+      } else if (access.denyReason === 'admin_allowlist_denied') {
+        logger.warn('super_admin_allowlist_denied', {
+          user_id: request.user.user_id,
+          has_email: Boolean(request.user.email),
+        })
+      } else {
+        logger.warn('super_admin_role_required', {
+          user_id: request.user.user_id,
+          supabase_role: request.user.role ?? null,
+          app_role: access.appRole,
+        })
       }
-    } catch (error) {
-      logger.warn('super_admin_role_lookup_failed', {
-        user_id: request.user.user_id,
-        error: getErrorMessage(error),
+
+      reply.code(403)
+      return reply.send({
+        error: 'forbidden',
+        code: access.denyReason ?? 'forbidden',
       })
     }
 
+    const supabaseRole = request.user.role
+    const appRole = access.appRole
+    if (supabaseRole === 'super_admin' || appRole === 'super_admin') {
+      return
+    }
+
+    logger.warn('super_admin_required', {
+      user_id: request.user.user_id,
+      supabase_role: supabaseRole ?? null,
+      app_role: appRole,
+    })
     reply.code(403)
-    return reply.send({ error: 'forbidden' })
+    return reply.send({
+      error: 'forbidden',
+      code: 'super_admin_required',
+    })
   }
   ;(handler as { __guardTag?: string }).__guardTag = 'requireSuperAdmin'
   return handler
@@ -610,6 +671,12 @@ const isEntitled = (entitlement: EntitlementType, entitlements: ReturnType<typeo
   if (entitlement === 'pulse_full') {
     return entitlements.pulse_access === 'full'
   }
+  if (entitlement === 'pulse_embed') {
+    return entitlements.pulse_embeds_enabled
+  }
+  if (entitlement === 'indices_embed') {
+    return entitlements.indices_embeds_enabled
+  }
   if (entitlement === 'exports') {
     return entitlements.exports_enabled
   }
@@ -637,12 +704,73 @@ const resolveApiKeyToken = (request: FastifyRequest): string | null => {
   return null
 }
 
-const isPlanActive = (status?: string | null): boolean => {
-  return status === 'active' || status === 'trialing'
+const isPaidEntitlement = (entitlement: EntitlementType): boolean => {
+  return entitlement === 'pulse'
+    || entitlement === 'pulse_full'
+    || entitlement === 'pulse_embed'
+    || entitlement === 'indices_embed'
+    || entitlement === 'exports'
+    || entitlement === 'api_access'
 }
 
-const isPaidEntitlement = (entitlement: EntitlementType): boolean => {
-  return entitlement === 'pulse' || entitlement === 'pulse_full' || entitlement === 'exports' || entitlement === 'api_access'
+const resolveEntitlementFailureConfig = (entitlement: EntitlementType) => {
+  switch (entitlement) {
+    case 'pulse':
+      return {
+        requiredPlan: 'plus' as const,
+        capability: 'pulse_access',
+        insufficientLegacyError: 'forbidden',
+        insufficientMessage: 'Pulse access requires a Plus plan.',
+        inactiveMessage: 'Your paid plan is inactive. Reactivate billing to open Pulse.',
+      }
+    case 'pulse_full':
+      return {
+        requiredPlan: 'enterprise' as const,
+        capability: 'pulse_access',
+        insufficientLegacyError: 'forbidden',
+        insufficientMessage: 'Full Pulse access requires an Enterprise plan.',
+        inactiveMessage: 'Your paid plan is inactive. Reactivate billing to open this Pulse view.',
+      }
+    case 'pulse_embed':
+      return {
+        requiredPlan: 'enterprise' as const,
+        capability: 'pulse_embeds_enabled',
+        insufficientLegacyError: 'forbidden',
+        insufficientMessage: 'Pulse embeds require an Enterprise plan.',
+        inactiveMessage: 'Your paid plan is inactive. Reactivate billing to generate Pulse embeds.',
+      }
+    case 'indices_embed':
+      return {
+        requiredPlan: 'enterprise' as const,
+        capability: 'indices_embeds_enabled',
+        insufficientLegacyError: 'forbidden',
+        insufficientMessage: 'Indices embeds require an Enterprise plan.',
+        inactiveMessage: 'Your paid plan is inactive. Reactivate billing to generate indices embeds.',
+      }
+    case 'exports':
+      return {
+        requiredPlan: 'plus' as const,
+        capability: 'exports_enabled',
+        insufficientLegacyError: 'forbidden',
+        insufficientMessage: 'Exports require a Plus plan.',
+        inactiveMessage: 'Your paid plan is inactive. Reactivate billing to create exports.',
+      }
+    case 'api_access':
+      return {
+        requiredPlan: 'enterprise' as const,
+        capability: 'api_access',
+        insufficientLegacyError: 'enterprise_required',
+        insufficientMessage: 'Enterprise API access is required.',
+        inactiveMessage: 'Your paid plan is inactive. Reactivate billing to access the API.',
+      }
+    default:
+      return {
+        capability: entitlement,
+        insufficientLegacyError: 'forbidden',
+        insufficientMessage: 'This feature is not available on your current plan.',
+        inactiveMessage: 'Your paid plan is inactive.',
+      }
+  }
 }
 
 const applyApiKeyRateLimit = async (
@@ -736,15 +864,16 @@ export const requireEntitlement = (entitlement: EntitlementType) => {
       return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
     }
 
+    const apiKeyAccessPolicy = resolveApiKeyAccessPolicy(request)
+
     // Institutional clients are not part of the Supabase user plan system.
     if (request.institutionalClient) {
       if (!isInstitutionalClientActive(request.institutionalClient)) {
         reply.code(403)
         return reply.send({ error: 'forbidden', code: 'institutional_inactive' })
       }
-      if (entitlement !== 'api_access') {
-        reply.code(403)
-        return reply.send({ error: 'forbidden' })
+      if (entitlement !== 'api_access' || !apiKeyAudienceAllows(apiKeyAccessPolicy, 'institutional')) {
+        return sendApiKeyRouteNotAllowed(reply)
       }
 
       const scopes = getInstitutionalClientScopes(request.institutionalClient.tier)
@@ -775,15 +904,11 @@ export const requireEntitlement = (entitlement: EntitlementType) => {
       return
     }
 
-    const userId = request.user?.user_id ?? request.apiKey?.user_id
+    const userApiKey = request.userApiKey ?? request.apiKey
+    const userId = request.user?.user_id ?? userApiKey?.user_id
     if (!userId) {
       if (request.apiKeyError) {
-        reply.code(401)
-        return reply.send({
-          error: 'unauthorized',
-          code: request.apiKeyError.code,
-          message: request.apiKeyError.message,
-        })
+        return sendApiKeyAuthError(reply, request.apiKeyError.code, request.apiKeyError.message)
       }
       reply.code(401)
       return reply.send({ error: 'unauthorized' })
@@ -797,44 +922,84 @@ export const requireEntitlement = (entitlement: EntitlementType) => {
         reply.code(500)
         return reply.send({ error: 'plan_not_found' })
       }
-      if (request.apiKey && plan.plan_code !== 'enterprise') {
+
+      const effective = await resolveEffectiveEntitlements({
+        pool: planeAPool,
+        userId,
+        email: request.user?.email ?? null,
+        supabaseRole: request.user?.role ?? null,
+        plan,
+      })
+      const failureConfig = resolveEntitlementFailureConfig(entitlement)
+
+      if (userApiKey && !effective.internalEnterpriseOverride && !effective.isPlanActive) {
         reply.code(403)
-        return reply.send({ error: 'enterprise_required' })
+        return reply.send(
+          createCapabilityAccessDeniedResponse({
+            context: effective,
+            ...failureConfig,
+          }),
+        )
       }
-      if (request.apiKey && !isPlanActive(plan.status)) {
+      if (userApiKey && !effective.entitlements.api_access) {
         reply.code(403)
-        return reply.send({ error: 'plan_inactive' })
+        return reply.send(
+          createCapabilityAccessDeniedResponse({
+            context: effective,
+            requiredPlan: 'enterprise',
+            capability: 'api_access',
+            insufficientLegacyError: 'enterprise_required',
+            insufficientMessage: 'Enterprise API access is required.',
+            inactiveMessage: 'Your paid plan is inactive. Reactivate billing to access the API.',
+          }),
+        )
       }
-      if (request.user && isPaidEntitlement(entitlement) && !isPlanActive(plan.status)) {
+      if (request.user && isPaidEntitlement(entitlement) && !effective.isPlanActive && !effective.internalEnterpriseOverride) {
         reply.code(403)
-        return reply.send({ error: 'plan_inactive' })
+        return reply.send(
+          createCapabilityAccessDeniedResponse({
+            context: effective,
+            ...failureConfig,
+          }),
+        )
       }
 
-      const normalizedPlanCode: PlanCode = plan.plan_code === 'plus' || plan.plan_code === 'enterprise' || plan.plan_code === 'free'
-        ? plan.plan_code
-        : 'free'
-      const effectivePlanCode: PlanCode = isPlanActive(plan.status) ? normalizedPlanCode : 'free'
-      const entitlements: Entitlements = getEntitlementsForPlan(effectivePlanCode)
-      if (!isEntitled(entitlement, entitlements)) {
+      if (!isEntitled(entitlement, effective.entitlements)) {
         reply.code(403)
-        return reply.send({ error: 'forbidden', entitlement })
+        return reply.send(
+          createCapabilityAccessDeniedResponse({
+            context: effective,
+            ...failureConfig,
+            extraDetails: { entitlement },
+          }),
+        )
       }
 
       request.entitlementsContext = {
-        planCode: effectivePlanCode,
-        entitlements,
+        planCode: effective.effectivePlanCode,
+        entitlements: effective.entitlements,
+        isPlanActive: effective.isPlanActive,
+        internalEnterpriseOverride: effective.internalEnterpriseOverride,
+        lifecycleState: effective.lifecycleState,
+        recoveryAvailable: effective.recoveryAvailable,
+        recoveryAction: effective.recoveryAction,
+        source: effective.source,
       }
 
-      if (request.apiKey) {
+      if (userApiKey) {
+        if (!apiKeyAudienceAllows(apiKeyAccessPolicy, 'retail')) {
+          return sendApiKeyRouteNotAllowed(reply)
+        }
+
         const requiredScopes = resolveRequiredApiKeyScopes(request)
-        if (!hasAllScopes(request.apiKey.scopes, requiredScopes)) {
+        if (!hasAllScopes(userApiKey.scopes, requiredScopes)) {
           reply.code(403)
           return reply.send({
             error: 'insufficient_scope',
             requiredScopes,
           })
         }
-        const allowed = await applyApiKeyRateLimit(request, reply, request.apiKey.key_id)
+        const allowed = await applyApiKeyRateLimit(request, reply, userApiKey.key_id)
         if (!allowed) {
           return
         }

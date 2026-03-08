@@ -36,6 +36,7 @@ describe('verifySupabaseJwt', () => {
 
   afterEach(() => {
     mockConfig.auth.supabase.verifyMode = 'auto'
+    mockConfig.planeA.requireEmailConfirmation = false
   })
 
   it('returns missing_token when header is missing', async () => {
@@ -62,11 +63,48 @@ describe('verifySupabaseJwt', () => {
     expect('user_id' in result && result.user_id).toBe('u2')
   })
 
-  it('fails closed when jwks keys exist but signature verification fails', async () => {
+  it('falls back to remote when jwks signature verification fails in auto mode', async () => {
     mockConfig.auth.supabase.verifyMode = 'auto'
     vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
     vi.mocked(verifyWithJwks).mockResolvedValue(null)
     vi.mocked(remoteVerify).mockResolvedValue({ user_id: 'u2', claims: {} })
+
+    const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
+    expect('user_id' in result && result.user_id).toBe('u2')
+    expect(remoteVerify).toHaveBeenCalled()
+  })
+
+  it('falls back to remote confirmation when jwks claims omit email confirmation', async () => {
+    mockConfig.auth.supabase.verifyMode = 'auto'
+    mockConfig.planeA.requireEmailConfirmation = true
+    vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
+    vi.mocked(verifyWithJwks).mockResolvedValue({ user_id: 'u1', claims: { sub: 'u1' } })
+    vi.mocked(remoteVerify).mockResolvedValue({
+      user_id: 'u1',
+      claims: { id: 'u1', email_confirmed_at: '2026-03-06T10:00:00.000Z' },
+    })
+
+    const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
+    expect('user_id' in result && result.user_id).toBe('u1')
+    expect(remoteVerify).toHaveBeenCalled()
+  })
+
+  it('returns email_not_confirmed when remote confirmation also reports unconfirmed user', async () => {
+    mockConfig.auth.supabase.verifyMode = 'remote'
+    mockConfig.planeA.requireEmailConfirmation = true
+    vi.mocked(remoteVerify).mockResolvedValue({
+      user_id: 'u3',
+      claims: { id: 'u3' },
+    })
+
+    const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
+    expect('code' in result && result.code).toBe('email_not_confirmed')
+  })
+
+  it('fails closed in jwks-only mode when signature verification fails', async () => {
+    mockConfig.auth.supabase.verifyMode = 'jwks'
+    vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
+    vi.mocked(verifyWithJwks).mockResolvedValue(null)
 
     const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
     expect('code' in result && result.code).toBe('invalid_token')

@@ -59,13 +59,20 @@ const PAYIN_TYPES = [
 const UA = 'Remit-Scout-Research/1.0 (+https://remit-scout.com/research; support@remit-scout.com)'
 
 const FEES_RATES_ENDPOINT = 'https://api.imxi.com/pricing/api/v3/feesrates'
+const INTERMEX_SUBSCRIPTION_KEY = (
+  process.env.INTERMEX_DISCOVERY_SUBSCRIPTION_KEY
+  || process.env.INTERMEX_SUBSCRIPTION_KEY
+  || ''
+).trim()
 
 const INTERMEX_HEADERS = {
   'accept': 'application/json, text/plain, */*',
   'channelid': '1',
   'languageid': '1',
   'partnerid': '1',
-  'ocp-apim-subscription-key': '2162a586e2164623a1cd9b6b2d300b4c',
+  ...(INTERMEX_SUBSCRIPTION_KEY
+    ? { 'ocp-apim-subscription-key': INTERMEX_SUBSCRIPTION_KEY }
+    : {}),
   'origin': 'https://www.intermexonline.com',
   'referer': 'https://www.intermexonline.com/',
   'user-agent': UA,
@@ -103,6 +110,15 @@ export class IntermexDiscovery extends ProviderDiscovery {
     _browser: DiscoveryBrowser,
     sourceCountry: string,
   ): Promise<string[]> {
+    if (!INTERMEX_SUBSCRIPTION_KEY) {
+      const staticDests = PROBE_DESTINATIONS.filter((d) => d !== sourceCountry)
+      this.logger.warn('intermex_subscription_key_missing', {
+        sourceCountry,
+        fallback: 'static_destinations',
+      })
+      return staticDests
+    }
+
     const destinations: string[] = []
 
     for (const dest of PROBE_DESTINATIONS) {
@@ -171,6 +187,18 @@ export class IntermexDiscovery extends ProviderDiscovery {
     corridorId: string,
   ): Promise<DiscoveredDeliveryMethod[]> {
     const methods: DiscoveredDeliveryMethod[] = []
+    if (!INTERMEX_SUBSCRIPTION_KEY) {
+      methods.push({
+        corridorId,
+        rawPayinLabel: 'debit_card',
+        normalizedPayin: 'debit_card',
+        rawPayoutLabel: 'bank_deposit',
+        normalizedPayout: 'bank_deposit',
+        unmapped: false,
+      })
+      return methods
+    }
+
     const parts = corridorId.split('-')
     if (parts.length < 4) return methods
     const [_srcCountry, destCountry, _srcCurrency, destCurrency] = parts
@@ -274,41 +302,43 @@ export class IntermexDiscovery extends ProviderDiscovery {
       }
 
       // API-based promo: check if fee returns 0 on a known corridor
-      try {
-        const params = new URLSearchParams({
-          DestCountryAbbr: 'MX',
-          DestCurrency: 'MXN',
-          OriCountryAbbr: 'USA',
-          OriStateAbbr: 'PA',
-          StyleId: '3',
-          TranTypeId: '3',
-          DeliveryType: 'W',
-          OriCurrency: 'USD',
-          ChannelId: '1',
-          OriAmount: '500',
-          DestAmount: '0',
-          SenderPaymentMethodId: '3',
-        })
-        const url = `${FEES_RATES_ENDPOINT}?${params.toString()}`
-        const resp = await fetch(url, { headers: INTERMEX_HEADERS })
-        if (resp.status === 200) {
-          const data = await resp.json() as IntermexResponse
-          const fee = parseFloat(String(data.Fee ?? '1'))
-          if (fee === 0) {
-            promos.push({
-              type: 'zero_fee',
-              corridorId: 'US-MX-USD-MXN',
-              rawText: 'API returned fee=0 for US→MX',
-              strikethroughDetected: false,
-              originalValue: null,
-              promoValue: '$0.00',
-              expiresAt: null,
-              bannerSelector: null,
-            })
+      if (INTERMEX_SUBSCRIPTION_KEY) {
+        try {
+          const params = new URLSearchParams({
+            DestCountryAbbr: 'MX',
+            DestCurrency: 'MXN',
+            OriCountryAbbr: 'USA',
+            OriStateAbbr: 'PA',
+            StyleId: '3',
+            TranTypeId: '3',
+            DeliveryType: 'W',
+            OriCurrency: 'USD',
+            ChannelId: '1',
+            OriAmount: '500',
+            DestAmount: '0',
+            SenderPaymentMethodId: '3',
+          })
+          const url = `${FEES_RATES_ENDPOINT}?${params.toString()}`
+          const resp = await fetch(url, { headers: INTERMEX_HEADERS })
+          if (resp.status === 200) {
+            const data = await resp.json() as IntermexResponse
+            const fee = parseFloat(String(data.Fee ?? '1'))
+            if (fee === 0) {
+              promos.push({
+                type: 'zero_fee',
+                corridorId: 'US-MX-USD-MXN',
+                rawText: 'API returned fee=0 for US→MX',
+                strikethroughDetected: false,
+                originalValue: null,
+                promoValue: '$0.00',
+                expiresAt: null,
+                bannerSelector: null,
+              })
+            }
           }
+        } catch {
+          // API promo check is best-effort
         }
-      } catch {
-        // API promo check is best-effort
       }
     } catch (err) {
       this.logger.warn('intermex_promo_detection_error', {

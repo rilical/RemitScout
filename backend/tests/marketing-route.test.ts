@@ -18,6 +18,11 @@ const mockConfig = {
       testEventCode: '',
     },
   },
+  privacy: {
+    hashSalt: 'test-privacy-hash-salt',
+    sessionSalt: 'test-privacy-session-salt',
+    sessionRotationHours: 24,
+  },
 }
 
 vi.mock('../shared/logger', () => ({
@@ -171,7 +176,7 @@ describe('marketing route', () => {
     expect(response).toMatchObject({ success: true })
     expect(mockInsertQuery).toHaveBeenCalled()
     const params = mockInsertQuery.mock.calls[0]?.[1] as unknown[]
-    expect(params[20]).toBe('203.0.113.0')
+    expect(params[20]).toBeNull()
     expect(String(params[21])).toMatch(/^[a-f0-9]{64}$/)
     expect(params[22]).toBe('chrome')
   })

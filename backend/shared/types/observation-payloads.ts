@@ -8,18 +8,21 @@
  * Quote observation payload — emitted when a quote is successfully collected.
  */
 export type QuoteObservationPayload = {
-  sendAmount: number
-  receiveAmount: number
-  impliedFxRate: number
-  feeAmount: number
-  totalDebitAmount: number
-  payinMethod: string
-  payoutMethod: string
-  deliveryTimeMinMinutes: number | null
-  deliveryTimeMaxMinutes: number | null
-  qualityFlags: string[]
-  parserVersion: string
-  bronzeObjectKey: string
+  provider_id: string
+  exchange_rate: number
+  implied_fx_rate: number
+  send_amount: number
+  receive_amount: number
+  fee_amount: number
+  total_debit_amount: number
+  payin_method: string
+  payout_method: string
+  method_profile: string | null
+  delivery_time_min_minutes: number | null
+  delivery_time_max_minutes: number | null
+  quality_flags: string[]
+  parser_version: string
+  bronze_object_key: string
 }
 
 /**

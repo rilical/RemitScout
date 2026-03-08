@@ -26,6 +26,27 @@ let initialized = false
 
 const configValue = (value?: string) => value?.trim() || ''
 
+const unwrapLicenseKey = (value?: string): string => {
+  const raw = configValue(value)
+  if (!raw) return ''
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (
+      typeof parsed === 'object'
+      && parsed !== null
+      && 'LicenseKey' in parsed
+      && typeof parsed.LicenseKey === 'string'
+    ) {
+      return parsed.LicenseKey.trim()
+    }
+  } catch {
+    // Fall through when the value is already the plain ingest key.
+  }
+
+  return raw
+}
+
 const normalizeEnvironmentName = (value?: string): string => {
   const normalized = configValue(value).toLowerCase()
   if (!normalized) return 'development'
@@ -60,7 +81,7 @@ const parseOtlpHeaders = (): Record<string, string> => {
     configValue(process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS) ||
     configValue(process.env.OTEL_EXPORTER_OTLP_HEADERS)
   if (!raw) {
-    const newRelicIngestKey = configValue(process.env.NEW_RELIC_INGEST_KEY)
+    const newRelicIngestKey = unwrapLicenseKey(process.env.NEW_RELIC_INGEST_KEY)
     return newRelicIngestKey ? { 'api-key': newRelicIngestKey } : {}
   }
 
@@ -79,7 +100,7 @@ const parseOtlpHeaders = (): Record<string, string> => {
       logger.warn('tracing_otlp_header_invalid', { header: pair })
       continue
     }
-    headers[key] = value
+    headers[key] = key.toLowerCase() === 'api-key' ? unwrapLicenseKey(value) || value : value
   }
   return headers
 }

@@ -13,6 +13,8 @@
  * Optional env:
  * - NEW_RELIC_REGION (US|EU, default US)
  * - NEW_RELIC_UNLINK_ACCOUNT_IDS (comma-separated linked account IDs)
+ * - NEW_RELIC_STAGING_AWS_MODE (push_pull|push_only|otlp_only, default push_pull)
+ * - NEW_RELIC_PROD_AWS_MODE (push_pull|push_only|otlp_only, default push_pull)
  */
 
 const NEW_RELIC_USER_API_KEY = process.env.NEW_RELIC_USER_API_KEY || ''
@@ -20,6 +22,16 @@ const NEW_RELIC_ACCOUNT_ID = Number.parseInt(process.env.NEW_RELIC_ACCOUNT_ID ||
 const NEW_RELIC_REGION = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
 const NEW_RELIC_STAGING_AWS_ROLE_ARN = (process.env.NEW_RELIC_STAGING_AWS_ROLE_ARN || '').trim()
 const NEW_RELIC_PROD_AWS_ROLE_ARN = (process.env.NEW_RELIC_PROD_AWS_ROLE_ARN || '').trim()
+const normalizeAwsMode = (value, fallback = 'push_pull') => {
+  const normalized = String(value || '').trim().toLowerCase()
+  if (!normalized) return fallback
+  if (['push_pull', 'push+pull', 'all'].includes(normalized)) return 'push_pull'
+  if (['push_only', 'push'].includes(normalized)) return 'push_only'
+  if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
+  throw new Error(`Unsupported New Relic AWS mode: ${value}`)
+}
+const NEW_RELIC_STAGING_AWS_MODE = normalizeAwsMode(process.env.NEW_RELIC_STAGING_AWS_MODE, 'push_pull')
+const NEW_RELIC_PROD_AWS_MODE = normalizeAwsMode(process.env.NEW_RELIC_PROD_AWS_MODE, 'push_pull')
 const NEW_RELIC_UNLINK_ACCOUNT_IDS = (process.env.NEW_RELIC_UNLINK_ACCOUNT_IDS || '')
   .split(',')
   .map((value) => Number.parseInt(value.trim(), 10))
@@ -36,8 +48,13 @@ if (!Number.isFinite(NEW_RELIC_ACCOUNT_ID)) {
   process.exit(1)
 }
 
-if (!NEW_RELIC_STAGING_AWS_ROLE_ARN || !NEW_RELIC_PROD_AWS_ROLE_ARN) {
-  console.error('Missing NEW_RELIC_STAGING_AWS_ROLE_ARN or NEW_RELIC_PROD_AWS_ROLE_ARN')
+if (NEW_RELIC_STAGING_AWS_MODE !== 'otlp_only' && !NEW_RELIC_STAGING_AWS_ROLE_ARN) {
+  console.error('Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging AWS-linked New Relic mode')
+  process.exit(1)
+}
+
+if (NEW_RELIC_PROD_AWS_MODE !== 'otlp_only' && !NEW_RELIC_PROD_AWS_ROLE_ARN) {
+  console.error('Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod AWS-linked New Relic mode')
   process.exit(1)
 }
 
@@ -237,42 +254,73 @@ const parseAwsAccountIdFromAuthLabel = (authLabel) => {
   return match ? match[1] : null
 }
 
+const MANAGED_LINK_NAMES = [
+  'remit-scout-staging-aws-metric-stream-push',
+  'remit-scout-staging-aws-metric-stream-pull',
+  'remit-scout-prod-aws-metric-stream-push',
+  'remit-scout-prod-aws-metric-stream-pull',
+]
+
+const buildDesiredLinks = ({ envName, arn, mode, expectedAwsAccountId }) => {
+  if (mode === 'otlp_only') return []
+
+  const prefix = `remit-scout-${envName}-aws-metric-stream`
+  const links = [
+    {
+      name: `${prefix}-push`,
+      arn,
+      metricCollectionMode: 'PUSH',
+      expectedAwsAccountId,
+    },
+  ]
+
+  if (mode === 'push_pull') {
+    links.push({
+      name: `${prefix}-pull`,
+      arn,
+      metricCollectionMode: 'PULL',
+      expectedAwsAccountId,
+    })
+  }
+
+  return links
+}
+
 const main = async () => {
   const trust = await getAwsProviderTrustRequirements()
   console.log(`NR AWS role principal account: ${trust.roleAccountId}`)
   console.log(`NR AWS required external ID: ${trust.roleExternalId}`)
 
-  const stagingAwsAccountId = parseAwsAccountId(NEW_RELIC_STAGING_AWS_ROLE_ARN)
-  const prodAwsAccountId = parseAwsAccountId(NEW_RELIC_PROD_AWS_ROLE_ARN)
+  const stagingAwsAccountId = NEW_RELIC_STAGING_AWS_ROLE_ARN
+    ? parseAwsAccountId(NEW_RELIC_STAGING_AWS_ROLE_ARN)
+    : null
+  const prodAwsAccountId = NEW_RELIC_PROD_AWS_ROLE_ARN
+    ? parseAwsAccountId(NEW_RELIC_PROD_AWS_ROLE_ARN)
+    : null
 
   const desiredLinks = [
-    {
-      name: 'remit-scout-staging-aws-metric-stream-push',
+    ...buildDesiredLinks({
+      envName: 'staging',
       arn: NEW_RELIC_STAGING_AWS_ROLE_ARN,
-      metricCollectionMode: 'PUSH',
+      mode: NEW_RELIC_STAGING_AWS_MODE,
       expectedAwsAccountId: stagingAwsAccountId,
-    },
-    {
-      name: 'remit-scout-staging-aws-metric-stream-pull',
-      arn: NEW_RELIC_STAGING_AWS_ROLE_ARN,
-      metricCollectionMode: 'PULL',
-      expectedAwsAccountId: stagingAwsAccountId,
-    },
-    {
-      name: 'remit-scout-prod-aws-metric-stream-push',
+    }),
+    ...buildDesiredLinks({
+      envName: 'prod',
       arn: NEW_RELIC_PROD_AWS_ROLE_ARN,
-      metricCollectionMode: 'PUSH',
+      mode: NEW_RELIC_PROD_AWS_MODE,
       expectedAwsAccountId: prodAwsAccountId,
-    },
-    {
-      name: 'remit-scout-prod-aws-metric-stream-pull',
-      arn: NEW_RELIC_PROD_AWS_ROLE_ARN,
-      metricCollectionMode: 'PULL',
-      expectedAwsAccountId: prodAwsAccountId,
-    },
+    }),
   ]
+  const desiredNames = new Set(desiredLinks.map((item) => item.name))
 
   const existingBefore = await listLinkedAccounts()
+  const staleManagedLinks = existingBefore
+    .filter((item) => MANAGED_LINK_NAMES.includes(item.name) && !desiredNames.has(item.name))
+    .map((item) => item.id)
+  if (staleManagedLinks.length > 0) {
+    await unlinkAccounts(staleManagedLinks)
+  }
   const existingByName = new Map(existingBefore.map((item) => [item.name, item]))
   const missingLinks = desiredLinks.filter((item) => !existingByName.has(item.name))
 
@@ -330,56 +378,63 @@ const main = async () => {
   }
 
   const linked = await listLinkedAccounts()
-
   const byName = new Map(linked.map((item) => [item.name, item]))
-  const stagingPush = byName.get('remit-scout-staging-aws-metric-stream-push')
-  const stagingPull = byName.get('remit-scout-staging-aws-metric-stream-pull')
-  const prodPush = byName.get('remit-scout-prod-aws-metric-stream-push')
-  const prodPull = byName.get('remit-scout-prod-aws-metric-stream-pull')
-
-  if (!stagingPush || !stagingPull || !prodPush || !prodPull) {
-    throw new Error('Unable to resolve all linked account IDs after link operation')
-  }
-
-  const pullIds = [stagingPull.id, prodPull.id]
-  const pullInput = pullIds.map((linkedAccountId) => ({ linkedAccountId }))
-  const pullConfig = await configureIntegrations({
-    aws: {
-      apigateway: pullInput,
-      awsRoute53resolver: pullInput,
-      awsWafv2: pullInput,
-      awsXray: pullInput,
-      billing: pullInput,
-      cloudfront: pullInput,
-      cloudtrail: pullInput,
-      ec2: pullInput,
-      ecs: pullInput,
-      elasticache: pullInput,
-      health: pullInput,
-      iam: pullInput,
-      lambda: pullInput,
-      rds: pullInput,
-      s3: pullInput,
-      sqs: pullInput,
-    },
+  const resolvedDesiredLinks = desiredLinks.map((desired) => {
+    const linkedAccount = byName.get(desired.name)
+    if (!linkedAccount) {
+      throw new Error(`Unable to resolve linked account ${desired.name} after link operation`)
+    }
+    return {
+      desired,
+      linkedAccount,
+    }
   })
 
-  if (pullConfig.errors?.length) {
-    throw new Error(`pull integration configuration failed: ${JSON.stringify(pullConfig.errors)}`)
+  const pullInput = resolvedDesiredLinks
+    .filter(({ desired }) => desired.metricCollectionMode === 'PULL')
+    .map(({ linkedAccount }) => ({ linkedAccountId: linkedAccount.id }))
+  if (pullInput.length > 0) {
+    const pullConfig = await configureIntegrations({
+      aws: {
+        apigateway: pullInput,
+        awsRoute53resolver: pullInput,
+        awsWafv2: pullInput,
+        awsXray: pullInput,
+        billing: pullInput,
+        cloudfront: pullInput,
+        cloudtrail: pullInput,
+        ec2: pullInput,
+        ecs: pullInput,
+        elasticache: pullInput,
+        health: pullInput,
+        iam: pullInput,
+        lambda: pullInput,
+        rds: pullInput,
+        s3: pullInput,
+        sqs: pullInput,
+      },
+    })
+
+    if (pullConfig.errors?.length) {
+      throw new Error(`pull integration configuration failed: ${JSON.stringify(pullConfig.errors)}`)
+    }
   }
 
-  const pushIds = [stagingPush.id, prodPush.id]
-  const pushInput = pushIds.map((linkedAccountId) => ({ linkedAccountId }))
-  const pushConfig = await configureIntegrations({
-    aws: {
-      awsMetadata: pushInput,
-      awsMsElasticache: pushInput,
-      awsTagsGlobal: pushInput,
-    },
-  })
+  const pushInput = resolvedDesiredLinks
+    .filter(({ desired }) => desired.metricCollectionMode === 'PUSH')
+    .map(({ linkedAccount }) => ({ linkedAccountId: linkedAccount.id }))
+  if (pushInput.length > 0) {
+    const pushConfig = await configureIntegrations({
+      aws: {
+        awsMetadata: pushInput,
+        awsMsElasticache: pushInput,
+        awsTagsGlobal: pushInput,
+      },
+    })
 
-  if (pushConfig.errors?.length) {
-    throw new Error(`push integration configuration failed: ${JSON.stringify(pushConfig.errors)}`)
+    if (pushConfig.errors?.length) {
+      throw new Error(`push integration configuration failed: ${JSON.stringify(pushConfig.errors)}`)
+    }
   }
 
   if (NEW_RELIC_UNLINK_ACCOUNT_IDS.length) {
@@ -428,6 +483,10 @@ const main = async () => {
       {
         stagingAwsAccountId,
         prodAwsAccountId,
+        modes: {
+          staging: NEW_RELIC_STAGING_AWS_MODE,
+          prod: NEW_RELIC_PROD_AWS_MODE,
+        },
         linkedAccounts: summary.map((account) => ({
           id: account.id,
           name: account.name,

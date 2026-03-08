@@ -35,6 +35,13 @@ describe('popular-corridors route', () => {
 
     app = {
       get: vi.fn(),
+      container: {
+        repositories: {
+          popularCorridor: {
+            listPopularCorridors: mockListPopularCorridors,
+          },
+        },
+      },
     } as any
 
     const { popularCorridorsRoutes } = await import('../plane-a/src/routes/popular-corridors')
@@ -204,4 +211,3 @@ describe('popular-corridors route', () => {
     await expect(handler(mockRequest, mockReply)).resolves.not.toThrow()
   })
 })
-

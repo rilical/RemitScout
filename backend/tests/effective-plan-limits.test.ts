@@ -32,6 +32,10 @@ vi.mock('../plane-a/src/services/user-plan', () => ({
   updatePlanFromStripe: vi.fn(),
 }))
 
+vi.mock('../plane-a/src/services/user-account', () => ({
+  upsertUserAccount: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('../plane-a/src/repositories', () => ({
   AlertRepository: vi.fn().mockImplementation(() => mockAlertRepository),
   WatchlistRepository: vi.fn().mockImplementation(() => mockWatchlistRepository),
@@ -137,6 +141,11 @@ describe('effective plan limits (inactive plus behaves as free)', () => {
     const result = await handler(
       {
         user: { user_id: 'u-test' },
+        entitlementsContext: {
+          entitlements: {
+            history_max_days: 30,
+          },
+        },
         query: {
           corridor_id: 'US-PH-USD-PHP',
           from_date: '2026-01-01',

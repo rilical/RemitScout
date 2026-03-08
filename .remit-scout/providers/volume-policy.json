@@ -1,0 +1,32 @@
+{
+  "$schema": "../schema/provider-volume-policy.schema.json",
+  "version": 1,
+  "description": "Provider-scoped volume weighting policy catalog. Module ownership and signal metadata live in modules/catalog.json; weighting fallback policy lives here.",
+  "default_policy": {
+    "strategy": "synthetic_seed",
+    "model_version": "synthetic_seed_v1",
+    "fallback_chain": [
+      "reported",
+      "inferred_proxy",
+      "synthetic_seed",
+      "equal_weight"
+    ],
+    "synthetic_seed": {
+      "default_weight": 0,
+      "default_confidence": 0.5,
+      "source_note": "provider_volume_catalog_default",
+      "corridor_overrides": []
+    },
+    "reported": {
+      "enabled": false,
+      "source_ref": null,
+      "freshness_slo_hours": 24
+    },
+    "inferred_proxy": {
+      "enabled": false,
+      "factor_name": "volume_proxy",
+      "lookback_days": 30
+    }
+  },
+  "providers": []
+}

@@ -53,6 +53,20 @@ describe('TriangulationEngine', () => {
     vi.useRealTimers()
   })
 
+  describe('database query contracts', () => {
+    it('casts method_profile params when loading Gold composite rows', async () => {
+      const pool = createMockPool()
+      const contractEngine = new TriangulationEngine(pool as any)
+
+      await (contractEngine as any).loadCompositeRows('2026-03-01', 500, 'standard_bank')
+
+      expect(pool.query).toHaveBeenCalledTimes(1)
+      const [sql, params] = (pool.query as any).mock.calls[0] as [string, unknown[]]
+      expect(sql).toContain('AND method_profile = $2::method_profile')
+      expect(params).toEqual([500, 'standard_bank', '2026-03-01'])
+    })
+  })
+
   // =========================================================================
   // Signal validation
   // =========================================================================
@@ -75,16 +89,16 @@ describe('TriangulationEngine', () => {
       expect(result!.ttlSeconds).toBe(300) // default TTL
     })
 
-    it('rejects signal with invalid corridor ID format (4-part)', () => {
+    it('accepts signal with 4-part corridor ID format', () => {
       const result = engine.ingestSignal({
-        corridorId: 'US-MX-USD-MXN', // 4-part format, engine expects "XXX-YYY"
+        corridorId: 'US-MX-USD-MXN',
         signalType: 'rate_deviation',
         intensity: 0.5,
         source: 'test',
       })
 
-      // The engine validates corridor as /^[A-Z]{3}-[A-Z]{3}$/ (currency pair style)
-      expect(result).toBeNull()
+      expect(result).not.toBeNull()
+      expect(result!.corridorId).toBe('US-MX-USD-MXN')
     })
 
     it('accepts valid corridor format: 3-letter-3-letter', () => {
@@ -585,25 +599,29 @@ describe('TriangulationEngine', () => {
     it('has the expected shape for a corridor result', () => {
       // This is a compile-time/type contract test
       const result = {
-        corridorId: 'GBP-KES',
+        corridorId: 'KE-GB-KES-GBP',
         amountBucket: 500,
-        methodProfile: 'bank_transfer:bank_deposit',
+        methodProfile: 'standard_bank',
         date: '2026-03-01',
-        leg1Corridor: 'GBP-USD',
-        leg2Corridor: 'USD-KES',
-        leg1Teer: 1.27,
-        leg2Teer: 130.5,
-        triangulatedTeer: 1.27 * 130.5,
+        teer: 165.735,
+        rci: 0.015,
+        rviBps: 42,
+        leg1Corridor: 'KE-GB-KES-GBP',
+        leg2Corridor: 'KE-GB-KES-GBP',
+        leg1Teer: 165.735,
+        leg2Teer: null,
+        triangulatedTeer: 165.735,
         triangulatedRci: 0.015,
         stressScore: 0.2,
         confidence: 'high' as const,
-        methodologyVersion: 'triangulation_v1',
+        contributingSignals: [],
+        methodologyVersion: 'triangulation_v2_corridor_composite',
       }
 
-      expect(result.corridorId).toBe('GBP-KES')
+      expect(result.corridorId).toBe('KE-GB-KES-GBP')
       expect(result.triangulatedTeer).toBeCloseTo(165.735, 2)
       expect(result.confidence).toBe('high')
-      expect(result.methodologyVersion).toBe('triangulation_v1')
+      expect(result.methodologyVersion).toBe('triangulation_v2_corridor_composite')
       expect(result.stressScore).toBeGreaterThanOrEqual(0)
       expect(result.stressScore).toBeLessThanOrEqual(1)
     })

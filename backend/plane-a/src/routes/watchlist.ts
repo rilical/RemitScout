@@ -7,7 +7,7 @@ import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { DEFAULT_AMOUNT_BUCKET } from '../../../shared/constants'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getUserPlan } from '../services/user-plan'
-import { getEntitlementsForPlan } from '../services/entitlements'
+import { getEffectiveEntitlementsForPlanStatus, resolveEffectivePlanCode } from '../services/entitlements'
 import { upsertUsageSnapshot } from '../services/plan-usage'
 import { ensureUserPlan } from '../services/user-plan'
 import { upsertUserAccount } from '../services/user-account'
@@ -197,9 +197,7 @@ async function getWatchlistLimit(
   if (!plan) {
     return { limit: 3, plan: null } // Default free plan limit
   }
-  const isPlanActive = plan.status === 'active' || plan.status === 'trialing'
-  const effectivePlanCode = isPlanActive ? plan.plan_code : 'free'
-  const entitlements = getEntitlementsForPlan(effectivePlanCode)
+  const entitlements = getEffectiveEntitlementsForPlanStatus(plan.plan_code, plan.status)
   const limit = entitlements.watchlist_items === null ? 'unlimited' : entitlements.watchlist_items
   return { limit, plan }
 }
@@ -362,8 +360,7 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
       if (limit !== 'unlimited') {
         const count = await getWatchlistCount(watchlistRepository, user.user_id)
         if (count >= limit) {
-          const isPlanActive = plan?.status === 'active' || plan?.status === 'trialing'
-          const effectivePlanCode = plan && isPlanActive ? plan.plan_code : 'free'
+          const effectivePlanCode = plan ? resolveEffectivePlanCode(plan.plan_code, plan.status) : 'free'
           const planLabel =
             effectivePlanCode === 'plus'
               ? 'Plus'

@@ -6,6 +6,7 @@ import { parseCorridorId, formatCorridorId } from '../../../shared/corridor'
 import { DEFAULT_AMOUNT_BUCKET } from '../../../shared/constants'
 import { requireEntitlement } from '../plugins/auth-plugin'
 import { ValidationError } from '../../../shared/errors'
+import { apiKeyAccessConfig } from './api-key-access'
 
 const logger = createLogger('plane-a.corridor-coverage')
 
@@ -40,7 +41,10 @@ export const corridorCoverageRoutes = async (app: FastifyInstance) => {
 
   app.get(
     '/corridors/:corridorId/coverage',
-    { preHandler: requireEntitlement('api_access') },
+    {
+      preHandler: requireEntitlement('api_access'),
+      config: apiKeyAccessConfig({ audience: 'institutional', requiredScope: 'corridors:read' }),
+    },
     async (request, reply) => {
       const params = paramSchema.safeParse(request.params)
       if (!params.success) {
@@ -79,12 +83,21 @@ export const corridorCoverageRoutes = async (app: FastifyInstance) => {
           last_observed_at: Date
           age_minutes: number
         }>(
-          `SELECT
+          `WITH eligible_providers AS (
+             SELECT provider_id
+             FROM silver.rights_matrix
+             WHERE allowed_collect IS TRUE
+               AND allowed_b2b IS TRUE
+               AND LOWER(COALESCE(stoplist_status, '')) = 'active'
+               AND LOWER(COALESCE(status, '')) = 'production'
+           )
+           SELECT
              o.provider_id,
              p.name AS provider_name,
              MAX(o.observed_at) AS last_observed_at,
              EXTRACT(EPOCH FROM (NOW() - MAX(o.observed_at)))::int / 60 AS age_minutes
            FROM silver.observation o
+           JOIN eligible_providers ep ON ep.provider_id = o.provider_id
            LEFT JOIN silver.provider p ON p.provider_id = o.provider_id
            WHERE o.corridor_id = $1
              AND o.amount_bucket = $2
@@ -129,10 +142,19 @@ export const corridorCoverageRoutes = async (app: FastifyInstance) => {
             top_share: number
             top_two_share: number
           }>(
-            `WITH provider_counts AS (
+            `WITH eligible_providers AS (
+               SELECT provider_id
+               FROM silver.rights_matrix
+               WHERE allowed_collect IS TRUE
+                 AND allowed_b2b IS TRUE
+                 AND LOWER(COALESCE(stoplist_status, '')) = 'active'
+                 AND LOWER(COALESCE(status, '')) = 'production'
+             ),
+             provider_counts AS (
                SELECT provider_id, COUNT(*) AS cnt
                FROM silver.observation
-               WHERE corridor_id = $1
+               WHERE provider_id IN (SELECT provider_id FROM eligible_providers)
+                 AND corridor_id = $1
                  AND amount_bucket = $2
                  AND type = 'quote'
                  AND observed_at >= NOW() - INTERVAL '24 hours'

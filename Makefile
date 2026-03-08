@@ -169,13 +169,18 @@ status-dev:
 		--cluster remit-scout-dev \
 		--region $(AWS_REGION) \
 		--query 'serviceArns' --output text); \
-	if [ -n "$$SERVICES" ]; then \
-		AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-services \
-			--cluster remit-scout-dev \
-			--services $$SERVICES \
-			--region $(AWS_REGION) \
-			--query 'services[].{name:serviceName,desired:desiredCount,running:runningCount,pending:pendingCount}' \
-			--output table; \
+	if [ -n "$$SERVICES" ] && [ "$$SERVICES" != "None" ]; then \
+		read -r -a service_arns <<< "$$SERVICES"; \
+		printf "%-45s %7s %7s %7s\n" "NAME" "DESIRED" "RUNNING" "PENDING"; \
+		for ((i=0; i<$${#service_arns[@]}; i+=10)); do \
+			batch=("$${service_arns[@]:i:10}"); \
+			AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-services \
+				--cluster remit-scout-dev \
+				--services "$${batch[@]}" \
+				--region $(AWS_REGION) \
+				--query 'services[].[serviceName,desiredCount,runningCount,pendingCount]' \
+				--output text; \
+		done | sort | awk '{printf "%-45s %7s %7s %7s\n", $$1, $$2, $$3, $$4}'; \
 	else \
 		echo "No ECS services found."; \
 	fi
@@ -196,12 +201,17 @@ status-env:
 		--region $(AWS_REGION) \
 		--query 'serviceArns' --output text); \
 	if [ -n "$$SERVICES" ] && [ "$$SERVICES" != "None" ]; then \
-		AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-services \
-			--cluster "$$CLUSTER" \
-			--services $$SERVICES \
-			--region $(AWS_REGION) \
-			--query 'services[].{name:serviceName,desired:desiredCount,running:runningCount,pending:pendingCount}' \
-			--output table; \
+		read -r -a service_arns <<< "$$SERVICES"; \
+		printf "%-45s %7s %7s %7s\n" "NAME" "DESIRED" "RUNNING" "PENDING"; \
+		for ((i=0; i<$${#service_arns[@]}; i+=10)); do \
+			batch=("$${service_arns[@]:i:10}"); \
+			AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-services \
+				--cluster "$$CLUSTER" \
+				--services "$${batch[@]}" \
+				--region $(AWS_REGION) \
+				--query 'services[].[serviceName,desiredCount,runningCount,pendingCount]' \
+				--output text; \
+		done | sort | awk '{printf "%-45s %7s %7s %7s\n", $$1, $$2, $$3, $$4}'; \
 	else \
 		echo "No ECS services found."; \
 	fi
@@ -429,15 +439,16 @@ db-migrate-env:
 		echo "ERROR: Could not find PlaneBIngestService in $$CLUSTER"; \
 		exit 1; \
 	fi; \
+	SERVICE_NAME=$${SERVICE_ARN##*/}; \
 	SERVICE_JSON=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-services \
 		--cluster "$$CLUSTER" \
-		--services "$$SERVICE_ARN" \
+		--services "$$SERVICE_NAME" \
 		--region $(AWS_REGION) \
 		--output json); \
 	SERVICE_TASK_DEF=$$(echo "$$SERVICE_JSON" | jq -r '.services[0].taskDefinition'); \
 	NETWORK_CONFIG=$$(echo "$$SERVICE_JSON" | jq -c '.services[0].networkConfiguration'); \
 	if [ -z "$$SERVICE_TASK_DEF" ] || [ "$$SERVICE_TASK_DEF" = "null" ]; then \
-		echo "ERROR: Could not resolve task definition for $$SERVICE_ARN"; \
+		echo "ERROR: Could not resolve task definition for $$SERVICE_NAME"; \
 		exit 1; \
 	fi; \
 	MIGRATE_TASK_DEF=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs list-task-definitions \

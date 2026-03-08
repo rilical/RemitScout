@@ -125,6 +125,7 @@ const forwardSetCookieHeaders = (event: any, headers: Headers | undefined) => {
 }
 
 const isE2eMockEnabled = () => process.env.E2E_MOCK_API === '1'
+const isLocalE2ePreview = () => process.env.LOCAL_E2E_PREVIEW === '1'
 let hasLoggedCriticalE2eMockWarning = false
 
 const isProdLikeEnvironment = () => {
@@ -304,12 +305,24 @@ const mockProviders = (query: Record<string, unknown>): MockResult => {
   const from = (toQueryString(query.from) || 'US').toUpperCase()
   const to = (toQueryString(query.to) || 'PH').toUpperCase()
   const amount = Number(toQueryString(query.amount) || 500)
-  const method = toQueryString(query.method) || 'bank'
+  const normalizeMethod = (value?: string | null) => {
+    const token = String(value || 'bank')
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, '_')
+    if (token === 'cash' || token === 'cash_pickup') return 'cash'
+    if (token === 'wallet' || token === 'mobile_wallet') return 'wallet'
+    if (token === 'airtime') return 'airtime'
+    if (token === 'home' || token === 'home_delivery') return 'home'
+    if (token === 'card' || token === 'card_delivery' || token === 'debit_card') return 'card'
+    return 'bank'
+  }
+  const method = normalizeMethod(toQueryString(query.method))
   const updatedAt = new Date().toISOString()
   const midMarketRate = 56.0
 
-  const makeQuote = (id: string, name: string, fee: number, fxRate: number, delivery: string) => ({
-    id,
+  const makeQuote = (slug: string, name: string, fee: number, fxRate: number, delivery: string) => ({
+    id: slug,
     name,
     fee,
     feeAmount: fee,
@@ -325,6 +338,15 @@ const mockProviders = (query: Record<string, unknown>): MockResult => {
     outboundUrl: null,
   })
 
+  const quotes = [
+    makeQuote('wise', 'Wise', 2.5, midMarketRate * 0.995, 'Same day'),
+    makeQuote('remitly', 'Remitly', 1.99, midMarketRate * 0.99, '15-30 min'),
+  ]
+  const availableMethods = quotes.length ? [method] : []
+  const availableMethodsByProvider = Object.fromEntries(
+    quotes.map(quote => [quote.id, [method]]),
+  )
+
   return {
     status: 200,
     body: {
@@ -335,11 +357,11 @@ const mockProviders = (query: Record<string, unknown>): MockResult => {
       midMarketRate,
       midMarketSource: 'Mid-market',
       midMarketUpdatedAt: updatedAt,
-      data: [
-        makeQuote('mock_wise', 'Wise', 2.5, midMarketRate * 0.995, 'Same day'),
-        makeQuote('mock_remitly', 'Remitly', 1.99, midMarketRate * 0.99, '15-30 min'),
-      ],
-      availableMethods: ['bank', 'cash', 'wallet'],
+      data: quotes,
+      availableMethods,
+      availableMethodsByProvider,
+      supportedMethods: [method],
+      supportedMethodsByProvider: availableMethodsByProvider,
       indices: {
         teer: midMarketRate * 0.992,
         rci: 0.028,
@@ -599,14 +621,17 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
   setResponseHeader(event, 'x-request-id', requestId)
 
   if (isE2eMockEnabled()) {
-    if (isProdLikeEnvironment() && !hasLoggedCriticalE2eMockWarning) {
+    const prodLikeRuntime = isProdLikeEnvironment()
+    const shouldBlockMocks = prodLikeRuntime && !isLocalE2ePreview()
+
+    if (shouldBlockMocks && !hasLoggedCriticalE2eMockWarning) {
       hasLoggedCriticalE2eMockWarning = true
       logBackendError('e2e_mock_enabled_in_prod_like', {
         nodeEnv: process.env.NODE_ENV || null,
         environment: process.env.ENVIRONMENT || null,
       })
     }
-    if (isProdLikeEnvironment()) {
+    if (shouldBlockMocks) {
       setResponseStatus(event, 503)
       return {
         error: 'service_unavailable',

@@ -8,11 +8,9 @@ export type TriangulatedIndexRow = {
   methodology_version: string | null
   teer: number | null
   rci: number | null
+  rvi_bps: number | null
   confidence: string | null
-  leg1_corridor: string
-  leg2_corridor: string
-  leg1_teer: number | null
-  leg2_teer: number | null
+  contributing_signals: unknown[]
 }
 
 export type CorridorStressRow = {
@@ -20,6 +18,7 @@ export type CorridorStressRow = {
   stress_score: number | null
   stress_level: string
   date: Date
+  computed_at: Date | null
   confidence: string | null
 }
 

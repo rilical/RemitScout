@@ -14,7 +14,8 @@ const mockRepo = {
 
 const mockPoolQuery = vi.fn()
 const mockGetUserPlan = vi.fn()
-const mockGetEntitlementsForPlan = vi.fn()
+const mockGetEffectiveEntitlementsForPlanStatus = vi.fn()
+const mockResolveEffectivePlanCode = vi.fn()
 
 vi.mock('../shared/db', () => ({
   getPool: vi.fn().mockReturnValue({ query: mockPoolQuery }),
@@ -34,7 +35,9 @@ vi.mock('../plane-a/src/services/user-account', () => ({
 }))
 
 vi.mock('../plane-a/src/services/entitlements', () => ({
-  getEntitlementsForPlan: (...args: any[]) => mockGetEntitlementsForPlan(...args),
+  getEffectiveEntitlementsForPlanStatus: (...args: any[]) =>
+    mockGetEffectiveEntitlementsForPlanStatus(...args),
+  resolveEffectivePlanCode: (...args: any[]) => mockResolveEffectivePlanCode(...args),
 }))
 
 vi.mock('../plane-a/src/services/plan-usage', () => ({
@@ -65,7 +68,8 @@ describe('watchlist route', () => {
     vi.clearAllMocks()
     mockPoolQuery.mockResolvedValue({ rows: [] })
     mockGetUserPlan.mockResolvedValue({ plan_code: 'free', status: 'active' })
-    mockGetEntitlementsForPlan.mockReturnValue({ watchlist_items: 3 })
+    mockGetEffectiveEntitlementsForPlanStatus.mockReturnValue({ watchlist_items: 3 })
+    mockResolveEffectivePlanCode.mockReturnValue('free')
     mockRepo.listByUserId.mockResolvedValue([])
     mockRepo.findByTarget.mockResolvedValue(null)
     mockRepo.countByUserId.mockResolvedValue(0)

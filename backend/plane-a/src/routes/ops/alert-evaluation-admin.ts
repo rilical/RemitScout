@@ -55,6 +55,27 @@ export const alertEvaluationAdminRoutes = (app: FastifyInstance) => {
       }
 
       try {
+        if (isExecute) {
+          await logAuditEvent(pool, {
+            actorId: request.user?.user_id ?? 'unknown',
+            actorType: 'admin',
+            actorRole: request.user?.role ?? undefined,
+            action: 'ops.alerts.evaluate.requested',
+            entityType: parsed.data.alertId ? 'alert_rule' : 'alerts',
+            entityId: parsed.data.alertId ?? parsed.data.frequency ?? 'weekly',
+            category: 'admin',
+            severity: 'warning',
+            metadata: {
+              run_mode: mode,
+              alertId: parsed.data.alertId ?? null,
+              frequency: parsed.data.frequency ?? null,
+              ignoreSchedule: parsed.data.ignoreSchedule,
+              limit: parsed.data.limit,
+            },
+            ...getRequestContext(request),
+          })
+        }
+
         if (parsed.data.alertId) {
           const triggered = await evaluateAlert(pool, parsed.data.alertId, { dryRun })
           const response = {

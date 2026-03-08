@@ -4,7 +4,7 @@ import { createLogger } from '../../../../shared/logger'
 import { getRedisClient } from '../../../../shared/redis'
 import { getHealthCorridors, type ProviderId } from '../../../../shared/health-corridors'
 import { getCorridorTier, getTierSloMinutes } from '../../../../shared/corridor-tiers'
-import { requireAdmin } from '../../plugins/auth-plugin'
+import { requireSuperAdmin } from '../../plugins/auth-plugin'
 import { getProviderMetadata } from '../../services/provider-metadata'
 import { sendAdminWebhook } from '../../services/admin-webhooks'
 import { getErrorMessage } from '../../types/errors'
@@ -208,7 +208,7 @@ const fetchProviderHealth = async (
 export const registerProviderHealthRoutes = (app: FastifyInstance, options: ProviderHealthOptions) => {
   const logger = createLogger(`plane-a.ops.${options.providerId}-health`)
 
-  app.get(`/ops/${options.providerId}/health`, { preHandler: requireAdmin() }, async (_request, reply) => {
+  app.get(`/ops/${options.providerId}/health`, { preHandler: requireSuperAdmin() }, async (_request, reply) => {
     try {
       return await fetchProviderHealth(app, options)
     }
@@ -229,7 +229,7 @@ export const registerProviderHealthRoutes = (app: FastifyInstance, options: Prov
 export const registerProvidersHealthAggregateRoute = (app: FastifyInstance) => {
   const logger = createLogger('plane-a.ops.providers-health')
 
-  app.get('/ops/providers/health', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.get('/ops/providers/health', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = includeCorridorsSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
       reply.code(400)

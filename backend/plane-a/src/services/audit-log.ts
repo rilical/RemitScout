@@ -1,8 +1,9 @@
 import type { FastifyRequest } from 'fastify'
-import type { Pool } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { randomUUID } from 'crypto'
 import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
+import { resolveClientIp } from '../plugins/ip-allowlist'
 
 const logger = createLogger('plane-a.audit-log')
 
@@ -32,17 +33,13 @@ export const getRequestContext = (request?: FastifyRequest) => {
   if (!request) {
     return {}
   }
-  const forwarded = request.headers['x-forwarded-for']
-  const ipAddress =
-    typeof forwarded === 'string'
-      ? forwarded.split(',')[0]?.trim()
-      : request.ip || undefined
+  const headers = request.headers ?? {}
 
   return {
-    ipAddress,
-    userAgent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined,
+    ipAddress: resolveClientIp(request) ?? undefined,
+    userAgent: typeof headers['user-agent'] === 'string' ? headers['user-agent'] : undefined,
     requestId: typeof request.id === 'string' ? request.id : undefined,
-    sessionId: typeof request.headers['x-session-id'] === 'string' ? request.headers['x-session-id'] : undefined,
+    sessionId: typeof headers['x-session-id'] === 'string' ? headers['x-session-id'] : undefined,
   }
 }
 
@@ -63,7 +60,7 @@ const computeChanges = (
   return Object.keys(changes).length > 0 ? changes : null
 }
 
-export const logAuditEvent = async (pool: Pool, input: AuditLogInput): Promise<string> => {
+export const logAuditEvent = async (pool: Pool | PoolClient, input: AuditLogInput): Promise<string> => {
   const eventId = `evt_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${randomUUID().slice(0, 8)}`
   const changes = computeChanges(input.beforeSnapshot, input.afterSnapshot)
 

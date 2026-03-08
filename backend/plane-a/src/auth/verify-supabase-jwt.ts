@@ -53,19 +53,89 @@ const enforceMaxTokenAge = (token: string): AuthError | null => {
   }
 }
 
-const enforceEmailConfirmation = (token: string): AuthError | null => {
+const asRecord = (value: unknown): Record<string, unknown> | undefined => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined
+  }
+  return value as Record<string, unknown>
+}
+
+const isTruthyTimestamp = (value: unknown) => {
+  if (typeof value === 'string') return value.trim().length > 0
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+}
+
+const isVerifiedFlag = (value: unknown) => {
+  return value === true || value === 'true'
+}
+
+const hasConfirmedEmailClaim = (claims?: Record<string, unknown>): boolean => {
+  if (!claims) return false
+  if (isTruthyTimestamp(claims.email_confirmed_at) || isTruthyTimestamp(claims.confirmed_at)) {
+    return true
+  }
+  if (isVerifiedFlag(claims.email_verified)) {
+    return true
+  }
+
+  const userMetadata = asRecord(claims.user_metadata)
+  if (isVerifiedFlag(userMetadata?.email_verified)) {
+    return true
+  }
+
+  const identities = Array.isArray(claims.identities) ? claims.identities : []
+  return identities.some((identity) => {
+    const row = asRecord(identity)
+    return (
+      isTruthyTimestamp(row?.email_confirmed_at) ||
+      isTruthyTimestamp(row?.confirmed_at) ||
+      isVerifiedFlag(row?.email_verified)
+    )
+  })
+}
+
+const enforceEmailConfirmation = (claims?: Record<string, unknown>): AuthError | null => {
   if (!config.planeA.requireEmailConfirmation) return null
-  try {
-    const payload = decodeJwt(token)
-    if (!payload.email_confirmed_at) {
-      return makeError('email_not_confirmed', 'Email not confirmed. Please check your inbox.')
-    }
-    return null
-  } catch (error) {
-    logger.warn('supabase_email_confirmation_check_failed', {
-      error: error instanceof Error ? error.message : String(error),
+  if (!hasConfirmedEmailClaim(claims)) {
+    return makeError('email_not_confirmed', 'Email not confirmed. Please check your inbox.')
+  }
+  return null
+}
+
+const resolveEmailConfirmation = async (
+  token: string,
+  mode: typeof config.auth.supabase.verifyMode,
+  allowRemote: boolean,
+  userClaims?: Record<string, unknown>,
+): Promise<{ userClaims?: Record<string, unknown>; error: AuthError | null }> => {
+  const directError = enforceEmailConfirmation(userClaims)
+  if (!directError) {
+    return { userClaims, error: null }
+  }
+
+  if (!allowRemote) {
+    return { userClaims, error: directError }
+  }
+
+  const remoteUser = await remoteVerify(token)
+  if (!remoteUser) {
+    logger.warn('supabase_email_confirmation_remote_check_failed', {
+      mode,
     })
-    return makeError('invalid_token', 'Email confirmation check failed.')
+    return {
+      userClaims,
+      error: makeError('verification_failed', 'JWT verification failed'),
+    }
+  }
+
+  const remoteError = enforceEmailConfirmation(asRecord(remoteUser.claims))
+  if (remoteError) {
+    return { userClaims: asRecord(remoteUser.claims), error: remoteError }
+  }
+
+  return {
+    userClaims: asRecord(remoteUser.claims),
+    error: null,
   }
 }
 
@@ -93,7 +163,12 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
       if (user) {
         const ageError = enforceMaxTokenAge(token)
         if (ageError) return ageError
-        const emailError = enforceEmailConfirmation(token)
+        const { error: emailError } = await resolveEmailConfirmation(
+          token,
+          mode,
+          allowRemote,
+          asRecord(user.claims),
+        )
         if (emailError) return emailError
         return user
       }
@@ -101,7 +176,9 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
       logger.warn('supabase_jwt_signature_verification_failed', {
         mode,
       })
-      return makeError('invalid_token', 'JWT signature verification failed')
+      if (!allowRemote) {
+        return makeError('invalid_token', 'JWT signature verification failed')
+      }
     }
 
     if (!allowRemote) {
@@ -114,7 +191,7 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
     if (user) {
       const ageError = enforceMaxTokenAge(token)
       if (ageError) return ageError
-      const emailError = enforceEmailConfirmation(token)
+      const emailError = enforceEmailConfirmation(asRecord(user.claims))
       if (emailError) return emailError
       return user
     }

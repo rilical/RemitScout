@@ -5,7 +5,7 @@ import { requireAuth } from '../../plugins/auth-plugin'
 import { getStripeClient, isStripeConfigured } from '../../services/stripe-client'
 import { ensureUserPlan, getUserPlan } from '../../services/user-plan'
 import { getErrorMessage, isStripeError } from '../../types/errors'
-import { ValidationError } from '../../../../shared/errors'
+import { AppError, ValidationError } from '../../../../shared/errors'
 
 const planeAPool = getPool(config.db.planeAUrl)
 
@@ -23,7 +23,12 @@ export const billingHistoryRoutes = async (app: FastifyInstance) => {
       const plan = await getUserPlan(planeAPool, user.user_id)
 
       if (!plan || !plan.stripe_customer_id) {
-                throw new ValidationError('Invalid request', { details: { error: 'customer_not_found' } })
+        throw new ValidationError('Invalid request', {
+          details: {
+            error: 'customer_not_found',
+            message: 'No Stripe customer was found for this account.',
+          },
+        })
       }
 
       const stripe = getStripeClient()
@@ -43,6 +48,9 @@ export const billingHistoryRoutes = async (app: FastifyInstance) => {
         })),
       }
     } catch (error: unknown) {
+      if (error instanceof AppError) {
+        throw error
+      }
       const errorMessage = isStripeError(error)
         ? error.message
         : getErrorMessage(error)

@@ -5,6 +5,11 @@ import { createLogger } from '../../../shared/logger'
 import { query } from '../../../shared/db'
 import { getRedisClient } from '../../../shared/redis'
 import { ApiKeyRepository } from '../repositories'
+import {
+  DEFAULT_RETAIL_API_KEY_SCOPES,
+  normalizeRetailApiKeyScopes,
+} from '../routes/api-key-access'
+import type { ApiKeyRecord } from '../repositories/interfaces/api-key-repository.interface'
 
 export type ApiKeyContext = {
   key_id: string
@@ -32,6 +37,11 @@ export type ApiKeyRotateResult = {
   token: string
 }
 
+export type ApiKeyValidationResult =
+  | { status: 'active'; apiKey: ApiKeyContext }
+  | { status: 'revoked' }
+  | { status: 'invalid' }
+
 const logger = createLogger('plane-a.api-keys')
 const API_KEY_ROTATION_GRACE_SECONDS = Math.max(
   0,
@@ -46,26 +56,9 @@ const toBase64Url = (buffer: Buffer) => {
     .replace(/=+$/, '')
 }
 
-const normalizeScopes = (scopes?: string[]) => {
-  const list = Array.isArray(scopes) ? scopes : []
-  return Array.from(
-    new Set(
-      list
-        .map((scope) => scope.trim().toLowerCase())
-        .filter(Boolean),
-    ),
-  )
-}
-
-const ensureDefaultScopes = (scopes: string[]) => {
-  const set = new Set(scopes)
-  if (!set.has('indices:read')) {
-    set.add('indices:read')
-  }
-  if (!set.has('corridors:read')) {
-    set.add('corridors:read')
-  }
-  return Array.from(set)
+const resolveRequestedScopes = (scopes?: string[]) => {
+  const normalized = normalizeRetailApiKeyScopes(scopes)
+  return normalized.length > 0 ? normalized : [...DEFAULT_RETAIL_API_KEY_SCOPES]
 }
 
 export const generateApiKeyToken = (bytes = 32): string => {
@@ -74,6 +67,13 @@ export const generateApiKeyToken = (bytes = 32): string => {
 
 export const hashApiKey = (token: string): string => {
   return createHash('sha256').update(token).digest('hex')
+}
+
+const hashesMatch = (expectedHash: string, actualHash: string) => {
+  const left = Buffer.from(expectedHash, 'utf8')
+  const right = Buffer.from(actualHash, 'utf8')
+  if (left.length !== right.length) return false
+  return timingSafeEqual(left, right)
 }
 
 export const createApiKey = async (
@@ -85,7 +85,7 @@ export const createApiKey = async (
   const token = generateApiKeyToken()
   const keyHash = hashApiKey(token)
   const keyPrefix = token.slice(0, 8)
-  const scopes = ensureDefaultScopes(normalizeScopes(input.scopes))
+  const scopes = resolveRequestedScopes(input.scopes)
 
   const record = await repo.createKey({
     user_id: userId,
@@ -209,17 +209,17 @@ export const countActiveApiKeys = async (pool: Pool, userId: string): Promise<nu
   return repo.countActiveKeys(userId)
 }
 
-export const validateApiKey = async (pool: Pool, token: string): Promise<ApiKeyContext | null> => {
+export const validateApiKeyToken = async (
+  pool: Pool,
+  token: string,
+): Promise<ApiKeyValidationResult> => {
   const repo = new ApiKeyRepository(pool)
   const hash = hashApiKey(token)
   const prefix = token.slice(0, 8)
-  const candidates = await repo.listActiveKeysByPrefix(prefix)
-  let record = candidates.find((candidate) => {
+  const candidates = await repo.listKeysByPrefix(prefix)
+  let record: ApiKeyRecord | null = candidates.find((candidate) => {
     try {
-      const left = Buffer.from(candidate.key_hash, 'utf8')
-      const right = Buffer.from(hash, 'utf8')
-      if (left.length !== right.length) return false
-      return timingSafeEqual(left, right)
+      return hashesMatch(candidate.key_hash, hash)
     } catch (error) {
       logger.debug('api_key_hash_compare_failed', {
         key_id: candidate.key_id,
@@ -244,19 +244,10 @@ export const validateApiKey = async (pool: Pool, token: string): Promise<ApiKeyC
             name: string | null
             scopes: string[]
           }
-          const left = Buffer.from(parsed.key_hash, 'utf8')
-          const right = Buffer.from(hash, 'utf8')
-          if (left.length === right.length && timingSafeEqual(left, right)) {
-            record = {
-              key_id: parsed.key_id,
-              user_id: parsed.user_id,
-              key_prefix: parsed.key_prefix,
-              key_hash: parsed.key_hash,
-              name: parsed.name,
-              scopes: parsed.scopes ?? [],
-              created_at: new Date(0),
-              last_used_at: null,
-              revoked_at: null,
+          if (hashesMatch(parsed.key_hash, hash)) {
+            const currentRecord = await repo.getKeyById(parsed.key_id)
+            if (currentRecord && currentRecord.user_id === parsed.user_id) {
+              record = currentRecord
             }
           }
         }
@@ -269,7 +260,13 @@ export const validateApiKey = async (pool: Pool, token: string): Promise<ApiKeyC
     }
   }
 
-  if (!record) return null
+  if (!record) {
+    return { status: 'invalid' }
+  }
+
+  if (record.revoked_at) {
+    return { status: 'revoked' }
+  }
 
   try {
     await repo.markKeyUsed(record.key_id)
@@ -281,10 +278,18 @@ export const validateApiKey = async (pool: Pool, token: string): Promise<ApiKeyC
   }
 
   return {
-    key_id: record.key_id,
-    user_id: record.user_id,
-    key_prefix: record.key_prefix,
-    name: record.name,
-    scopes: record.scopes ?? [],
+    status: 'active',
+    apiKey: {
+      key_id: record.key_id,
+      user_id: record.user_id,
+      key_prefix: record.key_prefix,
+      name: record.name,
+      scopes: record.scopes ?? [],
+    },
   }
+}
+
+export const validateApiKey = async (pool: Pool, token: string): Promise<ApiKeyContext | null> => {
+  const result = await validateApiKeyToken(pool, token)
+  return result.status === 'active' ? result.apiKey : null
 }

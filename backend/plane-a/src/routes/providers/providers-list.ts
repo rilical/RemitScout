@@ -206,8 +206,9 @@ const _loadIndexPermissions = async (
 const _loadProviderWeights = async (
   corridorId: string,
   modelVersion: string,
+  methodProfile = 'standard_bank',
 ): Promise<ProviderWeightSnapshot> => {
-  const cacheKey = `${corridorId}:${modelVersion}`
+  const cacheKey = `${corridorId}:${modelVersion}:${methodProfile}`
   const cached = await providerWeightCache.get(cacheKey)
   if (cached) return cached
 
@@ -219,8 +220,8 @@ const _loadProviderWeights = async (
   }>(
     `SELECT provider_id, weight, window_days, weight_confidence
      FROM gold.provider_weight_snapshot
-     WHERE corridor_id = $1 AND model_version = $2`,
-    [corridorId, modelVersion],
+     WHERE corridor_id = $1 AND model_version = $2 AND method_profile = $3::method_profile`,
+    [corridorId, modelVersion, methodProfile],
     planeAPool,
   )
 
@@ -230,8 +231,8 @@ const _loadProviderWeights = async (
   }>(
     `SELECT provider_id, weight
      FROM gold.provider_weight_snapshot
-     WHERE corridor_id = $1 AND model_version = $2`,
-    [GLOBAL_WEIGHT_CORRIDOR_ID, modelVersion],
+     WHERE corridor_id = $1 AND model_version = $2 AND method_profile = $3::method_profile`,
+    [GLOBAL_WEIGHT_CORRIDOR_ID, modelVersion, methodProfile],
     planeAPool,
   )
 
@@ -359,6 +360,13 @@ type ExcludedProviderDetails = {
   ageSeconds: number | null
   refreshAttempted: boolean
   refreshRequestIds: string[]
+  eligibleByRights: boolean
+  capabilitySupported: boolean | null
+  capabilitySource: string | null
+  capabilityPayinMethods: string[] | null
+  capabilityPayoutMethods: string[] | null
+  quoteCount: number
+  hasRequestedMethod: boolean
 }
 
 type ExcludedProviderDetailed = {
@@ -374,6 +382,13 @@ type ProvidersRefreshInfo = {
   providers: string[]
   requestIds: string[]
   dedupedProviders?: string[]
+}
+
+type ProviderCapabilityEvidence = {
+  supported: boolean | null
+  source: string | null
+  payinMethods: string[] | null
+  payoutMethods: string[] | null
 }
 
 type ProvidersResponseBase = {
@@ -396,6 +411,8 @@ type ProvidersResponseBase = {
   }
   availableMethods?: AvailableMethod[]
   availableMethodsByProvider?: Record<string, AvailableMethod[]>
+  supportedMethods?: AvailableMethod[]
+  supportedMethodsByProvider?: Record<string, AvailableMethod[]>
   excludedProviders?: Array<{ provider: string; reason: ExcludedProviderReason }>
   excludedProvidersDetailed?: ExcludedProviderDetailed[]
   refresh?: ProvidersRefreshInfo
@@ -1010,6 +1027,8 @@ const providersGetSchema = {
         },
         availableMethods: { type: 'array', items: { type: 'string' } },
         availableMethodsByProvider: { type: 'object', additionalProperties: { type: 'array', items: { type: 'string' } } },
+        supportedMethods: { type: 'array', items: { type: 'string' } },
+        supportedMethodsByProvider: { type: 'object', additionalProperties: { type: 'array', items: { type: 'string' } } },
         excludedProviders: {
           type: 'array',
           items: {
@@ -1041,7 +1060,7 @@ const providersGetSchema = {
         data: { type: 'array', items: { type: 'object', additionalProperties: true } },
         providerQuotes: { type: 'array', items: { type: 'object', additionalProperties: true } },
       },
-      required: ['comparisonId', 'start', 'updatedAt', 'corridor', 'amount', 'bucketUsed', 'approximate', 'data', 'cache', 'availableMethods'],
+      required: ['comparisonId', 'start', 'updatedAt', 'corridor', 'amount', 'bucketUsed', 'approximate', 'data', 'cache', 'availableMethods', 'supportedMethods'],
       additionalProperties: true,
     },
     400: {
@@ -1212,7 +1231,9 @@ export const providersListRoutes = async (app: FastifyInstance) => {
     const amountKey = requestedAmount ?? amountBucket
     const requestedMethod = resolveRequestedMethod(method, payout)
     const availableMethods = new Set<AvailableMethod>()
-    const methodsByProvider = new Map<string, Set<AvailableMethod>>()
+    const availableMethodsByProviderMap = new Map<string, Set<AvailableMethod>>()
+    const supportedMethods = new Set<AvailableMethod>()
+    const supportedMethodsByProviderMap = new Map<string, Set<AvailableMethod>>()
 
     try {
       const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridorId)
@@ -1224,7 +1245,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       const cacheTtlSeconds = maxAgeSeconds > 0
         ? Math.min(dynamicCacheTtlSeconds, maxAgeSeconds)
         : dynamicCacheTtlSeconds
-      const cacheKey = `providers:v2:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${staleGraceSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
+      const cacheKey = `providers:v3:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${staleGraceSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
       if (!bypassCache) {
         const cached = await providersCache.get(cacheKey)
         if (cached !== null) {
@@ -1269,16 +1290,26 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       const supportedProviderSet = new Set(
         supportedProviderIds.map(id => normalizeProviderId(id)).filter(Boolean),
       )
-      const capabilityMethods = new Set<AvailableMethod>()
       const capabilityProviderSet = new Set<string>()
+      const capabilityEvidenceByProviderId = new Map<string, ProviderCapabilityEvidence>()
 
       try {
         const capabilityRows = await corridorCapabilityRepository.listByCorridor(corridorId)
         for (const row of capabilityRows) {
+          const providerId = row?.provider_id ? normalizeProviderId(row.provider_id) : ''
+          if (providerId && supportedProviderSet.size && !supportedProviderSet.has(providerId)) {
+            continue
+          }
+          if (providerId) {
+            capabilityEvidenceByProviderId.set(providerId, {
+              supported: row?.is_supported === true ? true : row?.is_supported === false ? false : null,
+              source: typeof row?.source === 'string' ? row.source : null,
+              payinMethods: Array.isArray(row?.payin_methods) ? row.payin_methods : null,
+              payoutMethods: Array.isArray(row?.payout_methods) ? row.payout_methods : null,
+            })
+          }
           if (!row?.is_supported) continue
-          const providerId = row.provider_id ? normalizeProviderId(row.provider_id) : ''
           if (!providerId) continue
-          if (supportedProviderSet.size && !supportedProviderSet.has(providerId)) continue
           capabilityProviderSet.add(providerId)
           const metadata = getProviderMetadata(providerId)
           if (!metadata || metadata.type === 'BANK') continue
@@ -1287,12 +1318,12 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           for (const payoutMethod of payoutMethods) {
             const methodValue = toAvailableMethod(payoutMethod)
             if (!methodValue) continue
-            capabilityMethods.add(methodValue)
+            supportedMethods.add(methodValue)
             if (providerKey) {
-              if (!methodsByProvider.has(providerKey)) {
-                methodsByProvider.set(providerKey, new Set())
+              if (!supportedMethodsByProviderMap.has(providerKey)) {
+                supportedMethodsByProviderMap.set(providerKey, new Set())
               }
-              methodsByProvider.get(providerKey)!.add(methodValue)
+              supportedMethodsByProviderMap.get(providerKey)!.add(methodValue)
             }
           }
         }
@@ -1321,10 +1352,6 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           message: 'No providers currently support this corridor.',
           corridor: corridorId,
         } })
-      }
-
-      for (const methodValue of capabilityMethods) {
-        availableMethods.add(methodValue)
       }
 
       let bucketUsed = amountBucket
@@ -1357,17 +1384,18 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         }
       }
 
+      const corridorQuotes = quotes.filter((quote) => {
+        const metadata = getProviderMetadata(quote.provider_id)
+        return metadata && metadata.type !== 'BANK'
+      })
+
+      quotes = corridorQuotes
       if (allowedProviderSet.size) {
         quotes = quotes.filter((quote) => {
           const providerId = quote.provider_id ? normalizeProviderId(quote.provider_id) : ''
           return providerId && allowedProviderSet.has(providerId)
         })
       }
-
-      quotes = quotes.filter((quote) => {
-        const metadata = getProviderMetadata(quote.provider_id)
-        return metadata && metadata.type !== 'BANK'
-      })
 
       for (const quote of quotes) {
         const methodValue = toAvailableMethod(quote.payout)
@@ -1376,18 +1404,24 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         const metadata = getProviderMetadata(quote.provider_id)
         if (!metadata || metadata.type === 'BANK') continue
         const key = metadata.slug
-        if (!methodsByProvider.has(key)) {
-          methodsByProvider.set(key, new Set())
+        if (!availableMethodsByProviderMap.has(key)) {
+          availableMethodsByProviderMap.set(key, new Set())
         }
-        methodsByProvider.get(key)!.add(methodValue)
+        availableMethodsByProviderMap.get(key)!.add(methodValue)
       }
 
       const availableMethodsByProvider: Record<string, AvailableMethod[]> = {}
-      for (const [providerKey, methods] of methodsByProvider.entries()) {
+      for (const [providerKey, methods] of availableMethodsByProviderMap.entries()) {
         availableMethodsByProvider[providerKey] = orderMethods(methods)
       }
 
+      const supportedMethodsByProvider: Record<string, AvailableMethod[]> = {}
+      for (const [providerKey, methods] of supportedMethodsByProviderMap.entries()) {
+        supportedMethodsByProvider[providerKey] = orderMethods(methods)
+      }
+
       const excludedProvidersBySlug = new Map<string, ExcludedProviderReason>()
+      const hasCapabilityEvidence = capabilityEvidenceByProviderId.size > 0
 
       // Capability-based exclusions (only meaningful when capability gating is active).
       if (capabilityProviderSet.size > 0) {
@@ -1417,13 +1451,15 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       }
 
       const providerHasAnyQuote = new Set<string>()
+      const providerQuoteCountBySlug = new Map<string, number>()
       const providerRequestedMethodAgeBySlug = new Map<string, number>()
       if (allowedProviderSlugs.size > 0) {
-        for (const quote of quotes) {
+        for (const quote of corridorQuotes) {
           const metadata = getProviderMetadata(quote.provider_id)
           if (!metadata || metadata.type === 'BANK') continue
           const slug = metadata.slug
           providerHasAnyQuote.add(slug)
+          providerQuoteCountBySlug.set(slug, (providerQuoteCountBySlug.get(slug) ?? 0) + 1)
           const methodValue = toAvailableMethod(quote.payout)
           if (methodValue && methodValue === requestedMethod) {
             const ageSeconds = toAgeSeconds(quote.collected_at)
@@ -1447,8 +1483,16 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       }
 
       for (const slug of allowedProviderSlugs.values()) {
+        const providerId = providerIdBySlug.get(slug) ?? ''
+        const capabilityEvidence = providerId
+          ? (capabilityEvidenceByProviderId.get(providerId) ?? null)
+          : null
         if (!providerHasAnyQuote.has(slug)) {
-          excludedProvidersBySlug.set(slug, 'no_quotes')
+          if (capabilityEvidence?.supported === false || (hasCapabilityEvidence && capabilityEvidence?.supported !== true)) {
+            excludedProvidersBySlug.set(slug, 'capability')
+          } else {
+            excludedProvidersBySlug.set(slug, 'no_quotes')
+          }
         } else if (requestedMethod && !providerHasRequestedMethod.has(slug)) {
           // Only set method mismatch if a stronger exclusion isn't already recorded.
           if (!excludedProvidersBySlug.has(slug)) {
@@ -1571,6 +1615,9 @@ export const providersListRoutes = async (app: FastifyInstance) => {
               : null
             const requestIds = refreshRequestIdsByProvider.get(provider) ?? []
             const refreshAttempted = refreshAttemptedProviders.has(provider)
+            const capabilityEvidence = providerId
+              ? (capabilityEvidenceByProviderId.get(providerId) ?? null)
+              : null
             return {
               provider,
               reason,
@@ -1581,6 +1628,13 @@ export const providersListRoutes = async (app: FastifyInstance) => {
                 ageSeconds,
                 refreshAttempted,
                 refreshRequestIds: requestIds,
+                eligibleByRights: providerId ? supportedProviderSet.has(providerId) : false,
+                capabilitySupported: capabilityEvidence?.supported ?? null,
+                capabilitySource: capabilityEvidence?.source ?? null,
+                capabilityPayinMethods: capabilityEvidence?.payinMethods ?? null,
+                capabilityPayoutMethods: capabilityEvidence?.payoutMethods ?? null,
+                quoteCount: providerQuoteCountBySlug.get(provider) ?? 0,
+                hasRequestedMethod: providerHasRequestedMethod.has(provider),
               },
             }
           })
@@ -1636,8 +1690,10 @@ export const providersListRoutes = async (app: FastifyInstance) => {
             age_seconds: null,
             fresh: false,
           },
-          availableMethods: orderMethods(availableMethods),
-          availableMethodsByProvider,
+          availableMethods: [],
+          availableMethodsByProvider: {},
+          supportedMethods: orderMethods(supportedMethods),
+          supportedMethodsByProvider,
           excludedProviders,
           excludedProvidersDetailed,
           refresh: refreshInfo,
@@ -1726,12 +1782,12 @@ export const providersListRoutes = async (app: FastifyInstance) => {
 
         const deliveryLabel = quote.deliveryLabel
 
-        const providerMethods = methodsByProvider.get(pq.psp.slug)
+        const providerMethods = availableMethodsByProviderMap.get(pq.psp.slug)
         const methods = (providerMethods && providerMethods.size
           ? orderMethods(providerMethods)
           : (() => {
               const fallback = toAvailableMethod(quote.originalQuote.payout)
-              return fallback ? [fallback] : ['bank']
+              return fallback ? [fallback] : []
             })()) as FrontendProviderQuote['methods']
         const requestedMethodAgeSeconds = providerRequestedMethodAgeBySlug.get(pq.psp.slug) ?? null
         const isStale = requestedMethodAgeSeconds !== null
@@ -1990,6 +2046,8 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         },
         availableMethods: orderMethods(availableMethods),
         availableMethodsByProvider,
+        supportedMethods: orderMethods(supportedMethods),
+        supportedMethodsByProvider,
         excludedProviders,
         excludedProvidersDetailed,
         refresh: refreshInfo,
@@ -2070,6 +2128,8 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           },
           availableMethods: [],
           availableMethodsByProvider: {},
+          supportedMethods: [],
+          supportedMethodsByProvider: {},
           excludedProviders: [],
           excludedProvidersDetailed: [],
           refresh: {

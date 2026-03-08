@@ -24,7 +24,7 @@ describe('PulseChartFull', () => {
     vi.clearAllMocks()
   })
 
-  const mountChart = async (pulseLevel: 'none' | 'lite' | 'full') => {
+  const mountChart = async (pulseLevel: 'none' | 'lite' | 'full', canEmbed = true) => {
     const metadata = getChartById('all-in-cost')
     if (!metadata) throw new Error('all-in-cost chart metadata missing')
 
@@ -46,6 +46,7 @@ describe('PulseChartFull', () => {
         chartId: 'all-in-cost',
         filters,
         pulseLevel,
+        canEmbed,
       },
       global: {
         stubs: {
@@ -126,5 +127,21 @@ describe('PulseChartFull', () => {
     expect(labels).toContain('30D')
     expect(labels).toContain('90D')
     expect(labels).toContain('1Y')
+  })
+
+  it('does not render unsupported share or download controls', async () => {
+    const wrapper = await mountChart('full')
+    const labels = wrapper.findAll('button').map(button => button.text().trim())
+
+    expect(labels).not.toContain('Share')
+    expect(labels).not.toContain('Download')
+    expect(labels).toContain('Embed')
+  })
+
+  it('hides the embed control when embed capability is disabled', async () => {
+    const wrapper = await mountChart('full', false)
+
+    const labels = wrapper.findAll('button').map(button => button.text().trim())
+    expect(labels).not.toContain('Embed')
   })
 })

@@ -24,6 +24,8 @@ describe('pulse screener route', () => {
 
     app = {
       get: vi.fn(),
+      post: vi.fn(),
+      delete: vi.fn(),
       container: {
         pool: {},
         repositories: {
@@ -45,6 +47,7 @@ describe('pulse screener route', () => {
 
   it('returns rows with dataAvailable=false when cache entries are missing', async () => {
     mockGetEntries.mockResolvedValue([])
+    mockQuery.mockResolvedValue({ rows: [] })
 
     const handler = vi
       .mocked(app.get)
@@ -62,7 +65,11 @@ describe('pulse screener route', () => {
     expect(result.rows[0].updatedAt).toBeNull()
     expect(result.rows[0].bestProvider).toBeNull()
     expect(result.rows[0].smartSendLevel).toBeNull()
-    expect(mockQuery).not.toHaveBeenCalled()
+    // Screener makes 2 batch queries: stress (triangulated_index) + indices (cdp_daily) fallback
+    expect(mockQuery).toHaveBeenCalledTimes(2)
+    const querySqls = mockQuery.mock.calls.map((c: any[]) => c[0] as string)
+    expect(querySqls.some((sql: string) => sql.includes('FROM gold_export.triangulated_index'))).toBe(true)
+    expect(querySqls.some((sql: string) => sql.includes('FROM gold_export.cdp_daily'))).toBe(true)
   })
 
   it('returns parsed screener metrics when all required cache entries exist', async () => {
@@ -130,16 +137,19 @@ describe('pulse screener route', () => {
     ])
 
     const bucket = new Date('2026-02-01T04:00:00.000Z')
-    mockQuery.mockResolvedValue({
-      rows: [
-        {
-          corridor_id: 'US-PH-USD-PHP',
-          current_bucket: bucket,
-          current_avg_rate: 56,
-          prev_avg_rate: 50,
-        },
-      ],
-    })
+    // mockQuery is called for: movers, stress, indices fallback
+    mockQuery
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            corridor_id: 'US-PH-USD-PHP',
+            current_bucket: bucket,
+            current_avg_rate: 56,
+            prev_avg_rate: 50,
+          },
+        ],
+      })
+      .mockResolvedValue({ rows: [] })
 
     const handler = vi
       .mocked(app.get)
@@ -154,9 +164,7 @@ describe('pulse screener route', () => {
     expect(result.rows[0].moverDeltaPct24h).toBeCloseTo(0.12)
     expect(result.rows[0].moverTimestampBucket).toBe(bucket.toISOString())
     expect(mockQuery).toHaveBeenCalled()
-    const sql = mockQuery.mock.calls[0][0] as string
-    expect(sql).toContain('FROM gold_export.corridor_rates')
-    expect(sql).toContain('corridor_id = ANY($1)')
+    const querySqls = mockQuery.mock.calls.map((c: any[]) => c[0] as string)
+    expect(querySqls.some((sql: string) => sql.includes('FROM gold_export.corridor_rates'))).toBe(true)
   })
 })
-

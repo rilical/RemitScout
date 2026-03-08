@@ -198,7 +198,7 @@ describe('alert-evaluator', () => {
     expect(result).toBe(true)
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('FROM gold_export.cdp_daily'),
-      ['US-MX-USD-MXN', expect.any(Number)],
+      ['US-MX-USD-MXN', 500, 'standard_bank'],
       mockPool,
     )
     expect(mockAlertRepository.updateAlertState).toHaveBeenCalledWith(

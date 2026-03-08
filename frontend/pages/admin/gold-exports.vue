@@ -45,6 +45,8 @@
         />
       </header>
 
+      <AdminSurfaceOverview :model="surfaceOverview" />
+
       <section class="rounded-2xl bg-surface p-6 shadow-sm">
         <h2 class="text-body-lg font-semibold text-rs-fg">Filters</h2>
         <div class="mt-4 grid gap-4 md:grid-cols-4">
@@ -98,9 +100,9 @@
             >
           </label>
           <label class="text-body-sm text-rs-muted">
-            As-of date (point-in-time query)
+            Snapshot date
             <input
-              v-model="filters.as_of"
+              v-model="filters.date"
               type="date"
               class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
               @change="applyFilters"
@@ -356,6 +358,31 @@ No corrections recorded.
             Data limited to {{ chartDataWindow.returnedDays }} days — full requested range not yet available.
           </div>
 
+          <div
+            v-if="suppressedHistory.length"
+            class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-body-sm text-amber-800"
+          >
+            <div class="font-semibold">Suppressed history detected</div>
+            <p class="mt-1">
+              {{ suppressedHistory.length }} point(s) exist for this corridor, but they are suppressed from the visible chart.
+            </p>
+            <div class="mt-3 grid gap-2 md:grid-cols-2">
+              <div
+                v-for="point in suppressedHistory.slice(0, 6)"
+                :key="`${point.date}:${point.suppressionReason || 'unknown'}`"
+                class="rounded-lg border border-amber-200 bg-white px-3 py-2"
+              >
+                <div class="font-semibold text-rs-fg">{{ point.date }}</div>
+                <div class="text-xs text-amber-800">
+                  {{ point.suppressionReason || 'suppressed' }}
+                  <span v-if="point.providerCount !== undefined && point.providerCount !== null">
+                    · providers={{ point.providerCount }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <p class="mt-3 text-body-sm text-rs-muted">
             TEER = effective rate, RCI/RVI trend from `/indices/series`.
           </p>
@@ -371,10 +398,11 @@ import type { IndexSeriesResponse } from '~/types/indices'
 import type { ChartSeries } from '~/types/pulse'
 import type { CorrectionLedgerEntry } from '~/types/data-quality'
 import { getCorrectionLedger } from '~/lib/opsApi'
+import type { AdminSurfaceOverviewModel } from '~/utils/adminSurfaceStatus'
+import { formatAdminSurfaceAge, getFreshnessTone } from '~/utils/adminSurfaceStatus'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
-const runtimeConfig = useRuntimeConfig()
 const { formatTimestamp, formatPercent, formatNumber: formatAdminNumber } = useAdminFormat()
 
 useAdminPage({
@@ -479,13 +507,14 @@ const chartSeries = ref<ChartSeries[]>([])
 const chartDataWindow = ref<IndexSeriesResponse['dataWindow'] | null>(null)
 const chartLoading = ref(false)
 const chartError = ref<string | null>(null)
+const suppressedHistory = ref<IndexSeriesResponse['series']>([])
 
 const filters = reactive({
   q: '',
   suppressed: '' as '' | '0' | '1',
   sendCurrencies: [] as string[],
   methodology: '' as string,
-  as_of: '' as string,
+  date: '' as string,
 })
 
 const corrections = ref<CorrectionLedgerEntry[]>([])
@@ -524,6 +553,7 @@ const loadChart = async () => {
 
   chartLoading.value = true
   chartError.value = null
+  suppressedHistory.value = []
 
   try {
     const data = await getIndexSeries({
@@ -532,6 +562,7 @@ const loadChart = async () => {
       method_profile: meta.method_profile,
       days: 90,
     })
+    suppressedHistory.value = data.series.filter(point => point.suppressionFlag)
 
     const toPoints = (extractor: (point: typeof data.series[number]) => number | null) =>
       data.series
@@ -572,7 +603,9 @@ const loadChart = async () => {
     chartSeries.value = series.filter(item => item.points.length > 0)
     chartDataWindow.value = data.dataWindow ?? null
     if (!chartSeries.value.length) {
-      chartError.value = 'No index history is available for this corridor yet.'
+      chartError.value = suppressedHistory.value.length
+        ? 'History exists, but every point in this window is suppressed by publication thresholds.'
+        : 'No index history is available for this corridor yet.'
     }
   }
   catch (err: unknown) {
@@ -594,11 +627,11 @@ const buildQuery = (includePaging = true) => {
     method_profile: meta.method_profile,
   }
   const q = filters.q.trim()
+  if (filters.date) query.date = filters.date
   if (q) query.q = q
   if (filters.suppressed) query.suppressed = filters.suppressed
   if (filters.sendCurrencies.length > 0) query.send_currencies = filters.sendCurrencies.join(',')
   if (filters.methodology) query.methodology = filters.methodology
-  if (filters.as_of) query.as_of = filters.as_of
 
   if (includePaging) {
     query.limit = pagination.limit
@@ -643,6 +676,9 @@ const load = async () => {
     pagination.offset = response.pagination.offset
 
     rows.value = response.rows || []
+    if (!filters.date && response.meta.date) {
+      filters.date = response.meta.date
+    }
   }
   catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Failed to load Gold exports.'
@@ -717,29 +753,22 @@ const downloadPdf = async () => {
 
   const query = buildQuery(false)
   query.format = 'pdf'
-  const apiBase = runtimeConfig.public.apiBase || '/api'
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined) params.set(key, String(value))
   }
-  const url = `${apiBase}/ops/gold/exports/cdp-daily/export?${params.toString()}`
 
   downloading.value = true
   error.value = null
   try {
-    const response = await fetch(url, {
+    const response = await request<Blob>(`/ops/gold/exports/cdp-daily/export?${params.toString()}`, {
       method: 'GET',
-      credentials: 'include',
       headers: { accept: 'application/pdf' },
+      responseType: 'blob',
+      timeoutMs: 60000,
+      retries: 0,
     })
-
-    if (!response.ok) {
-      const body = await response.text()
-      throw new Error(body || `HTTP ${response.status}`)
-    }
-
-    const blob = await response.blob()
-    const output = URL.createObjectURL(blob)
+    const output = URL.createObjectURL(response)
     const anchor = document.createElement('a')
     anchor.href = output
     const suffix = meta.date ? meta.date : 'unknown'
@@ -772,6 +801,61 @@ const loadCorrections = async () => {
 const formatPercentRatio = (value?: number | null) => {
   return formatPercent(value, 2)
 }
+
+const surfaceOverview = computed<AdminSurfaceOverviewModel>(() => {
+  const freshnessTone = getFreshnessTone(meta.last_updated_at, { watchMinutes: 240, criticalMinutes: 720 })
+  const suppressionWatch = summary.suppressed_ratio >= 0.35
+  return {
+    runtimeLabel: summary.corridors_total > 0 ? 'Gold snapshot available' : 'Gold snapshot warming',
+    runtimeTone: summary.corridors_total > 0 ? (suppressionWatch ? 'watch' : 'healthy') : 'watch',
+    runtimeDetail: summary.corridors_total > 0
+      ? 'This surface reads directly from gold_export.cdp_daily and the indices history API.'
+      : 'No rows were returned for the selected slice.',
+    freshnessLabel: meta.last_updated_at ? formatAdminSurfaceAge(meta.last_updated_at) : 'No snapshot timestamp',
+    freshnessTone,
+    freshnessDetail: meta.last_updated_at ? `Snapshot updated ${formatTimestamp(meta.last_updated_at)}.` : 'The current slice has not reported a snapshot timestamp.',
+    lastJobLabel: meta.last_updated_at ? formatTimestamp(meta.last_updated_at) : 'No successful export job detected',
+    lastJobDetail: `Snapshot date ${meta.date || 'n/a'} · ${meta.method_profile} · amount bucket ${meta.amount_bucket}`,
+    stats: [
+      { label: 'Corridors', value: String(summary.corridors_total) },
+      { label: 'Available ratio', value: formatPercent(summary.available_ratio) },
+      { label: 'Suppressed ratio', value: formatPercent(summary.suppressed_ratio) },
+      { label: 'Corrections loaded', value: String(corrections.value.length) },
+    ],
+    dependencies: [
+      {
+        label: 'CDP daily snapshot',
+        status: summary.corridors_total > 0 ? 'healthy' : 'watch',
+        detail: summary.corridors_total > 0 ? 'The slice returned snapshot rows.' : 'No snapshot rows matched the current slice.',
+      },
+      {
+        label: 'Indices history API',
+        status: chartError.value && !suppressedHistory.value.length ? 'watch' : 'healthy',
+        detail: suppressedHistory.value.length
+          ? 'History exists, but some or all points are suppressed.'
+          : chartSeries.value.length > 0
+            ? 'Chart history is available for the selected corridor.'
+            : chartError.value || 'Select a corridor to inspect history.',
+      },
+      {
+        label: 'Correction ledger',
+        status: corrections.value.length > 0 ? 'healthy' : 'watch',
+        detail: corrections.value.length > 0 ? 'Historical corrections are available for operator review.' : 'No corrections were returned in the current window.',
+      },
+    ],
+    nextActions: [
+      { label: 'Use snapshot date and methodology filters to validate the exact publish contract you intend to export.' },
+      { label: 'Inspect suppressed history before concluding that a corridor has no trend line.' },
+      { label: 'Treat a high suppression ratio as a publication-readiness signal, not a frontend rendering issue.' },
+    ],
+    emptyState: rows.value.length === 0
+      ? {
+          title: 'No rows matched this Gold slice.',
+          body: 'Check the snapshot date, methodology version, suppression filter, and send-currency chips before treating this as a pipeline outage.',
+        }
+      : null,
+  }
+})
 
 onMounted(() => {
   void load()

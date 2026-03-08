@@ -2,7 +2,13 @@ import type { Pool } from 'pg'
 import { randomUUID } from 'node:crypto'
 import { createLogger } from '../../../shared/logger'
 import type { JobHandler, JobContext, JobResult, JobStatus } from '../../../shared/types/job'
-import type { ObservationEnvelope, ObservationType, ObservationConfidence } from '../../../shared/types/observation'
+import {
+  getObservationSignalLayer,
+  type ObservationEnvelope,
+  type ObservationType,
+  type ObservationConfidence,
+  type ObservationOwnerKind,
+} from '../../../shared/types/observation'
 import { getCurrentTraceCorrelation } from '../../../shared/types/correlation'
 
 /**
@@ -165,22 +171,35 @@ export abstract class BaseJobHandler implements JobHandler {
 
     await pool.query(
       `INSERT INTO silver.observation
-       (observation_id, module_id, provider_id, type, corridor_id, amount_bucket,
-        confidence, observed_at, ingested_at, ingestion_run_id, payload, trace_id, parent_span_id, schema_version)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10, $11, $12, 1)`,
+       (observation_id, module_id, provider_id, owner_kind, owner_id, type, signal_layer,
+        capture_method, parser_version, source_ref, corridor_id, amount_bucket,
+        confidence, observed_at, ingested_at, ingestion_run_id, payload, lineage,
+        trace_id, parent_span_id, schema_version)
+       VALUES ($1, $2, $3, $4, $5, $6, $7,
+               $8, $9, $10, $11, $12,
+               $13, $14, NOW(), $15, $16, $17,
+               $18, $19, $20)`,
       [
         observationId,
         envelope.moduleId,
         envelope.providerId,
+        envelope.ownerKind,
+        envelope.ownerId,
         envelope.type,
+        envelope.signalLayer,
+        envelope.captureMethod,
+        envelope.parserVersion,
+        envelope.sourceRef,
         envelope.corridorId,
         envelope.amountBucket,
         envelope.confidence,
         envelope.observedAt,
         envelope.ingestionRunId,
         JSON.stringify(envelope.payload),
+        JSON.stringify(envelope.lineage ?? {}),
         envelope.trace?.traceId ?? null,
         envelope.trace?.parentSpanId ?? null,
+        1,
       ],
     )
 
@@ -201,18 +220,31 @@ export abstract class BaseJobHandler implements JobHandler {
       amountBucket?: number
       confidence?: ObservationConfidence
       ingestionRunId: string
+      ownerKind?: ObservationOwnerKind
+      ownerId?: string
+      captureMethod?: string | null
+      parserVersion?: string | null
+      sourceRef?: string | null
+      lineage?: Record<string, unknown>
     },
   ): Omit<ObservationEnvelope<T>, 'observationId' | 'ingestedAt' | 'schemaVersion'> {
     return {
       moduleId,
       providerId,
+      ownerKind: options.ownerKind ?? 'provider',
+      ownerId: options.ownerId ?? providerId,
       type,
+      signalLayer: getObservationSignalLayer(type),
+      captureMethod: options.captureMethod ?? null,
+      parserVersion: options.parserVersion ?? null,
+      sourceRef: options.sourceRef ?? null,
       corridorId: options.corridorId ?? null,
       amountBucket: options.amountBucket ?? null,
       confidence: options.confidence ?? 'medium',
       observedAt: new Date().toISOString(),
       ingestionRunId: options.ingestionRunId,
       payload,
+      lineage: options.lineage ?? {},
       trace: getCurrentTraceCorrelation(),
     }
   }

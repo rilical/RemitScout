@@ -104,18 +104,19 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   })
   // CloudWatch PutMetricData does not support resource-level permissions — '*' is required by AWS.
   // We scope by condition key instead to limit to our namespace.
+  const remitScoutCloudWatchNamespacePattern = 'RemitScout*'
   const cloudWatchPolicy = new PolicyStatement({
     actions: ['cloudwatch:PutMetricData'],
     resources: ['*'],
     conditions: {
-      StringEquals: { 'cloudwatch:namespace': 'RemitScout' },
+      StringLike: { 'cloudwatch:namespace': remitScoutCloudWatchNamespacePattern },
     },
   })
   const cloudWatchReadPolicy = new PolicyStatement({
     actions: ['cloudwatch:GetMetricStatistics', 'cloudwatch:GetMetricData'],
     resources: ['*'],
     conditions: {
-      StringEquals: { 'cloudwatch:namespace': 'RemitScout' },
+      StringLike: { 'cloudwatch:namespace': remitScoutCloudWatchNamespacePattern },
     },
   })
   // X-Ray PutTraceSegments/PutTelemetryRecords are data-plane APIs that require Resource: '*'.
@@ -198,7 +199,11 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     resources: [`arn:aws:ssm:*:*:parameter/remit-scout/${options.envName}/ops/paused`],
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
-    actions: ['ecs:ListServices', 'ecs:UpdateService', 'ecs:DescribeServices'],
+    actions: ['ecs:ListServices'],
+    resources: ['*'],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['ecs:UpdateService', 'ecs:DescribeServices'],
     resources: [
       `arn:aws:ecs:*:*:service/${remitScoutClusterName}/*`,
       `arn:aws:ecs:*:*:cluster/${remitScoutClusterName}`,
@@ -210,7 +215,11 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   // possible; the task-level actions still need '*' at the resource level but
   // the cluster constraint limits blast radius via a condition key.
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
-    actions: ['ecs:ListTasks', 'ecs:DescribeTasks', 'ecs:StopTask'],
+    actions: ['ecs:ListTasks', 'ecs:DescribeTasks'],
+    resources: ['*'],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['ecs:StopTask'],
     resources: [
       `arn:aws:ecs:*:*:task/${remitScoutClusterName}/*`,
       `arn:aws:ecs:*:*:cluster/${remitScoutClusterName}`,
@@ -224,7 +233,11 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     ? [options.opsPauseEventRuleArnPrefix]
     : [`arn:aws:events:*:*:rule/remit-scout-${options.envName}-*`]
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
-    actions: ['events:DisableRule', 'events:EnableRule', 'events:ListRules'],
+    actions: ['events:ListRules'],
+    resources: ['*'],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['events:DisableRule', 'events:EnableRule'],
     resources: eventRuleResources,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
@@ -238,7 +251,11 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     ? [options.opsPauseDbClusterArn]
     : [`arn:aws:rds:*:*:cluster:remit-scout-${options.envName}*`]
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
-    actions: ['rds:StartDBCluster', 'rds:StopDBCluster', 'rds:DescribeDBClusters'],
+    actions: ['rds:DescribeDBClusters'],
+    resources: ['*'],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['rds:StartDBCluster', 'rds:StopDBCluster'],
     resources: rdsResources,
   }))
   // ElastiCache replication group actions: scope to the specific replication
@@ -249,10 +266,13 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     ? [options.opsPauseRedisReplicationGroupArn]
     : [`arn:aws:elasticache:*:*:replicationgroup:remit-scout-${options.envName}*`]
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['elasticache:DescribeReplicationGroups'],
+    resources: ['*'],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: [
       'elasticache:CreateReplicationGroup',
       'elasticache:DeleteReplicationGroup',
-      'elasticache:DescribeReplicationGroups',
     ],
     resources: elastiCacheReplicationGroupResources,
   }))
@@ -266,6 +286,10 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   // Add SES and SNS permissions to Plane A Lambda (for contact form and alerts)
   planeALambdaRole.addToPolicy(sesPolicy)
   planeALambdaRole.addToPolicy(snsPolicy)
+  planeALambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['ecs:ListServices', 'ecs:DescribeServices'],
+    resources: ['*'],
+  }))
 
   planeBEcsTaskRole.addToPolicy(cloudWatchPolicy)
   planeBEcsTaskRole.addToPolicy(cloudWatchReadPolicy)

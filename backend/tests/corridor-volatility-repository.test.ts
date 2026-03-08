@@ -1,10 +1,10 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
+import { expect, it, beforeEach, afterEach } from 'vitest'
 import type { Pool } from 'pg'
 
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { CorridorVolatilityRepository } from '../plane-b/src/repositories/implementations/corridor-volatility-repository'
-import { withTestTransaction } from './helpers/test-db'
+import { describeDbIntegration, withTestTransaction } from './helpers/test-db'
 
 const planeBUrl =
   process.env.DATABASE_URL_PLANE_B ||
@@ -13,7 +13,7 @@ const planeBUrl =
 
 process.env.DATABASE_URL_PLANE_B = process.env.DATABASE_URL_PLANE_B || planeBUrl
 
-describe('CorridorVolatilityRepository', () => {
+describeDbIntegration('CorridorVolatilityRepository', () => {
   let pool: Pool
   let repo: CorridorVolatilityRepository
   let ingestionRunId: string

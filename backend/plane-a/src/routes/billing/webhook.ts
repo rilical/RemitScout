@@ -17,6 +17,7 @@ import {
 } from '../../services/billing-email'
 import type { IUserPlanRepository } from '../../repositories'
 import { ValidationError } from '../../../../shared/errors'
+import { normalizePlanCode } from '../../services/entitlements'
 
 const logger = createLogger('plane-a.billing.webhook')
 
@@ -43,6 +44,11 @@ const toUnixTimestamp = (value: unknown) => {
     return new Date(value * 1000).toISOString()
   }
   return null
+}
+
+const resolveStoredPaidPlanCode = (planCode?: string | null): 'plus' | 'enterprise' => {
+  const normalized = normalizePlanCode(planCode)
+  return normalized === 'enterprise' ? 'enterprise' : 'plus'
 }
 
 const splitCsv = (value: string | undefined) => {
@@ -259,9 +265,10 @@ export const processStripeEvent = async (params: {
   }
 
   if (event.type === 'customer.subscription.deleted') {
+    const storedPaidPlanCode = resolveStoredPaidPlanCode(existingPlan?.plan_code)
     await userPlanRepo.updatePlan({
       user_id: userId,
-      plan_code: 'free',
+      plan_code: storedPaidPlanCode,
       status: 'canceled',
       stripe_subscription_id: null,
       current_period_end: null,
@@ -297,13 +304,7 @@ export const processStripeEvent = async (params: {
     }
 
     const currentPeriodEnd = toUnixTimestamp(subscription?.current_period_end)
-
-    let planCode: string | undefined
-    if (status === 'active' || status === 'trialing') {
-      planCode = 'plus'
-    } else if (status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired') {
-      planCode = 'free'
-    }
+    const planCode = resolveStoredPaidPlanCode(existingPlan?.plan_code)
 
     await userPlanRepo.updatePlan({
       user_id: userId,

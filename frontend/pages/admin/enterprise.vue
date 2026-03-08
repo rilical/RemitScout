@@ -44,18 +44,31 @@
             @submit.prevent="grantAccess"
           >
             <div class="flex-1">
-              <label class="block text-body-sm font-medium text-neutral-700 mb-1">User Email</label>
+              <label
+                class="block text-body-sm font-medium text-neutral-700 mb-1"
+                :for="grantEmailInputId"
+              >
+                User Email
+              </label>
               <input
+                :id="grantEmailInputId"
                 v-model="grantForm.email"
                 type="email"
                 placeholder="user@example.com"
+                autocomplete="email"
                 required
                 class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               >
             </div>
             <div class="flex-1">
-              <label class="block text-body-sm font-medium text-neutral-700 mb-1">Notes (optional)</label>
+              <label
+                class="block text-body-sm font-medium text-neutral-700 mb-1"
+                :for="grantNotesInputId"
+              >
+                Notes (optional)
+              </label>
               <input
+                :id="grantNotesInputId"
                 v-model="grantForm.notes"
                 type="text"
                 placeholder="Company name, deal terms, etc."
@@ -124,6 +137,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { DataTable } from '~/ui'
 import type { DataTableColumn } from '~/ui'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
@@ -161,6 +175,8 @@ const granting = ref(false)
 const grantMessage = ref('')
 const grantSuccess = ref(false)
 const revoking = ref<string | null>(null)
+const grantEmailInputId = 'enterprise-grant-email'
+const grantNotesInputId = 'enterprise-grant-notes'
 
 const grantForm = ref({
   email: '',
@@ -204,7 +220,7 @@ const loadUsers = async () => {
     }
   }
   catch (error) {
-    tableError.value = error instanceof Error ? error.message : 'Failed to load enterprise users.'
+    tableError.value = getAdminApiErrorMessage(error, 'Failed to load enterprise users.')
     log.error('Failed to load users', error)
   }
   finally {
@@ -243,7 +259,7 @@ const grantAccess = async () => {
     }
   }
   catch (error) {
-    grantMessage.value = 'Failed to grant access'
+    grantMessage.value = getAdminApiErrorMessage(error, 'Failed to grant access.')
     grantSuccess.value = false
   }
   finally {
@@ -266,6 +282,8 @@ const revokeAccess = async (user: UserWithPlan) => {
     await loadUsers()
   }
   catch (error) {
+    grantMessage.value = getAdminApiErrorMessage(error, 'Failed to revoke access.')
+    grantSuccess.value = false
     log.error('Failed to revoke access', error)
   }
   finally {

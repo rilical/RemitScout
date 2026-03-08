@@ -15,7 +15,7 @@ vi.mock('../shared/config', () => ({
       llmModel: 'claude-sonnet-4-20250514',
       llmMaxTokens: 2048,
       llmTemperature: 0.2,
-      anthropicApiKey: 'test-key',
+      anthropicApiKey: 'test-key', // pragma: allowlist secret
       bedrockRegion: '',
       bedrockModelId: '',
       llmPromptVersion: '1',
@@ -38,6 +38,9 @@ vi.mock('../shared/logger', () => ({
 vi.mock('../shared/error-tracker', () => ({
   captureExceptionWithContext: vi.fn(),
   addBreadcrumb: vi.fn(),
+}))
+vi.mock('../shared/agent-notifications', () => ({
+  notifyAgent: vi.fn(),
 }))
 vi.mock('../shared/provider-catalog', () => ({
   listProviders: () => ['wise', 'remitly', 'westernunion'],
@@ -108,20 +111,18 @@ const makeBundle = (overrides: Partial<FailureBundle> = {}): FailureBundle => ({
  */
 const makeMockPool = (overrides: {
   lockAcquired?: boolean
-} = {}): Pool & { queryCalls: Array<{ text: string; values: unknown[] }> } => {
+} = {}): Pool & {
+  queryCalls: Array<{ text: string; values: unknown[] }>
+  clientRelease: ReturnType<typeof vi.fn>
+} => {
   const queryCalls: Array<{ text: string; values: unknown[] }> = []
 
-  const query = vi.fn().mockImplementation(async (text: string, values?: unknown[]) => {
+  const executeQuery = vi.fn().mockImplementation(async (text: string, values?: unknown[]) => {
     queryCalls.push({ text, values: values ?? [] })
 
-    // Advisory lock — pg_try_advisory_lock
-    if (text.includes('pg_try_advisory_lock')) {
+    // Advisory lock — pg_try_advisory_xact_lock
+    if (text.includes('pg_try_advisory_xact_lock')) {
       return { rows: [{ acquired: overrides.lockAcquired ?? true }] }
-    }
-
-    // Advisory unlock — pg_advisory_unlock
-    if (text.includes('pg_advisory_unlock')) {
-      return { rows: [] }
     }
 
     // dispatch_queue poll — return no items so the process loop stays idle.
@@ -132,7 +133,24 @@ const makeMockPool = (overrides: {
     return { rows: [] }
   })
 
-  return { query, queryCalls } as unknown as Pool & { queryCalls: typeof queryCalls }
+  const clientRelease = vi.fn()
+  const poolQuery = vi.fn().mockImplementation((text: string, values?: unknown[]) =>
+    executeQuery(text, values),
+  )
+  const connect = vi.fn().mockResolvedValue({
+    query: executeQuery,
+    release: clientRelease,
+  })
+
+  return {
+    query: poolQuery,
+    connect,
+    queryCalls,
+    clientRelease,
+  } as unknown as Pool & {
+    queryCalls: typeof queryCalls
+    clientRelease: typeof clientRelease
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -414,11 +432,8 @@ describe('AgentOrchestrator — blast radius controls', () => {
       ac.abort()
       await startPromise
 
-      // pg_advisory_unlock must have been called regardless of the error.
-      const unlockCalls = pool.queryCalls.filter((q) =>
-        q.text.includes('pg_advisory_unlock'),
-      )
-      expect(unlockCalls.length).toBeGreaterThanOrEqual(1)
+      // Transaction-scoped lock should always release the client even on errors.
+      expect(pool.clientRelease).toHaveBeenCalledTimes(1)
     })
 
     it('uses the correct advisory lock key (999001)', async () => {
@@ -434,7 +449,7 @@ describe('AgentOrchestrator — blast radius controls', () => {
       await startPromise
 
       const lockCalls = pool.queryCalls.filter((q) =>
-        q.text.includes('pg_try_advisory_lock'),
+        q.text.includes('pg_try_advisory_xact_lock'),
       )
       expect(lockCalls.length).toBeGreaterThanOrEqual(1)
       expect(lockCalls[0].values[0]).toBe(999001)

@@ -1,0 +1,144 @@
+name: ops/cloudformation-stack-diagnostics
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Environment to inspect
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      action:
+        description: Inspect only or cancel a stuck UPDATE_IN_PROGRESS before re-inspecting
+        required: true
+        default: inspect
+        type: choice
+        options:
+          - inspect
+          - cancel_update
+      stack_name:
+        description: Optional stack name override
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  diagnose-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.env }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      STACK_NAME_DEFAULT: ${{ vars.STACK_NAME }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
+          retry-max-attempts: 3
+
+      - name: Inspect or recover CloudFormation stack
+        shell: bash
+        env:
+          ACTION: ${{ inputs.action }}
+          STACK_NAME_OVERRIDE: ${{ inputs.stack_name }}
+        run: |
+          set -euo pipefail
+
+          STACK_NAME="${STACK_NAME_OVERRIDE:-${STACK_NAME_DEFAULT:-}}"
+          if [ -z "${STACK_NAME}" ]; then
+            echo "::error::STACK_NAME is not set for this environment."
+            exit 1
+          fi
+
+          stack_status() {
+            aws cloudformation describe-stacks \
+              --stack-name "${STACK_NAME}" \
+              --query 'Stacks[0].StackStatus' \
+              --output text
+          }
+
+          print_snapshot() {
+            local status last_updated stack_id
+            status="$(stack_status)"
+            last_updated="$(aws cloudformation describe-stacks \
+              --stack-name "${STACK_NAME}" \
+              --query 'Stacks[0].LastUpdatedTime' \
+              --output text 2>/dev/null || true)"
+            stack_id="$(aws cloudformation describe-stacks \
+              --stack-name "${STACK_NAME}" \
+              --query 'Stacks[0].StackId' \
+              --output text)"
+
+            echo "Stack name: ${STACK_NAME}"
+            echo "Stack id: ${stack_id}"
+            echo "Stack status: ${status}"
+            echo "Last updated: ${last_updated}"
+
+            echo "::group::Recent stack events"
+            aws cloudformation describe-stack-events \
+              --stack-name "${STACK_NAME}" \
+              --query 'StackEvents[:40].[Timestamp,LogicalResourceId,ResourceType,ResourceStatus,ResourceStatusReason]' \
+              --output table
+            echo "::endgroup::"
+
+            echo "::group::In-progress or failed resources"
+            resources_json="$(aws cloudformation describe-stack-resources \
+              --stack-name "${STACK_NAME}" \
+              --output json)"
+            problem_resources="$(printf '%s' "${resources_json}" | jq -r '
+              .StackResources[]
+              | select(.ResourceStatus | test("_IN_PROGRESS|_FAILED|ROLLBACK|CLEANUP|DELETE_"))
+              | [.LogicalResourceId, .ResourceType, .ResourceStatus, (.ResourceStatusReason // "")]
+              | @tsv
+            ')"
+            if [ -n "${problem_resources}" ]; then
+              printf '%s\n' "${problem_resources}"
+            else
+              echo "No in-progress or failed stack resources."
+            fi
+            echo "::endgroup::"
+          }
+
+          print_snapshot
+
+          if [ "${ACTION}" != "cancel_update" ]; then
+            exit 0
+          fi
+
+          status="$(stack_status)"
+          if [ "${status}" != "UPDATE_IN_PROGRESS" ]; then
+            echo "::error::Refusing to call cancel-update-stack because current status is ${status}, not UPDATE_IN_PROGRESS."
+            exit 1
+          fi
+
+          echo "Cancelling in-progress stack update for ${STACK_NAME}."
+          aws cloudformation cancel-update-stack --stack-name "${STACK_NAME}"
+
+          for i in $(seq 1 60); do
+            status="$(stack_status)"
+            echo "Waiting for stack to settle after cancel (${i}/60): ${status}"
+            case "${status}" in
+              UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|UPDATE_ROLLBACK_FAILED|UPDATE_FAILED|CREATE_COMPLETE|IMPORT_COMPLETE)
+                break
+                ;;
+              *_IN_PROGRESS|*_CLEANUP_IN_PROGRESS)
+                sleep 10
+                ;;
+              *)
+                break
+                ;;
+            esac
+          done
+
+          print_snapshot

@@ -19,6 +19,26 @@ export const collectOandaThrottleEnv = (): Record<string, string> => {
   return env
 }
 
+export const resolveAdminMfaRequiredEnv = (
+  envName: string,
+  rawValue = process.env.ADMIN_MFA_REQUIRED,
+): string | undefined => {
+  const normalizedEnv = envName.trim().toLowerCase()
+  if (normalizedEnv === 'staging' || normalizedEnv === 'prod' || normalizedEnv === 'production') {
+    return '1'
+  }
+
+  const normalized = (rawValue || '').trim().toLowerCase()
+  if (!normalized) return undefined
+  if (normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on') {
+    return '1'
+  }
+  if (normalized === '0' || normalized === 'false' || normalized === 'no' || normalized === 'off') {
+    return '0'
+  }
+  return rawValue?.trim() || undefined
+}
+
 export const collectPlaneBProviderThrottleEnv = (): Record<string, string> => {
   const env: Record<string, string> = {}
   const patterns = [

@@ -16,6 +16,8 @@ export NEW_RELIC_ACCOUNT_ID=7756888
 export NEW_RELIC_REGION=US
 export NEW_RELIC_INGEST_KEY=...
 export NEW_RELIC_LOGS_ENABLED=1
+export NEW_RELIC_STAGING_AWS_MODE=push_pull
+export NEW_RELIC_PROD_AWS_MODE=otlp_only
 export NEW_RELIC_STAGING_AWS_ACCOUNT_ID=010630709504
 export NEW_RELIC_PROD_AWS_ACCOUNT_ID=938998270127
 export NEW_RELIC_STAGING_AWS_ROLE_ARN=arn:aws:iam::010630709504:role/NewRelicInfrastructure-Integrations-RemitScout
@@ -108,6 +110,8 @@ Then run:
 ```bash
 NEW_RELIC_STAGING_AWS_ROLE_ARN=arn:aws:iam::010630709504:role/NewRelicInfrastructure-Integrations-RemitScout \
 NEW_RELIC_PROD_AWS_ROLE_ARN=arn:aws:iam::938998270127:role/NewRelicInfrastructure-Integrations-RemitScout \
+NEW_RELIC_STAGING_AWS_MODE=push_pull \
+NEW_RELIC_PROD_AWS_MODE=otlp_only \
 node ops/newrelic/sync-cloud-links.mjs
 ```
 
@@ -116,11 +120,14 @@ Reconcile command (recommended in staging-full and prod promotion windows):
 ```bash
 NEW_RELIC_STAGING_AWS_ROLE_ARN=arn:aws:iam::010630709504:role/NewRelicInfrastructure-Integrations-RemitScout \
 NEW_RELIC_PROD_AWS_ROLE_ARN=arn:aws:iam::938998270127:role/NewRelicInfrastructure-Integrations-RemitScout \
+NEW_RELIC_STAGING_AWS_MODE=push_pull \
+NEW_RELIC_PROD_AWS_MODE=otlp_only \
 node ops/newrelic/sync-cloud-links.mjs
 ```
 
 This upserts:
-- staging/prod `PUSH` + `PULL` links
+- staging `PUSH` + `PULL` links when `NEW_RELIC_STAGING_AWS_MODE=push_pull`
+- prod/staging link removal when the env mode is `otlp_only`
 - API polling integrations needed by Remit-Scout
 - metadata/tags integrations for stream mode
 
@@ -130,6 +137,8 @@ If drift is detected, the script fails closed. To auto-repair drifted links in-p
 NEW_RELIC_REPAIR_DRIFTED_LINKS=1 \
 NEW_RELIC_STAGING_AWS_ROLE_ARN=arn:aws:iam::010630709504:role/NewRelicInfrastructure-Integrations-RemitScout \
 NEW_RELIC_PROD_AWS_ROLE_ARN=arn:aws:iam::938998270127:role/NewRelicInfrastructure-Integrations-RemitScout \
+NEW_RELIC_STAGING_AWS_MODE=push_pull \
+NEW_RELIC_PROD_AWS_MODE=otlp_only \
 node ops/newrelic/sync-cloud-links.mjs
 ```
 
@@ -148,8 +157,10 @@ Production (account-pinned, required for promotion checks):
 
 ```bash
 NEW_RELIC_TARGET_ENV=prod \
-NEW_RELIC_PROD_AWS_ACCOUNT_ID=938998270127 \
-REQUIRE_ACCOUNT_PINNING=1 \
+NEW_RELIC_PROD_AWS_MODE=otlp_only \
+REQUIRE_ACCOUNT_PINNING=0 \
+REQUIRE_API_GW_METRICS=0 \
+REQUIRE_SQS_METRICS=0 \
 node ops/newrelic/verify-signals.mjs
 ```
 
@@ -164,8 +175,8 @@ The check fails if any required signal group is missing:
 - `Metric`
 - `Log`
 - `Span`
-- `AWS/ApiGateway` metrics
-- `AWS/SQS` metrics
+- `AWS/ApiGateway` metrics when the env mode is not `otlp_only`
+- `AWS/SQS` metrics when the env mode is not `otlp_only`
 - required custom metric families (core SLO/indices)
 
 ## Hybrid log model (required)
@@ -216,7 +227,7 @@ Staging/prod promotion must fail if New Relic gate fails. Deploy workflows now r
 1) `bootstrap-dashboards`
 2) `sync-alerts`
 3) `sync-cloud-links`
-4) `verify-signals` (logs + spans required, account pinned)
+4) `verify-signals` (logs + spans required, AWS account pinning only for AWS-linked modes)
 
 Gate placement: before last-known-good image write in deploy workflows.
 

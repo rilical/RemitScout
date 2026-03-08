@@ -5,8 +5,6 @@
  *
  * Environment variables:
  *   DISCOVERY_PROVIDER         — Provider ID to scan (required)
- *   DISCOVERY_APPLY_RESULTS    — "1" or "true" to auto-apply discovered corridors/methods
- *
  * Used for manual one-off discovery scans triggered by ops.
  */
 
@@ -23,12 +21,6 @@ import type { DiscoveryRunOptions } from '../plane-b/src/discovery/discovery-typ
 
 const logger = createLogger('script.discovery-scan-single')
 initTracing('discovery-scan-single')
-
-const parseApplyResults = (): boolean => {
-  const raw = process.env.DISCOVERY_APPLY_RESULTS
-  const lower = raw?.toLowerCase()
-  return lower === '1' || lower === 'true' || lower === 'yes'
-}
 
 const run = async () => {
   const providerId = process.env.DISCOVERY_PROVIDER?.trim()
@@ -53,18 +45,14 @@ const run = async () => {
   const correlationId = randomUUID()
 
   try {
-    const applyResults = parseApplyResults()
-
     const options: DiscoveryRunOptions = {
       triggeredBy: 'manual',
       correlationId,
-      applyResults,
     }
 
     logger.info('discovery_scan_single_start', {
       correlationId,
       providerId,
-      applyResults,
     })
 
     const result = await runDiscoveryForProvider(pool, providerId, options)
@@ -94,7 +82,6 @@ const run = async () => {
       promotions: result.promotions.length,
       errors: result.errors.length,
       durationMs: result.metadata.durationMs,
-      applyResults,
     })
 
     if (status === 'failed') {

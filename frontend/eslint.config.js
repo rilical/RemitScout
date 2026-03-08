@@ -72,7 +72,7 @@ export default createConfigForNuxt({
   files: [
     'pages/dashboard.vue',
     'pages/plus.vue',
-    'pages/pulse.vue',
+    'pages/pulse/index.vue',
     'domains/**/*.{ts,vue}',
   ],
   rules: {

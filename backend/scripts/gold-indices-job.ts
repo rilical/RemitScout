@@ -29,6 +29,7 @@ import {
   INDICES_METHODOLOGY_VERSION,
 } from '../shared/weighting-model'
 import { buildB2bEffectiveRateSql } from '../shared/quote-rate'
+import { buildRightsMatrixCorridorEligibilitySql } from '../shared/rights-matrix-corridor'
 import {
   recordJobStart,
   recordJobComplete,
@@ -43,6 +44,14 @@ initTracing('gold-indices-job')
 const toNumber = (value: string | number | null | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const resolveUpsertTimeoutMs = (): number => {
+  const rawEnvironment = (process.env.ENVIRONMENT || process.env.NODE_ENV || '').trim().toLowerCase()
+  const environment =
+    rawEnvironment === 'production' ? 'prod' : rawEnvironment === 'development' ? 'dev' : rawEnvironment
+  const defaultTimeoutMs = environment === 'staging' || environment === 'prod' ? 240_000 : 60_000
+  return Math.max(60_000, toNumber(process.env.GOLD_INDICES_UPSERT_TIMEOUT_MS, defaultTimeoutMs))
 }
 
 type FxFreshnessAssessment = {
@@ -92,6 +101,10 @@ const rateRatioMax = Math.max(rateRatioMin, toNumber(process.env.GOLD_INDICES_RA
 const weightModel = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
 const methodologyVersion = process.env.INDICES_METHODOLOGY_VERSION || INDICES_METHODOLOGY_VERSION
 const b2bEffectiveRateSql = buildB2bEffectiveRateSql('qr')
+const rightsMatrixCorridorEligibilitySql = buildRightsMatrixCorridorEligibilitySql({
+  rightsAlias: 'rm',
+  corridorIdSql: 'qr.corridor_id',
+})
 
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
@@ -132,6 +145,7 @@ WITH weight_snapshot AS (
   SELECT
     corridor_id,
     provider_id,
+    method_profile,
     weight,
     model_version,
     window_days,
@@ -143,26 +157,31 @@ corridor_weights AS (
   SELECT
     corridor_id,
     provider_id,
+    method_profile,
     weight,
     window_days,
     weight_confidence
   FROM weight_snapshot
   WHERE corridor_id <> $9
+    AND method_profile IS NOT NULL
 ),
 global_weights AS (
   SELECT
     provider_id,
+    method_profile,
     weight
   FROM weight_snapshot
   WHERE corridor_id = $9
+    AND method_profile IS NOT NULL
 ),
 weight_meta AS (
   SELECT
     corridor_id,
+    method_profile,
     MAX(window_days)::int AS window_days,
     MAX(weight_confidence)::double precision AS weight_confidence
   FROM corridor_weights
-  GROUP BY corridor_id
+  GROUP BY corridor_id, method_profile
 ),
 base_raw AS (
   SELECT
@@ -176,7 +195,7 @@ base_raw AS (
     qr.fee_amount::double precision AS fee_amount,
     qr.collected_at,
     date_trunc('day', qr.collected_at) AS bucket_day,
-    CASE
+    (CASE
       WHEN qr.payout = 'cash_pickup'
         AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
         THEN 'cash_pickup'
@@ -198,7 +217,7 @@ base_raw AS (
         AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
         THEN 'home_delivery'
       ELSE NULL
-    END AS method_profile,
+    END)::method_profile AS method_profile,
     rm.allowed_in_rvi,
     rm.allowed_in_rci,
     rm.allowed_in_teer
@@ -228,6 +247,7 @@ base_raw AS (
     AND rm.allowed_resell_b2b = true
     AND rm.status = 'production'
     AND rm.stoplist_status = 'active'
+    AND ${rightsMatrixCorridorEligibilitySql}
     AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
 ),
 base AS (
@@ -393,8 +413,10 @@ weighted_inputs AS (
   LEFT JOIN corridor_weights cw
     ON cw.corridor_id = l.corridor_id
    AND cw.provider_id = l.provider_id
+   AND cw.method_profile = l.method_profile
   LEFT JOIN global_weights gw
     ON gw.provider_id = l.provider_id
+   AND gw.method_profile = l.method_profile
 ),
 weighted_agg AS (
   SELECT
@@ -490,6 +512,7 @@ prepared_base AS (
    AND wm.method_profile = wv.method_profile
   LEFT JOIN weight_meta wmeta
     ON wmeta.corridor_id = wv.corridor_id
+   AND wmeta.method_profile = wv.method_profile
 ),
 prepared_with_prev AS (
   SELECT
@@ -628,6 +651,10 @@ upserted AS (
 SELECT COUNT(*)::int AS upserted
 FROM upserted
 `
+
+export const goldIndicesSql = {
+  indicesUpsertQuery,
+}
 
 export const upsertGoldIndices = async (
   pool: Pool,
@@ -801,7 +828,7 @@ export const runGoldIndicesJob = async (
         maxRetries: 3,
         initialDelayMs: 500,
         maxDelayMs: 10000,
-        timeoutMs: 60000,
+        timeoutMs: resolveUpsertTimeoutMs(),
         operation: 'gold-indices.upsert',
         signal: shutdownSignal,
         retryable: (error) => {

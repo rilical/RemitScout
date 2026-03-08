@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin, requireAuth } from '../plugins/auth-plugin'
-import { ValidationError, NotFoundError } from '../../../shared/errors'
+import { AppError, ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.audit')
 
@@ -97,6 +97,7 @@ export const auditRoutes = async (app: FastifyInstance) => {
         },
       }
     } catch (error) {
+      if (error instanceof AppError) throw error
       logger.error('audit_log_list_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -138,6 +139,7 @@ export const auditRoutes = async (app: FastifyInstance) => {
       reply.header('Content-Type', format === 'csv' ? 'text/csv' : 'application/json')
       return output
     } catch (error) {
+      if (error instanceof AppError) throw error
       logger.error('audit_log_export_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -159,6 +161,7 @@ export const auditRoutes = async (app: FastifyInstance) => {
       }
       return { log }
     } catch (error) {
+      if (error instanceof AppError) throw error
       logger.error('audit_log_get_failed', {
         error: error instanceof Error ? error.message : String(error),
       })

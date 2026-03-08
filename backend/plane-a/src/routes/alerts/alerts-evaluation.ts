@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { recordRequest } from '../../../../shared/api-metrics'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getUserPlan } from '../../services/user-plan'
+import { resolveEffectiveEntitlements } from '../../services/effective-entitlements'
 import { logger } from './shared'
 
 export const registerAlertsEvaluationRoutes = async (app: FastifyInstance) => {
@@ -13,14 +14,21 @@ export const registerAlertsEvaluationRoutes = async (app: FastifyInstance) => {
 
     try {
       const plan = await getUserPlan(pool, user.user_id)
-      if (!plan || plan.plan_code === 'free') {
+      const effective = await resolveEffectiveEntitlements({
+        pool,
+        userId: user.user_id,
+        email: user.email ?? null,
+        supabaseRole: user.role ?? null,
+        plan,
+      })
+      if (!effective.entitlements.smart_alerts_enabled) {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('GET', '/alerts/smart-notifier', 403, durationSeconds)
 
         reply.code(403)
         return {
           success: false,
-          error: 'forbidden',
+          error: 'plus_required',
           message: 'Smart Notifier is available for Plus members only.',
         }
       }

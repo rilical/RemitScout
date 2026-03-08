@@ -13,12 +13,12 @@ Inbox filename contract:
 
 ## Components
 - Slack Front Desk runner (Socket Mode):
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/frontdesk/slack-frontdesk.ts`
+  - `backend/scripts/frontdesk/slack-frontdesk.ts`
 - Brain (posts cards, handles CaseAction events):
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/brain/brain.ts`
+  - `backend/scripts/brain/brain.ts`
 - Inbox/outbox:
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ops/brain/inbox/`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ops/brain/outbox/`
+  - `ops/brain/inbox/`
+  - `ops/brain/outbox/`
 
 ## Required Slack setup
 1. Create a Slack App in your workspace.
@@ -35,8 +35,8 @@ Inbox filename contract:
    - `SLACK_CASES_CHANNEL_ID`
 
 ## Local runtime (Mac mini)
-The front desk runner loads `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.env.frontdesk` if present.
-Start from `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.env.frontdesk.example`.
+The front desk runner loads `.env.frontdesk` at the repo root if present.
+Start from `.env.frontdesk.example`.
 
 Example env file keys:
 ```bash
@@ -46,19 +46,19 @@ SLACK_SIGNING_SECRET=...
 SLACK_CASES_CHANNEL_ID=C0123456789
 
 # Optional: default repo root override
-# REMIT_SCOUT_REPO_ROOT=/Users/omarghabyen/Desktop/Remit-Scout Production V2
+# REMIT_SCOUT_REPO_ROOT=/absolute/path/to/your/repo
 ```
 
 Run:
 ```bash
-cd "/Users/omarghabyen/Desktop/Remit-Scout Production V2"
+cd "<repo-root>"
 pnpm -C backend frontdesk:slack
 ```
 
 ## launchd
 Use:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ops/frontdesk/launchd/remit-scout-frontdesk.plist`
+- `ops/frontdesk/launchd/remit-scout-frontdesk.plist`
 
 Logs:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ops/frontdesk/frontdesk.out.log`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ops/frontdesk/frontdesk.err.log`
+- `ops/frontdesk/frontdesk.out.log`
+- `ops/frontdesk/frontdesk.err.log`

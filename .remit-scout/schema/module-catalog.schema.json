@@ -33,29 +33,85 @@
       "type": "object",
       "required": [
         "module_id",
-        "provider_id",
         "collector_type",
         "status",
-        "spec_version",
-        "volume"
+        "spec_version"
       ],
       "additionalProperties": false,
       "properties": {
         "module_id": { "type": "string", "minLength": 3 },
+        "owner_kind": {
+          "type": "string",
+          "enum": ["provider", "signal_source"]
+        },
+        "owner_id": { "type": "string", "minLength": 2 },
         "provider_id": { "type": "string", "minLength": 2 },
         "collector_type": { "type": "string", "minLength": 2 },
+        "display_name": { "type": "string", "minLength": 1 },
         "status": {
           "type": "string",
           "enum": ["candidate", "sandbox", "beta", "production", "deprecated", "quarantined"]
+        },
+        "signal_layer": {
+          "type": "string",
+          "enum": ["quote", "factor", "stress", "health", "event"]
+        },
+        "capture_method": { "type": "string", "minLength": 2 },
+        "rollout_state": {
+          "type": "string",
+          "enum": ["enabled", "shadow", "disabled"]
         },
         "spec_version": {
           "type": "integer",
           "minimum": 1
         },
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "supported_corridors": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "supported_amount_buckets": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 1 }
+        },
+        "payin_method": {
+          "type": ["string", "null"]
+        },
+        "payout_method": {
+          "type": ["string", "null"]
+        },
+        "policy_flags": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "auto_heal_enabled": { "type": "boolean" },
+            "emit_observations": { "type": "boolean" },
+            "include_in_gold": { "type": "boolean" }
+          }
+        },
+        "lineage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_ref": { "type": ["string", "null"] },
+            "source_ref": { "type": ["string", "null"] }
+          }
+        },
         "volume": {
           "$ref": "#/$defs/volume_policy"
         }
-      }
+      },
+      "anyOf": [
+        {
+          "required": ["provider_id"]
+        },
+        {
+          "required": ["owner_kind", "owner_id"]
+        }
+      ]
     },
     "volume_policy": {
       "type": "object",

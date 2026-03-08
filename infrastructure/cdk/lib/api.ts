@@ -34,8 +34,8 @@ import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
 import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
-import { collectOandaThrottleEnv } from './env-utils'
-import { resolveTracingEnv } from './newrelic-observability'
+import { collectOandaThrottleEnv, resolveAdminMfaRequiredEnv } from './env-utils'
+import { resolveCloudWatchMetricsEnabled, resolveTracingEnv } from './newrelic-observability'
 
 export type ApiOptions = {
   envName: string
@@ -68,6 +68,10 @@ export type ApiOptions = {
   planeACorsAllowedMethods?: string[]
   planeACorsAllowCredentials?: boolean
   frontendBaseUrl?: string
+  publicAdsEnabled?: string
+  publicPulseEnabled?: string
+  publicPulseScreenerEnabled?: string
+  publicEnterpriseEnabled?: string
   planeAB2cMaxBucketDeltaPct?: number
   planeCDbSecretArn?: string
   planeCDbSecretJsonKey?: string
@@ -138,6 +142,51 @@ export type ApiResources = {
   planeAWaf?: CfnWebACL
 }
 
+export const PLANE_A_EXPLICIT_EDGE_ROUTE_PATHS = [
+  '/healthz',
+  '/readyz',
+  '/api',
+  '/api/v1/quotes/current',
+  '/api/v1/providers',
+  '/api/v1/providers/metadata',
+  '/api/v1/providers/metadata/{id}',
+  '/api/v1/quotes/refresh-status',
+  '/api/v1/sessions/track',
+  '/api/v1/billing/webhook',
+  '/api/v1/billing/pricing',
+  '/api/v1/corridor-currencies',
+  '/api/v1/corridor-limits',
+  '/api/v1/rates/spot',
+  '/api/v1/rates/providers',
+  '/api/v1/rates/history',
+  '/api/v1/geo',
+  '/api/v1/popular-corridors',
+  '/api/v1/contact',
+  '/api/v1/pulse/teaser',
+  '/api/v1/bank-vs-specialist',
+  '/api/v1/alerts/unsubscribe',
+  '/api/v1/newsletter/subscribe',
+  '/api/v1/newsletter/confirm',
+  '/api/v1/newsletter/unsubscribe',
+  '/api/v1/newsletter/status',
+  '/api/v1/telemetry/search',
+  '/api/v1/telemetry/click',
+  '/api/v1/telemetry/conversion',
+  '/api/v1/telemetry/session',
+  '/api/v1/marketing/meta',
+  '/api/v1/marketing/tiktok',
+  '/api/v1/ads/placement',
+  '/api/v1/ads/click',
+  '/api/v1/compliance/status',
+  '/api/v1/indices/latest',
+  '/api/v1/indices/series',
+  '/api/v1/indices/corridors',
+  '/api/v1/indices/triangulated/{corridorId}',
+  '/api/v1/indices/health',
+  '/api/v1/usage',
+  '/api/v1/corridors/{corridorId}/coverage',
+] as const
+
 export const createApi = (scope: Construct, options: ApiOptions): ApiResources => {
   const completeSecretArnPattern =
     /^arn:aws[a-zA-Z-]*:secretsmanager:[^:]+:\d{12}:secret:[^:]+-[A-Za-z0-9]{6}$/
@@ -158,7 +207,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const isProd = options.envName === 'prod'
   const enablePlaneCIamAuth =
     options.enablePlaneCIamAuth ?? (options.envName === 'prod' || options.envName === 'staging')
-  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? (isProd ? '1' : '0')
+  const cloudwatchMetricsEnabled = resolveCloudWatchMetricsEnabled(options.envName)
   const tracingEnv = resolveTracingEnv({
     envName: options.envName,
     defaultExporter: 'xray',
@@ -206,6 +255,23 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (privacySessionSalt) {
     planeAEnvironment.PRIVACY_SESSION_SALT = privacySessionSalt
+  }
+  if (options.publicAdsEnabled !== undefined) {
+    planeAEnvironment.PLANE_A_PUBLIC_ADS_ENABLED = options.publicAdsEnabled
+    planeAEnvironment.PUBLIC_ENABLE_ADS = options.publicAdsEnabled
+    planeAEnvironment.PUBLIC_ADS_ENABLED = options.publicAdsEnabled
+  }
+  if (options.publicPulseEnabled !== undefined) {
+    planeAEnvironment.PLANE_A_PUBLIC_PULSE_ENABLED = options.publicPulseEnabled
+    planeAEnvironment.PUBLIC_PULSE_ENABLED = options.publicPulseEnabled
+  }
+  if (options.publicPulseScreenerEnabled !== undefined) {
+    planeAEnvironment.PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED = options.publicPulseScreenerEnabled
+    planeAEnvironment.PUBLIC_PULSE_SCREENER_ENABLED = options.publicPulseScreenerEnabled
+  }
+  if (options.publicEnterpriseEnabled !== undefined) {
+    planeAEnvironment.PLANE_A_PUBLIC_ENTERPRISE_ENABLED = options.publicEnterpriseEnabled
+    planeAEnvironment.PUBLIC_ENTERPRISE_ENABLED = options.publicEnterpriseEnabled
   }
   const enforceJwtAuth =
     options.enablePlaneAJwtAuth ??
@@ -369,6 +435,10 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeAEnvironment.PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED = options.planeAAdminRevocationFailClosed
       ? '1'
       : '0'
+  }
+  const adminMfaRequired = resolveAdminMfaRequiredEnv(options.envName)
+  if (adminMfaRequired !== undefined && adminMfaRequired !== '') {
+    planeAEnvironment.ADMIN_MFA_REQUIRED = adminMfaRequired
   }
   if (options.frontendBaseUrl) {
     planeAEnvironment.FRONTEND_BASE_URL = options.frontendBaseUrl
@@ -683,13 +753,25 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     options.enablePlaneAJwtAuth ??
     (options.envName === 'prod' || options.envName === 'staging')
   const planeJwtAuthorizerIssuer = options.planeAJwtIssuer ?? jwtIssuer
+  const supabaseIssuerPattern = /^https:\/\/[a-z0-9-]+\.supabase\.co\/auth\/v1\/?$/i
+  const planeAEdgeJwtAuthorizerSupported = !(
+    planeJwtAuthorizerIssuer && supabaseIssuerPattern.test(planeJwtAuthorizerIssuer.trim())
+  )
+  if (enablePlaneAJwtAuth && !planeAEdgeJwtAuthorizerSupported) {
+    Annotations.of(scope).addWarning(
+      'Plane A edge JWT authorizer disabled for Supabase issuer. AWS HTTP API JWT authorizers require RSA keys, while the current Supabase project publishes ES256 keys. Fastify remains the active JWT enforcement layer.',
+    )
+  }
   const resolvedJwtAudiences = dedupJwtAudiences
-  const planeAJwtAuthorizer = enablePlaneAJwtAuth && planeJwtAuthorizerIssuer && dedupJwtAudiences.length > 0
+  const planeAJwtAuthorizer = enablePlaneAJwtAuth
+    && planeAEdgeJwtAuthorizerSupported
+    && planeJwtAuthorizerIssuer
+    && dedupJwtAudiences.length > 0
     ? new HttpJwtAuthorizer('PlaneAJwtAuthorizer', planeJwtAuthorizerIssuer, {
       jwtAudience: resolvedJwtAudiences,
     })
     : undefined
-  if (enablePlaneAJwtAuth && !planeAJwtAuthorizer) {
+  if (enablePlaneAJwtAuth && planeAEdgeJwtAuthorizerSupported && !planeAJwtAuthorizer) {
     const jwtError =
       'Plane A JWT auth enabled but issuer/audience missing. Set planeAJwtIssuer and planeAJwtAudiences.'
     if (options.envName === 'prod' || options.envName === 'staging') {
@@ -714,53 +796,14 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const publicMetricsEnabled = options.envName === 'dev'
     || process.env.PLANE_A_PUBLIC_METRICS === '1'
   const publicRoutes = [
-    '/healthz',
-    '/readyz',
+    ...PLANE_A_EXPLICIT_EDGE_ROUTE_PATHS,
     ...(publicMetricsEnabled ? ['/metrics'] : []),
-    // Legacy tombstones
-    '/api',
-    // Public web experience (no auth)
-    '/api/v1/quotes/current',
-    '/api/v1/providers',
-    '/api/v1/providers/metadata',
-    '/api/v1/providers/metadata/{id}',
-    '/api/v1/quotes/refresh-status',
-    '/api/v1/sessions/track',
-    '/api/v1/billing/webhook',
-    '/api/v1/billing/pricing',
-    '/api/v1/corridor-currencies',
-    '/api/v1/corridor-limits',
-    '/api/v1/rates/spot',
-    '/api/v1/rates/providers',
-    '/api/v1/rates/history',
-    '/api/v1/geo',
-    '/api/v1/popular-corridors',
-    '/api/v1/contact',
-    '/api/v1/pulse/teaser',
-    '/api/v1/bank-vs-specialist',
-    '/api/v1/alerts/unsubscribe',
     ...(isDev
       ? [
           '/api/v1/alerts/corridor-eligibility',
           '/api/v1/alerts/macro-corridors',
         ]
       : []),
-    '/api/v1/newsletter/subscribe',
-    '/api/v1/newsletter/confirm',
-    '/api/v1/newsletter/unsubscribe',
-    '/api/v1/newsletter/status',
-    '/api/v1/telemetry/search',
-    '/api/v1/telemetry/click',
-    '/api/v1/telemetry/conversion',
-    '/api/v1/telemetry/session',
-    '/api/v1/marketing/meta',
-    '/api/v1/marketing/tiktok',
-    '/api/v1/ads/placement',
-    '/api/v1/ads/click',
-    '/api/v1/indices/latest',
-    '/api/v1/indices/series',
-    '/api/v1/indices/corridors',
-    '/api/v1/indices/health',
   ]
 
   for (const path of publicRoutes) {

@@ -17,7 +17,7 @@ type CorridorCapabilityRow = {
   last_verified_at: string | null
 }
 
-type ProviderReport = {
+export type ProviderReport = {
   providerId: string
   corridorsWithCapability: number
   dbPayoutMethods: string[]
@@ -34,11 +34,17 @@ type ProviderReport = {
   }>
 }
 
+export type ProviderDeliveryDiscoveryOptions = {
+  providerIds?: string[]
+  outputFormat?: 'json' | 'text' | 'log'
+  pool?: ReturnType<typeof createPool>
+}
+
 const CAPABILITY_PROBE_PROVIDERS = new Set([
   'remitly', 'wise', 'xe', 'transfergo', 'paysend', 'pangea',
   'orbitremit', 'bossmoney', 'koronapay', 'remitbee', 'singx',
   'placid', 'ria', 'dahabshiil', 'sendwave', 'mukuru', 'worldremit',
-  'westernunion', 'xoom', 'instarem', 'wirebarley', 'intermex',
+  'westernunion', 'xoom', 'instarem', 'wirebarley', 'wellsfargo', 'alansari', 'intermex',
 ])
 
 const loadCodeMapMethods = async (providerId: string): Promise<string[]> => {
@@ -122,7 +128,7 @@ const buildReport = async (
   return reports
 }
 
-const formatTextReport = (reports: ProviderReport[]): string => {
+export const formatProviderDeliveryDiscoveryReport = (reports: ProviderReport[]): string => {
   const lines: string[] = [
     '═══════════════════════════════════════════════════════',
     '  PROVIDER DELIVERY METHOD COVERAGE REPORT',
@@ -167,17 +173,23 @@ const formatTextReport = (reports: ProviderReport[]): string => {
   return lines.join('\n')
 }
 
-const run = async () => {
-  const pool = createPool(config.db.planeBUrl)
+export const runProviderDeliveryDiscovery = async (
+  options: ProviderDeliveryDiscoveryOptions = {},
+): Promise<ProviderReport[]> => {
+  const pool = options.pool ?? createPool(config.db.planeBUrl)
+  const ownsPool = !options.pool
 
   try {
     const allProviderIds = getProviderIds()
-    const targetFilter = process.env.DISCOVERY_PROVIDERS
+    const targetFilter = options.providerIds
+      ?? (process.env.DISCOVERY_PROVIDERS
+        ? process.env.DISCOVERY_PROVIDERS.split(',').map(id => id.trim())
+        : null)
     const providerIds = targetFilter
-      ? targetFilter.split(',').map(id => id.trim()).filter(id => allProviderIds.includes(id))
+      ? targetFilter.filter(id => allProviderIds.includes(id))
       : allProviderIds
 
-    const outputFormat = (process.env.DISCOVERY_OUTPUT_FORMAT || 'text').toLowerCase()
+    const outputFormat = options.outputFormat ?? ((process.env.DISCOVERY_OUTPUT_FORMAT || 'text').toLowerCase() as 'json' | 'text' | 'log')
 
     logger.info('discovery_start', {
       providers: providerIds.length,
@@ -188,8 +200,8 @@ const run = async () => {
 
     if (outputFormat === 'json') {
       process.stdout.write(JSON.stringify(reports, null, 2) + '\n')
-    } else {
-      process.stdout.write(formatTextReport(reports) + '\n')
+    } else if (outputFormat === 'text') {
+      process.stdout.write(formatProviderDeliveryDiscoveryReport(reports) + '\n')
     }
 
     logger.info('discovery_complete', {
@@ -197,13 +209,16 @@ const run = async () => {
       providers_with_data: reports.filter(r => r.corridorsWithCapability > 0).length,
       providers_with_gaps: reports.filter(r => r.unmappedInDb.length > 0 || r.missingFromDb.length > 0).length,
     })
+    return reports
   } finally {
-    await pool.end()
+    if (ownsPool) {
+      await pool.end()
+    }
   }
 }
 
 if (require.main === module) {
-  run().catch((error) => {
+  runProviderDeliveryDiscovery().catch((error) => {
     logger.error('discovery_failed', {
       error: error instanceof Error ? error.message : String(error),
     })

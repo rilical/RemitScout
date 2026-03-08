@@ -45,6 +45,14 @@ const parseProviderIds = (): string[] => {
 
 const logger = createLogger('script.provider-probe-lambda')
 
+const loadGenericProbe = (): typeof import('../lib/generic-probe') => {
+  // Use CommonJS require here instead of dynamic import. In the Lambda bundle,
+  // a failed lazy ESM init can poison warm containers and leave the export
+  // undefined on subsequent invocations.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require('../lib/generic-probe') as typeof import('../lib/generic-probe')
+}
+
 export const handler = async (): Promise<ProbeLambdaResponse> => {
   const startTime = Date.now()
   const lambdaTimeoutMs = Number(process.env.AWS_LAMBDA_FUNCTION_TIMEOUT) * 1000 || 300000
@@ -140,7 +148,10 @@ export const handler = async (): Promise<ProbeLambdaResponse> => {
 
     // Lazy-load workload module only after runtime env resolution.
     // This prevents config initialization from freezing pre-resolution DB settings.
-    const { runGenericProbe } = await import('../lib/generic-probe')
+    const { runGenericProbe } = loadGenericProbe()
+    if (typeof runGenericProbe !== 'function') {
+      throw new Error('Failed to load generic probe workload')
+    }
 
     const results: ProbeInvocationResult[] = []
     for (const providerId of providerIds) {

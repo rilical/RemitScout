@@ -1,5 +1,6 @@
 import { useApi } from '~/composables/useApi'
 import type { IndexSeriesPoint, IndexSeriesResponse, TriangulatedIndexResponse } from '~/types/indices'
+import type { PublishedEmbedVariant } from './pulseApi'
 
 type IndexSeriesParams = {
   corridor_id: string
@@ -67,6 +68,32 @@ export type IndicesEmbedSnapshotResponse = {
   expiresAt: string
 }
 
+export type IndicesPublishedEmbedCreateParams = IndicesEmbedSnapshotCreateParams & {
+  theme?: 'dark' | 'light'
+}
+
+export type IndicesPublishedEmbedCreateResponse = {
+  success: true
+  publishedId: string
+  title: string
+  theme: 'dark' | 'light'
+  publicUrl: string
+  embedCode: string
+  variants: PublishedEmbedVariant[]
+  createdAt: string
+  publishedAt: string
+  corridorId: string
+  amountBucket: number
+  methodProfile: string
+}
+
+export type IndicesPublishedEmbedResponse = IndexSeriesResponse & {
+  publishedId: string
+  theme: 'dark' | 'light'
+  createdAt: string
+  publishedAt: string
+}
+
 export async function getIndexSeries(params: IndexSeriesParams): Promise<IndexSeriesResponse> {
   const { request } = useApi()
   const { api_key, ...query } = params
@@ -94,6 +121,23 @@ export async function getPublicIndicesEmbedSnapshot(
 ): Promise<IndicesEmbedSnapshotResponse> {
   const { request } = useApi()
   return await request<IndicesEmbedSnapshotResponse>(`/public/indices/embed-snapshots/${encodeURIComponent(snapshotId)}`)
+}
+
+export async function createIndicesPublishedEmbed(
+  params: IndicesPublishedEmbedCreateParams,
+): Promise<IndicesPublishedEmbedCreateResponse> {
+  const { request } = useApi()
+  return await request<IndicesPublishedEmbedCreateResponse>('/indices/published-embeds', {
+    method: 'POST',
+    body: params,
+  })
+}
+
+export async function getPublicIndicesPublishedEmbed(
+  publishedId: string,
+): Promise<IndicesPublishedEmbedResponse> {
+  const { request } = useApi()
+  return await request<IndicesPublishedEmbedResponse>(`/public/indices/published-embeds/${encodeURIComponent(publishedId)}`)
 }
 
 export async function getTriangulatedIndex(

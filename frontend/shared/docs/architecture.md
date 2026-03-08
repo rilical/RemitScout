@@ -67,7 +67,7 @@ These are grounded in existing route structure under `frontend/pages/**`.
 
 **Purpose**: exchange rates, pulse feeds, index methodology pages and visualizations.
 
-- Routes: `frontend/pages/exchange-rates/**`, `frontend/pages/pulse.vue`, `frontend/pages/indices-methodology.vue`, `frontend/pages/methodology.vue`
+- Routes: `frontend/pages/exchange-rates/**`, `frontend/pages/pulse/index.vue`, `frontend/pages/indices-methodology.vue`, `frontend/pages/methodology.vue`
 
 ### 3) Account (Auth + Billing)
 

@@ -4,16 +4,29 @@ import type { ApiKeyContext } from '../services/api-keys'
 import type { InstitutionalClientContext } from '../services/institutional-clients'
 import type { Entitlements, PlanCode } from '../services/entitlements'
 import type { PlaneAContainer } from '../container'
+import type { ApiKeyAccessPolicy } from '../routes/api-key-access'
+import type { PlanLifecycleState, PlanRecoveryAction } from '../services/plan-state'
 
 declare module 'fastify' {
   interface FastifyRequest {
     user?: AuthUser
     authError?: AuthError
     accountDeleted?: boolean
+    apiKeyPresented?: boolean
     apiKey?: ApiKeyContext
+    userApiKey?: ApiKeyContext
     apiKeyError?: { code: string; message: string }
     institutionalClient?: InstitutionalClientContext
-    entitlementsContext?: { planCode: PlanCode; entitlements: Entitlements }
+    entitlementsContext?: {
+      planCode: PlanCode
+      entitlements: Entitlements
+      isPlanActive: boolean
+      internalEnterpriseOverride: boolean
+      lifecycleState: PlanLifecycleState
+      recoveryAvailable: boolean
+      recoveryAction: PlanRecoveryAction
+      source: 'internal_admin_override' | 'stored_plan' | 'inactive_or_default'
+    }
     traceId?: string
     span?: Span
     startTime?: number
@@ -21,5 +34,9 @@ declare module 'fastify' {
 
   interface FastifyInstance {
     container: PlaneAContainer
+  }
+
+  interface FastifyContextConfig {
+    apiKeyAccess?: ApiKeyAccessPolicy
   }
 }

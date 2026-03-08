@@ -208,8 +208,8 @@ describe('StressResponder', () => {
       const overrides = await responder.processStressSignals([signal])
 
       expect(overrides).toHaveLength(1)
-      // Critical: 0.25 multiplier -> 60000 * 0.25 = 15000ms
-      expect(overrides[0].overrideIntervalMs).toBe(15_000)
+      // Critical would resolve to 15000ms, but the responder clamps to MIN_INTERVAL_MS.
+      expect(overrides[0].overrideIntervalMs).toBe(20_000)
     })
 
     it('applies overrides to multiple modules covering the corridor', async () => {

@@ -35,8 +35,8 @@ export type DeployResult = {
  * - Records the PR URL on the failure bundle
  * - Requires human review and merge
  *
- * Direct application (without PR) is gated behind the `AGENT_DIRECT_DEPLOY` flag
- * and requires `autoHealEnabled` in the module's policy.
+ * Direct application is intentionally disabled. All repairs stay propose-only
+ * and go through PR-based review.
  */
 export class PatchDeployer {
   private readonly pool: Pool
@@ -72,20 +72,6 @@ export class PatchDeployer {
       moduleId: proposal.moduleId,
       confidence: proposal.confidence,
     })
-
-    // Check if direct deploy is allowed
-    const directDeploy = process.env.AGENT_DIRECT_DEPLOY === 'true'
-    const { rows: modules } = await this.pool.query<{ policy: Record<string, unknown> }>(
-      `SELECT policy FROM silver.module_registry WHERE module_id = $1`,
-      [proposal.moduleId],
-    )
-
-    const autoHealEnabled = modules.length > 0 && (modules[0].policy as { autoHealEnabled?: boolean })?.autoHealEnabled === true
-
-    if (directDeploy && autoHealEnabled && proposal.confidence === 'high') {
-      // Direct application path — only for high-confidence proposals on auto-heal modules
-      return this.deployDirect(proposal)
-    }
 
     // Default: PR-based deployment (propose-only governance)
     return this.deployViaPR(proposal)
@@ -346,26 +332,6 @@ export class PatchDeployer {
       method: 'pr',
       prUrl: null,
       reason,
-    }
-  }
-
-  /**
-   * Apply patch directly (requires autoHealEnabled + AGENT_DIRECT_DEPLOY).
-   * Currently deferred — direct deployment is not yet implemented.
-   */
-  private async deployDirect(proposal: PatchProposal): Promise<DeployResult> {
-    logger.warn('direct_deploy_not_implemented', {
-      bundleId: proposal.bundleId,
-      moduleId: proposal.moduleId,
-    })
-
-    return {
-      bundleId: proposal.bundleId,
-      moduleId: proposal.moduleId,
-      deployed: false,
-      method: 'deferred',
-      prUrl: null,
-      reason: 'Direct deployment not yet implemented — falling back to PR workflow',
     }
   }
 }

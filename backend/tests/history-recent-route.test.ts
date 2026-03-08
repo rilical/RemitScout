@@ -9,11 +9,21 @@ vi.mock('../shared/db', () => ({
   query: vi.fn(),
 }))
 
-vi.mock('../plane-a/src/repositories', () => ({
-  ComparisonHistoryRepository: vi.fn().mockImplementation(() => ({
-    listByUserId: mockListByUserId,
-  })),
-}))
+vi.mock('../plane-a/src/repositories', async () => {
+  const actual = await vi.importActual<typeof import('../plane-a/src/repositories')>(
+    '../plane-a/src/repositories',
+  )
+  return {
+    ...actual,
+    ComparisonHistoryRepository: vi.fn().mockImplementation(() => ({
+      listByUserId: mockListByUserId,
+    })),
+    DailyUsageCounterRepository: vi.fn().mockImplementation(() => ({
+      incrementAndGet: vi.fn().mockResolvedValue(0),
+      getCount: vi.fn().mockResolvedValue(0),
+    })),
+  }
+})
 
 describe('history recent route', () => {
   let app: FastifyInstance

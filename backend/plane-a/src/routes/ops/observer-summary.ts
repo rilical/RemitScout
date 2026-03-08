@@ -4,7 +4,7 @@ import { getPool, query } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { DEFAULT_LIMIT_MAX } from '../../../../shared/constants'
-import { requireAdmin } from '../../plugins/auth-plugin'
+import { requireSuperAdmin } from '../../plugins/auth-plugin'
 import { getErrorMessage } from '../../types/errors'
 import { ValidationError } from '../../../../shared/errors'
 
@@ -18,7 +18,7 @@ const querySchema = z.object({
 })
 
 export const observerSummaryRoutes = (app: FastifyInstance) => {
-  app.get('/ops/observer/summary', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.get('/ops/observer/summary', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
