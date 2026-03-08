@@ -14,7 +14,14 @@ const isDashboardUrl = (url: string | URL) => {
 }
 
 const waitForDashboard = async (page: Page) => {
-  await page.waitForURL(url => isDashboardUrl(url), { timeout: 30000 })
+  try {
+    await page.waitForURL(url => isDashboardUrl(url), { timeout: 30000 })
+  }
+ catch (err) {
+    throw new Error(
+      `Expected dashboard URL but at: ${page.url()}. Auth hydration may have failed. Original: ${err}`,
+    )
+  }
   await expect(page.getByText(dashboardSubtitle)).toBeVisible({ timeout: 30000 })
 }
 
