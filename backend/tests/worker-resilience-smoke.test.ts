@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { resolveWorkerResilienceAdminAuth } from '../scripts/ci/worker-resilience-smoke'
+import {
+  resolveQueueLookupIssue,
+  resolveWorkerResilienceAdminAuth,
+} from '../scripts/ci/worker-resilience-smoke'
 
 describe('worker resilience smoke admin auth', () => {
   it('accepts the admin exchange token when it is returned directly', () => {
@@ -33,5 +36,19 @@ describe('worker resilience smoke admin auth', () => {
       ok: false,
       note: 'status=403',
     })
+  })
+
+  it('classifies direct queue lookup misses as non-fatal fallback issues', () => {
+    expect(resolveQueueLookupIssue({
+      name: 'AWS.SimpleQueueService.NonExistentQueue',
+      message: 'The specified queue does not exist.',
+    })).toBe('nonexistent_queue')
+
+    expect(resolveQueueLookupIssue({
+      name: 'AccessDeniedException',
+      message: 'is not authorized to perform: sqs:GetQueueUrl',
+    })).toBe('access_denied')
+
+    expect(resolveQueueLookupIssue(new Error('socket timeout'))).toBeNull()
   })
 })
