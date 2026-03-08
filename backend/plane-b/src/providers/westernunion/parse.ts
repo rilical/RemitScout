@@ -236,8 +236,9 @@ export const parseWesternUnionPayload = (
   const { sourceCurrency } = requireCorridorId(request.corridor_id)
 
   const sendAmount = option.send_amount ?? request.send_amount
+  const effectiveRate = option.promotional_rate ?? option.fx_rate
   const receiveAmount =
-    option.receive_amount ?? (option.fx_rate > 0 ? sendAmount * option.fx_rate : Number.NaN)
+    option.receive_amount ?? (effectiveRate > 0 ? sendAmount * effectiveRate : Number.NaN)
   const feeForDebit = option.promotional_fee_amount ?? option.fee_amount
 
   if (!Number.isFinite(sendAmount) || !Number.isFinite(receiveAmount)) {
