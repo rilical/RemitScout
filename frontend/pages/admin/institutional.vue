@@ -15,7 +15,12 @@
       </template>
     </AdminPageShell>
 
-    <ErrorState v-if="error" mode="card" :message="error" :on-retry="loadClients" />
+    <ErrorState
+v-if="error"
+mode="card"
+:message="error"
+:on-retry="loadClients"
+/>
 
     <AdminSurfaceOverview :model="surfaceOverview" />
 
@@ -127,7 +132,10 @@
           </span>
         </button>
 
-        <div v-if="showCreateForm" class="border-t border-rs-border px-6 py-6">
+        <div
+v-if="showCreateForm"
+class="border-t border-rs-border px-6 py-6"
+>
           <div
             class="text-body-sm mb-4 rounded-2xl border px-4 py-4"
             :class="
@@ -148,7 +156,10 @@
             </p>
           </div>
 
-          <form class="grid gap-4 md:grid-cols-2" @submit.prevent="createClient">
+          <form
+class="grid gap-4 md:grid-cols-2"
+@submit.prevent="createClient"
+>
             <label class="text-body-sm text-rs-muted">
               Client name
               <input
@@ -158,7 +169,7 @@
                 class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
                 :disabled="!canMutate || creating"
                 placeholder="Acme Treasury"
-              />
+              >
             </label>
 
             <label class="text-body-sm text-rs-muted">
@@ -170,7 +181,7 @@
                 class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
                 :disabled="!canMutate || creating"
                 placeholder="acme_treasury"
-              />
+              >
             </label>
 
             <label class="text-body-sm text-rs-muted">
@@ -194,7 +205,7 @@
                 class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
                 :disabled="!canMutate || creating"
                 placeholder="owner@remit-scout.com"
-              />
+              >
             </label>
 
             <div class="text-body-sm text-rs-muted md:col-span-2">
@@ -210,7 +221,7 @@
                 :disabled="!canMutate || creating || corridorCatalogLoading"
                 placeholder="Search by send country or destination country"
                 @keydown.enter.prevent="commitCreateCorridorSearch"
-              />
+              >
               <div
                 v-if="corridorCatalogLoading"
                 class="mt-2 rounded-2xl border border-rs-border bg-rs-bg/40 px-3 py-3 text-xs text-rs-muted"
@@ -268,7 +279,7 @@
                 min="0"
                 class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
                 :disabled="!canMutate || creating"
-              />
+              >
             </label>
 
             <label class="text-body-sm text-rs-muted">
@@ -279,7 +290,7 @@
                 min="0"
                 class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
                 :disabled="!canMutate || creating"
-              />
+              >
             </label>
 
             <label class="text-body-sm text-rs-muted">
@@ -289,7 +300,7 @@
                 type="date"
                 class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
                 :disabled="!canMutate || creating"
-              />
+              >
             </label>
 
             <label class="text-body-sm text-rs-muted">
@@ -299,7 +310,7 @@
                 type="date"
                 class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
                 :disabled="!canMutate || creating"
-              />
+              >
             </label>
 
             <label class="text-body-sm text-rs-muted">
@@ -385,8 +396,7 @@
             <div class="mt-3 flex items-center gap-2">
               <code
                 class="flex-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-rs-fg"
-                >{{ newApiKey }}</code
-              >
+                >{{ newApiKey }}</code>
               <button
                 class="text-body-sm rounded-lg bg-emerald-700 px-3 py-2 font-semibold text-white hover:bg-emerald-800"
                 @click="copyApiKey"
@@ -596,7 +606,10 @@
         </template>
       </DataTable>
 
-      <div v-if="expandedClient" class="mt-6 rounded-3xl border border-rs-border bg-rs-bg/30 p-5">
+      <div
+v-if="expandedClient"
+class="mt-6 rounded-3xl border border-rs-border bg-rs-bg/30 p-5"
+>
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div class="flex items-center gap-3">
@@ -626,20 +639,23 @@
 
           <button
             class="text-body-sm h-10 rounded-lg border border-rs-border px-4 font-semibold text-rs-fg hover:bg-neutral-50"
-            @click="
-              expandedId = null;
-              clientDetail = null;
-            "
+            @click="closeDetail"
           >
             Close
           </button>
         </div>
 
-        <div v-if="detailLoading" class="text-body-sm mt-4 text-rs-muted">
+        <div
+v-if="detailLoading"
+class="text-body-sm mt-4 text-rs-muted"
+>
           Loading client detail...
         </div>
 
-        <div v-else-if="clientDetail" class="mt-5 grid gap-4 lg:grid-cols-3">
+        <div
+v-else-if="clientDetail"
+class="mt-5 grid gap-4 lg:grid-cols-3"
+>
           <article class="rounded-2xl border border-rs-border bg-rs-surface p-4">
             <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">
               Workflow
@@ -797,7 +813,10 @@
           </button>
         </div>
 
-        <form class="mt-5 grid gap-4 md:grid-cols-2" @submit.prevent="saveEdit">
+        <form
+class="mt-5 grid gap-4 md:grid-cols-2"
+@submit.prevent="saveEdit"
+>
           <label class="text-body-sm text-rs-muted">
             Client name
             <input
@@ -805,7 +824,7 @@
               type="text"
               class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
               :disabled="saving"
-            />
+            >
           </label>
 
           <label class="text-body-sm text-rs-muted">
@@ -834,7 +853,7 @@
               :disabled="saving || corridorCatalogLoading"
               placeholder="Search by send country or destination country"
               @keydown.enter.prevent="commitEditCorridorSearch"
-            />
+            >
             <div
               v-if="corridorCatalogLoading"
               class="mt-2 rounded-2xl border border-rs-border bg-rs-bg/40 px-3 py-3 text-xs text-rs-muted"
@@ -892,7 +911,7 @@
               min="0"
               class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
               :disabled="saving"
-            />
+            >
           </label>
 
           <label class="text-body-sm text-rs-muted">
@@ -903,7 +922,7 @@
               min="0"
               class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
               :disabled="saving"
-            />
+            >
           </label>
 
           <label class="text-body-sm text-rs-muted">
@@ -913,7 +932,7 @@
               type="date"
               class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
               :disabled="saving"
-            />
+            >
           </label>
 
           <label class="text-body-sm text-rs-muted">
@@ -923,7 +942,7 @@
               type="date"
               class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
               :disabled="saving"
-            />
+            >
           </label>
 
           <label class="text-body-sm text-rs-muted">
@@ -933,7 +952,7 @@
               type="email"
               class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
               :disabled="saving"
-            />
+            >
           </label>
 
           <label class="text-body-sm text-rs-muted">
@@ -1013,8 +1032,7 @@
         <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <code
             class="block break-all rounded-lg border border-amber-200 bg-white px-3 py-3 text-xs text-rs-fg"
-            >{{ rotatedApiKey }}</code
-          >
+            >{{ rotatedApiKey }}</code>
           <div class="mt-3 flex justify-end gap-3">
             <button
               class="text-body-sm rounded-lg bg-amber-700 px-3 py-2 font-semibold text-white hover:bg-amber-800"
@@ -1036,101 +1054,101 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onMounted, reactive, ref } from 'vue';
-import { useApi } from '~/composables/useApi';
-import { DataTable } from '~/ui';
-import type { DataTableColumn } from '~/ui';
-import type { AdminSurfaceOverviewModel } from '~/utils/adminSurfaceStatus';
-import { formatAdminSurfaceAge, getFreshnessTone } from '~/utils/adminSurfaceStatus';
-import { getAdminApiErrorMessage } from '~/utils/adminApiErrors';
+import { computed, defineAsyncComponent, onMounted, reactive, ref } from 'vue'
+import { useApi } from '~/composables/useApi'
+import { DataTable } from '~/ui'
+import type { DataTableColumn } from '~/ui'
+import type { AdminSurfaceOverviewModel } from '~/utils/adminSurfaceStatus'
+import { formatAdminSurfaceAge, getFreshnessTone } from '~/utils/adminSurfaceStatus'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 import {
   buildCorridorSearchText,
   formatCorridorCountryPair,
   toCountryPairId,
-} from '~/utils/corridorLabels';
+} from '~/utils/corridorLabels'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
   layout: 'admin',
-});
+})
 
-const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'));
+const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
 
 useAdminPage({
   title: 'Admin: Institutional Clients | Remit-Scout',
   description: 'Manage B2B institutional clients, prelaunch workflow, and activation guardrails.',
-});
+})
 
 type InstitutionalClient = {
-  id: string;
-  name: string;
-  client_prefix: string;
-  tier: string;
-  corridors_allowed: string[] | null;
-  rate_limit_rpm: number;
-  rate_limit_daily: number;
-  status: string;
-  nda_signed_at: string | null;
-  contract_start: string | null;
-  contract_end: string | null;
-  report_schedule: string;
-  internal_owner_email?: string | null;
-  compliance_notes?: string | null;
-  onboarding_checklist?: Record<string, unknown>;
-  prelaunch_config?: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-};
+  id: string
+  name: string
+  client_prefix: string
+  tier: string
+  corridors_allowed: string[] | null
+  rate_limit_rpm: number
+  rate_limit_daily: number
+  status: string
+  nda_signed_at: string | null
+  contract_start: string | null
+  contract_end: string | null
+  report_schedule: string
+  internal_owner_email?: string | null
+  compliance_notes?: string | null
+  onboarding_checklist?: Record<string, unknown>
+  prelaunch_config?: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
 
 type LaunchGate = {
-  ready: boolean;
-  required_days: number;
-  available_days: number;
-  reason: string;
-  updated_at: string | null;
-  enforced?: boolean;
-  blocked?: boolean;
-  message?: string;
-};
+  ready: boolean
+  required_days: number
+  available_days: number
+  reason: string
+  updated_at: string | null
+  enforced?: boolean
+  blocked?: boolean
+  message?: string
+}
 
 type InstitutionalWorkflow = {
-  live_activation_blocked: boolean;
-  blocked_actions: string[];
-  allowed_prelaunch_actions: string[];
-  key_state: string;
-};
+  live_activation_blocked: boolean
+  blocked_actions: string[]
+  allowed_prelaunch_actions: string[]
+  key_state: string
+}
 
 type CorridorCatalogRecord = {
-  corridorId: string;
-};
+  corridorId: string
+}
 
 type CorridorCatalogResponse = {
-  corridors?: CorridorCatalogRecord[];
-};
+  corridors?: CorridorCatalogRecord[]
+}
 
 type CountryPairOption = {
-  value: string;
-  label: string;
-  searchText: string;
-};
+  value: string
+  label: string
+  searchText: string
+}
 
 type ClientDetail = {
-  client: InstitutionalClient;
+  client: InstitutionalClient
   usage: {
-    total_requests_30d: number;
-    by_endpoint: Array<{ endpoint: string; count: number }>;
-  };
+    total_requests_30d: number
+    by_endpoint: Array<{ endpoint: string, count: number }>
+  }
   exports: Array<{
-    id: string;
-    export_date: string;
-    export_kind: string;
-    row_count: number;
-    created_at: string;
-  }>;
-  scopes: string[];
-  launch_gate?: LaunchGate;
-  workflow?: InstitutionalWorkflow;
-};
+    id: string
+    export_date: string
+    export_kind: string
+    row_count: number
+    created_at: string
+  }>
+  scopes: string[]
+  launch_gate?: LaunchGate
+  workflow?: InstitutionalWorkflow
+}
 
 const defaultChecklist = () =>
   JSON.stringify(
@@ -1141,8 +1159,8 @@ const defaultChecklist = () =>
       billing_verified: false,
     },
     null,
-    2
-  );
+    2,
+  )
 
 const defaultPrelaunchConfig = () =>
   JSON.stringify(
@@ -1152,18 +1170,18 @@ const defaultPrelaunchConfig = () =>
       go_live_owner: '',
     },
     null,
-    2
-  );
+    2,
+  )
 
-const { request } = useApi();
-const { isSuperAdmin } = useAuth();
-const log = useLogger('admin/institutional');
+const { request } = useApi()
+const { isSuperAdmin } = useAuth()
+const log = useLogger('admin/institutional')
 
-const loading = ref(true);
-const error = ref<string | null>(null);
-const clients = ref<InstitutionalClient[]>([]);
-const launchGate = ref<LaunchGate | null>(null);
-const workflow = ref<InstitutionalWorkflow | null>(null);
+const loading = ref(true)
+const error = ref<string | null>(null)
+const clients = ref<InstitutionalClient[]>([])
+const launchGate = ref<LaunchGate | null>(null)
+const workflow = ref<InstitutionalWorkflow | null>(null)
 const summaryData = reactive({
   active: 0,
   suspended: 0,
@@ -1171,15 +1189,15 @@ const summaryData = reactive({
   trial: 0,
   standard: 0,
   premium: 0,
-});
-const statusFilter = ref('');
+})
+const statusFilter = ref('')
 
-const showCreateForm = ref(false);
-const creating = ref(false);
-const createMessage = ref('');
-const createSuccess = ref(false);
-const newApiKey = ref('');
-const copied = ref(false);
+const showCreateForm = ref(false)
+const creating = ref(false)
+const createMessage = ref('')
+const createSuccess = ref(false)
+const newApiKey = ref('')
+const copied = ref(false)
 
 const createForm = reactive({
   name: '',
@@ -1195,12 +1213,12 @@ const createForm = reactive({
   compliance_notes: '',
   onboarding_checklist_json: defaultChecklist(),
   prelaunch_config_json: defaultPrelaunchConfig(),
-});
+})
 
-const expandedId = ref<string | null>(null);
-const detailLoading = ref(false);
-const clientDetail = ref<ClientDetail | null>(null);
-const editingClient = ref<InstitutionalClient | null>(null);
+const expandedId = ref<string | null>(null)
+const detailLoading = ref(false)
+const clientDetail = ref<ClientDetail | null>(null)
+const editingClient = ref<InstitutionalClient | null>(null)
 const editForm = reactive({
   name: '',
   tier: 'trial',
@@ -1214,75 +1232,79 @@ const editForm = reactive({
   compliance_notes: '',
   onboarding_checklist_json: '{}',
   prelaunch_config_json: '{}',
-});
-const saving = ref(false);
-const rotatedApiKey = ref('');
-const rotatedCopied = ref(false);
-const corridorCatalogRaw = ref<CorridorCatalogRecord[]>([]);
-const corridorCatalogLoading = ref(false);
-const corridorCatalogError = ref<string | null>(null);
-const createCorridorSearch = ref('');
-const editCorridorSearch = ref('');
-const createSelectedCorridors = ref<string[]>([]);
-const editSelectedCorridors = ref<string[]>([]);
+})
+const saving = ref(false)
+const rotatedApiKey = ref('')
+const rotatedCopied = ref(false)
+const corridorCatalogRaw = ref<CorridorCatalogRecord[]>([])
+const corridorCatalogLoading = ref(false)
+const corridorCatalogError = ref<string | null>(null)
+const createCorridorSearch = ref('')
+const editCorridorSearch = ref('')
+const createSelectedCorridors = ref<string[]>([])
+const editSelectedCorridors = ref<string[]>([])
 
-const canMutate = computed(() => Boolean(isSuperAdmin.value));
+const canMutate = computed(() => Boolean(isSuperAdmin.value))
+const closeDetail = () => {
+  expandedId.value = null
+  clientDetail.value = null
+}
 const expandedClient = computed(
-  () => clients.value.find(client => client.id === expandedId.value) ?? null
-);
-const detailWorkflow = computed(() => clientDetail.value?.workflow ?? workflow.value);
-const isActivationBlocked = computed(() => Boolean(launchGate.value?.blocked));
+  () => clients.value.find(client => client.id === expandedId.value) ?? null,
+)
+const detailWorkflow = computed(() => clientDetail.value?.workflow ?? workflow.value)
+const isActivationBlocked = computed(() => Boolean(launchGate.value?.blocked))
 const corridorCatalogOptions = computed<CountryPairOption[]>(() => {
-  const options = new Map<string, CountryPairOption>();
+  const options = new Map<string, CountryPairOption>()
   for (const corridor of corridorCatalogRaw.value) {
-    const value = toCountryPairId(corridor.corridorId);
-    if (!value || options.has(value)) continue;
+    const value = toCountryPairId(corridor.corridorId)
+    if (!value || options.has(value)) continue
     options.set(value, {
       value,
       label: formatCorridorCountryPair(value, ' -> '),
       searchText: buildCorridorSearchText(value),
-    });
+    })
   }
-  return Array.from(options.values()).sort((left, right) => left.label.localeCompare(right.label));
-});
-const createSelectedCorridorSet = computed(() => new Set(createSelectedCorridors.value));
-const editSelectedCorridorSet = computed(() => new Set(editSelectedCorridors.value));
+  return Array.from(options.values()).sort((left, right) => left.label.localeCompare(right.label))
+})
+const createSelectedCorridorSet = computed(() => new Set(createSelectedCorridors.value))
+const editSelectedCorridorSet = computed(() => new Set(editSelectedCorridors.value))
 
 const launchGateMessage = computed(() => {
-  if (!launchGate.value) return '';
-  if (launchGate.value.message) return launchGate.value.message;
+  if (!launchGate.value) return ''
+  if (launchGate.value.message) return launchGate.value.message
   if (launchGate.value.ready) {
-    return `Institutional launch gate is open with ${launchGate.value.available_days} days of sellable Gold history.`;
+    return `Institutional launch gate is open with ${launchGate.value.available_days} days of sellable Gold history.`
   }
-  return `Institutional launch stays blocked until ${launchGate.value.required_days} days of sellable Gold history are available (${launchGate.value.available_days} currently available).`;
-});
+  return `Institutional launch stays blocked until ${launchGate.value.required_days} days of sellable Gold history are available (${launchGate.value.available_days} currently available).`
+})
 
 const humanizeWorkflowAction = (value: string) =>
-  value.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+  value.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase())
 
 const blockedActionSummary = computed(() =>
   (detailWorkflow.value?.blocked_actions || []).length
     ? (detailWorkflow.value?.blocked_actions || []).map(humanizeWorkflowAction).join(', ')
-    : 'No blocked actions.'
-);
+    : 'No blocked actions.',
+)
 
 const allowedActionSummary = computed(() =>
   (detailWorkflow.value?.allowed_prelaunch_actions || []).length
     ? (detailWorkflow.value?.allowed_prelaunch_actions || []).map(humanizeWorkflowAction).join(', ')
-    : 'No prelaunch actions loaded yet.'
-);
+    : 'No prelaunch actions loaded yet.',
+)
 
 const tierBadgeClass = (tier: string) => {
-  if (tier === 'premium') return 'bg-fuchsia-100 text-fuchsia-700';
-  if (tier === 'standard') return 'bg-sky-100 text-sky-700';
-  return 'bg-slate-200 text-slate-700';
-};
+  if (tier === 'premium') return 'bg-fuchsia-100 text-fuchsia-700'
+  if (tier === 'standard') return 'bg-sky-100 text-sky-700'
+  return 'bg-slate-200 text-slate-700'
+}
 
 const statusBadgeClass = (status: string) => {
-  if (status === 'active') return 'bg-emerald-100 text-emerald-700';
-  if (status === 'suspended') return 'bg-amber-100 text-amber-700';
-  return 'bg-rose-100 text-rose-700';
-};
+  if (status === 'active') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'suspended') return 'bg-amber-100 text-amber-700'
+  return 'bg-rose-100 text-rose-700'
+}
 
 const clientColumns: DataTableColumn[] = [
   { key: 'name', label: 'Name' },
@@ -1294,7 +1316,7 @@ const clientColumns: DataTableColumn[] = [
   { key: 'rate_limits', label: 'Rate Limits' },
   { key: 'report_schedule', label: 'Report' },
   { key: 'actions', label: 'Actions', align: 'right' },
-];
+]
 
 const clientRows = computed(() =>
   clients.value.map(client => ({
@@ -1309,122 +1331,123 @@ const clientRows = computed(() =>
     report_schedule: client.report_schedule,
     actions: 'actions',
     raw: client,
-  }))
-);
+  })),
+)
 
 const asString = (value: unknown): string =>
-  typeof value === 'string' ? value : String(value ?? '');
-const clientFromRow = (value: unknown): InstitutionalClient => value as InstitutionalClient;
+  typeof value === 'string' ? value : String(value ?? '')
+const clientFromRow = (value: unknown): InstitutionalClient => value as InstitutionalClient
 
 const normalizeAllowedCorridors = (values: string[] | null | undefined): string[] => {
-  return Array.from(new Set((values || []).map(value => toCountryPairId(value)).filter(Boolean)));
-};
+  return Array.from(new Set((values || []).map(value => toCountryPairId(value)).filter(Boolean)))
+}
 
 const getFallbackCorridorOption = (corridorId: string): CountryPairOption => {
-  const value = toCountryPairId(corridorId);
+  const value = toCountryPairId(corridorId)
   return {
     value,
     label: formatCorridorCountryPair(value, ' -> '),
     searchText: buildCorridorSearchText(value),
-  };
-};
+  }
+}
 
 const toSelectedCorridorOptions = (values: string[]) =>
   values.map(
     corridorId =>
-      corridorCatalogOptions.value.find(option => option.value === corridorId) ||
-      getFallbackCorridorOption(corridorId)
-  );
+      corridorCatalogOptions.value.find(option => option.value === corridorId)
+      || getFallbackCorridorOption(corridorId),
+  )
 
 const createSelectedCorridorOptions = computed(() =>
-  toSelectedCorridorOptions(createSelectedCorridors.value)
-);
+  toSelectedCorridorOptions(createSelectedCorridors.value),
+)
 const editSelectedCorridorOptions = computed(() =>
-  toSelectedCorridorOptions(editSelectedCorridors.value)
-);
+  toSelectedCorridorOptions(editSelectedCorridors.value),
+)
 
 const filterCorridorOptions = (query: string, selected: Set<string>) => {
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = query.trim().toLowerCase()
   return corridorCatalogOptions.value
     .filter(option => !selected.has(option.value))
     .filter(option => !normalizedQuery || option.searchText.includes(normalizedQuery))
-    .slice(0, 8);
-};
+    .slice(0, 8)
+}
 
 const createCorridorCandidates = computed(() =>
-  filterCorridorOptions(createCorridorSearch.value, createSelectedCorridorSet.value)
-);
+  filterCorridorOptions(createCorridorSearch.value, createSelectedCorridorSet.value),
+)
 const editCorridorCandidates = computed(() =>
-  filterCorridorOptions(editCorridorSearch.value, editSelectedCorridorSet.value)
-);
+  filterCorridorOptions(editCorridorSearch.value, editSelectedCorridorSet.value),
+)
 
 const setCreateSelectedCorridors = (values: string[]) => {
-  createSelectedCorridors.value = normalizeAllowedCorridors(values);
-  createForm.corridors_raw = createSelectedCorridors.value.join(', ');
-};
+  createSelectedCorridors.value = normalizeAllowedCorridors(values)
+  createForm.corridors_raw = createSelectedCorridors.value.join(', ')
+}
 
 const setEditSelectedCorridors = (values: string[]) => {
-  editSelectedCorridors.value = normalizeAllowedCorridors(values);
-  editForm.corridors_raw = editSelectedCorridors.value.join(', ');
-};
+  editSelectedCorridors.value = normalizeAllowedCorridors(values)
+  editForm.corridors_raw = editSelectedCorridors.value.join(', ')
+}
 
 const addCreateCorridor = (corridorId: string) => {
-  if (createSelectedCorridorSet.value.has(corridorId)) return;
-  setCreateSelectedCorridors([...createSelectedCorridors.value, corridorId]);
-  createCorridorSearch.value = '';
-};
+  if (createSelectedCorridorSet.value.has(corridorId)) return
+  setCreateSelectedCorridors([...createSelectedCorridors.value, corridorId])
+  createCorridorSearch.value = ''
+}
 
 const removeCreateCorridor = (corridorId: string) => {
-  setCreateSelectedCorridors(createSelectedCorridors.value.filter(value => value !== corridorId));
-};
+  setCreateSelectedCorridors(createSelectedCorridors.value.filter(value => value !== corridorId))
+}
 
 const addEditCorridor = (corridorId: string) => {
-  if (editSelectedCorridorSet.value.has(corridorId)) return;
-  setEditSelectedCorridors([...editSelectedCorridors.value, corridorId]);
-  editCorridorSearch.value = '';
-};
+  if (editSelectedCorridorSet.value.has(corridorId)) return
+  setEditSelectedCorridors([...editSelectedCorridors.value, corridorId])
+  editCorridorSearch.value = ''
+}
 
 const removeEditCorridor = (corridorId: string) => {
-  setEditSelectedCorridors(editSelectedCorridors.value.filter(value => value !== corridorId));
-};
+  setEditSelectedCorridors(editSelectedCorridors.value.filter(value => value !== corridorId))
+}
 
 const commitCreateCorridorSearch = () => {
   if (createCorridorCandidates.value.length > 0) {
-    addCreateCorridor(createCorridorCandidates.value[0].value);
+    addCreateCorridor(createCorridorCandidates.value[0].value)
   }
-};
+}
 
 const commitEditCorridorSearch = () => {
   if (editCorridorCandidates.value.length > 0) {
-    addEditCorridor(editCorridorCandidates.value[0].value);
+    addEditCorridor(editCorridorCandidates.value[0].value)
   }
-};
+}
 
 const selectedCorridorsPayload = (values: string[]) => {
-  if (values.length === 0) return null;
-  return values;
-};
+  if (values.length === 0) return null
+  return values
+}
 
 const parseJsonObject = (value: string, fallback: Record<string, unknown>) => {
   try {
-    const parsed = JSON.parse(value);
+    const parsed = JSON.parse(value)
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return parsed as Record<string, unknown>;
+      return parsed as Record<string, unknown>
     }
-    return fallback;
-  } catch {
-    throw new Error('Invalid JSON payload.');
+    return fallback
   }
-};
+ catch {
+    throw new Error('Invalid JSON payload.')
+  }
+}
 
-const formatJson = (value: unknown) => JSON.stringify(value, null, 2);
+const formatJson = (value: unknown) => JSON.stringify(value, null, 2)
 
 const surfaceOverview = computed<AdminSurfaceOverviewModel>(() => {
-  const latestClientUpdate = clients.value[0]?.updated_at || launchGate.value?.updated_at || null;
+  const latestClientUpdate = clients.value[0]?.updated_at || launchGate.value?.updated_at || null
   const freshnessTone = getFreshnessTone(latestClientUpdate, {
     watchMinutes: 1440,
     criticalMinutes: 10080,
-  });
+  })
 
   return {
     runtimeLabel: launchGate.value?.blocked ? 'Prelaunch mode active' : 'Live activation allowed',
@@ -1490,47 +1513,47 @@ const surfaceOverview = computed<AdminSurfaceOverviewModel>(() => {
             body: 'That is acceptable in staging. Seed suspended records now so onboarding and launch-readiness work can proceed without live risk.',
           }
         : null,
-  };
-});
+  }
+})
 
 const resetCreateForm = () => {
-  createForm.name = '';
-  createForm.client_prefix = '';
-  createForm.tier = 'trial';
-  createForm.corridors_raw = '';
-  createForm.rate_limit_rpm = 60;
-  createForm.rate_limit_daily = 10000;
-  createForm.contract_start = '';
-  createForm.contract_end = '';
-  createForm.report_schedule = 'none';
-  createForm.internal_owner_email = '';
-  createForm.compliance_notes = '';
-  createForm.onboarding_checklist_json = defaultChecklist();
-  createForm.prelaunch_config_json = defaultPrelaunchConfig();
-  createCorridorSearch.value = '';
-  setCreateSelectedCorridors([]);
-};
+  createForm.name = ''
+  createForm.client_prefix = ''
+  createForm.tier = 'trial'
+  createForm.corridors_raw = ''
+  createForm.rate_limit_rpm = 60
+  createForm.rate_limit_daily = 10000
+  createForm.contract_start = ''
+  createForm.contract_end = ''
+  createForm.report_schedule = 'none'
+  createForm.internal_owner_email = ''
+  createForm.compliance_notes = ''
+  createForm.onboarding_checklist_json = defaultChecklist()
+  createForm.prelaunch_config_json = defaultPrelaunchConfig()
+  createCorridorSearch.value = ''
+  setCreateSelectedCorridors([])
+}
 
 const loadClients = async () => {
-  loading.value = true;
-  error.value = null;
+  loading.value = true
+  error.value = null
 
   try {
-    const query: Record<string, string> = {};
+    const query: Record<string, string> = {}
     if (statusFilter.value) {
-      query.status = statusFilter.value;
+      query.status = statusFilter.value
     }
 
     const data = await request<{
-      clients?: InstitutionalClient[];
-      summary?: typeof summaryData;
-      launch_gate?: LaunchGate;
-      workflow?: InstitutionalWorkflow;
-    }>('/admin/institutional/clients', { query });
+      clients?: InstitutionalClient[]
+      summary?: typeof summaryData
+      launch_gate?: LaunchGate
+      workflow?: InstitutionalWorkflow
+    }>('/admin/institutional/clients', { query })
 
-    clients.value = data.clients || [];
-    launchGate.value = data.launch_gate || null;
-    workflow.value = data.workflow || null;
+    clients.value = data.clients || []
+    launchGate.value = data.launch_gate || null
+    workflow.value = data.workflow || null
     Object.assign(summaryData, {
       active: 0,
       suspended: 0,
@@ -1539,47 +1562,51 @@ const loadClients = async () => {
       standard: 0,
       premium: 0,
       ...(data.summary || {}),
-    });
-  } catch (err) {
-    error.value = getAdminApiErrorMessage(err, 'Failed to load institutional clients.');
-    log.error('Failed to load institutional clients', err);
-  } finally {
-    loading.value = false;
+    })
   }
-};
+ catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to load institutional clients.')
+    log.error('Failed to load institutional clients', err)
+  }
+ finally {
+    loading.value = false
+  }
+}
 
 const loadCorridorCatalog = async () => {
-  if (corridorCatalogLoading.value) return;
+  if (corridorCatalogLoading.value) return
 
-  corridorCatalogLoading.value = true;
-  corridorCatalogError.value = null;
+  corridorCatalogLoading.value = true
+  corridorCatalogError.value = null
 
   try {
-    const data = await request<CorridorCatalogResponse>('/indices/corridors');
-    corridorCatalogRaw.value = Array.isArray(data.corridors) ? data.corridors : [];
-  } catch {
-    corridorCatalogError.value =
-      'The country-pair catalog is unavailable right now. Refresh before updating enterprise corridor access.';
-  } finally {
-    corridorCatalogLoading.value = false;
+    const data = await request<CorridorCatalogResponse>('/indices/corridors')
+    corridorCatalogRaw.value = Array.isArray(data.corridors) ? data.corridors : []
   }
-};
+ catch {
+    corridorCatalogError.value
+      = 'The country-pair catalog is unavailable right now. Refresh before updating enterprise corridor access.'
+  }
+ finally {
+    corridorCatalogLoading.value = false
+  }
+}
 
 const createClient = async () => {
-  if (!canMutate.value) return;
+  if (!canMutate.value) return
 
-  creating.value = true;
-  createMessage.value = '';
-  createSuccess.value = false;
-  newApiKey.value = '';
+  creating.value = true
+  createMessage.value = ''
+  createSuccess.value = false
+  newApiKey.value = ''
 
   try {
     const data = await request<{
-      success?: boolean;
-      client?: InstitutionalClient;
-      api_key?: string | null;
-      launch_gate?: LaunchGate;
-      workflow?: InstitutionalWorkflow;
+      success?: boolean
+      client?: InstitutionalClient
+      api_key?: string | null
+      launch_gate?: LaunchGate
+      workflow?: InstitutionalWorkflow
     }>('/admin/institutional/clients', {
       method: 'POST',
       body: {
@@ -1597,98 +1624,103 @@ const createClient = async () => {
         onboarding_checklist: parseJsonObject(createForm.onboarding_checklist_json, {}),
         prelaunch_config: parseJsonObject(createForm.prelaunch_config_json, {}),
       },
-    });
+    })
 
-    launchGate.value = data.launch_gate || launchGate.value;
-    workflow.value = data.workflow || workflow.value;
+    launchGate.value = data.launch_gate || launchGate.value
+    workflow.value = data.workflow || workflow.value
 
     if (data.success) {
-      createSuccess.value = true;
-      createMessage.value =
-        data.client?.status === 'suspended'
+      createSuccess.value = true
+      createMessage.value
+        = data.client?.status === 'suspended'
           ? `Client "${createForm.name}" created in suspended prelaunch mode.`
-          : `Client "${createForm.name}" created successfully.`;
-      newApiKey.value = data.api_key || '';
-      resetCreateForm();
-      await loadClients();
-    } else {
-      createMessage.value = 'Failed to create client.';
+          : `Client "${createForm.name}" created successfully.`
+      newApiKey.value = data.api_key || ''
+      resetCreateForm()
+      await loadClients()
     }
-  } catch (err) {
-    createMessage.value = getAdminApiErrorMessage(err, 'Failed to create client.');
-    createSuccess.value = false;
-  } finally {
-    creating.value = false;
+ else {
+      createMessage.value = 'Failed to create client.'
+    }
   }
-};
+ catch (err) {
+    createMessage.value = getAdminApiErrorMessage(err, 'Failed to create client.')
+    createSuccess.value = false
+  }
+ finally {
+    creating.value = false
+  }
+}
 
 const copyText = async (value: string) => {
-  if (!value || !import.meta.client || !navigator.clipboard?.writeText) return;
-  await navigator.clipboard.writeText(value);
-};
+  if (!value || !import.meta.client || !navigator.clipboard?.writeText) return
+  await navigator.clipboard.writeText(value)
+}
 
 const copyApiKey = async () => {
-  await copyText(newApiKey.value);
-  copied.value = true;
+  await copyText(newApiKey.value)
+  copied.value = true
   window.setTimeout(() => {
-    copied.value = false;
-  }, 2000);
-};
+    copied.value = false
+  }, 2000)
+}
 
 const copyRotatedKey = async () => {
-  await copyText(rotatedApiKey.value);
-  rotatedCopied.value = true;
+  await copyText(rotatedApiKey.value)
+  rotatedCopied.value = true
   window.setTimeout(() => {
-    rotatedCopied.value = false;
-  }, 2000);
-};
+    rotatedCopied.value = false
+  }, 2000)
+}
 
 const toggleDetail = async (id: string) => {
   if (expandedId.value === id) {
-    expandedId.value = null;
-    clientDetail.value = null;
-    return;
+    expandedId.value = null
+    clientDetail.value = null
+    return
   }
 
-  expandedId.value = id;
-  detailLoading.value = true;
-  clientDetail.value = null;
+  expandedId.value = id
+  detailLoading.value = true
+  clientDetail.value = null
 
   try {
-    const data = await request<ClientDetail>(`/admin/institutional/clients/${id}`);
-    clientDetail.value = data;
-    launchGate.value = data.launch_gate || launchGate.value;
-    workflow.value = data.workflow || workflow.value;
-  } catch (err) {
-    error.value = getAdminApiErrorMessage(err, 'Failed to load client detail.');
-    log.error('Failed to load institutional client detail', err);
-  } finally {
-    detailLoading.value = false;
+    const data = await request<ClientDetail>(`/admin/institutional/clients/${id}`)
+    clientDetail.value = data
+    launchGate.value = data.launch_gate || launchGate.value
+    workflow.value = data.workflow || workflow.value
   }
-};
+ catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to load client detail.')
+    log.error('Failed to load institutional client detail', err)
+  }
+ finally {
+    detailLoading.value = false
+  }
+}
 
 const startEdit = (client: InstitutionalClient) => {
-  if (!canMutate.value) return;
-  editingClient.value = client;
-  editForm.name = client.name;
-  editForm.tier = client.tier;
-  setEditSelectedCorridors(client.corridors_allowed || []);
-  editCorridorSearch.value = '';
-  editForm.rate_limit_rpm = client.rate_limit_rpm;
-  editForm.rate_limit_daily = client.rate_limit_daily;
-  editForm.contract_start = client.contract_start || '';
-  editForm.contract_end = client.contract_end || '';
-  editForm.report_schedule = client.report_schedule;
-  editForm.internal_owner_email = client.internal_owner_email || '';
-  editForm.compliance_notes = client.compliance_notes || '';
-  editForm.onboarding_checklist_json = JSON.stringify(client.onboarding_checklist || {}, null, 2);
-  editForm.prelaunch_config_json = JSON.stringify(client.prelaunch_config || {}, null, 2);
-};
+  if (!canMutate.value) return
+  editingClient.value = client
+  editForm.name = client.name
+  editForm.tier = client.tier
+  setEditSelectedCorridors(client.corridors_allowed || [])
+  editCorridorSearch.value = ''
+  editForm.rate_limit_rpm = client.rate_limit_rpm
+  editForm.rate_limit_daily = client.rate_limit_daily
+  editForm.contract_start = client.contract_start || ''
+  editForm.contract_end = client.contract_end || ''
+  editForm.report_schedule = client.report_schedule
+  editForm.internal_owner_email = client.internal_owner_email || ''
+  editForm.compliance_notes = client.compliance_notes || ''
+  editForm.onboarding_checklist_json = JSON.stringify(client.onboarding_checklist || {}, null, 2)
+  editForm.prelaunch_config_json = JSON.stringify(client.prelaunch_config || {}, null, 2)
+}
 
 const saveEdit = async () => {
-  if (!editingClient.value) return;
+  if (!editingClient.value) return
 
-  saving.value = true;
+  saving.value = true
   try {
     await request(`/admin/institutional/clients/${editingClient.value.id}`, {
       method: 'PATCH',
@@ -1706,88 +1738,93 @@ const saveEdit = async () => {
         onboarding_checklist: parseJsonObject(editForm.onboarding_checklist_json, {}),
         prelaunch_config: parseJsonObject(editForm.prelaunch_config_json, {}),
       },
-    });
+    })
 
-    const openId = expandedId.value;
-    editingClient.value = null;
-    await loadClients();
+    const openId = expandedId.value
+    editingClient.value = null
+    await loadClients()
     if (openId) {
-      expandedId.value = openId;
-      detailLoading.value = true;
-      clientDetail.value = null;
+      expandedId.value = openId
+      detailLoading.value = true
+      clientDetail.value = null
       try {
-        const data = await request<ClientDetail>(`/admin/institutional/clients/${openId}`);
-        clientDetail.value = data;
-        launchGate.value = data.launch_gate || launchGate.value;
-        workflow.value = data.workflow || workflow.value;
-      } finally {
-        detailLoading.value = false;
+        const data = await request<ClientDetail>(`/admin/institutional/clients/${openId}`)
+        clientDetail.value = data
+        launchGate.value = data.launch_gate || launchGate.value
+        workflow.value = data.workflow || workflow.value
+      }
+ finally {
+        detailLoading.value = false
       }
     }
-  } catch (err) {
-    error.value = getAdminApiErrorMessage(err, 'Failed to update client.');
-    log.error('Failed to update institutional client', err);
-  } finally {
-    saving.value = false;
   }
-};
+ catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to update client.')
+    log.error('Failed to update institutional client', err)
+  }
+ finally {
+    saving.value = false
+  }
+}
 
 const changeStatus = async (client: InstitutionalClient, newStatus: string) => {
-  if (!canMutate.value) return;
+  if (!canMutate.value) return
   if (newStatus === 'active' && isActivationBlocked.value) {
-    error.value = launchGateMessage.value;
-    return;
+    error.value = launchGateMessage.value
+    return
   }
 
-  const action =
-    newStatus === 'revoked' ? 'revoke' : newStatus === 'suspended' ? 'suspend' : 'reactivate';
-  if (!window.confirm(`Are you sure you want to ${action} "${client.name}"?`)) return;
+  const action
+    = newStatus === 'revoked' ? 'revoke' : newStatus === 'suspended' ? 'suspend' : 'reactivate'
+  if (!window.confirm(`Are you sure you want to ${action} "${client.name}"?`)) return
 
   try {
-    const data = await request<{ workflow?: InstitutionalWorkflow; launch_gate?: LaunchGate }>(
+    const data = await request<{ workflow?: InstitutionalWorkflow, launch_gate?: LaunchGate }>(
       `/admin/institutional/clients/${client.id}/status`,
       {
         method: 'POST',
         body: { status: newStatus },
-      }
-    );
-    workflow.value = data.workflow || workflow.value;
-    launchGate.value = data.launch_gate || launchGate.value;
-    await loadClients();
-  } catch (err) {
-    error.value = getAdminApiErrorMessage(err, 'Failed to change client status.');
-    log.error('Failed to change institutional client status', err);
+      },
+    )
+    workflow.value = data.workflow || workflow.value
+    launchGate.value = data.launch_gate || launchGate.value
+    await loadClients()
   }
-};
+ catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to change client status.')
+    log.error('Failed to change institutional client status', err)
+  }
+}
 
 const rotateKey = async (client: InstitutionalClient) => {
-  if (!canMutate.value) return;
+  if (!canMutate.value) return
   if (
     !window.confirm(
-      `Rotate API key for "${client.name}"? The current key will be invalidated immediately.`
+      `Rotate API key for "${client.name}"? The current key will be invalidated immediately.`,
     )
   )
-    return;
+    return
 
   try {
     const data = await request<{
-      success?: boolean;
-      api_key?: string;
-      launch_gate?: LaunchGate;
-      workflow?: InstitutionalWorkflow;
-    }>(`/admin/institutional/clients/${client.id}/rotate-key`, { method: 'POST' });
-    rotatedApiKey.value = data.api_key || '';
-    rotatedCopied.value = false;
-    workflow.value = data.workflow || workflow.value;
-    launchGate.value = data.launch_gate || launchGate.value;
-  } catch (err) {
-    error.value = getAdminApiErrorMessage(err, 'Failed to rotate API key.');
-    log.error('Failed to rotate institutional client API key', err);
+      success?: boolean
+      api_key?: string
+      launch_gate?: LaunchGate
+      workflow?: InstitutionalWorkflow
+    }>(`/admin/institutional/clients/${client.id}/rotate-key`, { method: 'POST' })
+    rotatedApiKey.value = data.api_key || ''
+    rotatedCopied.value = false
+    workflow.value = data.workflow || workflow.value
+    launchGate.value = data.launch_gate || launchGate.value
   }
-};
+ catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to rotate API key.')
+    log.error('Failed to rotate institutional client API key', err)
+  }
+}
 
 onMounted(() => {
-  void loadClients();
-  void loadCorridorCatalog();
-});
+  void loadClients()
+  void loadCorridorCatalog()
+})
 </script>
