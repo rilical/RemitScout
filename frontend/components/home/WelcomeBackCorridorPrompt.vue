@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
 import { useCompareHistory } from '~/composables/useCompareHistory'
 import { usePersistedState } from '~/composables/usePersistedState'
 import { usePrivacySettings } from '~/composables/usePrivacySettings'
@@ -182,6 +183,7 @@ const fetchRecentFromServer = async () => {
     const response = await request<{ success: boolean, records: RecentHistoryRecord[] }>('/history/recent', {
       method: 'GET',
       query: { limit: 1 },
+      retries: UI_BOOTSTRAP_RETRIES,
     })
     const record = response.records?.[0]
     if (!record) return

@@ -204,4 +204,52 @@ describe('useEntitlements helpers', () => {
     expect(entitlements.bulkExportEnabled.value).toBe(true)
     expect(entitlements.indicesExportsEnabled.value).toBe(true)
   })
+
+  it('retries /me during authenticated bootstrap', async () => {
+    mockRequest.mockResolvedValueOnce({
+      success: true,
+      timestamp: '2026-03-06T12:00:00.000Z',
+      user: {
+        user_id: 'retry-user',
+        email: 'retry@example.com',
+        name: 'Retry User',
+      },
+      plan: {
+        plan_code: 'free',
+        status: 'active',
+      },
+      entitlements: {
+        pulse_access: 'none',
+        exports_enabled: false,
+        exports_max_days: 0,
+        alerts_max: 1,
+        history_max_days: 30,
+        watchlist_items: 3,
+        api_access: false,
+        api_tier: null,
+        bulk_export: false,
+        indices_api: false,
+        daily_alerts_enabled: false,
+        smart_alerts_enabled: false,
+        index_threshold_alerts_enabled: false,
+        indices_exports_enabled: false,
+        pulse_embeds_enabled: false,
+        indices_embeds_enabled: false,
+        api_key_max: 0,
+        api_rate_limit_rpm: 0,
+      },
+      usage: {},
+    })
+
+    vi.resetModules()
+    const { useEntitlements } = await import('~/composables/useEntitlements')
+    useEntitlements()
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(mockRequest).toHaveBeenCalledWith('/me', {
+      retries: 5,
+    })
+  })
 })

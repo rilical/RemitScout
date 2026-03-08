@@ -1,3 +1,5 @@
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
+
 export type PendingProviderVisit = {
   id: string
   provider_id: string
@@ -34,6 +36,7 @@ export const useProviderVisits = () => {
       const response = await request<{ visits: PendingProviderVisit[] }>('/provider-visits/pending-feedback', {
         method: 'GET',
         query: { limit },
+        retries: UI_BOOTSTRAP_RETRIES,
       })
       pendingVisits.value = Array.isArray(response.visits) ? response.visits : []
     }

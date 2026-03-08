@@ -1,4 +1,5 @@
 import { createId } from '~/utils/id'
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
 import type { WatchTarget, WatchlistItem } from '~/types/tracking'
 
 export type WatchlistSaveErrorReason
@@ -269,7 +270,9 @@ export const useWatchlist = () => {
 
     try {
       syncing.value = true
-      const response = await request<WatchlistApiResponse>('/watchlist')
+      const response = await request<WatchlistApiResponse>('/watchlist', {
+        retries: UI_BOOTSTRAP_RETRIES,
+      })
 
       if (response.success && response.items) {
         items.value = response.items.sort(sortByUpdatedDesc)
@@ -306,7 +309,9 @@ export const useWatchlist = () => {
 
       let serverItems: WatchlistItem[] = []
       try {
-        const response = await request<WatchlistApiResponse>('/watchlist')
+        const response = await request<WatchlistApiResponse>('/watchlist', {
+          retries: UI_BOOTSTRAP_RETRIES,
+        })
         if (response.success && response.items) {
           serverItems = response.items
         }

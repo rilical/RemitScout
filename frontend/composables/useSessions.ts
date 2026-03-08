@@ -1,3 +1,5 @@
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
+
 type SessionItem = {
   id: string
   session_id: string
@@ -23,7 +25,9 @@ export const useSessions = () => {
     loading.value = true
     error.value = null
     try {
-      const data = await request<SessionsResponse>('/sessions')
+      const data = await request<SessionsResponse>('/sessions', {
+        retries: UI_BOOTSTRAP_RETRIES,
+      })
       sessions.value = Array.isArray(data.sessions) ? data.sessions : []
     }
     catch (err) {

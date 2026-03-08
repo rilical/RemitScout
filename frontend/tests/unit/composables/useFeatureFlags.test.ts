@@ -99,4 +99,39 @@ describe('useFeatureFlags', () => {
     expect(featureFlags.pulseEnabled.value).toBe(true)
     expect(featureFlags.pulseScreenerEnabled.value).toBe(true)
   })
+
+  it('retries runtime flag bootstrap reads and preserves the prior snapshot on failure', async () => {
+    mockRequest
+      .mockResolvedValueOnce({
+        generated_at: '2026-03-07T12:00:00.000Z',
+        flags: [
+          buildRuntimeFlag('pulse.public', true),
+          buildRuntimeFlag('pulse.screener', true),
+          buildRuntimeFlag('enterprise.public', false),
+          buildRuntimeFlag('ads.public', false),
+        ],
+      })
+      .mockRejectedValueOnce(new Error('Service Unavailable'))
+
+    const { useFeatureFlags } = await import('~/composables/useFeatureFlags')
+    const featureFlags = useFeatureFlags()
+
+    await featureFlags.refreshRuntimeFlags()
+    await nextTick()
+    expect(featureFlags.pulseEnabled.value).toBe(true)
+
+    await featureFlags.refreshRuntimeFlags()
+    await nextTick()
+
+    expect(mockRequest).toHaveBeenNthCalledWith(1, '/feature-flags/effective', {
+      method: 'GET',
+      retries: 5,
+    })
+    expect(mockRequest).toHaveBeenNthCalledWith(2, '/feature-flags/effective', {
+      method: 'GET',
+      retries: 5,
+    })
+    expect(featureFlags.pulseEnabled.value).toBe(true)
+    expect(featureFlags.runtimeFlagsError.value).toBe('Service Unavailable')
+  })
 })

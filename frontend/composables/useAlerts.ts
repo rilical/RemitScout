@@ -1,4 +1,5 @@
 import { createId } from '~/utils/id'
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
 import type { Alert, AlertHistoryEvent, AlertRule, WatchTarget } from '~/types/tracking'
 import { extractPlanStateFailure, mapPlanStateFailureMessage, resolvePlanStateFailureCode } from '~/composables/usePlanStateError'
 
@@ -97,7 +98,9 @@ export const useAlerts = () => {
 
     try {
       syncing.value = true
-      const response = await request<AlertsApiResponse>('/alerts')
+      const response = await request<AlertsApiResponse>('/alerts', {
+        retries: UI_BOOTSTRAP_RETRIES,
+      })
 
       if (response.success && response.alerts) {
         alerts.value = response.alerts.sort(sortByUpdatedDesc)

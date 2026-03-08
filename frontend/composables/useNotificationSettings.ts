@@ -1,3 +1,5 @@
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
+
 type NotificationSettings = {
   rateAlerts: boolean
   weeklySummary: boolean
@@ -38,6 +40,7 @@ export const useNotificationSettings = () => {
     try {
       const response = await request<{ settings: NotificationSettings }>('/notifications/preferences', {
         method: 'GET',
+        retries: UI_BOOTSTRAP_RETRIES,
       })
       settings.value = { ...defaults, ...response.settings }
       loaded.value = true
