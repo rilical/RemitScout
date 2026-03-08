@@ -6,6 +6,7 @@ import {
   resolveSmokeApiBaseUrl,
   resolveSmokeRootBaseUrl,
 } from './alerts-watchlists-smoke'
+import { jsonFetch } from './json-fetch'
 import {
   findVerifiedTotpFactor,
   hasTotpMfaAmr,
@@ -174,18 +175,6 @@ const evaluateRequiredMfaTruth = (input: {
     return { ok: true, advisory: true }
   }
   return { ok: false, advisory: false }
-}
-
-const jsonFetch = async <T = unknown>(
-  url: string,
-  init?: RequestInit,
-): Promise<{ status: number; body: T }> => {
-  const res = await fetch(url, init)
-  const contentType = res.headers.get('content-type') || ''
-  const body: unknown = contentType.includes('application/json')
-    ? await res.json().catch(() => ({}))
-    : await res.text().catch(() => '')
-  return { status: res.status, body: body as T }
 }
 
 const buildAnonHeaders = (apiKey: string, accessToken?: string): HeadersInit => ({
