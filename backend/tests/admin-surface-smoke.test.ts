@@ -11,6 +11,7 @@ import {
   resolveAuditLogEventId,
   resolveAdminSmokeAuthToken,
   resolvePlanSnapshot,
+  shouldSkipPrivilegedAdminChecks,
   shouldUseSupabaseFallbackForMfaChallenge,
 } from '../scripts/ci/admin-surface-smoke'
 
@@ -174,6 +175,13 @@ describe('admin surface smoke helpers', () => {
     expect(shouldUseSupabaseFallbackForMfaChallenge(403, {
       error: 'forbidden',
     }, false, '')).toBe(false)
+  })
+
+  it('skips privileged admin checks only for the explicit MFA-tolerated supabase fallback mode', () => {
+    expect(shouldSkipPrivilegedAdminChecks('supabase_fallback', true)).toBe(true)
+    expect(shouldSkipPrivilegedAdminChecks('admin_exchange', true)).toBe(false)
+    expect(shouldSkipPrivilegedAdminChecks('supabase_fallback', false)).toBe(false)
+    expect(shouldSkipPrivilegedAdminChecks('none', true)).toBe(false)
   })
 
   it('falls back to the Supabase token when admin exchange succeeds without returning an access token', () => {
