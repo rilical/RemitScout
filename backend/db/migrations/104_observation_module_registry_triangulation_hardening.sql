@@ -1,4 +1,4 @@
--- Migration 108: Observation/module registry hardening + triangulation storage expansion
+-- Migration 104: Observation/module registry hardening + triangulation storage expansion
 --
 -- Adds canonical observation lineage fields, split module ownership fields,
 -- and composite triangulation payload columns needed by corridor-level outputs.
