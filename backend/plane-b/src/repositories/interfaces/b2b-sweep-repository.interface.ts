@@ -58,6 +58,7 @@ export interface IB2bSweepRepository {
   updateSweepRunStatus(runId: string, status: B2bSweepRunStatus, finishedAt?: Date | null): Promise<void>
   updateSweepRunTotals(runId: string, corridorsTotal: number, providersTotal: number): Promise<void>
   getLatestRunByTier(priorityTier: string): Promise<B2bSweepRunRecord | null>
+  getLatestCompletedRunByTier(priorityTier: string): Promise<B2bSweepRunRecord | null>
   getActiveRunByTier(priorityTier: string): Promise<B2bSweepRunRecord | null>
   insertSweepTasks(runId: string, tasks: B2bSweepTaskInput[], options?: B2bSweepTaskInsertOptions): Promise<void>
   loadPendingTasks(runId: string, limit: number): Promise<B2bSweepTaskRecord[]>

@@ -12,7 +12,7 @@
  *
  * Env:
  * - SEND_CURRENCIES=USD,AED,GBP,EUR (default: all macro send currencies)
- * - METHODS=bank,cash,wallet,airtime (default: all)
+ * - METHODS=bank,cash,wallet,airtime,home,card (default: all)
  * - AMOUNT=500 (default: 500) -> amount bucket used for quote-presence checks
  * - RIGHTS_CHANNEL=b2c|b2b (default: b2c)
  * - REQUIRE_STATUS_PRODUCTION=1 (optional)
@@ -38,7 +38,7 @@ initErrorTracking('rights-matrix-differential')
 
 const logger = createLogger('script.rights-matrix-differential')
 
-type RequestedMethod = 'bank' | 'cash' | 'wallet' | 'airtime'
+type RequestedMethod = 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'
 type RightsChannel = 'b2c' | 'b2b'
 
 type RightsRow = {
@@ -133,19 +133,26 @@ const toAvailableMethod = (value?: string | null): RequestedMethod | null => {
   if (token === 'cash_pickup' || token === 'cash' || token.includes('cash')) {
     return 'cash'
   }
+  if (token === 'home_delivery' || token === 'home' || token.includes('home_delivery')) {
+    return 'home'
+  }
+  if (
+    token === 'debit_card'
+    || token === 'card_delivery'
+    || token === 'card_deposit'
+    || token === 'card'
+    || token === 'credit_card'
+  ) {
+    return 'card'
+  }
   if (
     token === 'bank_deposit'
     || token === 'bank_transfer'
     || token === 'bank_account'
     || token === 'bank'
     || token === 'account'
-    || token === 'card'
-    || token === 'card_deposit'
-    || token === 'debit_card'
-    || token === 'credit_card'
     || token.includes('bank')
     || token.includes('account')
-    || token.includes('card')
   ) {
     return 'bank'
   }
@@ -153,7 +160,7 @@ const toAvailableMethod = (value?: string | null): RequestedMethod | null => {
 }
 
 const parseMethods = (value: string | undefined): RequestedMethod[] => {
-  const defaults: RequestedMethod[] = ['bank', 'cash', 'wallet', 'airtime']
+  const defaults: RequestedMethod[] = ['bank', 'cash', 'wallet', 'airtime', 'home', 'card']
   const raw = splitCsv(value).map((v) => normalizeLower(v))
   if (!raw.length) return defaults
   const parsed = raw
@@ -162,6 +169,8 @@ const parseMethods = (value: string | undefined): RequestedMethod[] => {
       if (v === 'cash') return 'cash'
       if (v === 'wallet') return 'wallet'
       if (v === 'airtime') return 'airtime'
+      if (v === 'home') return 'home'
+      if (v === 'card') return 'card'
       return null
     })
     .filter((v): v is RequestedMethod => Boolean(v))

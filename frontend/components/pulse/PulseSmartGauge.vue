@@ -49,6 +49,22 @@
         <span class="sr-only">Loading chart</span>
       </div>
 
+      <!-- No meaningful data state -->
+      <div
+        v-else-if="!hasRealData"
+        class="flex flex-col items-center py-8"
+      >
+        <div class="h-48 w-full max-w-xs mx-auto flex items-center justify-center">
+          <div class="text-center">
+            <div class="text-4xl text-neutral-600 mb-3">—</div>
+            <p class="text-body-sm font-semibold text-neutral-400">Collecting data</p>
+            <p class="text-[11px] text-neutral-500 mt-1 max-w-[200px]">
+              Rate signal will appear once enough provider data is available for this corridor.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div
         v-else
         class="flex flex-col items-center"
@@ -217,7 +233,7 @@ title="Score is a 0-100 percentile based on the current effective rate relative 
 
     <!-- Trust Stamp -->
     <PulseTrustStamp
-      v-if="data"
+      v-if="data && hasRealData"
       :last-updated="data.lastUpdated"
     />
   </div>
@@ -249,6 +265,12 @@ type SmartSendNormalized = SmartSendData & {
 }
 
 const data = ref<SmartSendNormalized | null>(null)
+
+const hasRealData = computed(() => {
+  if (!data.value) return false
+  // Consider data "real" if we have non-zero rates or a non-default source
+  return (data.value.currentRate > 0 || data.value.avg30Day > 0 || (data.value as any).source === 'gold_export')
+})
 
 const normalizeSmartSend = (payload: SmartSendData): SmartSendNormalized => {
   return {

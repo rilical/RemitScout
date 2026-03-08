@@ -22,6 +22,7 @@ Rules:
     "/api/*",
 
     "/api/v1/billing/webhook",
+    "/api/v1/auth/forgot-password",
     "/api/v1/alerts/unsubscribe",
     "/api/v1/sessions/track",
     "/api/v1/account/deletion/cancel",
@@ -66,7 +67,15 @@ Rules:
     "/api/v1/telemetry/session",
 
     "/api/v1/provider-visits/track",
-    "/api/v1/indices/health"
+    "/api/v1/indices/health",
+    "/api/v1/feature-flags/effective",
+    "/api/v1/public/indices/series",
+    "/api/v1/public/indices/embed-snapshots/:snapshotId",
+    "/api/v1/public/indices/published-embeds/:id",
+    "/api/v1/public/pulse/embed-snapshots/:snapshotId",
+    "/api/v1/public/pulse/published-embeds/:id",
+    "/api/v1/public/pulse/hero",
+    "/api/v1/public/pulse/corridors"
   ]
 }
 ```
@@ -78,11 +87,14 @@ Rules:
 - `/api`, `/api/*`: explicit 410 for legacy paths.
 - `/api-docs/*`: developer OpenAPI UI (disabled in AWS unless `SWAGGER_ENABLED=1`).
 - `/api/v1/billing/webhook`: Stripe webhook (signature verification + optional IP allowlist).
+- `/api/v1/auth/forgot-password`: password-reset initiation must work before authentication.
 - `/api/v1/alerts/unsubscribe`: email unsubscribe (token validation in handler).
 - `/api/v1/sessions/track`: Anonymous session telemetry must work before authentication.
 - `/api/v1/account/deletion/cancel`: Account deletion cancel link from email must work without authentication.
 - `/api/v1/auth/forgot-password`: Password reset must work without authentication.
 - Public read-only API endpoints (quotes/providers/rates/etc): used by unauthenticated discovery flows; must not expose PII.
+- `/api/v1/public/indices/*`, `/api/v1/public/pulse/*`: share-safe embed/public data feeds; must remain aggregate-only and PII-free.
+- `/api/v1/feature-flags/effective`: public runtime toggle snapshot for client bootstrapping; must expose only minimal resolved flag state.
 - `/api/v1/compliance/*`: exposes non-sensitive certification posture and privacy threshold metadata.
 - Telemetry write endpoints: accept anonymous events; must avoid PII and be rate-limited.
 - `/api/v1/indices/health`: public readiness summary for indices (no user data).

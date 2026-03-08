@@ -1,44 +1,35 @@
 <template>
-  <div
-:class="CHART_STYLE.card"
-class="overflow-hidden"
->
+  <div :class="CHART_STYLE.card" class="overflow-hidden" data-chart-export-root>
     <!-- Header -->
-    <div class="p-6 border-b border-neutral-700">
+    <div class="border-b border-neutral-700 p-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <!-- Chart Info -->
         <div>
-          <div class="mb-1 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
+          <div class="text-body-sm mb-1 font-semibold uppercase tracking-wider text-neutral-500">
             {{ chartData?.metadata.categoryLabel || chartMeta?.categoryLabel }}
           </div>
           <h2 class="text-h3 font-bold text-white">
             {{ chartData?.metadata.title || chartMeta?.title }}
           </h2>
-          <p
-            v-if="chartData?.insight"
-            class="mt-1 text-neutral-400"
-          >
+          <p v-if="chartData?.insight" class="mt-1 text-neutral-400">
             {{ chartData.insight }}
           </p>
         </div>
 
         <!-- Controls -->
-        <div
-          v-if="!isGated"
-          class="flex flex-wrap items-center gap-3"
-        >
+        <div v-if="!isGated" class="flex flex-wrap items-center gap-3">
           <!-- Range Selector -->
           <div class="flex items-center gap-1 rounded-lg bg-neutral-900 p-1">
             <button
               v-for="r in ranges"
               :key="r.value"
-              class="relative flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium transition-colors"
+              class="text-body-sm relative flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors"
               :class="[
                 selectedRange === r.value
                   ? 'bg-brand-600 text-white'
                   : r.isGated && !isPlus
-                    ? 'text-neutral-500 cursor-not-allowed'
-                    : 'text-neutral-400 hover:text-white hover:bg-neutral-700',
+                    ? 'cursor-not-allowed text-neutral-500'
+                    : 'text-neutral-400 hover:bg-neutral-700 hover:text-white',
               ]"
               :disabled="r.isGated && !isPlus"
               @click="selectRange(r)"
@@ -64,16 +55,15 @@ class="overflow-hidden"
           <!-- View Toggle -->
           <div class="flex items-center gap-1 rounded-lg bg-neutral-900 p-1">
             <button
-              class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium transition-colors"
-              :class="viewMode === 'chart' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
+              class="text-body-sm flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors"
+              :class="
+                viewMode === 'chart'
+                  ? 'bg-brand-600 text-white'
+                  : 'text-neutral-400 hover:bg-neutral-700 hover:text-white'
+              "
               @click="viewMode = 'chart'"
             >
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -84,16 +74,15 @@ class="overflow-hidden"
               Chart
             </button>
             <button
-              class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium transition-colors"
-              :class="viewMode === 'table' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
+              class="text-body-sm flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors"
+              :class="
+                viewMode === 'table'
+                  ? 'bg-brand-600 text-white'
+                  : 'text-neutral-400 hover:bg-neutral-700 hover:text-white'
+              "
               @click="viewMode = 'table'"
             >
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -124,16 +113,9 @@ class="overflow-hidden"
       </div>
 
       <!-- Loading -->
-      <div
-        v-else-if="loading"
-        class="flex h-80 items-center justify-center"
-      >
+      <div v-else-if="loading" class="flex h-80 items-center justify-center">
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
+          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle
               class="opacity-25"
               cx="12"
@@ -153,10 +135,7 @@ class="overflow-hidden"
       </div>
 
       <!-- Chart View -->
-      <div
-        v-else-if="viewMode === 'chart'"
-        class="min-h-[320px]"
-      >
+      <div v-else-if="viewMode === 'chart'" class="min-h-[320px]">
         <div
           v-if="chartData && !chartHasRenderableSeries"
           class="flex h-80 items-center justify-center text-center text-neutral-300"
@@ -165,15 +144,12 @@ class="overflow-hidden"
             <p class="text-body font-semibold text-white">
               {{ chartEmptyTitle }}
             </p>
-            <p class="mt-2 text-body-sm text-neutral-400">
+            <p class="text-body-sm mt-2 text-neutral-400">
               {{ chartEmptyMessage }}
             </p>
           </div>
         </div>
-        <AsyncErrorBoundary
-          v-else-if="chartComponent && chartData"
-          skeleton-height="320"
-        >
+        <AsyncErrorBoundary v-else-if="chartComponent && chartData" skeleton-height="320">
           <component
             :is="chartComponent"
             :series="chartData.series"
@@ -182,10 +158,7 @@ class="overflow-hidden"
             :rows="matrixRows"
           />
         </AsyncErrorBoundary>
-        <div
-          v-else
-          class="flex h-80 items-center justify-center text-neutral-400"
-        >
+        <div v-else class="flex h-80 items-center justify-center text-neutral-400">
           No data available
         </div>
       </div>
@@ -206,22 +179,17 @@ class="overflow-hidden"
     <!-- Footer -->
     <div
       v-if="!isGated"
-      class="flex items-center justify-between border-t border-neutral-700 px-6 py-4 text-body-sm"
+      class="text-body-sm flex items-center justify-between border-t border-neutral-700 px-6 py-4"
     >
       <div class="flex items-center gap-4 text-neutral-400">
         <span v-if="chartData?.metadata.lastUpdated">
           Updated {{ formatLastUpdated(chartData.metadata.lastUpdated) }}
         </span>
         <button
-          class="flex items-center gap-1 hover:text-white transition-colors"
+          class="flex items-center gap-1 transition-colors hover:text-white"
           :title="chartData?.metadata.sourceNotes"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -234,34 +202,11 @@ class="overflow-hidden"
       </div>
       <div class="flex items-center gap-3">
         <button
-          class="flex items-center gap-1.5 text-neutral-400 hover:text-white transition-colors"
-          @click="$emit('share')"
-        >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-            />
-          </svg>
-          Share
-        </button>
-        <button
-          class="flex items-center gap-1.5 text-neutral-400 hover:text-white transition-colors"
+          v-if="canEmbed"
+          class="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
           @click="$emit('embed')"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -271,202 +216,171 @@ class="overflow-hidden"
           </svg>
           Embed
         </button>
-        <button
-          class="flex items-center gap-1.5 transition-colors"
-          :class="isPlus ? 'text-neutral-400 hover:text-white' : 'text-neutral-500 cursor-not-allowed'"
-          :disabled="!isPlus"
-          @click="isPlus && $emit('download')"
-        >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          Download
-          <svg
-            v-if="!isPlus"
-            class="h-3 w-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
-          </svg>
-        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, markRaw, defineAsyncComponent } from 'vue'
-import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
-import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
-import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
-import { formatDate } from '~/shared/lib/format'
-import { CHART_STYLE } from '~/lib/pulseChartStyle'
-import type { PulseLevel } from '~/composables/useEntitlements'
-import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
+import { ref, computed, watch, onMounted, markRaw, defineAsyncComponent } from 'vue';
+import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue';
+import { getChartData, getMethodCoverage } from '~/lib/pulseApi';
+import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry';
+import { formatDate } from '~/shared/lib/format';
+import { CHART_STYLE } from '~/lib/pulseChartStyle';
+import type { PulseLevel } from '~/composables/useEntitlements';
+import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse';
 
-const PulseLineChart = defineAsyncComponent(() => import('./PulseLineChart.vue'))
-const PulseBarChart = defineAsyncComponent(() => import('./PulseBarChart.vue'))
-const PulseStackedChart = defineAsyncComponent(() => import('./PulseStackedChart.vue'))
-const PulseScatterChart = defineAsyncComponent(() => import('./PulseScatterChart.vue'))
-const PulseMatrixTable = defineAsyncComponent(() => import('./PulseMatrixTable.vue'))
-const PulseTableView = defineAsyncComponent(() => import('./PulseTableView.vue'))
+const PulseLineChart = defineAsyncComponent(() => import('./PulseLineChart.vue'));
+const PulseBarChart = defineAsyncComponent(() => import('./PulseBarChart.vue'));
+const PulseStackedChart = defineAsyncComponent(() => import('./PulseStackedChart.vue'));
+const PulseScatterChart = defineAsyncComponent(() => import('./PulseScatterChart.vue'));
+const PulseMatrixTable = defineAsyncComponent(() => import('./PulseMatrixTable.vue'));
+const PulseTableView = defineAsyncComponent(() => import('./PulseTableView.vue'));
 
 interface Props {
-  chartId: string
-  filters: PulseFilters
-  pulseLevel?: PulseLevel
-  initialRange?: TimeRange
+  chartId: string;
+  filters: PulseFilters;
+  pulseLevel?: PulseLevel;
+  canEmbed?: boolean;
+  initialRange?: TimeRange;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pulseLevel: 'none',
+  canEmbed: true,
   initialRange: '30d',
-})
+});
 
 const emit = defineEmits<{
-  'share': []
-  'embed': []
-  'download': []
-  'range-change': [range: TimeRange]
-}>()
+  embed: [];
+  'range-change': [range: TimeRange];
+}>();
 
-const loading = ref(true)
-const chartData = ref<ChartData | null>(null)
-const matrixRows = ref<MethodCoverageRow[]>([])
-const selectedRange = ref<TimeRange>(props.initialRange)
-const viewMode = ref<'chart' | 'table'>('chart')
+const loading = ref(true);
+const chartData = ref<ChartData | null>(null);
+const matrixRows = ref<MethodCoverageRow[]>([]);
+const selectedRange = ref<TimeRange>(props.initialRange);
+const viewMode = ref<'chart' | 'table'>('chart');
 
-const chartMeta = computed(() => getChartById(props.chartId))
+const chartMeta = computed(() => getChartById(props.chartId));
 
-const isPlus = computed(() => props.pulseLevel !== 'none')
-const isFullAccess = computed(() => props.pulseLevel === 'full')
-const isPro = computed(() => props.pulseLevel === 'full')
-const isGated = computed(() => !isPro.value)
+const isPlus = computed(() => props.pulseLevel !== 'none');
+const isFullAccess = computed(() => props.pulseLevel === 'full');
+const isPro = computed(() => props.pulseLevel === 'full');
+const canEmbed = computed(() => props.canEmbed);
+const isGated = computed(() => !isPro.value);
 
 const gatedTitle = computed(() => {
-  const title = chartMeta.value?.title
-  return title ? `${title} (Enterprise)` : 'Pulse (Enterprise)'
-})
+  const title = chartMeta.value?.title;
+  return title ? `${title} (Enterprise)` : 'Pulse (Enterprise)';
+});
 
 const ranges = computed(() => {
   const baseRanges = [
     { value: '7d' as TimeRange, label: '7D', isGated: false },
     { value: '30d' as TimeRange, label: '30D', isGated: false },
-    { value: '90d' as TimeRange, label: '90D', isGated: isRangeGated(props.chartId, '90d', isFullAccess.value) },
-  ]
+    {
+      value: '90d' as TimeRange,
+      label: '90D',
+      isGated: isRangeGated(props.chartId, '90d', isFullAccess.value),
+    },
+  ];
 
   if (isFullAccess.value) {
     baseRanges.push({
       value: '365d' as TimeRange,
       label: '1Y',
       isGated: isRangeGated(props.chartId, '365d', isFullAccess.value),
-    })
+    });
   }
 
-  return baseRanges
-})
+  return baseRanges;
+});
 
 const chartComponent = computed(() => {
-  if (!chartMeta.value) return null
+  if (!chartMeta.value) return null;
 
   switch (chartMeta.value.type) {
     case 'line':
-      return markRaw(PulseLineChart)
+      return markRaw(PulseLineChart);
     case 'bar':
-      return markRaw(PulseBarChart)
+      return markRaw(PulseBarChart);
     case 'stacked':
-      return markRaw(PulseStackedChart)
+      return markRaw(PulseStackedChart);
     case 'scatter':
-      return markRaw(PulseScatterChart)
+      return markRaw(PulseScatterChart);
     case 'matrix':
-      return markRaw(PulseMatrixTable)
+      return markRaw(PulseMatrixTable);
     default:
-      return markRaw(PulseLineChart)
+      return markRaw(PulseLineChart);
   }
-})
+});
 
 const chartHasRenderableSeries = computed(() => {
-  if (!chartData.value || !Array.isArray(chartData.value.series)) return false
-  return chartData.value.series.some(series => Array.isArray(series.points) && series.points.length > 0)
-})
+  if (!chartData.value || !Array.isArray(chartData.value.series)) return false;
+  return chartData.value.series.some(
+    series => Array.isArray(series.points) && series.points.length > 0
+  );
+});
 
 const chartEmptyTitle = computed(() => {
   if (chartData.value?.dataAvailable === false || !chartData.value?.updatedAt) {
-    return 'Data pending'
+    return 'Data pending';
   }
-  return 'No data available'
-})
+  return 'No data available';
+});
 
 const chartEmptyMessage = computed(() => {
   if (chartData.value?.dataAvailable === false || !chartData.value?.updatedAt) {
-    return 'Data is being prepared for this corridor. Check back shortly.'
+    return 'Data is being prepared for this corridor. Check back shortly.';
   }
-  return 'No chart points are available for the selected filters.'
-})
+  return 'No chart points are available for the selected filters.';
+});
 
 async function loadData() {
   if (isGated.value) {
     // Enterprise charts are enterprise-only; don't mount or fetch anything when gated.
-    chartData.value = null
-    matrixRows.value = []
-    loading.value = false
-    return
+    chartData.value = null;
+    matrixRows.value = [];
+    loading.value = false;
+    return;
   }
-  loading.value = true
+  loading.value = true;
   try {
     if (chartMeta.value?.type === 'matrix') {
-      matrixRows.value = await getMethodCoverage(props.filters)
-      chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value)
+      matrixRows.value = await getMethodCoverage(props.filters);
+      chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value);
+    } else {
+      chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value);
     }
-    else {
-      chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value)
-    }
-  }
-  catch (e) {
-    useLogger('PulseChartFull').error('Failed to load chart data', e)
-  }
-  finally {
-    loading.value = false
+  } catch (e) {
+    useLogger('PulseChartFull').error('Failed to load chart data', e);
+  } finally {
+    loading.value = false;
   }
 }
 
-function selectRange(range: { value: TimeRange, isGated: boolean }) {
-  if (range.isGated && !isFullAccess.value) return
-  selectedRange.value = range.value
-  emit('range-change', range.value)
-  loadData()
+function selectRange(range: { value: TimeRange; isGated: boolean }) {
+  if (range.isGated && !isFullAccess.value) return;
+  selectedRange.value = range.value;
+  emit('range-change', range.value);
+  loadData();
 }
 
 function formatLastUpdated(timestamp: string): string {
-  const diff = Date.now() - new Date(timestamp).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return formatDate(timestamp)
+  const diff = Date.now() - new Date(timestamp).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return formatDate(timestamp);
 }
 
-watch(() => props.filters, loadData, { deep: true })
-watch(() => props.chartId, loadData)
-watch(() => props.pulseLevel, loadData)
+watch(() => props.filters, loadData, { deep: true });
+watch(() => props.chartId, loadData);
+watch(() => props.pulseLevel, loadData);
 
-onMounted(loadData)
+onMounted(loadData);
 </script>

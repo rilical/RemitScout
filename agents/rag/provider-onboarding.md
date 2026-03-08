@@ -16,21 +16,23 @@ Automate horizontal scaling by providing a repeatable, deterministic workflow fo
 - `silver.provider_corridor_capability` — method capabilities
 
 ## Primary skills
-1. `remit-scout-provider-onboarding` — 13-step onboarding workflow
-2. `remit-scout-provider-health-probe` — post-onboarding health validation
+1. `remit-scout-provider-onboarding` — zero-touch onboarding contract and execution loop
+2. `provider.onboarding.local` — deterministic local orchestrator entrypoint (`pnpm -C backend provider:onboarding-orchestrator`)
+3. `remit-scout-provider-health-probe` — post-onboarding health validation
 
 ## Current provider registry (24)
 Canonical inventory lives in `.remit-scout/providers/catalog.json`.
 
 remitly, westernunion, worldremit, instarem, wirebarley, alansari, intermex, xoom, xe, transfergo, paysend, pangea, orbitremit, bossmoney, koronapay, remitbee, singx, placid, ria, dahabshiil, sendwave, mukuru, wise, wellsfargo
 
-## Onboarding phases
-1. **Scaffolding** — Create provider directory, parser, config, types
-2. **Database** — Migration for provider + rights-matrix + capabilities
-3. **Infrastructure** — Probe Lambda, secrets, ECS env vars
-4. **Testing** — Collector tests + parser tests
-5. **Validation** — Run in candidate mode, verify Silver data
-6. **Promotion** — Promote to production, enable indices
+## Onboarding loop phases (deterministic)
+1. **Contract ingest** — parse `providers[]` payload (curl templates, countries/currencies/corridors, env context).
+2. **Preflight validation** — enforce auth headers, ISO code validity, and hard-stop blocker checks.
+3. **Synthetic catalog** — derive bounded corridor test set when `corridors[]` is empty.
+4. **Scaffold + probes** — run `provider:scaffold`, `probe:provider`, `evidence:provider-health`.
+5. **Capability checks** — run canary capability seed + capability probe + capability evidence.
+6. **B2C smoke** — run `ci:api-smoke` for B2C/BOTH providers.
+7. **Scoring + review** — compute Remit-Score, emit review card, reason codes, and next skill IDs.
 
 ## Provider lifecycle states
 - `candidate` — newly onboarded, collecting but not in indices
@@ -56,6 +58,9 @@ remitly, westernunion, worldremit, instarem, wirebarley, alansari, intermex, xoo
 - Amount normalization to $500 USD equivalent is required
 - Probe Lambda must be tagged `managed-by: ops-pause` for dev pause compatibility
 - Provider-specific secrets go to Secrets Manager, never env vars or code
+- Onboarding artifacts must always include non-empty `ci_ref` and `review_card`.
+- Remit-Score onboarding weights are fixed: Delivered Value 40, Reliability/Success 20, Friction/Speed 15, Support/Refunds 15, Trust/Safety 10.
+- Required onboarding reason-code coverage: `provider_onboarding.input_invalid`, `provider_onboarding.scaffold_fail`, `provider_onboarding.probe_timeout`, `provider_onboarding.smoke_fail`, `provider_onboarding.score_below_threshold`, `provider_onboarding.review_blocked`.
 
 ## Post-onboarding checklist
 - [ ] Provider appears in `remit-scout-provider-health-probe` output

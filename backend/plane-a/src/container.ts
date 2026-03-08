@@ -21,6 +21,7 @@ type PlaneARepositories = {
   latestQuote: repositoriesModule.LatestQuoteRepository
   newsletter: repositoriesModule.NewsletterRepository
   popularCorridor: repositoriesModule.PopularCorridorRepository
+  publishedEmbed: repositoriesModule.PublishedEmbedRepository
   providerVisit: repositoriesModule.ProviderVisitRepository
   pulseCache: repositoriesModule.PulseCacheRepository
   quoteAttempt: repositoriesModule.QuoteAttemptRepository
@@ -99,6 +100,9 @@ export const createPlaneAContainer = () => {
     },
     get popularCorridor() {
       return getOrCreate('popularCorridor', 'PopularCorridorRepository')
+    },
+    get publishedEmbed() {
+      return getOrCreate('publishedEmbed', 'PublishedEmbedRepository')
     },
     get providerVisit() {
       return getOrCreate('providerVisit', 'ProviderVisitRepository')

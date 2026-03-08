@@ -7,6 +7,7 @@ import { ValidationError } from '../../../shared/errors'
 import { createLogger } from '../../../shared/logger'
 import { sendJsonMessage } from '../../../shared/sqs'
 import type { ExportJobRow, ExportJobType } from '../repositories'
+import { loadAwsOpsServiceHealth } from '../services/aws-ops-health'
 import {
   getInclusiveWindowDays,
   resolveExportJobType,
@@ -39,12 +40,19 @@ type ExportPipelineError = {
   meta: {
     queueMode: string
     queueUrlSet: boolean
+    serviceStatus?: string
+    opsHealthSource?: string
   }
 }
 
 export type ExportPipelineStatus = { ok: true } | ExportPipelineError
 
 const getBucket = () => config.storage.exports?.bucket || ''
+const normalizeEnvironmentName = (value?: string): string => (value || '').trim().toLowerCase()
+const shouldVerifyExportWorkerHealth = () => {
+  const environment = normalizeEnvironmentName(config.envName || config.env)
+  return environment === 'staging' || environment === 'prod' || environment === 'production'
+}
 
 const getQueueConfig = (): QueueConfig => {
   const queueMode = config.queues.exports?.mode ?? 'off'
@@ -57,6 +65,8 @@ export const resolveActor = (
   request: FastifyRequest,
   reply: FastifyReply,
 ): ExportActor | null => {
+  const userApiKey = request.userApiKey ?? request.apiKey
+
   if (request.user) {
     return {
       userId: request.user.user_id,
@@ -65,11 +75,11 @@ export const resolveActor = (
     }
   }
 
-  if (request.apiKey) {
+  if (userApiKey) {
     return {
-      userId: request.apiKey.user_id,
+      userId: userApiKey.user_id,
       actorType: 'api_key',
-      apiKeyId: request.apiKey.key_id,
+      apiKeyId: userApiKey.key_id,
     }
   }
 
@@ -78,7 +88,7 @@ export const resolveActor = (
   return null
 }
 
-export const getExportPipelineStatus = (): ExportPipelineStatus => {
+export const getExportPipelineStatus = async (): Promise<ExportPipelineStatus> => {
   const { queueMode, queueUrl, queueEnabled } = getQueueConfig()
   if (!queueEnabled) {
     return {
@@ -98,6 +108,54 @@ export const getExportPipelineStatus = (): ExportPipelineStatus => {
       error: 'exports_bucket_not_configured',
       message: 'Exports bucket is not configured.',
       meta: { queueMode, queueUrlSet: Boolean(queueUrl) },
+    }
+  }
+
+  if (shouldVerifyExportWorkerHealth()) {
+    try {
+      const opsHealth = await loadAwsOpsServiceHealth()
+      const pauseState = opsHealth.services.find((service) => service.service_id === 'ops-pause-state')
+      if (pauseState?.status === 'degraded') {
+        return {
+          ok: false,
+          error: 'exports_paused',
+          message: 'Exports are paused while operational services are paused.',
+          meta: {
+            queueMode,
+            queueUrlSet: Boolean(queueUrl),
+            serviceStatus: pauseState.status,
+            opsHealthSource: opsHealth.source,
+          },
+        }
+      }
+
+      const exportWorker = opsHealth.services.find((service) => service.service_id === 'export-worker')
+      if (!exportWorker || exportWorker.status !== 'healthy') {
+        return {
+          ok: false,
+          error: 'exports_worker_unavailable',
+          message: exportWorker?.message || 'Export worker is not healthy in this environment.',
+          meta: {
+            queueMode,
+            queueUrlSet: Boolean(queueUrl),
+            serviceStatus: exportWorker?.status,
+            opsHealthSource: opsHealth.source,
+          },
+        }
+      }
+    } catch (error) {
+      logger.warn('export_pipeline_health_check_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return {
+        ok: false,
+        error: 'exports_health_check_failed',
+        message: 'Export worker health could not be verified.',
+        meta: {
+          queueMode,
+          queueUrlSet: Boolean(queueUrl),
+        },
+      }
     }
   }
 
@@ -145,7 +203,7 @@ export const resolveCreateExport = (
 
     if (!isParquetEnabled) {
       logger.warn('parquet_format_requested_but_not_enabled', {
-        user_id: request.user?.user_id ?? request.apiKey?.user_id ?? 'unknown',
+        user_id: request.user?.user_id ?? request.userApiKey?.user_id ?? request.apiKey?.user_id ?? 'unknown',
         message: 'Parquet export was requested but EXPORTS_PARQUET_ENABLED is not set to true. '
           + 'Enable it via the EXPORTS_PARQUET_ENABLED env var once the export worker has parquet support.',
       })
@@ -158,7 +216,7 @@ export const resolveCreateExport = (
     }
     if (!hasBulkExportEntitlement) {
       logger.info('parquet_format_requested_without_entitlement', {
-        user_id: request.user?.user_id ?? request.apiKey?.user_id ?? 'unknown',
+        user_id: request.user?.user_id ?? request.userApiKey?.user_id ?? request.apiKey?.user_id ?? 'unknown',
       })
       throw new ValidationError('Parquet export requires a plan with bulk export access', {
         details: { error: 'parquet_not_allowed' },
@@ -221,8 +279,8 @@ export const resolveCreateExport = (
     format: payload.format,
   }
 
-  if (request.apiKey) {
-    params.exportAudience = 'institutional'
+  if (request.userApiKey || request.apiKey) {
+    params.exportAudience = 'retail_api_key'
   }
   if (dateFrom) {
     params.dateFrom = dateFrom.toISOString()

@@ -104,6 +104,7 @@ vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
   requireAuth: () => () => undefined,
   requireAdmin: () => () => undefined,
   requireEntitlement: () => () => undefined,
+  requireSuperAdmin: () => () => undefined,
 }))
 
 vi.mock('../plane-a/src/services/stripe-client', () => ({

@@ -34,7 +34,7 @@ describe('UserAccountRepository', () => {
       const queryCall = vi.mocked(dbModule.query).mock.calls[0][0] as string
       expect(queryCall).toContain('ON CONFLICT (user_id)')
       expect(queryCall).toContain('DO UPDATE SET email = EXCLUDED.email')
-      expect(queryCall).toContain('app_role = CASE')
+      expect(queryCall).toContain("COALESCE($3, 'user')")
     })
 
     it('handles null email', async () => {
@@ -65,6 +65,5 @@ describe('UserAccountRepository', () => {
     })
   })
 })
-
 
 

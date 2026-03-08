@@ -125,6 +125,4 @@ export type DiscoveryRunOptions = {
   triggeredBy: 'schedule' | 'agent' | 'manual'
   /** Correlation ID for tracing */
   correlationId?: string
-  /** Auto-apply discovered corridors and methods to rights_matrix + capability tables */
-  applyResults?: boolean
 }

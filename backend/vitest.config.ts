@@ -12,6 +12,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     pool: 'threads',
+    setupFiles: ['./tests/setup-env.ts'],
     include: ['**/*.test.ts', '**/*.spec.ts'],
     exclude: [
       '**/node_modules/**',

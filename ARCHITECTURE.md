@@ -8,7 +8,7 @@ It is intentionally optimized for LLM context windows:
 - links to deeper docs instead of embedding everything here
 
 Detailed docs live under:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/`
+- `docs/architecture/`
 
 ## Agent navigation (start here)
 1. System invariants: `ARCHITECTURE.md` (this file)
@@ -125,10 +125,10 @@ Remit-Scout runs ops work as durable artifacts and bounded loops:
 - **Executors** run skills (GitHub Actions, AWS scheduled jobs, local).
 - **Judge** validates evidence + contracts, decides iterate/escalate/close.
 
-Details: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/issueops.md`
+Details: `docs/architecture/issueops.md`
 
 ## SLO targets (default values)
-Canonical list: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/observability.md`
+Canonical list: `docs/architecture/observability.md`
 
 ## Repo navigation notes (LLM friendly)
 - When diagnosing: prefer running a skill/evidence pack over reading raw logs.
@@ -146,9 +146,11 @@ Canonical list: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/archi
 ## Admin security invariants (2026-02)
 - Admin access tokens are validated and revoked via Redis blocklist; revocation checks default to fail-open with alerting, and can be configured to fail-closed via `PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED`.
 - Admin MFA (Supabase TOTP) must be available and enforceable for admin sessions when configured.
+- Admin surface inventory, guard expectations, and staging proof live in `docs/security/admin-surface-control-matrix.md`; readiness/deploy gates must keep Omar entitlement smoke and admin-surface smoke green before promotion.
 - Account deletion is a two-step workflow: `DELETE /api/v1/account` creates a pending deletion row in `public.system_account_deletion_request`, users have a 7-day cancel window, and background cleanup performs physical deletion after the grace period.
 
 ## Admin UI surface changes
 - Canonical admin shell is `frontend/layouts/admin.vue` with command palette and sidebar navigation.
 - `/admin/ops-health` is a compatibility redirect to `/admin/observer`.
 - Admin observer and dashboard summaries use `/api/v1/ops/observer/summary` for queue + activity visibility.
+- Admin pages must derive authority from `/api/v1/me` plus Plane A admin session bootstrap (`/api/v1/sessions/admin/exchange`, `/api/v1/sessions/admin/refresh`); client-side cached roles are never sufficient.

@@ -11,9 +11,11 @@
  */
 
 import {
-  buildAwsMetricLikeFilter,
+  buildAwsIntegrationScopeClause,
+  buildAwsSummaryFilterExpression,
   buildEnvScopeClause,
   buildMetricNameFilter,
+  buildNamedMetricSelect,
 } from './nrql-helpers.mjs'
 
 const NEW_RELIC_USER_API_KEY = process.env.NEW_RELIC_USER_API_KEY || ''
@@ -242,11 +244,10 @@ const toConditionUpdateInput = (definition) => ({
 })
 
 const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) => {
-  const scope = buildEnvScopeClause({
+  const awsScope = buildAwsIntegrationScopeClause({
     envName,
     nameToken: token,
     awsAccountId,
-    allowMissingAwsAccount: false,
   })
   const queueNamePrefix = `remit-scout-${envName}-`
   const runtimeScopedFilter = buildEnvScopeClause({
@@ -267,9 +268,9 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       description: 'Mirror of CloudWatch gate: remit-scout-<env>-api-error-rate-high',
       query:
         `FROM Metric SELECT ` +
-        `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.5XXError')}) ` +
-        `/ filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.Count')}) ` +
-        `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope}`,
+        `${buildAwsSummaryFilterExpression('aws.apigateway.5xx', 'total', 'sum')} ` +
+        `/ ${buildAwsSummaryFilterExpression('aws.apigateway.Count', 'total', 'sum')} ` +
+        `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsScope}`,
       operator: 'ABOVE',
       threshold: apiErrorThreshold,
       thresholdDuration: 600,
@@ -280,10 +281,10 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       name: `[${envLabel}] api-p99-latency-high (mirror)`,
       description: 'Mirror of CloudWatch gate: remit-scout-<env>-api-p99-latency-high',
       query:
-        `FROM Metric SELECT percentile(value, 99) ` +
+        `FROM Metric SELECT percentile(getField(\`aws.apigateway.Latency.byStage\`, max), 99) ` +
         `WHERE aws.Namespace = 'AWS/ApiGateway' ` +
-        `AND ${buildAwsMetricLikeFilter('apigateway.Latency')} ` +
-        `AND ${scope}`,
+        `AND metricName = 'aws.apigateway.Latency.byStage' ` +
+        `AND ${awsScope}`,
       operator: 'ABOVE',
       threshold: 5000,
       thresholdDuration: 900,
@@ -294,10 +295,10 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       name: `[${envLabel}] dlq-depth-high (mirror)`,
       description: 'Mirror of DLQ depth critical signal (>=1)',
       query:
-        `FROM Metric SELECT sum(value) ` +
-        `WHERE ${buildAwsMetricLikeFilter('ApproximateNumberOfMessagesVisible')} ` +
+        `FROM Metric SELECT max(getField(\`aws.sqs.ApproximateNumberOfMessagesVisible\`, max)) ` +
+        `WHERE metricName = 'aws.sqs.ApproximateNumberOfMessagesVisible' ` +
         `AND aws.sqs.QueueName LIKE '${queueNamePrefix}%-dlq' ` +
-        `AND ${scope}`,
+        `AND ${awsScope}`,
       operator: 'ABOVE_OR_EQUALS',
       threshold: 1,
       thresholdDuration: 300,
@@ -308,7 +309,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       name: `[${envLabel}] slo-breach-total (mirror)`,
       description: 'Mirror of SLO breach metric signal',
       query:
-        `FROM Metric SELECT sum(value) ` +
+        `FROM Metric SELECT ${buildNamedMetricSelect('slo_breach_total')} ` +
         `WHERE ${buildMetricNameFilter('slo_breach_total')} ` +
         `AND ${runtimeScopedFilter}`,
       operator: 'ABOVE_OR_EQUALS',
@@ -321,7 +322,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       name: `[${envLabel}] provider-probe-failures-high (mirror)`,
       description: 'Mirror of provider probe failure burst alarm',
       query:
-        `FROM Metric SELECT sum(value) ` +
+        `FROM Metric SELECT ${buildNamedMetricSelect('probe_result')} ` +
         `WHERE ${buildMetricNameFilter('probe_result')} ` +
         `AND Status = 'failure' AND ${runtimeScopedFilter}`,
       operator: 'ABOVE_OR_EQUALS',
@@ -334,7 +335,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       name: `[${envLabel}] orchestrator-detection-stall (mirror)`,
       description: 'Mirror of CloudWatch agent alarm: no detection cycles in 10 minutes',
       query:
-        `FROM Metric SELECT sum(value) ` +
+        `FROM Metric SELECT ${buildNamedMetricSelect('detection_cycle_count')} ` +
         `WHERE ${buildMetricNameFilter('detection_cycle_count')} ` +
         `AND ${runtimeScopedFilter}`,
       operator: 'BELOW',
@@ -347,7 +348,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       name: `[${envLabel}] tool-gateway-violations (mirror)`,
       description: 'Mirror of CloudWatch agent alarm: >10 tool requests blocked in 5 minutes',
       query:
-        `FROM Metric SELECT sum(value) ` +
+        `FROM Metric SELECT ${buildNamedMetricSelect('tool_request_blocked')} ` +
         `WHERE ${buildMetricNameFilter('tool_request_blocked')} ` +
         `AND ${runtimeScopedFilter}`,
       operator: 'ABOVE_OR_EQUALS',
@@ -360,7 +361,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       name: `[${envLabel}] corridor-stress-incident (mirror)`,
       description: 'Mirror of CloudWatch agent alarm: any incident-level stress escalation',
       query:
-        `FROM Metric SELECT sum(value) ` +
+        `FROM Metric SELECT ${buildNamedMetricSelect('stress_escalation_incident')} ` +
         `WHERE ${buildMetricNameFilter('stress_escalation_incident')} ` +
         `AND ${runtimeScopedFilter}`,
       operator: 'ABOVE_OR_EQUALS',
@@ -373,7 +374,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       name: `[${envLabel}] failure-bundle-burst (mirror)`,
       description: 'Mirror of CloudWatch agent alarm: >20 failure bundles in 15 minutes',
       query:
-        `FROM Metric SELECT sum(value) ` +
+        `FROM Metric SELECT ${buildNamedMetricSelect('failure_bundle_created')} ` +
         `WHERE ${buildMetricNameFilter('failure_bundle_created')} ` +
         `AND ${runtimeScopedFilter}`,
       operator: 'ABOVE_OR_EQUALS',

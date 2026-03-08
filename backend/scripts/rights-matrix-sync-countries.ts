@@ -174,7 +174,7 @@ export const runRightsMatrixSyncCountries = async (): Promise<void> => {
 
     if (valid.length > 0) {
       // NOTE: pg's array encoding for nested arrays is inconsistent across runtime/build configs.
-      // A simple per-provider upsert is deterministic and fast enough (~25 providers).
+      // A simple per-provider upsert is deterministic and fast enough (~24 providers).
       for (const entry of valid) {
         await query(
           `INSERT INTO silver.rights_matrix (provider_id, source_countries, destination_countries)

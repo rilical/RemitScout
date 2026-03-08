@@ -211,7 +211,7 @@ export const useAnalytics = () => {
       return await fn()
     }
     catch (err: any) {
-      error.value = err?.message || 'Failed to load analytics.'
+      error.value = getAdminApiErrorMessage(err, 'Failed to load analytics.')
       throw err
     }
     finally {
@@ -268,3 +268,4 @@ export const useAnalytics = () => {
     getRevenueMetrics,
   }
 }
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'

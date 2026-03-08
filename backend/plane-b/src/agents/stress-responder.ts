@@ -321,17 +321,26 @@ export class StressResponder {
     // Record escalation as an observation
     await this.pool.query(
       `INSERT INTO silver.observation
-       (module_id, provider_id, type, corridor_id, confidence, observed_at, ingestion_run_id, payload, schema_version)
-       VALUES ('system:stress-responder', 'system', 'event', $1, 'high', NOW(), $2, $3, 1)`,
+       (module_id, provider_id, owner_kind, owner_id, type, signal_layer, capture_method,
+        parser_version, source_ref, corridor_id, confidence, observed_at, ingestion_run_id,
+        payload, lineage, schema_version)
+       VALUES ('system:stress-responder', 'system', 'signal_source', 'system:stress-responder',
+               'event', 'stress', 'derived',
+               NULL, NULL, $1, 'high', NOW(), $2,
+               $3, $4, 1)`,
       [
         corridorId,
         `escalation-${Date.now()}`,
         JSON.stringify({
-          eventType: 'stress_escalation',
-          escalationLevel: record.escalationLevel,
-          consecutiveHighCount: record.consecutiveHighCount,
-          firstDetectedAt: record.firstDetectedAt,
-          lastDetectedAt: record.lastDetectedAt,
+          event_type: 'stress_escalation',
+          escalation_level: record.escalationLevel,
+          consecutive_high_count: record.consecutiveHighCount,
+          first_detected_at: record.firstDetectedAt,
+          last_detected_at: record.lastDetectedAt,
+        }),
+        JSON.stringify({
+          owner_id: 'system:stress-responder',
+          corridor_id: corridorId,
         }),
       ],
     )
@@ -487,17 +496,26 @@ export class StressResponder {
   private async recordStressEvent(signal: CorridorStressSignal): Promise<void> {
     await this.pool.query(
       `INSERT INTO silver.observation
-       (module_id, provider_id, type, corridor_id, confidence, observed_at, ingestion_run_id, payload, schema_version)
-       VALUES ('system:stress-responder', 'system', 'event', $1, 'high', $2, $3, $4, 1)`,
+       (module_id, provider_id, owner_kind, owner_id, type, signal_layer, capture_method,
+        parser_version, source_ref, corridor_id, confidence, observed_at, ingestion_run_id,
+        payload, lineage, schema_version)
+       VALUES ('system:stress-responder', 'system', 'signal_source', 'system:stress-responder',
+               'event', 'stress', 'derived',
+               NULL, NULL, $1, 'high', $2, $3,
+               $4, $5, 1)`,
       [
         signal.corridorId,
         signal.detectedAt,
         `stress-${Date.now()}`,
         JSON.stringify({
-          eventType: 'corridor_stress',
-          stressScore: signal.stressScore,
-          stressLevel: signal.stressLevel,
-          triggerFactors: signal.triggerFactors,
+          event_type: 'corridor_stress',
+          stress_score: signal.stressScore,
+          stress_level: signal.stressLevel,
+          trigger_factors: signal.triggerFactors,
+        }),
+        JSON.stringify({
+          owner_id: 'system:stress-responder',
+          corridor_id: signal.corridorId,
         }),
       ],
     )

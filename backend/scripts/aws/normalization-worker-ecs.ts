@@ -56,11 +56,6 @@ export const handler = async (): Promise<number> => {
     },
   })
 
-  const { startHealthServer } = await import('../../shared/health-server')
-  await startHealthServer({
-    loggerName: 'script.normalization-worker-ecs.health-server',
-  })
-
   const { runNormalizationWorkerLoop } = await import('../normalization-queue-worker')
   return await runNormalizationWorkerLoop()
 }

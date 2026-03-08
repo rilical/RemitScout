@@ -8,7 +8,7 @@
  *   DATABASE_URL_PLANE_B — Plane B database connection
  *   TRIANGULATION_ENABLED — must be 'true' to run (default: false)
  *   TRIANGULATION_AMOUNT_BUCKETS — comma-separated list (default: 500)
- *   TRIANGULATION_METHOD_PROFILE — method profile (default: bank_transfer:bank_deposit)
+ *   TRIANGULATION_METHOD_PROFILE — method profile (default: standard_bank)
  *   STRESS_DETECTION_ENABLED — run stress detection after triangulation (default: false)
  */
 import { createPool } from '../shared/db'
@@ -41,7 +41,7 @@ async function main() {
       .map((s) => parseInt(s.trim(), 10))
       .filter(Number.isFinite)
 
-    const methodProfile = process.env.TRIANGULATION_METHOD_PROFILE ?? 'bank_transfer:bank_deposit'
+    const methodProfile = process.env.TRIANGULATION_METHOD_PROFILE ?? 'standard_bank'
 
     logger.info('triangulation_starting', { amountBuckets, methodProfile })
 

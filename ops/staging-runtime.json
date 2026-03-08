@@ -25,8 +25,8 @@
   "businessHours": {
     "enabled": true,
     "timezone": "America/New_York",
-    "resumeCron": "cron(0 8 ? * MON-FRI *)",
-    "pauseCron": "cron(0 20 ? * MON-FRI *)"
+    "resumeCron": "cron(0 9 ? * MON-FRI *)",
+    "pauseCron": "cron(0 18 ? * MON-FRI *)"
   },
   "interfaceEndpointAllowlist": [
     "ecr.api",

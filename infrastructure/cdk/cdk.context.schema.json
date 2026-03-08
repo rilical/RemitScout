@@ -329,6 +329,10 @@
       "type": "number",
       "description": "Desired count for FX rate refresh worker service"
     },
+    "planeADesiredCount": {
+      "type": "number",
+      "description": "Desired count for Plane A ECS service"
+    },
     "planeBIngestDesiredCount": {
       "type": "number",
       "description": "Desired count for Plane B ingest service"
@@ -798,6 +802,10 @@
       ],
       "description": "Production VPC interface endpoint mode"
     },
+    "prodRedisNodeType": {
+      "type": "string",
+      "description": "Production Redis node type override"
+    },
     "stagingNatGateways": {
       "type": "number",
       "description": "Staging NAT gateway count override"
@@ -805,6 +813,22 @@
     "prodNatGateways": {
       "type": "number",
       "description": "Production NAT gateway count override"
+    },
+    "prodDatabaseInstances": {
+      "type": "number",
+      "description": "Production Aurora instance count override"
+    },
+    "prodRedisReplicasPerNodeGroup": {
+      "type": "number",
+      "description": "Production Redis replicas per node group override"
+    },
+    "prodRedisAutomaticFailoverEnabled": {
+      "type": "boolean",
+      "description": "Production Redis automatic failover toggle"
+    },
+    "prodRedisMultiAzEnabled": {
+      "type": "boolean",
+      "description": "Production Redis Multi-AZ toggle"
     }
   },
   "required": [

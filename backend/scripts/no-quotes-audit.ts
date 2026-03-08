@@ -22,6 +22,38 @@ import { HEALTH_CORRIDORS } from '../shared/health-corridors'
 
 type ExcludedProvider = { provider: string; reason: string }
 type ExcludedProviderDetailed = { provider: string; reason: string; details?: Record<string, unknown> }
+type NoQuotesPair = {
+  corridor_id: string
+  provider: string
+  reason: string
+  details: Record<string, unknown> | null
+}
+
+export type NoQuotesAuditInput = {
+  baseUrl?: string
+  sendCurrencies?: string[]
+  method?: string
+  amount?: number
+  refresh?: boolean
+  maxCorridors?: number
+  providers?: string[]
+  timeoutMs?: number
+  verbose?: boolean
+}
+
+export type NoQuotesAuditPayload = {
+  success: boolean
+  base_url: string
+  send_currencies: string[]
+  method: string
+  amount: number
+  refresh: boolean
+  corridors_scanned: number
+  failures: number
+  no_quotes_providers: Array<{ provider: string; count: number }>
+  no_quotes_pairs: NoQuotesPair[]
+  failure_samples: Array<Record<string, unknown>>
+}
 
 const parseList = (value: string | undefined): string[] =>
   (value || '')
@@ -39,8 +71,8 @@ const toBool = (value: string | undefined, defaultValue: boolean): boolean => {
   return defaultValue
 }
 
-const getBaseUrl = (): URL => {
-  const raw = (process.env.PLANE_A_BASE_URL || process.env.API_BASE_URL || '').trim()
+const getBaseUrl = (rawOverride?: string): URL => {
+  const raw = (rawOverride || process.env.PLANE_A_BASE_URL || process.env.API_BASE_URL || '').trim()
   if (!raw) {
     throw new Error('Missing PLANE_A_BASE_URL (or API_BASE_URL)')
   }
@@ -99,16 +131,19 @@ const parseCorridorSendCurrency = (corridorId: string): string | null => {
   return normalizeCurrency(parts[2] || '')
 }
 
-export const runNoQuotesAudit = async () => {
-  const base = getBaseUrl()
+export const runNoQuotesAudit = async (input: NoQuotesAuditInput = {}): Promise<NoQuotesAuditPayload> => {
+  const base = getBaseUrl(input.baseUrl)
   const sendCurrencies = new Set(
-    parseList(process.env.SEND_CURRENCIES || 'USD,AED,GBP,EUR').map(normalizeCurrency),
+    (input.sendCurrencies ?? parseList(process.env.SEND_CURRENCIES || 'USD,AED,GBP,EUR')).map(normalizeCurrency),
   )
-  const method = (process.env.METHOD || 'bank').trim().toLowerCase()
-  const amount = Number(process.env.AMOUNT || '100')
-  const refresh = toBool(process.env.REFRESH, false)
-  const maxCorridors = Math.max(1, Math.min(1000, Number(process.env.MAX_CORRIDORS || '200')))
-  const providerFilter = new Set(parseList(process.env.PROVIDERS).map((p) => p.trim().toLowerCase()))
+  const method = String(input.method || process.env.METHOD || 'bank').trim().toLowerCase()
+  const amount = Number(input.amount ?? process.env.AMOUNT ?? '100')
+  const refresh = input.refresh ?? toBool(process.env.REFRESH, false)
+  const maxCorridors = Math.max(1, Math.min(1000, Number(input.maxCorridors ?? process.env.MAX_CORRIDORS ?? '200')))
+  const providerFilter = new Set(
+    (input.providers ?? parseList(process.env.PROVIDERS)).map((p) => p.trim().toLowerCase()),
+  )
+  const timeoutMs = Math.max(1_000, Number(input.timeoutMs ?? 20_000))
 
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error(`Invalid AMOUNT: ${process.env.AMOUNT || '(missing)'}`)
@@ -125,10 +160,10 @@ export const runNoQuotesAudit = async () => {
     .slice(0, maxCorridors)
 
   const noQuotesByProvider = new Map<string, number>()
-  const noQuotesPairs: Array<Record<string, unknown>> = []
+  const noQuotesPairs: NoQuotesPair[] = []
   const failures: Array<Record<string, unknown>> = []
 
-  if (process.env.VERBOSE === '1') {
+  if (input.verbose || process.env.VERBOSE === '1') {
      
     console.error(JSON.stringify({
       event: 'no_quotes_audit_start',
@@ -144,7 +179,7 @@ export const runNoQuotesAudit = async () => {
 
   for (const corridorId of corridors) {
     const url = buildProvidersUrl(base, { corridorId, amount, method, refresh })
-    const { status, body } = await fetchJson(url, 20000)
+    const { status, body } = await fetchJson(url, timeoutMs)
 
     if (status !== 200) {
       failures.push({
@@ -183,7 +218,7 @@ export const runNoQuotesAudit = async () => {
     .slice(0, 25)
     .map(([provider, count]) => ({ provider, count }))
 
-  const payload = {
+  const payload: NoQuotesAuditPayload = {
     success: true,
     base_url: base.toString(),
     send_currencies: Array.from(sendCurrencies.values()),
@@ -197,18 +232,21 @@ export const runNoQuotesAudit = async () => {
     failure_samples: failures.slice(0, 20),
   }
 
-  const pretty = process.env.PRETTY === '1'
-   
-  console.log(pretty ? JSON.stringify(payload, null, 2) : JSON.stringify(payload))
+  return payload
 }
 
 if (require.main === module) {
-  runNoQuotesAudit().catch((error) => {
+  runNoQuotesAudit()
+    .then((payload) => {
+      const pretty = process.env.PRETTY === '1'
+      console.log(pretty ? JSON.stringify(payload, null, 2) : JSON.stringify(payload))
+    })
+    .catch((error) => {
      
-    console.error(JSON.stringify({
-      event: 'no_quotes_audit_failed',
-      error: error instanceof Error ? error.message : String(error),
-    }))
-    process.exit(1)
-  })
+      console.error(JSON.stringify({
+        event: 'no_quotes_audit_failed',
+        error: error instanceof Error ? error.message : String(error),
+      }))
+      process.exit(1)
+    })
 }

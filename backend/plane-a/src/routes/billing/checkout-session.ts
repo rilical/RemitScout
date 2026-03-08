@@ -25,6 +25,16 @@ const createCheckoutHandler = async (request: FastifyRequest, _reply: FastifyRep
     const body = checkoutSessionSchema.parse(request.body)
     const billingInterval = body.billing_interval || 'month'
 
+    if (body.plan_code !== 'plus') {
+      throw new ValidationError('Unsupported plan code', {
+        details: {
+          error: 'unsupported_plan_code',
+          message: 'Enterprise plans are provisioned through sales.',
+          plan_code: body.plan_code,
+        },
+      })
+    }
+
     // Validate input before surfacing server configuration errors.
     if (!isStripeConfigured() || !config.billing.stripe.priceIdPlus) {
       throw new AppError('Billing not configured', { statusCode: 500, code: 'billing_not_configured' })
@@ -37,7 +47,11 @@ const createCheckoutHandler = async (request: FastifyRequest, _reply: FastifyRep
     }
 
     // Check if user already has active plus subscription
-    if (plan.plan_code === 'plus' && plan.status === 'active' && plan.stripe_subscription_id) {
+    if (
+      plan.plan_code === 'plus'
+      && (plan.status === 'active' || plan.status === 'trialing')
+      && plan.stripe_subscription_id
+    ) {
       throw new ConflictError('User already has an active subscription')
     }
 

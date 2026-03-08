@@ -1085,6 +1085,14 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('publicPulseEnabled') ??
       process.env.PUBLIC_PULSE_ENABLED ??
       process.env.NUXT_PUBLIC_PULSE_ENABLED
+    const publicPulseScreenerEnabled =
+      this.node.tryGetContext('publicPulseScreenerEnabled') ??
+      process.env.PUBLIC_PULSE_SCREENER_ENABLED ??
+      process.env.NUXT_PUBLIC_PULSE_SCREENER_ENABLED
+    const publicEnterpriseEnabled =
+      this.node.tryGetContext('publicEnterpriseEnabled') ??
+      process.env.PUBLIC_ENTERPRISE_ENABLED ??
+      process.env.NUXT_PUBLIC_ENTERPRISE_ENABLED
     const publicNewRelicBrowserEnabled =
       this.node.tryGetContext('publicNewRelicBrowserEnabled') ??
       process.env.PUBLIC_NEW_RELIC_BROWSER_ENABLED ??
@@ -1608,6 +1616,10 @@ export class RemitScoutStack extends Stack {
       planeACorsAllowCredentials,
       planeAAdminRevocationFailClosed,
       frontendBaseUrl,
+      publicAdsEnabled,
+      publicPulseEnabled,
+      publicPulseScreenerEnabled,
+      publicEnterpriseEnabled,
       planeCDbSecretArn,
       planeCDbSecretJsonKey,
       planeCDbSsmName,
@@ -1796,6 +1808,8 @@ export class RemitScoutStack extends Stack {
         publicMetaPixelId,
         publicAdsEnabled,
         publicPulseEnabled,
+        publicPulseScreenerEnabled,
+        publicEnterpriseEnabled,
         publicNewRelicBrowserEnabled,
         publicNewRelicAccountId,
         publicNewRelicTrustKey,

@@ -1,4 +1,16 @@
 export type Plan = 'free' | 'plus' | 'enterprise'
+export type PlanLifecycleState =
+  | 'active'
+  | 'trialing'
+  | 'scheduled_cancel'
+  | 'past_due'
+  | 'canceled'
+  | 'unpaid'
+  | 'incomplete_expired'
+  | 'expired'
+  | 'inactive'
+
+export type PlanRecoveryAction = 'none' | 'billing_portal' | 'upgrade'
 
 export type PulseLevel = 'none' | 'lite' | 'full'
 
@@ -44,9 +56,15 @@ type MeResponse = {
   plan_effective?: {
     plan_code: string
     is_active: boolean
+    lifecycle_state?: PlanLifecycleState
+    source?: 'internal_admin_override' | 'stored_plan' | 'inactive_or_default'
+    recovery_available?: boolean
+    recovery_action?: PlanRecoveryAction
   }
   billing?: {
     next_billing_date: string | null
+    current_period_end?: string | null
+    cancel_at_period_end?: boolean
     amount: number | null
     currency: string | null
     status: string | null
@@ -67,6 +85,14 @@ type MeResponse = {
     watchlist_items: number | null
     api_access: boolean
     api_tier: number | null
+    bulk_export: boolean
+    indices_api: boolean
+    daily_alerts_enabled: boolean
+    smart_alerts_enabled: boolean
+    index_threshold_alerts_enabled: boolean
+    indices_exports_enabled: boolean
+    pulse_embeds_enabled: boolean
+    indices_embeds_enabled: boolean
     api_key_max: number | null
     api_rate_limit_rpm: number | null
   }
@@ -90,20 +116,32 @@ export const useEntitlements = () => {
   const { request } = useApi()
   const { isLoggedIn, applyBackendProfile } = useAuth()
 
-  const freeLimits: PlanLimits = {
+  const plan = useState<Plan>('entitlements:plan', () => 'free')
+  const storedPlanCode = useState<Plan>('entitlements:stored-plan', () => 'free')
+  const planStatus = useState<string>('entitlements:plan-status', () => 'active')
+  const planLifecycleState = useState<PlanLifecycleState>('entitlements:plan-lifecycle', () => 'active')
+  const recoveryAvailable = useState<boolean>('entitlements:recovery-available', () => false)
+  const recoveryAction = useState<PlanRecoveryAction>('entitlements:recovery-action', () => 'none')
+  const limits = useState<PlanLimits>('entitlements:limits', () => ({
     watchlistItems: 3,
     alerts: 1,
     historyDays: 30,
     exports: false,
     exportsMaxDays: 0,
-  }
-  const plan = useState<Plan>('entitlements:plan', () => 'free')
-  const limits = useState<PlanLimits>('entitlements:limits', () => freeLimits)
+  }))
   const apiAccess = useState<boolean>('entitlements:api-access', () => false)
   const apiTier = useState<number | null>('entitlements:api-tier', () => null)
   const apiKeyMax = useState<number | null>('entitlements:api-key-max', () => null)
   const apiRateLimitRpm = useState<number | null>('entitlements:api-rate-limit-rpm', () => null)
   const pulseAccess = useState<BackendPulseAccess>('entitlements:pulse-access', () => 'none')
+  const bulkExportEnabled = useState<boolean>('entitlements:bulk-export-enabled', () => false)
+  const indicesApiEnabled = useState<boolean>('entitlements:indices-api-enabled', () => false)
+  const dailyAlertsEnabled = useState<boolean>('entitlements:daily-alerts-enabled', () => false)
+  const smartAlertsEnabled = useState<boolean>('entitlements:smart-alerts-enabled', () => false)
+  const indexThresholdAlertsEnabled = useState<boolean>('entitlements:index-threshold-alerts-enabled', () => false)
+  const indicesExportsEnabled = useState<boolean>('entitlements:indices-exports-enabled', () => false)
+  const pulseEmbedsEnabled = useState<boolean>('entitlements:pulse-embeds-enabled', () => false)
+  const indicesEmbedsEnabled = useState<boolean>('entitlements:indices-embeds-enabled', () => false)
   const billing = useState<MeResponse['billing'] | null>('entitlements:billing', () => null)
   const loading = useState<boolean>('entitlements:loading', () => false)
   const error = useState<string | null>('entitlements:error', () => null)
@@ -124,16 +162,41 @@ export const useEntitlements = () => {
     return access ? pulseAccessToPulseLevel(access) : planToPulseLevel(plan.value)
   })
 
+  const hasPaidAccess = computed(() => plan.value === 'plus' || plan.value === 'enterprise')
+
+  const resetToFree = () => {
+    plan.value = 'free'
+    storedPlanCode.value = 'free'
+    planStatus.value = 'active'
+    planLifecycleState.value = 'active'
+    recoveryAvailable.value = false
+    recoveryAction.value = 'none'
+    limits.value = {
+      watchlistItems: 3,
+      alerts: 1,
+      historyDays: 30,
+      exports: false,
+      exportsMaxDays: 0,
+    }
+    apiAccess.value = false
+    apiTier.value = null
+    apiKeyMax.value = null
+    apiRateLimitRpm.value = null
+    pulseAccess.value = 'none'
+    bulkExportEnabled.value = false
+    indicesApiEnabled.value = false
+    dailyAlertsEnabled.value = false
+    smartAlertsEnabled.value = false
+    indexThresholdAlertsEnabled.value = false
+    indicesExportsEnabled.value = false
+    pulseEmbedsEnabled.value = false
+    indicesEmbedsEnabled.value = false
+    billing.value = null
+  }
+
   async function fetchPlan() {
     if (!isLoggedIn.value) {
-      plan.value = 'free'
-      limits.value = freeLimits
-      apiAccess.value = false
-      apiTier.value = null
-      apiKeyMax.value = null
-      apiRateLimitRpm.value = null
-      pulseAccess.value = 'none'
-      billing.value = null
+      resetToFree()
       hydrated.value = true
       return
     }
@@ -145,18 +208,35 @@ export const useEntitlements = () => {
       const data = await request<MeResponse>('/me')
 
       if (data.success && data.plan) {
+        const storedPlan =
+          data.plan.plan_code === 'enterprise'
+            ? 'enterprise'
+            : (data.plan.plan_code === 'plus' ? 'plus' : 'free')
         const effectivePlanCode = data.plan_effective?.plan_code || data.plan.plan_code
         const planCode
           = effectivePlanCode === 'enterprise'
             ? 'enterprise'
             : (effectivePlanCode === 'plus' ? 'plus' : 'free')
         plan.value = planCode
+        storedPlanCode.value = storedPlan
+        planStatus.value = data.plan.status || 'active'
+        planLifecycleState.value = data.plan_effective?.lifecycle_state || 'active'
+        recoveryAvailable.value = Boolean(data.plan_effective?.recovery_available)
+        recoveryAction.value = data.plan_effective?.recovery_action || 'none'
         limits.value = mapEntitlementsToLimits(data.entitlements)
         apiAccess.value = Boolean(data.entitlements.api_access)
         apiTier.value = data.entitlements.api_tier
         apiKeyMax.value = data.entitlements.api_key_max ?? null
         apiRateLimitRpm.value = data.entitlements.api_rate_limit_rpm ?? null
         pulseAccess.value = data.entitlements.pulse_access
+        bulkExportEnabled.value = Boolean(data.entitlements.bulk_export)
+        indicesApiEnabled.value = Boolean(data.entitlements.indices_api)
+        dailyAlertsEnabled.value = Boolean(data.entitlements.daily_alerts_enabled)
+        smartAlertsEnabled.value = Boolean(data.entitlements.smart_alerts_enabled)
+        indexThresholdAlertsEnabled.value = Boolean(data.entitlements.index_threshold_alerts_enabled)
+        indicesExportsEnabled.value = Boolean(data.entitlements.indices_exports_enabled)
+        pulseEmbedsEnabled.value = Boolean(data.entitlements.pulse_embeds_enabled)
+        indicesEmbedsEnabled.value = Boolean(data.entitlements.indices_embeds_enabled)
         billing.value = data.billing ?? null
         if (data.user) {
           applyBackendProfile(data.user)
@@ -169,18 +249,8 @@ export const useEntitlements = () => {
     }
     catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch plan'
-      // On failure, preserve last known entitlements if we have them.
-      // Only fall back to free defaults on the very first fetch (never hydrated).
-      if (!hydrated.value) {
-        plan.value = 'free'
-        limits.value = freeLimits
-        apiAccess.value = false
-        apiTier.value = null
-        apiKeyMax.value = null
-        apiRateLimitRpm.value = null
-        pulseAccess.value = 'none'
-        billing.value = null
-      }
+      // Default to free plan on error
+      resetToFree()
       hydrated.value = true
     }
     finally {
@@ -215,20 +285,19 @@ export const useEntitlements = () => {
       fetchPlan()
     }
     else {
-      plan.value = 'free'
-      limits.value = freeLimits
-      apiAccess.value = false
-      apiTier.value = null
-      apiKeyMax.value = null
-      apiRateLimitRpm.value = null
-      pulseAccess.value = 'none'
-      billing.value = null
+      resetToFree()
       hydrated.value = true
     }
   })
 
   return {
     plan: readonly(plan),
+    storedPlanCode: readonly(storedPlanCode),
+    planStatus: readonly(planStatus),
+    planLifecycleState: readonly(planLifecycleState),
+    recoveryAvailable: readonly(recoveryAvailable),
+    recoveryAction: readonly(recoveryAction),
+    hasPaidAccess,
     limits: readonly(limits),
     billing: readonly(billing),
     hydrated: readonly(hydrated),
@@ -241,6 +310,14 @@ export const useEntitlements = () => {
     apiTier: readonly(apiTier),
     apiKeyMax: readonly(apiKeyMax),
     apiRateLimitRpm: readonly(apiRateLimitRpm),
+    bulkExportEnabled: readonly(bulkExportEnabled),
+    indicesApiEnabled: readonly(indicesApiEnabled),
+    dailyAlertsEnabled: readonly(dailyAlertsEnabled),
+    smartAlertsEnabled: readonly(smartAlertsEnabled),
+    indexThresholdAlertsEnabled: readonly(indexThresholdAlertsEnabled),
+    indicesExportsEnabled: readonly(indicesExportsEnabled),
+    pulseEmbedsEnabled: readonly(pulseEmbedsEnabled),
+    indicesEmbedsEnabled: readonly(indicesEmbedsEnabled),
     refreshPlan,
   }
 }

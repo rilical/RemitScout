@@ -2,7 +2,12 @@ import { z } from 'zod'
 import { query } from '../../../../shared/db'
 import { createLogger } from '../../../../shared/logger'
 import { getUserPlan } from '../../services/user-plan'
-import { getEntitlementsForPlan } from '../../services/entitlements'
+import {
+  getEntitlementsForPlan,
+  resolveEffectivePlanCode,
+  type Entitlements,
+  type PlanCode,
+} from '../../services/entitlements'
 import { upsertUsageSnapshot } from '../../services/plan-usage'
 import { getErrorMessage } from '../../types/errors'
 import { getCountryByCode } from '../../../../shared/countries-currencies'
@@ -102,20 +107,26 @@ export const updateAlertSchema = z.object({
 })
 
 export const isPlusEntitled = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) => {
-  return !!plan
-    && ['plus', 'enterprise'].includes(plan.plan_code)
-    && ['active', 'trialing'].includes(plan.status)
+  return !!plan && ['plus', 'enterprise'].includes(resolveEffectivePlanCode(plan.plan_code, plan.status))
 }
 
-export const isPlanActiveStatus = (status?: string | null) => status === 'active' || status === 'trialing'
+export const resolveAlertLimitForEntitlements = (entitlements: Pick<Entitlements, 'alerts_max'>): number | 'unlimited' => {
+  return entitlements.alerts_max === null ? 'unlimited' : entitlements.alerts_max
+}
 
 export const resolveAlertLimit = (plan: Awaited<ReturnType<typeof getUserPlan>> | null): number | 'unlimited' => {
   if (!plan) {
     return 1 // Default free plan limit
   }
-  const effectivePlanCode = isPlanActiveStatus(plan.status) ? plan.plan_code : 'free'
+  const effectivePlanCode = resolveEffectivePlanCode(plan.plan_code, plan.status)
   const entitlements = getEntitlementsForPlan(effectivePlanCode)
-  return entitlements.alerts_max === null ? 'unlimited' : entitlements.alerts_max
+  return resolveAlertLimitForEntitlements(entitlements)
+}
+
+export const resolvePlanLabel = (planCode: PlanCode): 'Free' | 'Plus' | 'Enterprise' => {
+  if (planCode === 'plus') return 'Plus'
+  if (planCode === 'enterprise') return 'Enterprise'
+  return 'Free'
 }
 
 export const resolveCooldownMinutes = (frequency: 'weekly' | 'daily') => {

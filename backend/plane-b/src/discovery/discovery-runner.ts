@@ -15,8 +15,7 @@ import { createLogger } from '../../../shared/logger'
 import { config } from '../../../shared/config'
 import type { ProviderDiscovery } from './discovery-base'
 import type { DiscoveryResult, DiscoveryRunOptions } from './discovery-types'
-import { applyDiscoveryResults } from './discovery-applier'
-import type { ApplyResult } from './discovery-applier'
+import { generateProviderDiff } from './reports/diff-reporter'
 
 // Lazy-load provider scripts to avoid importing Playwright at module level
 const PROVIDER_FACTORIES: Record<string, () => Promise<ProviderDiscovery>> = {
@@ -205,28 +204,15 @@ export async function runDiscoveryForProvider(
       await persistDiscoveredPromotions(pool, scanId, providerId, result)
     }
 
-    // 7. Auto-apply results to rights_matrix + capability tables
-    let applied: ApplyResult | null = null
-    if (options.applyResults && status !== 'failed') {
-      try {
-        applied = await applyDiscoveryResults(pool, providerId, result)
-        logger.info('discovery_apply_summary', {
-          scanId,
-          providerId,
-          rightsMatrixUpdated: applied.rightsMatrixUpdated,
-          sourceCountriesAdded: applied.sourceCountriesAdded.length,
-          destinationCountriesAdded: applied.destinationCountriesAdded.length,
-          capabilitiesUpserted: applied.capabilitiesUpserted,
-          corridorsWithNewMethods: applied.corridorsWithNewMethods.length,
-          applyErrors: applied.errors.length,
-        })
-      } catch (applyErr) {
-        logger.error('discovery_apply_error', {
-          scanId,
-          providerId,
-          error: applyErr instanceof Error ? applyErr.message : String(applyErr),
-        })
-      }
+    // 7. Always persist a reviewable diff for completed/partial scans.
+    try {
+      await generateProviderDiff(pool, providerId, scanId, result)
+    } catch (diffErr) {
+      logger.error('discovery_diff_generation_failed', {
+        scanId,
+        providerId,
+        error: diffErr instanceof Error ? diffErr.message : String(diffErr),
+      })
     }
 
     logger.info('discovery_scan_completed', {
@@ -238,7 +224,6 @@ export async function runDiscoveryForProvider(
       promotions: result.promotions.length,
       errors: result.errors.length,
       durationMs: result.metadata.durationMs,
-      applied: applied != null,
     })
   } catch (err) {
     logger.error('discovery_scan_error', {
@@ -254,6 +239,8 @@ export async function runDiscoveryForProvider(
         error: err instanceof Error ? err.message : String(err),
       },
       durationMs: null,
+      reviewStatus: 'not_required',
+      applyStatus: 'not_applicable',
     })
   }
 
@@ -337,6 +324,8 @@ async function updateScanRecord(
     errorsCount: number
     resultJson: unknown
     durationMs: number | null
+    reviewStatus?: string
+    applyStatus?: string
   },
 ): Promise<void> {
   await pool.query(
@@ -348,6 +337,8 @@ async function updateScanRecord(
          errors_count = $6,
          result_json = $7,
          duration_ms = $8,
+         review_status = COALESCE($9, review_status),
+         apply_status = COALESCE($10, apply_status),
          completed_at = NOW()
      WHERE id = $1`,
     [
@@ -359,6 +350,8 @@ async function updateScanRecord(
       update.errorsCount,
       JSON.stringify(update.resultJson),
       update.durationMs,
+      update.reviewStatus ?? null,
+      update.applyStatus ?? null,
     ],
   )
 }

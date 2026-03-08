@@ -30,13 +30,19 @@
             class="mt-6 inline-flex items-center gap-2 text-body-sm text-neutral-400"
           >
             <span
-              :class="['font-semibold', isPlus ? 'text-brand-400' : 'text-neutral-400']"
-            >{{ isPlus ? 'Plus member' : 'Free plan' }}</span>
-            <span v-if="!isPlus">
+              :class="['font-semibold', hasStoredPaidPlan ? 'text-brand-400' : 'text-neutral-400']"
+            >{{ planHeadlineLabel }}</span>
+            <span v-if="shouldShowUpgrade">
               · <button
 class="text-brand-400 hover:text-brand-300 font-semibold motion-safe:transition-colors"
 @click="handleUpgrade"
 >Upgrade now</button>
+            </span>
+            <span
+              v-else-if="shouldShowManageBilling"
+              class="text-neutral-500"
+            >
+              · Open billing to update status
             </span>
           </div>
         </div>
@@ -224,12 +230,20 @@ class="mt-1 text-body-sm text-white/60"
               Get started
             </button>
             <button
-              v-else-if="!isPlus"
+              v-else-if="shouldShowUpgrade"
               class="w-full py-3 rounded-xl bg-white text-brand-600 hover:bg-neutral-50 font-bold text-body-sm mt-auto motion-safe:transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               :disabled="checkoutLoading || portalLoading"
               @click="handleUpgrade"
             >
-              {{ checkoutLoading ? 'Starting…' : 'Upgrade to Plus' }}
+              {{ checkoutLoading ? 'Starting…' : plusPrimaryButtonLabel }}
+            </button>
+            <button
+              v-else-if="shouldShowManageBilling"
+              class="w-full py-3 rounded-xl bg-white text-brand-600 hover:bg-neutral-50 font-bold text-body-sm mt-auto motion-safe:transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              :disabled="portalLoading"
+              @click="handleManageSubscription"
+            >
+              {{ portalLoading ? 'Opening…' : manageBillingLabel }}
             </button>
             <div
               v-else
@@ -518,8 +532,11 @@ class="text-brand-400"
           <template v-if="!isAuthenticated">
             Create a free account and upgrade to Plus anytime.
           </template>
-          <template v-else-if="!isPlus">
+          <template v-else-if="shouldShowUpgrade">
             Unlock alerts, history, exports, and an ad-free dashboard.
+          </template>
+          <template v-else-if="shouldShowManageBilling">
+            Your billing status needs attention. Open billing below to restore or keep Plus active.
           </template>
           <template v-else>
             You already have Plus. Manage your subscription below.
@@ -540,13 +557,13 @@ class="text-brand-400"
               Sign in
             </NuxtLink>
           </template>
-          <template v-else-if="!isPlus">
+          <template v-else-if="shouldShowUpgrade">
             <button
               class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-neutral-50 text-brand-600 rounded-xl font-bold text-body-lg motion-safe:transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
               :disabled="checkoutLoading || portalLoading"
               @click="handleUpgrade"
             >
-              {{ checkoutLoading ? 'Starting…' : 'Upgrade to Plus' }}
+              {{ checkoutLoading ? 'Starting…' : plusPrimaryButtonLabel }}
             </button>
             <NuxtLink
               to="/contact"
@@ -555,14 +572,19 @@ class="text-brand-400"
               Questions? Contact us
             </NuxtLink>
           </template>
-          <template v-else>
+          <template v-else-if="shouldShowManageBilling">
             <button
               class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-neutral-50 text-brand-600 rounded-xl font-bold text-body-lg motion-safe:transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
               :disabled="portalLoading"
               @click="handleManageSubscription"
             >
-              {{ portalLoading ? 'Opening…' : 'Manage subscription' }}
+              {{ portalLoading ? 'Opening…' : manageBillingLabel }}
             </button>
+          </template>
+          <template v-else>
+            <div class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/20 text-white rounded-xl font-semibold text-body-lg">
+              Current plan
+            </div>
           </template>
         </div>
         <p class="mt-6 text-body-sm text-white/50">
@@ -581,11 +603,32 @@ import { Icon } from '~/ui'
 import { formatMoney as formatMoneyUtil } from '~/shared/lib/format'
 
 const { isAuthenticated } = useAuth()
-const { isPlus } = useEntitlements()
+const { isPlus, storedPlanCode, planLifecycleState, recoveryAvailable, recoveryAction } = useEntitlements()
 const { enterpriseEnabled, pulseEnabled } = useFeatureFlags()
 const billingActions = useBilling()
 const checkoutLoading = computed(() => billingActions.checkoutLoading.value)
 const portalLoading = computed(() => billingActions.portalLoading.value)
+const hasStoredPaidPlan = computed(() => storedPlanCode.value === 'plus' || storedPlanCode.value === 'enterprise')
+const shouldShowUpgrade = computed(() => !hasStoredPaidPlan.value || recoveryAction.value === 'upgrade')
+const shouldShowManageBilling = computed(() => recoveryAction.value === 'billing_portal')
+const planHeadlineLabel = computed(() => {
+  if (storedPlanCode.value === 'enterprise') return 'Enterprise'
+  if (storedPlanCode.value === 'plus') {
+    if (planLifecycleState.value === 'scheduled_cancel') return 'Plus scheduled to end'
+    if (!isPlus.value) return 'Plus inactive'
+    return 'Plus member'
+  }
+  return 'Free plan'
+})
+const plusPrimaryButtonLabel = computed(() => {
+  if (recoveryAction.value === 'upgrade' && hasStoredPaidPlan.value) return 'Upgrade again'
+  return 'Upgrade to Plus'
+})
+const manageBillingLabel = computed(() => {
+  if (planLifecycleState.value === 'scheduled_cancel') return 'Keep plan active'
+  if (!isPlus.value && recoveryAvailable.value) return 'Reactivate billing'
+  return 'Manage subscription'
+})
 
 const billingInterval = useState<'month' | 'year'>('billingInterval', () => 'year')
 

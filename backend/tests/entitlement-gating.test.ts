@@ -1,5 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+vi.mock('../shared/config', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../shared/config')>()
+  return {
+    ...actual,
+    config: {
+      ...actual.config,
+      planeA: {
+        ...actual.config.planeA,
+        cors: {
+          ...actual.config.planeA.cors,
+          origins: ['http://localhost:3000'],
+        },
+      },
+    },
+  }
+})
+
 vi.mock('../plane-a/src/auth/verify-supabase-jwt', () => ({
   verifySupabaseJwt: vi.fn().mockResolvedValue({ user_id: 'u-test', claims: {} }),
 }))
@@ -113,7 +130,20 @@ describe('entitlement gating', () => {
     })
 
     expect(response.statusCode).toBe(403)
-    expect(response.json()).toEqual({ error: 'forbidden', entitlement: 'pulse_full' })
+    expect(response.json()).toEqual({
+      error: 'forbidden',
+      message: 'Full Pulse access requires an Enterprise plan.',
+      details: {
+        entitlement: 'pulse_full',
+        capability: 'pulse_access',
+        required_plan: 'enterprise',
+        plan_failure: 'enterprise_required',
+        purchased_plan: 'plus',
+        effective_plan: 'plus',
+        lifecycle_state: 'active',
+        recovery_action: 'none',
+      },
+    })
   })
 
   it('maps entitlements by plan tier', () => {

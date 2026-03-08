@@ -334,10 +334,18 @@ async function storeDiff(
   scanId: number,
   report: ProviderDiffReport,
 ): Promise<void> {
+  const hasReviewableChanges = report.recommendation !== 'no_action'
   await pool.query(
     `UPDATE silver.discovery_scan
-     SET diff_json = $2
+     SET diff_json = $2,
+         review_status = $3,
+         apply_status = $4
      WHERE id = $1`,
-    [scanId, JSON.stringify(report)],
+    [
+      scanId,
+      JSON.stringify(report),
+      hasReviewableChanges ? 'pending_review' : 'not_required',
+      hasReviewableChanges ? 'not_requested' : 'not_applicable',
+    ],
   )
 }

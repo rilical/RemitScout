@@ -21,6 +21,13 @@ export type CloudWatchMetricInput = {
 
 const logger = createLogger('shared.cloudwatch-metrics')
 
+const cloudwatchConfig = {
+  enabled: config.observability?.cloudwatch?.enabled ?? false,
+  flushIntervalMs: config.observability?.cloudwatch?.flushIntervalMs ?? 5_000,
+  highCardinalityEnabled: config.observability?.cloudwatch?.highCardinalityEnabled ?? false,
+  namespace: config.observability?.cloudwatch?.namespace ?? 'RemitScout',
+}
+
 const MAX_BATCH_SIZE = 20
 const MAX_QUEUE_SIZE = 1000 // Backpressure threshold
 const MAX_DIMENSIONS = 30 // CloudWatch limit
@@ -41,6 +48,17 @@ const CLOUDWATCH_ALARM_NAMESPACES = new Set([
 const isCloudWatchRequired = (namespace: string): boolean =>
   CLOUDWATCH_ALARM_NAMESPACES.has(namespace)
 
+// Some namespaces back release gates and admin views, so mirror them directly
+// into New Relic even when CloudWatch remains the alarm source of truth.
+const DIRECT_NEW_RELIC_MIRROR_NAMESPACES = new Set([
+  'RemitScout',
+  'RemitScout/Agents',
+  'RemitScout/Business',
+])
+
+const shouldMirrorToNewRelic = (namespace: string): boolean =>
+  !isCloudWatchRequired(namespace) || DIRECT_NEW_RELIC_MIRROR_NAMESPACES.has(namespace)
+
 let client: CloudWatchClient | null = null
 let flushTimer: NodeJS.Timeout | null = null
 const metricQueue: CloudWatchMetricInput[] = []
@@ -60,8 +78,8 @@ const getClient = () => {
 }
 
 const shouldRecordMetric = (metric: CloudWatchMetricInput): boolean => {
-  if (!config.observability.cloudwatch.enabled) return false
-  if (metric.highCardinality && !config.observability.cloudwatch.highCardinalityEnabled) {
+  if (!cloudwatchConfig.enabled) return false
+  if (metric.highCardinality && !cloudwatchConfig.highCardinalityEnabled) {
     return false
   }
   // If CloudWatch is down, avoid unbounded queue growth. Still allow a small
@@ -111,6 +129,25 @@ const toDimensions = (dimensions?: Record<string, string>) => {
   }))
 }
 
+const mirrorMetricToNewRelic = (
+  metric: CloudWatchMetricInput,
+  resolvedNamespace: string,
+): void => {
+  if (!shouldMirrorToNewRelic(resolvedNamespace) || !isNewRelicMetricExportEnabled()) return
+
+  enqueueNewRelicMetric({
+    name: metric.name,
+    type: metric.unit === 'Count' ? 'count' : 'gauge',
+    value: metric.value,
+    attributes: {
+      ...Object.fromEntries(
+        Object.entries(metric.dimensions || {}).map(([key, value]) => [key, String(value)]),
+      ),
+      namespace: resolvedNamespace,
+    },
+  })
+}
+
 /**
  * Retry with exponential backoff for PutMetricData.
  */
@@ -136,7 +173,7 @@ const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> =>
 }
 
 const flushMetrics = async (): Promise<void> => {
-  if (!config.observability.cloudwatch.enabled) {
+  if (!cloudwatchConfig.enabled) {
     metricQueue.length = 0
     return
   }
@@ -151,7 +188,7 @@ const flushMetrics = async (): Promise<void> => {
 
   const byNamespace = new Map<string, CloudWatchMetricInput[]>()
   for (const metric of batch) {
-    const namespace = metric.namespace || config.observability.cloudwatch.namespace
+    const namespace = metric.namespace || cloudwatchConfig.namespace
     const existing = byNamespace.get(namespace)
     if (existing) {
       existing.push(metric)
@@ -198,7 +235,7 @@ const scheduleFlush = () => {
         error: error instanceof Error ? error.message : String(error),
       })
     })
-  }, config.observability.cloudwatch.flushIntervalMs)
+  }, cloudwatchConfig.flushIntervalMs)
   flushTimer.unref?.()
 }
 
@@ -224,39 +261,12 @@ export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
     return
   }
 
-  const resolvedNamespace = metric.namespace || config.observability.cloudwatch.namespace
-  const newRelicEnabled = isNewRelicMetricExportEnabled()
-  const cloudWatchRequired = isCloudWatchRequired(resolvedNamespace)
+  const resolvedNamespace = metric.namespace || cloudwatchConfig.namespace
+  mirrorMetricToNewRelic(metric, resolvedNamespace)
 
-  // In split mode: all metrics go to NR; alarm namespaces also go to CloudWatch.
-  // In newrelic_only: all to NR. In cloudwatch_only: all to CloudWatch.
-  const routingMode = config.observability.cloudwatch.metricRoutingMode
-  const shouldWriteToNewRelic =
-    newRelicEnabled &&
-    (routingMode === 'newrelic_only' || routingMode === 'split')
-
-  if (shouldWriteToNewRelic) {
-    enqueueNewRelicMetric({
-      name: metric.name,
-      type: 'gauge',
-      value: metric.value,
-      attributes: {
-        ...Object.fromEntries(
-          Object.entries(metric.dimensions || {}).map(([k, v]) => [k, String(v)]),
-        ),
-        namespace: resolvedNamespace,
-      },
-    })
-    // Non-alarm namespaces: NR only (cost optimization — skip CloudWatch)
-    if (!cloudWatchRequired || routingMode === 'newrelic_only') return
-  }
-
-  if (routingMode === 'newrelic_only' && !newRelicEnabled) {
-    logger.warn('cloudwatch_metric_newrelic_only_fallback', {
-      metric_name: metric.name,
-      namespace: resolvedNamespace,
-      reason: 'newrelic_metric_export_disabled',
-    })
+  // Route non-alarm namespaces to New Relic directly (skip CloudWatch).
+  if (!isCloudWatchRequired(resolvedNamespace)) {
+    return
   }
 
   if (!shouldRecordMetric(metric)) return
@@ -290,4 +300,46 @@ export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
 
 export const flushCloudWatchMetrics = async (): Promise<void> => {
   await flushMetrics()
+}
+
+export type ProviderOnboardingMetricInput = {
+  metric:
+    | 'run_count'
+    | 'provider_count'
+    | 'provider_status'
+    | 'remit_score'
+    | 'step_duration_seconds'
+  value: number
+  env: string
+  provider_id?: string
+  status?: string
+  step?: string
+}
+
+const PROVIDER_ONBOARDING_METRIC_NAMES: Record<ProviderOnboardingMetricInput['metric'], string> = {
+  run_count: 'provider_onboarding_run_count',
+  provider_count: 'provider_onboarding_provider_count',
+  provider_status: 'provider_onboarding_provider_status',
+  remit_score: 'provider_onboarding_remit_score',
+  step_duration_seconds: 'provider_onboarding_step_duration_seconds',
+}
+
+export const recordProviderOnboardingMetric = (metric: ProviderOnboardingMetricInput): void => {
+  const name = PROVIDER_ONBOARDING_METRIC_NAMES[metric.metric]
+  if (!name) return
+
+  const dimensions: Record<string, string> = {
+    env: String(metric.env || '').trim() || 'unknown',
+    scope: 'provider_onboarding',
+  }
+  if (metric.provider_id) dimensions.provider = String(metric.provider_id).trim()
+  if (metric.status) dimensions.status = String(metric.status).trim()
+  if (metric.step) dimensions.step = String(metric.step).trim()
+
+  recordCloudWatchMetric({
+    name,
+    value: metric.value,
+    namespace: 'RemitScout/Onboarding',
+    dimensions,
+  })
 }

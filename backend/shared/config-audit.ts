@@ -1,4 +1,5 @@
 import { config, type RuntimeConfigRequirements } from './config'
+import { resolveIngestFanoutQueueState } from './ingest-fanout-queues'
 
 export type ConfigAuditResult = {
   missing: string[]
@@ -44,6 +45,12 @@ export const auditConfig = (
   const items: AuditItem[] = []
   const missing: string[] = []
   const warnings: string[] = []
+  const ingestFanoutQueueState = resolveIngestFanoutQueueState({
+    mode: config.queues.ingestFanout.mode,
+    url: config.queues.ingestFanout.url,
+    tier1Url: config.queues.ingestFanout.tier1Url,
+    tier2Url: config.queues.ingestFanout.tier2Url,
+  })
 
   const add = (envVar: string, value: unknown, required: boolean, warnWhenEmpty = true) => {
     items.push({ envVar, value, required, warnWhenEmpty })
@@ -89,7 +96,16 @@ export const auditConfig = (
     add('QUOTE_REFRESH_QUEUE_URL', config.queues.quoteRefreshUrl, requireQuoteRefreshQueue)
     add('FX_RATE_REFRESH_QUEUE_URL', config.queues.fxRateRefreshUrl, requireFxRateRefreshQueue)
     add('EXPORT_JOB_QUEUE_URL', config.queues.exports.url, requireExportJobQueue)
-    add('PLANE_B_INGEST_FANOUT_QUEUE_URL', config.queues.ingestFanout.url, requireIngestFanoutQueue)
+    add(
+      'PLANE_B_INGEST_FANOUT_QUEUE_URL or tiered pair',
+      ingestFanoutQueueState.enabled ? 'configured' : '',
+      requireIngestFanoutQueue,
+    )
+    add(
+      'PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL + PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL',
+      ingestFanoutQueueState.tierMisconfigured ? '' : 'valid',
+      requireIngestFanoutQueue && ingestFanoutQueueState.tierMisconfigured,
+    )
     add('PLANE_B_NOTIFICATIONS_QUEUE_URL', config.queues.notifications.url, requireNotificationsQueue)
     add('PLANE_B_OPS_ALERT_QUEUE_URL', config.queues.opsAlerts.url, requireOpsAlertsQueue)
     add('GOLD_LIVE_QUEUE_URL', config.queues.goldLive.url, requireGoldLiveQueue)

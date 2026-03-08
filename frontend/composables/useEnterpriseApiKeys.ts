@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useEntitlements } from '~/composables/useEntitlements'
+import { mapPlanStateFailureMessage } from '~/composables/usePlanStateError'
 import type { DataTableColumn } from '~/ui'
 
 type ApiKeyRecord = {
@@ -57,7 +58,10 @@ export function useEnterpriseApiKeys() {
     const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
     if (/429|too many|rate.?limit/i.test(raw)) return 'Rate limited — wait a moment then press Refresh.'
     if (/api_key_limit_reached/i.test(raw)) return `Maximum of ${maxApiKeys.value} active keys reached. Revoke a key before creating a new one.`
-    return raw || fallback
+    return mapPlanStateFailureMessage(error, fallback, {
+      enterprise_required: 'Enterprise API access is required for API keys.',
+      plan_inactive: 'Your paid plan is inactive. Reactivate billing to manage API keys.',
+    })
   }
 
   const fetchApiKeys = async () => {

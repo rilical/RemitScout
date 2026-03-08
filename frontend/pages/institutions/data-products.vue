@@ -7,7 +7,7 @@ const mailtoHref = 'mailto:support@remit-scout.com?subject=Institutional%20inqui
 
 setSeo({
   title: 'Data Products (NDA) | Remit-Scout',
-  description: 'Data products available to qualified institutional clients.',
+  description: 'Institutional data products in launch-program review while live history matures.',
   canonical: `${siteUrl}/institutions/data-products`,
   noindex: true,
   ogImage: false,
@@ -34,7 +34,7 @@ const breadcrumbItems = [
             Institutional access
           </h1>
           <p class="text-body text-neutral-700 leading-relaxed mb-8">
-            Data products available to qualified institutional clients. Contact us to discuss your requirements.
+            Data products are currently offered through a waitlist launch program while the sellable Gold dataset matures toward the 180-day threshold. Contact us to discuss fit, timing, and evaluation requirements.
           </p>
 
           <div class="flex flex-wrap gap-3">

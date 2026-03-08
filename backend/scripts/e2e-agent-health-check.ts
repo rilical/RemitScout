@@ -17,6 +17,12 @@
  *   pnpm tsx backend/scripts/e2e-agent-health-check.ts --lookback-hours=2
  */
 
+import {
+  CloudWatchClient,
+  GetMetricDataCommand,
+  ListMetricsCommand,
+} from '@aws-sdk/client-cloudwatch'
+
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
@@ -31,6 +37,64 @@ type CheckResult = {
 
 const LOOKBACK_HOURS = Number(process.env.AGENT_HEALTH_LOOKBACK_HOURS) ||
   Number(process.argv.find((a) => a.startsWith('--lookback-hours='))?.split('=')[1]) || 1
+const AGENT_METRIC_NAMESPACE = 'RemitScout/Agents'
+const DETECTION_CYCLE_METRIC = 'detection_cycle_count'
+
+const resolveEnvironmentName = () => {
+  const value = (config.envName || config.env || process.env.ENVIRONMENT || process.env.NODE_ENV || '').trim()
+  if (!value) return 'dev'
+  const normalized = value.toLowerCase()
+  if (normalized === 'production') return 'prod'
+  if (normalized === 'development') return 'dev'
+  return normalized
+}
+
+const loadDetectionCycleMetricCount = async (): Promise<number> => {
+  const cloudWatch = new CloudWatchClient({})
+  const endTime = new Date()
+  const startTime = new Date(endTime.getTime() - LOOKBACK_HOURS * 60 * 60 * 1000)
+  const environment = resolveEnvironmentName()
+
+  const listResponse = await cloudWatch.send(new ListMetricsCommand({
+    Namespace: AGENT_METRIC_NAMESPACE,
+    MetricName: DETECTION_CYCLE_METRIC,
+    RecentlyActive: 'PT3H',
+    Dimensions: [
+      { Name: 'environment', Value: environment },
+      { Name: 'service', Value: 'remit-scout' },
+    ],
+  }))
+
+  const metrics = (listResponse.Metrics ?? []).slice(0, 50)
+  if (metrics.length === 0) {
+    return 0
+  }
+
+  const queries = metrics.map((metric, index) => ({
+    Id: `m${index}`,
+    MetricStat: {
+      Metric: {
+        Namespace: AGENT_METRIC_NAMESPACE,
+        MetricName: DETECTION_CYCLE_METRIC,
+        Dimensions: metric.Dimensions,
+      },
+      Period: 60,
+      Stat: 'Sum',
+    },
+    ReturnData: true,
+  }))
+
+  const metricData = await cloudWatch.send(new GetMetricDataCommand({
+    StartTime: startTime,
+    EndTime: endTime,
+    MetricDataQueries: queries,
+  }))
+
+  return (metricData.MetricDataResults ?? []).reduce((total, result) => {
+    const metricTotal = (result.Values ?? []).reduce((sum, value) => sum + Number(value || 0), 0)
+    return total + metricTotal
+  }, 0)
+}
 
 async function runChecks(): Promise<CheckResult[]> {
   const pool = createPool(config.db.planeBUrl)
@@ -91,20 +155,12 @@ async function runChecks(): Promise<CheckResult[]> {
       detail: `${actionCount} agent actions in last ${LOOKBACK_HOURS}h (0 is acceptable if no repairs needed)`,
     })
 
-    // 5. Detection cycles — check that orchestrator has been cycling
-    // We look for recent dispatch_queue entries from the orchestrator (queue_name starts with 'agent-')
-    const cycleResult = await pool.query<{ cnt: string }>(
-      `SELECT COUNT(DISTINCT DATE_TRUNC('minute', created_at))::text AS cnt
-       FROM silver.dispatch_queue
-       WHERE queue_name LIKE 'agent-%'
-         AND created_at > NOW() - $1::interval`,
-      [lookbackInterval],
-    )
-    const cycleMinutes = Number(cycleResult.rows[0]?.cnt ?? 0)
+    // 5. Detection cycles — prove the orchestrator emitted CloudWatch health metrics recently.
+    const cycleCount = await loadDetectionCycleMetricCount()
     results.push({
       name: 'detection_cycles',
-      passed: cycleMinutes > 0 || dispatchCount > 0,
-      detail: `${cycleMinutes} distinct minutes with agent dispatch activity in last ${LOOKBACK_HOURS}h`,
+      passed: cycleCount > 0,
+      detail: `${cycleCount} CloudWatch detection cycles in last ${LOOKBACK_HOURS}h`,
     })
 
     // 6. Provider sources indexed in silver.knowledge_chunk

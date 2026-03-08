@@ -69,6 +69,12 @@ import { INSTAREM_SUPPORTED_CORRIDORS } from '../providers/instarem/supported-co
 import { fetchWireBarleyQuote } from '../providers/wirebarley/fetch'
 import { extractWireBarleyMethodPairs } from '../providers/wirebarley/parse'
 import { WIREBARLEY_SUPPORTED_CORRIDORS } from '../providers/wirebarley/supported-corridors'
+import { fetchWellsFargoQuote } from '../providers/wellsfargo/fetch'
+import { extractWellsFargoMethodPairs } from '../providers/wellsfargo/parse'
+import { WELLSFARGO_SUPPORTED_CORRIDORS } from '../providers/wellsfargo/supported-corridors'
+import { fetchAlansariQuote } from '../providers/alansari/fetch'
+import { extractAlansariMethodPairs } from '../providers/alansari/parse'
+import { ALANSARI_SUPPORTED_CORRIDORS } from '../providers/alansari/supported-corridors'
 import { fetchIntermexQuote } from '../providers/intermex/fetch'
 import { extractIntermexMethodPairs } from '../providers/intermex/parse'
 import { INTERMEX_SUPPORTED_CORRIDORS } from '../providers/intermex/supported-corridors'
@@ -203,6 +209,16 @@ const capabilityProbes: Record<string, CapabilityProbeEntry> = {
     fetch: fetchWireBarleyQuote,
     extractPairs: extractWireBarleyMethodPairs,
   },
+  wellsfargo: {
+    providerId: 'wellsfargo',
+    fetch: fetchWellsFargoQuote,
+    extractPairs: extractWellsFargoMethodPairs,
+  },
+  alansari: {
+    providerId: 'alansari',
+    fetch: fetchAlansariQuote,
+    extractPairs: extractAlansariMethodPairs,
+  },
   intermex: {
     providerId: 'intermex',
     fetch: fetchIntermexQuote,
@@ -228,6 +244,8 @@ const mukuruSupportedCorridors = new Set(MUKURU_SUPPORTED_CORRIDORS)
 const xoomSupportedCorridors = new Set(XOOM_SUPPORTED_CORRIDORS)
 const instaremSupportedCorridors = new Set(INSTAREM_SUPPORTED_CORRIDORS)
 const wirebarleySupportedCorridors = new Set(WIREBARLEY_SUPPORTED_CORRIDORS)
+const wellsFargoSupportedCorridors = new Set(WELLSFARGO_SUPPORTED_CORRIDORS)
+const alansariSupportedCorridors = new Set(ALANSARI_SUPPORTED_CORRIDORS)
 const intermexSupportedCorridors = new Set(INTERMEX_SUPPORTED_CORRIDORS)
 
 const catalogSupportedCorridors: Record<string, Set<string>> = {
@@ -249,6 +267,8 @@ const catalogSupportedCorridors: Record<string, Set<string>> = {
   xoom: xoomSupportedCorridors,
   instarem: instaremSupportedCorridors,
   wirebarley: wirebarleySupportedCorridors,
+  wellsfargo: wellsFargoSupportedCorridors,
+  alansari: alansariSupportedCorridors,
   intermex: intermexSupportedCorridors,
 }
 
@@ -373,11 +393,13 @@ export const resolveProviderSupport = async (
   options: {
     allowProbe?: boolean
     skipCatalog?: boolean
+    forceProbe?: boolean
     refreshUnsupportedAfterDays?: number
   } = {},
 ): Promise<ProviderSupportDecision> => {
   const allowProbe = options.allowProbe ?? true
   const skipCatalog = options.skipCatalog ?? false
+  const forceProbe = options.forceProbe ?? false
   const refreshUnsupportedAfterDays = Number.isFinite(options.refreshUnsupportedAfterDays)
     ? Math.max(0, options.refreshUnsupportedAfterDays ?? 0)
     : 0
@@ -408,7 +430,7 @@ export const resolveProviderSupport = async (
 
   const repo = new ProviderCapabilityRepository(pool)
   let existing = await repo.getCapability(request.provider_id, request.corridor_id)
-  if (existing) {
+  if (existing && !forceProbe) {
     if (!existing.is_supported) {
       const lastVerifiedAt = existing.last_verified_at
         ? new Date(existing.last_verified_at).getTime()
@@ -424,7 +446,7 @@ export const resolveProviderSupport = async (
       existing = null
     }
   }
-  if (existing) {
+  if (existing && !forceProbe) {
     if (!methodAllowed(existing.payin_methods, request.payin_method) || !methodAllowed(existing.payout_methods, request.payout_method)) {
       return { supported: false, reason: 'capability_method_mismatch', source: 'cache' }
     }

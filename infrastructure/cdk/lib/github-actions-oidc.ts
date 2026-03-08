@@ -38,7 +38,7 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
     : new OpenIdConnectProvider(scope, 'GithubActionsOidcProvider', {
         url: 'https://token.actions.githubusercontent.com',
         clientIds: ['sts.amazonaws.com'],
-        thumbprints: ['6938fd4d98bab03faadb97b34396831e3780aea1'],
+        thumbprints: ['6938fd4d98bab03faadb97b34396831e3780aea1'], // pragma: allowlist secret
       })
 
   const account = Stack.of(scope).account

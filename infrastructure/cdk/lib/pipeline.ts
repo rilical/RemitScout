@@ -32,6 +32,8 @@ export type PipelineOptions = {
   frontendDistribution?: Distribution
   planeACloudFrontDomain?: string
   planeAApiEndpoint?: string
+  publicSiteUrl?: string
+  publicApiBase?: string
   publicSupabaseUrl?: string
   publicSupabaseAnonKey?: string
   publicSupabaseSecretArn?: string
@@ -41,6 +43,8 @@ export type PipelineOptions = {
   publicMetaPixelId?: string
   publicAdsEnabled?: string
   publicPulseEnabled?: string
+  publicPulseScreenerEnabled?: string
+  publicEnterpriseEnabled?: string
   publicNewRelicBrowserEnabled?: string
   publicNewRelicAccountId?: string
   publicNewRelicTrustKey?: string
@@ -105,6 +109,12 @@ export const createPipeline = (
   if (options.planeAApiEndpoint) {
     buildEnvVars.PLANE_A_API_ENDPOINT = { value: options.planeAApiEndpoint }
   }
+  if (options.publicSiteUrl) {
+    buildEnvVars.PUBLIC_SITE_URL = { value: options.publicSiteUrl }
+  }
+  if (options.publicApiBase) {
+    buildEnvVars.PUBLIC_API_BASE = { value: options.publicApiBase }
+  }
   if (options.publicSupabaseUrl) {
     buildEnvVars.PUBLIC_SUPABASE_URL = { value: options.publicSupabaseUrl }
   }
@@ -132,10 +142,17 @@ export const createPipeline = (
     buildEnvVars.PUBLIC_META_PIXEL_ID = { value: options.publicMetaPixelId }
   }
   if (options.publicAdsEnabled) {
+    buildEnvVars.PUBLIC_ENABLE_ADS = { value: options.publicAdsEnabled }
     buildEnvVars.PUBLIC_ADS_ENABLED = { value: options.publicAdsEnabled }
   }
   if (options.publicPulseEnabled) {
     buildEnvVars.PUBLIC_PULSE_ENABLED = { value: options.publicPulseEnabled }
+  }
+  if (options.publicPulseScreenerEnabled !== undefined) {
+    buildEnvVars.PUBLIC_PULSE_SCREENER_ENABLED = { value: options.publicPulseScreenerEnabled }
+  }
+  if (options.publicEnterpriseEnabled !== undefined) {
+    buildEnvVars.PUBLIC_ENTERPRISE_ENABLED = { value: options.publicEnterpriseEnabled }
   }
   if (options.publicNewRelicBrowserEnabled) {
     buildEnvVars.PUBLIC_NEW_RELIC_BROWSER_ENABLED = { value: options.publicNewRelicBrowserEnabled }
@@ -197,23 +214,37 @@ export const createPipeline = (
             [
               'if [ -n "$FRONTEND_BUCKET_NAME" ]; then',
               '  echo "Building frontend..."',
+              '  if [ "$ENV_NAME" = "staging" ] || [ "$ENV_NAME" = "prod" ]; then',
+              '    if [ -z "$PUBLIC_API_BASE" ]; then',
+              '      echo "Missing PUBLIC_API_BASE for $ENV_NAME frontend build."',
+              '      exit 1',
+              '    fi',
+              '    if [ -z "$PUBLIC_SITE_URL" ]; then',
+              '      echo "Missing PUBLIC_SITE_URL for $ENV_NAME frontend build."',
+              '      exit 1',
+              '    fi',
+              '  fi',
               '  if [ -z "$PUBLIC_API_BASE" ]; then',
               '    if [ -n "$PLANE_A_CLOUDFRONT_DOMAIN" ]; then',
               '      export PUBLIC_API_BASE=https://$PLANE_A_CLOUDFRONT_DOMAIN/api/v1',
               '    elif [ -n "$PLANE_A_API_ENDPOINT" ]; then',
               '      export PUBLIC_API_BASE=${PLANE_A_API_ENDPOINT%/}/api/v1',
               '    fi',
+              '  else',
+              '    export PUBLIC_API_BASE=${PUBLIC_API_BASE%/}',
               '  fi',
-              '  if [ -n "$FRONTEND_DISTRIBUTION_DOMAIN" ]; then',
-              '    export PUBLIC_SITE_URL=https://$FRONTEND_DISTRIBUTION_DOMAIN',
-              '    export PUBLIC_IMAGE_BASE=https://$FRONTEND_DISTRIBUTION_DOMAIN/images',
-              '  elif [ -n "${PUBLIC_SITE_URL:-}" ]; then',
+              '  if [ -n "${PUBLIC_SITE_URL:-}" ]; then',
               '    export PUBLIC_SITE_URL=${PUBLIC_SITE_URL%/}',
               '    export PUBLIC_IMAGE_BASE=${PUBLIC_IMAGE_BASE:-${PUBLIC_SITE_URL%/}/images}',
+              '  elif [ -n "$FRONTEND_DISTRIBUTION_DOMAIN" ]; then',
+              '    export PUBLIC_SITE_URL=https://$FRONTEND_DISTRIBUTION_DOMAIN',
+              '    export PUBLIC_IMAGE_BASE=https://$FRONTEND_DISTRIBUTION_DOMAIN/images',
               '  fi',
               '  export PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL:-}',
               '  export PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY:-}',
               '  export PUBLIC_PULSE_ENABLED=${PUBLIC_PULSE_ENABLED:-}',
+              '  export PUBLIC_PULSE_SCREENER_ENABLED=${PUBLIC_PULSE_SCREENER_ENABLED:-}',
+              '  export PUBLIC_ENTERPRISE_ENABLED=${PUBLIC_ENTERPRISE_ENABLED:-}',
               '  export PUBLIC_NEW_RELIC_BROWSER_ENABLED=${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-}',
               '  export PUBLIC_NEW_RELIC_ACCOUNT_ID=${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}',
               '  export PUBLIC_NEW_RELIC_TRUST_KEY=${PUBLIC_NEW_RELIC_TRUST_KEY:-}',

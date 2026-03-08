@@ -127,6 +127,16 @@ const mapPayout = (code?: string | null) => {
   return payoutMethodMap[code] ?? 'other'
 }
 
+export const extractWellsFargoMethodPairs = (
+  payload?: WellsFargoPayload | null,
+) => {
+  const methodCode = payload?.paymentMethodCode ?? 'ACCT_TO_ACCT'
+  return [{
+    payin_method: mapPayin(methodCode),
+    payout_method: mapPayout(methodCode),
+  }]
+}
+
 export const parseWellsFargoPayload = (
   payload: WellsFargoPayload,
 ): WellsFargoParsedQuote | null => {

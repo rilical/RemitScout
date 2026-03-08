@@ -48,8 +48,8 @@
             :cta-label="isChartGated(chart) ? 'Contact sales' : undefined"
             :disable-actions="isChartGated(chart)"
             :days-available="props.daysAvailable"
+            :can-embed="props.canEmbed"
             @view="handleView"
-            @share="handleShare"
             @embed="handleEmbed"
           />
         </LazyChartSlot>
@@ -79,17 +79,18 @@ interface Props {
   filters: PulseFilters
   pulseLevel?: PulseLevel
   daysAvailable?: number
+  canEmbed?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pulseLevel: 'none',
   chartAvailability: () => ({}),
   daysAvailable: 0,
+  canEmbed: false,
 })
 
 const emit = defineEmits<{
   view: [chartId: string]
-  share: [chartId: string]
   embed: [chartId: string]
 }>()
 
@@ -197,10 +198,6 @@ function isChartGated(chart: ChartMetadata): boolean {
 
 function handleView(chartId: string) {
   emit('view', chartId)
-}
-
-function handleShare(chartId: string) {
-  emit('share', chartId)
 }
 
 function handleEmbed(chartId: string) {

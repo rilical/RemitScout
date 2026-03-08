@@ -129,4 +129,29 @@ describe('quotes route', () => {
     expect(result.count).toBe(1)
     expect(Array.isArray(result.quotes)).toBe(true)
   })
+
+  it('does not synthesize the requested payout method into availableMethods when no quotes exist', async () => {
+    const app = makeApp()
+    const { quotesRoutes } = await import('../plane-a/src/routes/quotes')
+    await quotesRoutes(app)
+
+    const handler = getHandler(app, 'get', '/quotes/current')
+    const reply = { header: vi.fn().mockReturnThis(), code: vi.fn().mockReturnThis() }
+    const result = await handler(
+      {
+        query: {
+          corridor_id: 'US-MX-USD-MXN',
+          amount_bucket: 500,
+          payin: 'bank_transfer',
+          payout: 'bank_deposit',
+          live: true,
+        },
+        headers: {},
+      },
+      reply,
+    )
+
+    expect(result.availableMethods).toEqual([])
+    expect(result.quotes).toEqual([])
+  })
 })

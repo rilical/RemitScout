@@ -3,11 +3,19 @@ import { z } from 'zod'
 import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth, requireEntitlement } from '../plugins/auth-plugin'
-import { getUserPlan } from '../services/user-plan'
-import { getEntitlementsForPlan } from '../services/entitlements'
 import { ValidationError } from '../../../shared/errors'
+import { apiKeyAccessConfig } from './api-key-access'
 
 const logger = createLogger('plane-a.history')
+const METHOD_PROFILES = [
+  'standard_bank',
+  'standard_card',
+  'cash_pickup',
+  'mobile_wallet',
+  'airtime_topup',
+  'card_delivery',
+  'home_delivery',
+] as const
 
 const historyQuerySchema = z.object({
   corridor_id: z.string().min(3),
@@ -15,7 +23,7 @@ const historyQuerySchema = z.object({
   to_date: z.string().optional(),
   granularity: z.enum(['daily', '4h', 'hourly']).optional(),
   amount_bucket: z.coerce.number().int().optional(),
-  method_profile: z.string().optional(),
+  method_profile: z.enum(METHOD_PROFILES).optional(),
 })
 
 const historyCreateSchema = z.object({
@@ -44,7 +52,7 @@ const formatIso = (value?: Date | null) => {
 
 const resolveUserId = (request: FastifyRequest, reply: FastifyReply): string | null => {
   if (request.user) return request.user.user_id
-  if (request.apiKey) return request.apiKey.user_id
+  if (request.userApiKey || request.apiKey) return (request.userApiKey ?? request.apiKey)!.user_id
   reply.code(401)
   reply.send({ error: 'unauthorized' })
   return null
@@ -87,50 +95,57 @@ export const historyRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/history/corridor', { preHandler: requireEntitlement('history') }, async (request, reply) => {
-    const parsed = historyQuerySchema.safeParse(request.query)
-    if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
-    }
-
-    const userId = resolveUserId(request, reply)
-    if (!userId) return
-    const plan = await getUserPlan(planeAPool, userId)
-    const isPlanActive = plan?.status === 'active' || plan?.status === 'trialing'
-    const effectivePlanCode = plan && isPlanActive ? plan.plan_code : 'free'
-    const entitlements = getEntitlementsForPlan(effectivePlanCode)
-    const maxDays = entitlements.history_max_days
-
-    const corridorId = parsed.data.corridor_id
-    const granularity = parsed.data.granularity ?? 'daily'
-    if (granularity !== 'daily') {
-            throw new ValidationError('Invalid request', { details: { error: 'granularity_not_supported', granularity } })
-    }
-
-    const toDate = parseDate(parsed.data.to_date) ?? new Date()
-    const fromDate =
-      parseDate(parsed.data.from_date) ??
-      new Date(toDate.getTime() - (maxDays ?? 30) * 24 * 60 * 60 * 1000)
-
-    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-    }
-    if (fromDate > toDate) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range', message: 'from_date is after to_date' } })
-    }
-
-    if (typeof maxDays === 'number') {
-      const rangeMs = toDate.getTime() - fromDate.getTime()
-      const rangeDays = rangeMs / (24 * 60 * 60 * 1000)
-      if (rangeDays > maxDays) {
-        reply.code(403)
-        return { error: 'history_range_exceeded', maxDays }
+  app.get(
+    '/history/corridor',
+    {
+      preHandler: requireEntitlement('history'),
+      config: apiKeyAccessConfig({ audience: 'retail', requiredScope: 'corridors:read' }),
+    },
+    async (request, reply) => {
+      const parsed = historyQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+              throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
       }
-    }
 
-    const conditions: string[] = ['corridor_id = $1', 'date >= $2', 'date <= $3']
-    const params: Array<string | number | Date> = [corridorId, fromDate, toDate]
-    let paramIndex = 4
+      const userId = resolveUserId(request, reply)
+      if (!userId) return
+      const entitlements = request.entitlementsContext?.entitlements
+      if (!entitlements) {
+        reply.code(500)
+        return { error: 'entitlements_context_missing' }
+      }
+      const maxDays = entitlements.history_max_days
+
+      const corridorId = parsed.data.corridor_id
+      const granularity = parsed.data.granularity ?? 'daily'
+      if (granularity !== 'daily') {
+              throw new ValidationError('Invalid request', { details: { error: 'granularity_not_supported', granularity } })
+      }
+
+      const toDate = parseDate(parsed.data.to_date) ?? new Date()
+      const fromDate =
+        parseDate(parsed.data.from_date) ??
+        new Date(toDate.getTime() - (maxDays ?? 30) * 24 * 60 * 60 * 1000)
+
+      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+              throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
+      }
+      if (fromDate > toDate) {
+              throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range', message: 'from_date is after to_date' } })
+      }
+
+      if (typeof maxDays === 'number') {
+        const rangeMs = toDate.getTime() - fromDate.getTime()
+        const rangeDays = rangeMs / (24 * 60 * 60 * 1000)
+        if (rangeDays > maxDays) {
+          reply.code(403)
+          return { error: 'history_range_exceeded', maxDays }
+        }
+      }
+
+      const conditions: string[] = ['corridor_id = $1', 'date >= $2', 'date <= $3']
+      const params: Array<string | number | Date> = [corridorId, fromDate, toDate]
+      let paramIndex = 4
 
     if (parsed.data.amount_bucket !== undefined) {
       conditions.push(`amount_bucket = $${paramIndex}`)
@@ -138,7 +153,7 @@ export const historyRoutes = async (app: FastifyInstance) => {
       paramIndex += 1
     }
     if (parsed.data.method_profile) {
-      conditions.push(`method_profile = $${paramIndex}`)
+      conditions.push(`method_profile = $${paramIndex}::method_profile`)
       params.push(parsed.data.method_profile)
       paramIndex += 1
     }
@@ -226,7 +241,8 @@ export const historyRoutes = async (app: FastifyInstance) => {
       reply.code(500)
       return { error: 'internal_error' }
     }
-  })
+    },
+  )
 
   app.post('/history', { preHandler: requireAuth() }, async (request, reply) => {
     const parsed = historyCreateSchema.safeParse(request.body)

@@ -8,7 +8,7 @@ const mailtoHref = 'mailto:support@remit-scout.com?subject=Institutional%20inqui
 setSeo({
   title: 'Institutions | Remit-Scout',
   description:
-    'Remittance intelligence for research and risk teams. Contact us for institutional access details.',
+    'Institutional remittance data launch program and waitlist for research and risk teams.',
   canonical: `${siteUrl}/institutions`,
   noindex: true,
   ogImage: false,
@@ -37,7 +37,7 @@ const breadcrumbItems = [
             Remittance intelligence for research and risk teams
           </h1>
           <p class="text-body text-neutral-700 leading-relaxed mb-8">
-            Remittance intelligence for research and risk teams. We offer real-time corridor data, proprietary cost and volatility indexes, and historical datasets. Contact us for details.
+            Institutional access is currently handled as a waitlist launch program while we accumulate the first 180 days of sellable live history. Contact us if you want to review the roadmap, launch timing, or join the early-access list.
           </p>
 
           <div class="flex flex-wrap gap-3">
@@ -56,7 +56,7 @@ const breadcrumbItems = [
           </div>
 
           <p class="mt-6 text-body-sm text-neutral-500">
-            Materials and access details are shared with qualified clients under NDA.
+            Materials, launch timing, and data-room access are shared with qualified clients under NDA.
           </p>
         </div>
       </div>

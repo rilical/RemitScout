@@ -1,4 +1,4 @@
-import type { Pool } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { config } from '../../../shared/config'
 import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
@@ -7,13 +7,15 @@ import { getErrorMessage } from '../types/errors'
 const logger = createLogger('plane-a.admin-access')
 
 export type AdminAccessInput = {
-  pool: Pool
+  pool: Pool | PoolClient
   userId: string
   email?: string | null
+  supabaseRole?: string | null
 }
 
 export type AdminAccessResult = {
   appRole: string | null
+  email: string | null
   hasAdminRole: boolean
   allowlisted: boolean
   requireAllowlist: boolean
@@ -39,20 +41,22 @@ const resolveDomainAllowed = (email: string | null, allowlist: readonly string[]
 }
 
 export const resolveAdminAccess = async (input: AdminAccessInput): Promise<AdminAccessResult> => {
-  const email = normalizeEmail(input.email)
+  const inputEmail = normalizeEmail(input.email)
   const allowlist = config.planeA.adminEmails
   const domainAllowlist = config.planeA.adminEmailDomains
   const hasAllowlistConfigured = allowlist.length > 0 || domainAllowlist.length > 0
   const requireAllowlist = config.planeA.adminRequireAllowlist || config.planeA.adminAllowlistStrict
 
   let appRole: string | null = null
+  let storedEmail: string | null = null
   try {
-    const result = await query<{ app_role: string | null }>(
-      `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
+    const result = await query<{ app_role: string | null, email: string | null }>(
+      `SELECT app_role, email FROM silver.user_account WHERE user_id = $1`,
       [input.userId],
       input.pool,
     )
     appRole = result.rows[0]?.app_role ?? null
+    storedEmail = normalizeEmail(result.rows[0]?.email ?? null)
   }
   catch (error) {
     logger.warn('admin_role_lookup_failed', {
@@ -61,12 +65,18 @@ export const resolveAdminAccess = async (input: AdminAccessInput): Promise<Admin
     })
   }
 
-  const hasAdminRole = appRole === 'admin' || appRole === 'super_admin'
-  const allowlisted = Boolean(email && allowlist.includes(email)) || resolveDomainAllowed(email, domainAllowlist)
+  const email = inputEmail ?? storedEmail
+
+  const hasAdminRole =
+    input.supabaseRole === 'admin'
+    || input.supabaseRole === 'super_admin'
+    || appRole === 'admin'
+    || appRole === 'super_admin'
 
   if (!hasAdminRole) {
     return {
       appRole,
+      email,
       hasAdminRole,
       allowlisted: false,
       requireAllowlist,
@@ -76,9 +86,12 @@ export const resolveAdminAccess = async (input: AdminAccessInput): Promise<Admin
     }
   }
 
+  const allowlisted = Boolean(email && allowlist.includes(email)) || resolveDomainAllowed(email, domainAllowlist)
+
   if (requireAllowlist && !hasAllowlistConfigured) {
     return {
       appRole,
+      email,
       hasAdminRole,
       allowlisted,
       requireAllowlist,
@@ -91,6 +104,7 @@ export const resolveAdminAccess = async (input: AdminAccessInput): Promise<Admin
   if ((hasAllowlistConfigured || requireAllowlist) && !allowlisted) {
     return {
       appRole,
+      email,
       hasAdminRole,
       allowlisted,
       requireAllowlist,
@@ -102,6 +116,7 @@ export const resolveAdminAccess = async (input: AdminAccessInput): Promise<Admin
 
   return {
     appRole,
+    email,
     hasAdminRole,
     allowlisted,
     requireAllowlist,

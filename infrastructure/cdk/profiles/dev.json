@@ -1,9 +1,9 @@
 {
   "_profile": "dev",
   "_description": "Development environment — minimal cost, auto-pause nightly",
-  "devPaused": false,
+  "devPaused": true,
   "devMinimalInfra": false,
-  "devNightlyPauseEnabled": true,
+  "devNightlyPauseEnabled": false,
   "devNightlyPauseCron": "0 20 * * *",
   "devMorningResumeCron": "0 9 * * MON-FRI",
   "devNatGateways": 1,

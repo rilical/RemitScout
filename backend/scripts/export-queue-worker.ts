@@ -644,7 +644,7 @@ const fetchCorridorHistory = async (
       const bucketIndex = values.length
       values.push(cursor.methodProfile)
       const methodIndex = values.length
-      conditions.push(`(date, corridor_id, amount_bucket, method_profile) < ($${dateIndex}, $${corridorIndex}, $${bucketIndex}, $${methodIndex})`)
+      conditions.push(`(date, corridor_id, amount_bucket, method_profile) < ($${dateIndex}, $${corridorIndex}, $${bucketIndex}, $${methodIndex}::method_profile)`)
     }
 
     values.push(exportFetchPageSize)

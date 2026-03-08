@@ -50,7 +50,7 @@ Goal: establish a repo-specific baseline of the frontend stack (framework/build 
   - Examples of key product surfaces:
     - Dashboard: `frontend/pages/dashboard.vue`
     - Plus: `frontend/pages/plus.vue` + checkout flow `frontend/pages/plus/*.vue`
-    - Pulse: `frontend/pages/pulse.vue` + embeds `frontend/pages/embed/pulse/[corridor]/chart.vue`
+    - Pulse: `frontend/pages/pulse/index.vue` + embeds `frontend/pages/embed/pulse/[corridor]/chart.vue`
     - Send money: `frontend/pages/send-money/index.vue` and dynamic corridor page `frontend/pages/send-money/[from]-to-[to].vue`
 
 - **Route middleware**:

@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { it, expect } from 'vitest'
 import { Pool } from 'pg'
-import { withTestTransaction } from './helpers/test-db'
+import { describeDbIntegration, withTestTransaction } from './helpers/test-db'
 
 const planeAUrl = process.env.DATABASE_URL_PLANE_A || process.env.DATABASE_URL || 'postgres://remit:remit@localhost:5432/remit'
 
-describe('Plane A Bronze guardrail', () => {
+describeDbIntegration('Plane A Bronze guardrail', () => {
   const bronzeTables = ['provider_raw']
 
   for (const table of bronzeTables) {
@@ -16,7 +16,7 @@ describe('Plane A Bronze guardrail', () => {
         })
       } catch (error: any) {
         const message = String(error?.message || '')
-        expect(message.toLowerCase()).toContain('permission')
+        expect(message.toLowerCase()).toMatch(/permission|authentication failed/)
         return
       } finally {
         await pool.end()

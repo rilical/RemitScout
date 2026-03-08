@@ -10,13 +10,23 @@ vi.mock('../shared/db', () => ({
   getPool: vi.fn().mockReturnValue({}),
 }))
 
-vi.mock('../plane-a/src/repositories', () => ({
-  UserAccountRepository: vi.fn().mockImplementation(() => ({
-    upsertUserAccount: mockUpsertUserAccount,
-    getPrivacySettings: mockGetPrivacySettings,
-    updatePrivacySettings: mockUpdatePrivacySettings,
-  })),
-}))
+vi.mock('../plane-a/src/repositories', async () => {
+  const actual = await vi.importActual<typeof import('../plane-a/src/repositories')>(
+    '../plane-a/src/repositories',
+  )
+  return {
+    ...actual,
+    DailyUsageCounterRepository: vi.fn().mockImplementation(() => ({
+      incrementAndGet: vi.fn().mockResolvedValue(0),
+      getCount: vi.fn().mockResolvedValue(0),
+    })),
+    UserAccountRepository: vi.fn().mockImplementation(() => ({
+      upsertUserAccount: mockUpsertUserAccount,
+      getPrivacySettings: mockGetPrivacySettings,
+      updatePrivacySettings: mockUpdatePrivacySettings,
+    })),
+  }
+})
 
 describe('account privacy routes', () => {
   let app: FastifyInstance
@@ -28,6 +38,7 @@ describe('account privacy routes', () => {
 
     app = {
       get: vi.fn(),
+      post: vi.fn(),
       put: vi.fn(),
       delete: vi.fn(),
       container: {

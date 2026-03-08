@@ -1,22 +1,32 @@
 <template>
-  <div class="relative">
+  <div
+ref="rootRef"
+class="relative"
+>
     <div class="relative">
       <input
         :id="resolvedId"
+        ref="inputRef"
         v-model="searchQuery"
         type="text"
-        class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-neutral-50 disabled:text-neutral-400 disabled:cursor-not-allowed"
+        class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
         :class="selectClass"
         :placeholder="placeholder"
         :aria-label="props.label || props.placeholder || 'Select currency'"
+        role="combobox"
+        aria-autocomplete="list"
         autocomplete="off"
         :disabled="disabled"
         :aria-invalid="error ? 'true' : 'false'"
         :aria-describedby="error ? errorId : undefined"
+        :aria-expanded="isOpen ? 'true' : 'false'"
+        :aria-controls="listboxId"
+        :aria-activedescendant="activeDescendant"
         @input="handleSearch"
         @focus="handleFocus"
         @blur="handleBlur"
-        @click="handleFocus"
+        @click="handleClick"
+        @keydown="handleKeydown"
       >
       <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
         <svg
@@ -40,40 +50,51 @@
     </div>
 
     <Teleport
-      v-if="isMounted"
-      to="body"
-    >
+v-if="isMounted"
+to="body"
+>
       <div
-        v-show="isOpen && filteredCurrencies.length > 0"
+        v-show="isOpen"
+        :id="listboxId"
         ref="dropdownRef"
+        role="listbox"
         :class="[
           'fixed z-dropdown overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
           props.theme === 'dark'
             ? 'border-neutral-700 bg-neutral-800'
             : 'border-neutral-300 bg-surface',
         ]"
-        style="max-height: 400px;"
         :style="dropdownStyle"
       >
         <div
           v-if="filteredCurrencies.length === 0"
           :class="[
-            'px-4 py-2 text-body-sm',
+            'text-body-sm px-4 py-3',
             props.theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500',
           ]"
         >
           No currencies found
         </div>
         <button
-          v-for="currency in filteredCurrencies"
+          v-for="(currency, index) in filteredCurrencies"
+          :id="getOptionId(currency.code)"
           :key="currency.code"
+          :data-option-index="index"
           type="button"
+          role="option"
+          :aria-selected="highlightedIndex === index ? 'true' : 'false'"
           :class="[
-            'w-full px-4 py-2.5 text-left text-body-sm transition-colors focus:outline-none',
+            'text-body-sm w-full px-4 py-2.5 text-left transition-colors focus:outline-none',
             props.theme === 'dark'
               ? 'text-white hover:bg-neutral-700 hover:text-white focus:bg-neutral-700 active:bg-neutral-600'
               : 'text-neutral-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100',
+            highlightedIndex === index
+              && (props.theme === 'dark'
+                ? 'bg-neutral-700 text-white'
+                : 'bg-primary-50 text-primary-700'),
           ]"
+          @mouseenter="setHighlightedIndex(index)"
+          @mousemove="handleOptionHover(index)"
           @mousedown.prevent="selectCurrency(currency)"
           @touchstart.prevent="selectCurrency(currency)"
         >
@@ -86,7 +107,7 @@
       <p
         v-if="error"
         :id="errorId"
-        class="mt-1 text-body-sm text-danger-600"
+        class="text-body-sm mt-1 text-danger-600"
         role="alert"
         aria-live="polite"
       >
@@ -97,18 +118,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, useId } from 'vue'
-import {
-  CURRENCIES,
-  BASE_CURRENCIES,
-  getAvailableCurrencies,
-} from '~/utils/countries-currencies'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
+import { BASE_CURRENCIES, CURRENCIES, getAvailableCurrencies } from '~/utils/countries-currencies'
 
 interface CurrencyOption {
   code: string
   label: string
   name: string
   symbol: string
+  searchText: string
 }
 
 interface Props {
@@ -143,17 +161,22 @@ const props = withDefaults(defineProps<Props>(), {
 const fallbackId = useId()
 const resolvedId = computed(() => props.id ?? `currency-select-${fallbackId}`)
 const errorId = computed(() => `${resolvedId.value}-error`)
+const listboxId = computed(() => `${resolvedId.value}-listbox`)
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
   'currency-selected': [value: string]
 }>()
 
+const rootRef = ref<HTMLElement | null>(null)
+const inputRef = ref<HTMLInputElement | null>(null)
+const dropdownRef = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
 const isOpen = ref(false)
 const isMounted = ref(false)
-const dropdownRef = ref<HTMLElement | null>(null)
-const dropdownStyle = ref({})
+const highlightedIndex = ref(-1)
+const filteredCurrencies = ref<CurrencyOption[]>([])
+const dropdownStyle = ref<Record<string, string>>({})
 
 const availableCurrencyCodes = computed(() => {
   if (props.currencies && props.currencies.length > 0) {
@@ -168,11 +191,10 @@ const availableCurrencyCodes = computed(() => {
   return BASE_CURRENCIES
 })
 
-const allCurrencies = computed(() => {
-  const codes = availableCurrencyCodes.value
+const allCurrencies = computed<CurrencyOption[]>(() => {
   const currencies: CurrencyOption[] = []
 
-  codes.forEach((code) => {
+  availableCurrencyCodes.value.forEach((code) => {
     const currencyInfo = CURRENCIES[code]
     if (currencyInfo) {
       currencies.push({
@@ -180,21 +202,22 @@ const allCurrencies = computed(() => {
         label: props.codeOnly ? currencyInfo.code : `${currencyInfo.code} | ${currencyInfo.name}`,
         name: currencyInfo.name,
         symbol: currencyInfo.symbol,
+        searchText: `${currencyInfo.code.toLowerCase()} ${currencyInfo.name.toLowerCase()}`,
       })
+      return
     }
-    else {
-      useLogger('CurrencySelect').warn('Currency not found in CURRENCIES', code)
-      currencies.push({
-        code,
-        label: code,
-        name: code,
-        symbol: code,
-      })
-    }
+
+    useLogger('CurrencySelect').warn('Currency not found in CURRENCIES', code)
+    currencies.push({
+      code,
+      label: code,
+      name: code,
+      symbol: code,
+      searchText: code.toLowerCase(),
+    })
   })
 
-  // Sort: base currencies first, then alphabetically
-  const sorted = currencies.sort((a, b) => {
+  return currencies.sort((a, b) => {
     const aIsBase = BASE_CURRENCIES.includes(a.code)
     const bIsBase = BASE_CURRENCIES.includes(b.code)
 
@@ -206,125 +229,310 @@ const allCurrencies = computed(() => {
 
     return a.name.localeCompare(b.name)
   })
-
-  return sorted
 })
 
-const filteredCurrencies = ref<CurrencyOption[]>([])
+const activeDescendant = computed(() => {
+  if (highlightedIndex.value < 0) return undefined
+  const option = filteredCurrencies.value[highlightedIndex.value]
+  return option ? getOptionId(option.code) : undefined
+})
 
-const filterCurrencies = () => {
-  let currencies = allCurrencies.value
+const getOptionId = (code: string) => `${resolvedId.value}-option-${code.toLowerCase()}`
 
-  // Exclude the specified currency if provided
+const restoreSelectedValue = () => {
+  searchQuery.value = props.modelValue || ''
+}
+
+const matchCurrency = (currency: CurrencyOption, query: string) => {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return 0
+
+  if (currency.code.toLowerCase() === normalized) return 0
+  if (currency.name.toLowerCase() === normalized) return 0
+  if (currency.code.toLowerCase().startsWith(normalized)) return 1
+  if (currency.name.toLowerCase().startsWith(normalized)) return 1
+  if (
+    currency.name
+      .toLowerCase()
+      .split(/\s+/)
+      .some(part => part.startsWith(normalized))
+  )
+    return 2
+  if (currency.searchText.includes(normalized)) return 3
+  return Number.POSITIVE_INFINITY
+}
+
+const updateFilteredCurrencies = (preferSelected: boolean = false) => {
+  let currencies = [...allCurrencies.value]
+
   if (props.excludeCurrency) {
     currencies = currencies.filter(currency => currency.code !== props.excludeCurrency)
   }
 
-  if (!searchQuery.value) {
+  const query = searchQuery.value.trim()
+  if (!query) {
     filteredCurrencies.value = currencies
   }
-  else {
-    const query = searchQuery.value.toLowerCase()
-    filteredCurrencies.value = currencies.filter(currency =>
-      currency.label.toLowerCase().includes(query)
-      || currency.code.toLowerCase().includes(query),
+ else {
+    filteredCurrencies.value = currencies
+      .map(currency => ({ currency, rank: matchCurrency(currency, query) }))
+      .filter(item => Number.isFinite(item.rank))
+      .sort((a, b) => a.rank - b.rank || a.currency.name.localeCompare(b.currency.name))
+      .map(item => item.currency)
+  }
+
+  if (filteredCurrencies.value.length === 0) {
+    highlightedIndex.value = -1
+    return
+  }
+
+  if (preferSelected) {
+    const selectedIndex = filteredCurrencies.value.findIndex(
+      currency => currency.code === props.modelValue,
     )
+    highlightedIndex.value = selectedIndex >= 0 ? selectedIndex : 0
+    return
+  }
+
+  if (highlightedIndex.value < 0 || highlightedIndex.value >= filteredCurrencies.value.length) {
+    highlightedIndex.value = 0
   }
 }
 
-watch(searchQuery, filterCurrencies)
-watch(allCurrencies, () => {
-  filterCurrencies()
-})
-watch(() => props.excludeCurrency, filterCurrencies)
+const setHighlightedIndex = (index: number) => {
+  if (!filteredCurrencies.value.length) {
+    highlightedIndex.value = -1
+    return
+  }
+  highlightedIndex.value = Math.min(Math.max(index, 0), filteredCurrencies.value.length - 1)
+}
+
+const scrollHighlightedOptionIntoView = () => {
+  if (!dropdownRef.value || highlightedIndex.value < 0) return
+  const option = dropdownRef.value.querySelector<HTMLElement>(
+    `[data-option-index="${highlightedIndex.value}"]`,
+  )
+  option?.scrollIntoView({ block: 'nearest' })
+}
+
+const closeDropdown = (restoreSelection: boolean = true) => {
+  isOpen.value = false
+  highlightedIndex.value = -1
+  if (restoreSelection) {
+    restoreSelectedValue()
+  }
+}
+
+const updateDropdownPosition = () => {
+  if (!inputRef.value || !isOpen.value) return
+
+  const rect = inputRef.value.getBoundingClientRect()
+  const viewportPadding = 12
+  const gutter = 4
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+  const width = Math.min(rect.width, viewportWidth - viewportPadding * 2)
+  const spaceBelow = viewportHeight - rect.bottom - viewportPadding
+  const spaceAbove = rect.top - viewportPadding
+  const openAbove = spaceBelow < 220 && spaceAbove > spaceBelow
+  const availableSpace = openAbove ? spaceAbove : spaceBelow
+  const maxHeight = Math.max(140, Math.min(360, availableSpace - gutter))
+  let left = rect.left
+
+  if (left + width + viewportPadding > viewportWidth) {
+    left = viewportWidth - width - viewportPadding
+  }
+  left = Math.max(viewportPadding, left)
+
+  const top = openAbove
+    ? Math.max(viewportPadding, rect.top - maxHeight - gutter)
+    : rect.bottom + gutter
+
+  dropdownStyle.value = {
+    top: `${Math.round(top)}px`,
+    left: `${Math.round(left)}px`,
+    width: `${Math.round(width)}px`,
+    maxHeight: `${Math.round(maxHeight)}px`,
+  }
+}
+
+const openDropdown = async (resetSearch: boolean) => {
+  if (props.disabled) return
+  isOpen.value = true
+  if (resetSearch) {
+    searchQuery.value = ''
+  }
+  updateFilteredCurrencies(true)
+  await nextTick()
+  updateDropdownPosition()
+  scrollHighlightedOptionIntoView()
+}
 
 const selectCurrency = (currency: CurrencyOption) => {
   emit('update:modelValue', currency.code)
   emit('currency-selected', currency.code)
-  // Show just the code, not the full label
   searchQuery.value = currency.code
   isOpen.value = false
+  highlightedIndex.value = -1
 }
 
-const handleSearch = (event: Event) => {
+const handleSearch = async (event: Event) => {
   const target = event.target as HTMLInputElement
   searchQuery.value = target.value
   isOpen.value = true
+  updateFilteredCurrencies(false)
+  await nextTick()
   updateDropdownPosition()
 }
 
 const handleFocus = async () => {
-  isOpen.value = true
+  if (isOpen.value) return
+  await openDropdown(true)
+}
 
-  // Clear search query when focusing to show all currencies
-  searchQuery.value = ''
-  await nextTick()
-  filteredCurrencies.value = [...allCurrencies.value]
-
-  updateDropdownPosition()
+const handleClick = async () => {
+  if (isOpen.value) return
+  await openDropdown(true)
 }
 
 const handleBlur = () => {
-  setTimeout(() => {
-    isOpen.value = false
-    // Restore to previous selection if no currency was selected
-    if (props.modelValue) {
-      searchQuery.value = props.modelValue
+  window.setTimeout(() => {
+    if (!isOpen.value) return
+    const activeElement = document.activeElement
+    if (
+      activeElement
+      && (rootRef.value?.contains(activeElement) || dropdownRef.value?.contains(activeElement))
+    ) {
+      return
     }
-    else {
-      searchQuery.value = ''
-    }
-  }, 200)
+    closeDropdown(true)
+  }, 0)
 }
 
-const updateDropdownPosition = async () => {
+const moveHighlight = async (delta: number) => {
+  if (!filteredCurrencies.value.length) return
+  if (!isOpen.value) {
+    await openDropdown(true)
+    return
+  }
+  if (highlightedIndex.value < 0) {
+    updateFilteredCurrencies(true)
+  }
+ else {
+    const next
+      = (highlightedIndex.value + delta + filteredCurrencies.value.length)
+        % filteredCurrencies.value.length
+    highlightedIndex.value = next
+  }
   await nextTick()
-  const input = document.getElementById(props.id || '')
-  if (input) {
-    const rect = input.getBoundingClientRect()
-    dropdownStyle.value = {
-      top: `${rect.bottom + 4}px`,
-      left: `${rect.left}px`,
-      width: `${rect.width}px`,
+  scrollHighlightedOptionIntoView()
+}
+
+const handleKeydown = async (event: KeyboardEvent) => {
+  if (props.disabled) return
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    await moveHighlight(1)
+    return
+  }
+
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    if (!isOpen.value) {
+      await openDropdown(true)
+      return
     }
+    await moveHighlight(-1)
+    return
+  }
+
+  if (event.key === 'Home' && isOpen.value) {
+    event.preventDefault()
+    setHighlightedIndex(0)
+    await nextTick()
+    scrollHighlightedOptionIntoView()
+    return
+  }
+
+  if (event.key === 'End' && isOpen.value) {
+    event.preventDefault()
+    setHighlightedIndex(filteredCurrencies.value.length - 1)
+    await nextTick()
+    scrollHighlightedOptionIntoView()
+    return
+  }
+
+  if (event.key === 'Enter' && isOpen.value) {
+    if (highlightedIndex.value >= 0 && filteredCurrencies.value[highlightedIndex.value]) {
+      event.preventDefault()
+      selectCurrency(filteredCurrencies.value[highlightedIndex.value])
+    }
+    return
+  }
+
+  if (event.key === 'Escape' && isOpen.value) {
+    event.preventDefault()
+    closeDropdown(true)
+    inputRef.value?.blur()
+    return
+  }
+
+  if (event.key === 'Tab' && isOpen.value) {
+    closeDropdown(true)
   }
 }
 
+const handleOptionHover = (index: number) => {
+  if (highlightedIndex.value !== index) {
+    highlightedIndex.value = index
+  }
+}
+
+const handleOutsidePointer = (event: MouseEvent | TouchEvent) => {
+  const target = event.target as Node | null
+  if (!target) return
+  if (rootRef.value?.contains(target) || dropdownRef.value?.contains(target)) return
+  closeDropdown(true)
+}
+
+watch([allCurrencies, () => props.excludeCurrency], () => {
+  updateFilteredCurrencies(true)
+  if (isOpen.value) {
+    void nextTick().then(() => {
+      updateDropdownPosition()
+      scrollHighlightedOptionIntoView()
+    })
+  }
+})
+
 watch(
   () => props.modelValue,
-  (newValue, oldValue) => {
-    if (newValue && !isOpen.value) {
-      // Always show just the code (regardless of codeOnly prop for input display)
-      searchQuery.value = newValue
+  () => {
+    if (!isOpen.value) {
+      restoreSelectedValue()
+      return
     }
-    else if (!newValue) {
-      searchQuery.value = ''
-    }
-    else {
-      // Dropdown is open: don't clobber in-progress user input.
-    }
+    updateFilteredCurrencies(true)
   },
   { immediate: true },
 )
 
 onMounted(() => {
   isMounted.value = true
+  restoreSelectedValue()
+  updateFilteredCurrencies(true)
 
-  // Initialize filtered currencies immediately
-  filteredCurrencies.value = [...allCurrencies.value]
-  filterCurrencies()
-
-  if (props.modelValue) {
-    // Always show just the currency code in the input
-    searchQuery.value = props.modelValue
-  }
-
-  window.addEventListener('scroll', updateDropdownPosition)
+  document.addEventListener('mousedown', handleOutsidePointer)
+  document.addEventListener('touchstart', handleOutsidePointer)
+  window.addEventListener('scroll', updateDropdownPosition, true)
   window.addEventListener('resize', updateDropdownPosition)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('scroll', updateDropdownPosition)
+  document.removeEventListener('mousedown', handleOutsidePointer)
+  document.removeEventListener('touchstart', handleOutsidePointer)
+  window.removeEventListener('scroll', updateDropdownPosition, true)
   window.removeEventListener('resize', updateDropdownPosition)
 })
 </script>

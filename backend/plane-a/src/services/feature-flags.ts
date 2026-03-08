@@ -32,9 +32,306 @@ export type FeatureFlagAuditRecord = {
   changed_at: string
 }
 
+export type RuntimeFlagKey =
+  | 'pulse.public'
+  | 'pulse.screener'
+  | 'enterprise.public'
+  | 'ads.public'
+
+export type RuntimeFlagDefinition = {
+  key: RuntimeFlagKey
+  label: string
+  description: string
+  hardGateEnabled: boolean
+  bootstrapEnabled: boolean
+}
+
+export type RuntimeFlagContext = {
+  effectivePlanCode?: string | null
+  pulseAccess?: 'none' | 'lite' | 'full' | null
+  isAdmin?: boolean
+  envName?: string | null
+}
+
+type NormalizedRuntimeFlagContext = {
+  effectivePlanCode: string
+  pulseAccess: 'none' | 'lite' | 'full'
+  envName: string
+}
+
+export type RuntimeFlagSource =
+  | 'hard_env_disabled'
+  | 'entitlement_override'
+  | 'db_flag'
+  | 'bootstrap_default'
+
+export type EffectiveRuntimeFlag = {
+  key: RuntimeFlagKey
+  label: string
+  description: string
+  enabled: boolean
+  source: RuntimeFlagSource
+  reason: string
+  hard_gate_enabled: boolean
+  bootstrap_enabled: boolean
+  plan_code: string
+  pulse_access: 'none' | 'lite' | 'full'
+  matched_audience_rules: boolean
+  db_flag: FeatureFlagRecord | null
+}
+
+const DEFAULT_RUNTIME_FLAG_KEYS: RuntimeFlagKey[] = [
+  'pulse.public',
+  'pulse.screener',
+  'enterprise.public',
+  'ads.public',
+]
+
 const parseJsonObject = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   return value as Record<string, unknown>
+}
+
+const parseBooleanEnv = (value: string | undefined, fallback: boolean) => {
+  if (value === undefined) return fallback
+  const normalized = value.trim().toLowerCase()
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false
+  return fallback
+}
+
+const readPlaneARuntimeEnv = (primaryKey: string, ...fallbackKeys: string[]) => {
+  for (const key of [primaryKey, ...fallbackKeys]) {
+    const value = process.env[key]
+    if (value !== undefined) return value
+  }
+  return undefined
+}
+
+const readRuntimeFlagDefinitions = (): RuntimeFlagDefinition[] => {
+  const pulseHardGate = parseBooleanEnv(
+    readPlaneARuntimeEnv('PLANE_A_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED', 'NUXT_PUBLIC_PULSE_ENABLED'),
+    false,
+  )
+  const pulseScreenerHardGate = parseBooleanEnv(
+    readPlaneARuntimeEnv(
+      'PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED',
+      'PUBLIC_PULSE_SCREENER_ENABLED',
+      'NUXT_PUBLIC_PULSE_SCREENER_ENABLED',
+    ),
+    true,
+  )
+  const enterpriseHardGate = parseBooleanEnv(
+    readPlaneARuntimeEnv(
+      'PLANE_A_PUBLIC_ENTERPRISE_ENABLED',
+      'PUBLIC_ENTERPRISE_ENABLED',
+      'NUXT_PUBLIC_ENTERPRISE_ENABLED',
+    ),
+    false,
+  )
+  const adsHardGate = parseBooleanEnv(
+    readPlaneARuntimeEnv('PLANE_A_PUBLIC_ADS_ENABLED', 'PUBLIC_ENABLE_ADS', 'PUBLIC_ADS_ENABLED'),
+    false,
+  )
+
+  return [
+    {
+      key: 'pulse.public',
+      label: 'Pulse public rollout',
+      description: 'Controls whether Pulse is visible to non-entitled users.',
+      hardGateEnabled: pulseHardGate,
+      bootstrapEnabled: pulseHardGate,
+    },
+    {
+      key: 'pulse.screener',
+      label: 'Pulse screener',
+      description: 'Controls the screener-first Pulse experience.',
+      hardGateEnabled: pulseScreenerHardGate,
+      bootstrapEnabled: pulseScreenerHardGate,
+    },
+    {
+      key: 'enterprise.public',
+      label: 'Enterprise visibility',
+      description: 'Controls public enterprise marketing and navigation visibility.',
+      hardGateEnabled: enterpriseHardGate,
+      bootstrapEnabled: enterpriseHardGate,
+    },
+    {
+      key: 'ads.public',
+      label: 'Ads serving',
+      description: 'Controls whether monetized ads may render for free users.',
+      hardGateEnabled: adsHardGate,
+      bootstrapEnabled: adsHardGate,
+    },
+  ]
+}
+
+const getStringList = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => String(entry ?? '').trim().toLowerCase())
+      .filter(Boolean)
+  }
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((entry) => entry.trim().toLowerCase())
+      .filter(Boolean)
+  }
+  return []
+}
+
+const getNestedObject = (value: Record<string, unknown>, key: string): Record<string, unknown> =>
+  parseJsonObject(value[key])
+
+const normalizeRuntimeFlagContext = (context: RuntimeFlagContext = {}): NormalizedRuntimeFlagContext => {
+  const rawPlanCode = typeof context.effectivePlanCode === 'string'
+    ? context.effectivePlanCode.trim().toLowerCase()
+    : ''
+  const rawEnvName = typeof context.envName === 'string'
+    ? context.envName.trim().toLowerCase()
+    : ''
+  const defaultEnvName = typeof config.envName === 'string'
+    ? config.envName.trim().toLowerCase()
+    : ''
+
+  return {
+    effectivePlanCode: rawPlanCode || 'free',
+    pulseAccess: context.pulseAccess === 'lite' || context.pulseAccess === 'full'
+      ? context.pulseAccess
+      : 'none',
+    envName: rawEnvName || defaultEnvName || 'unknown',
+  }
+}
+
+const matchesAudienceRules = (
+  rules: Record<string, unknown>,
+  context: NormalizedRuntimeFlagContext,
+): boolean => {
+  if (!Object.keys(rules).length) return true
+  if (rules.global === false) return false
+
+  const plans = getNestedObject(rules, 'plans')
+  const allowPlans = getStringList(plans.allow)
+  const denyPlans = getStringList(plans.deny)
+  if (denyPlans.includes(context.effectivePlanCode)) return false
+  if (allowPlans.length > 0 && !allowPlans.includes(context.effectivePlanCode)) return false
+
+  const envs = getNestedObject(rules, 'envs')
+  const allowEnvs = getStringList(envs.allow)
+  const denyEnvs = getStringList(envs.deny)
+  const normalizedEnv = context.envName.trim().toLowerCase()
+  if (denyEnvs.includes(normalizedEnv)) return false
+  if (allowEnvs.length > 0 && !allowEnvs.includes(normalizedEnv)) return false
+
+  const pulseAccess = getNestedObject(rules, 'pulse_access')
+  const allowPulseAccess = getStringList(pulseAccess.allow)
+  const denyPulseAccess = getStringList(pulseAccess.deny)
+  if (denyPulseAccess.includes(context.pulseAccess)) return false
+  if (allowPulseAccess.length > 0 && !allowPulseAccess.includes(context.pulseAccess)) return false
+
+  return true
+}
+
+const resolveEntitlementOverride = (
+  definition: RuntimeFlagDefinition,
+  context: NormalizedRuntimeFlagContext,
+): { enabled: boolean, reason: string } | null => {
+  if (definition.key === 'pulse.public' && context.pulseAccess !== 'none') {
+    return {
+      enabled: true,
+      reason: `Enabled by paid entitlement (${context.pulseAccess}).`,
+    }
+  }
+
+  if (definition.key === 'enterprise.public' && context.effectivePlanCode === 'enterprise') {
+    return {
+      enabled: true,
+      reason: 'Enabled by enterprise entitlement.',
+    }
+  }
+
+  return null
+}
+
+const toRuntimeFlag = (
+  definition: RuntimeFlagDefinition,
+  dbFlag: FeatureFlagRecord | null,
+  context: NormalizedRuntimeFlagContext,
+): EffectiveRuntimeFlag => {
+  const audienceRules = dbFlag?.audience_rules ?? {}
+  const audienceMatch = matchesAudienceRules(audienceRules, context)
+  const entitlementOverride = resolveEntitlementOverride(definition, context)
+
+  if (!definition.hardGateEnabled) {
+    return {
+      key: definition.key,
+      label: definition.label,
+      description: definition.description,
+      enabled: false,
+      source: 'hard_env_disabled',
+      reason: 'Hard environment gate is disabled.',
+      hard_gate_enabled: definition.hardGateEnabled,
+      bootstrap_enabled: definition.bootstrapEnabled,
+      plan_code: context.effectivePlanCode,
+      pulse_access: context.pulseAccess,
+      matched_audience_rules: audienceMatch,
+      db_flag: dbFlag,
+    }
+  }
+
+  if (entitlementOverride) {
+    return {
+      key: definition.key,
+      label: definition.label,
+      description: definition.description,
+      enabled: entitlementOverride.enabled,
+      source: 'entitlement_override',
+      reason: entitlementOverride.reason,
+      hard_gate_enabled: definition.hardGateEnabled,
+      bootstrap_enabled: definition.bootstrapEnabled,
+      plan_code: context.effectivePlanCode,
+      pulse_access: context.pulseAccess,
+      matched_audience_rules: audienceMatch,
+      db_flag: dbFlag,
+    }
+  }
+
+  if (dbFlag) {
+    return {
+      key: definition.key,
+      label: definition.label,
+      description: definition.description,
+      enabled: dbFlag.enabled && audienceMatch,
+      source: 'db_flag',
+      reason: dbFlag.enabled
+        ? audienceMatch
+          ? 'Enabled by database flag.'
+          : 'Database flag is enabled, but this audience is excluded.'
+        : 'Disabled by database flag.',
+      hard_gate_enabled: definition.hardGateEnabled,
+      bootstrap_enabled: definition.bootstrapEnabled,
+      plan_code: context.effectivePlanCode,
+      pulse_access: context.pulseAccess,
+      matched_audience_rules: audienceMatch,
+      db_flag: dbFlag,
+    }
+  }
+
+  return {
+    key: definition.key,
+    label: definition.label,
+    description: definition.description,
+    enabled: definition.bootstrapEnabled,
+    source: 'bootstrap_default',
+    reason: 'No database override exists; using bootstrap default.',
+    hard_gate_enabled: definition.hardGateEnabled,
+    bootstrap_enabled: definition.bootstrapEnabled,
+    plan_code: context.effectivePlanCode,
+    pulse_access: context.pulseAccess,
+    matched_audience_rules: audienceMatch,
+    db_flag: null,
+  }
 }
 
 const invalidateFlagsCache = async () => {
@@ -108,6 +405,56 @@ export const listFeatureFlags = async (pool: Pool): Promise<FeatureFlagRecord[]>
   const flags = result.rows.map(toFeatureFlag)
   await setCachedFeatureFlags(flags)
   return flags
+}
+
+export const getRuntimeFlagDefinitions = (): RuntimeFlagDefinition[] => readRuntimeFlagDefinitions()
+
+export const getEffectiveRuntimeFlags = async (
+  pool: Pool,
+  context: RuntimeFlagContext = {},
+): Promise<{
+  generated_at: string
+  flags: EffectiveRuntimeFlag[]
+}> => {
+  const flags = await listFeatureFlags(pool)
+  const flagsByKey = new Map(flags.map((flag) => [flag.key, flag]))
+  const resolvedContext = normalizeRuntimeFlagContext(context)
+
+  const runtimeFlags = readRuntimeFlagDefinitions().map((definition) =>
+    toRuntimeFlag(
+      definition,
+      flagsByKey.get(definition.key) ?? null,
+      resolvedContext,
+    ),
+  )
+
+  return {
+    generated_at: new Date().toISOString(),
+    flags: runtimeFlags,
+  }
+}
+
+export const ensureRuntimeFlagSeed = async (pool: Pool): Promise<void> => {
+  const existing = await listFeatureFlags(pool)
+  const existingKeys = new Set(existing.map((flag) => flag.key))
+  const definitions = readRuntimeFlagDefinitions()
+
+  for (const definition of definitions) {
+    if (existingKeys.has(definition.key)) continue
+
+    await createFeatureFlag(pool, {
+      key: definition.key,
+      enabled: definition.bootstrapEnabled,
+      metadata: {
+        source: 'bootstrap_seed',
+        label: definition.label,
+        description: definition.description,
+        managed_runtime_flag: true,
+      },
+      audienceRules: { global: true },
+      updatedBy: null,
+    })
+  }
 }
 
 export const createFeatureFlag = async (

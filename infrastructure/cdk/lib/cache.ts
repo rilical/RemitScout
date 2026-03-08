@@ -32,6 +32,25 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
   const subnets = options.vpc.privateSubnets
   const redisAuthMode = options.redisAuthMode ?? (isProtectedEnv ? 'required' : 'legacy')
   const authEnabled = redisAuthMode === 'required'
+  const cacheNodeType = isProd ? (options.nodeType ?? 'cache.t4g.small') : 'cache.t4g.micro'
+  const replicasPerNodeGroup = isProtectedEnv ? (options.replicasPerNodeGroup ?? 1) : undefined
+  const automaticFailoverEnabled = isProd
+    ? (options.automaticFailoverEnabled ?? true)
+    : isStaging
+      ? (options.automaticFailoverEnabled ?? true)
+    : undefined
+  const multiAzEnabled = isProd
+    ? (options.multiAzEnabled ?? true)
+    : isStaging
+      ? (options.multiAzEnabled ?? false)
+    : undefined
+
+  if ((replicasPerNodeGroup ?? 0) === 0 && automaticFailoverEnabled) {
+    throw new Error('automaticFailoverEnabled requires replicasPerNodeGroup > 0')
+  }
+  if (multiAzEnabled && !automaticFailoverEnabled) {
+    throw new Error('multiAzEnabled requires automaticFailoverEnabled')
+  }
 
   const redisSnapshottingClusterIdRaw = process.env.REDIS_SNAPSHOTTING_CLUSTER_ID?.trim()
   const redisSnapshottingClusterId =
@@ -41,7 +60,7 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
   const snapshotsEnabled = Boolean(redisSnapshottingClusterId)
 
   const redisAuthSecret = new Secret(scope, 'RedisAuthSecret', {
-    secretName: `remit-scout/${options.envName}/redis-auth`,
+    secretName: `remit-scout/${options.envName}/redis-auth`, // pragma: allowlist secret
     description: `Redis AUTH token for Remit-Scout ${options.envName}`,
     generateSecretString: {
       passwordLength: 48,
@@ -65,17 +84,13 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     'RedisReplicationGroupAuth',
     {
       replicationGroupDescription: `Remit-Scout Redis (${options.envName})`,
-      cacheNodeType: isProd ? (options.nodeType ?? 'cache.t4g.small') : 'cache.t4g.micro',
+      cacheNodeType,
       engine: 'redis',
       engineVersion: '7.1',
       numNodeGroups: 1,
-      replicasPerNodeGroup: isProtectedEnv ? (options.replicasPerNodeGroup ?? 1) : undefined,
-      automaticFailoverEnabled: isProd
-        ? (options.automaticFailoverEnabled ?? true)
-        : isStaging
-          ? (options.automaticFailoverEnabled ?? true)
-          : false,
-      multiAzEnabled: isProd ? (options.multiAzEnabled ?? true) : false,
+      replicasPerNodeGroup,
+      automaticFailoverEnabled,
+      multiAzEnabled,
       atRestEncryptionEnabled: true,
       transitEncryptionEnabled: true,
       cacheSubnetGroupName: subnetGroup.ref,

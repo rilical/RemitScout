@@ -17,6 +17,14 @@ describe('entitlements', () => {
         api_tier: null,
         bulk_export: false,
         indices_api: false,
+        daily_alerts_enabled: false,
+        smart_alerts_enabled: false,
+        index_threshold_alerts_enabled: false,
+        indices_exports_enabled: false,
+        pulse_embeds_enabled: false,
+        indices_embeds_enabled: false,
+        api_key_max: 0,
+        api_rate_limit_rpm: 0,
       })
     })
 
@@ -34,6 +42,14 @@ describe('entitlements', () => {
         api_tier: null,
         bulk_export: false,
         indices_api: false,
+        daily_alerts_enabled: true,
+        smart_alerts_enabled: true,
+        index_threshold_alerts_enabled: false,
+        indices_exports_enabled: false,
+        pulse_embeds_enabled: false,
+        indices_embeds_enabled: false,
+        api_key_max: 0,
+        api_rate_limit_rpm: 0,
       })
     })
 
@@ -43,14 +59,22 @@ describe('entitlements', () => {
       expect(entitlements).toEqual({
         pulse_access: 'full',
         exports_enabled: true,
-        exports_max_days: null,
+        exports_max_days: 365,
         alerts_max: null,
-        history_max_days: null,
+        history_max_days: 365,
         watchlist_items: null,
         api_access: true,
         api_tier: 2,
         bulk_export: true,
         indices_api: true,
+        daily_alerts_enabled: true,
+        smart_alerts_enabled: true,
+        index_threshold_alerts_enabled: true,
+        indices_exports_enabled: true,
+        pulse_embeds_enabled: true,
+        indices_embeds_enabled: true,
+        api_key_max: 5,
+        api_rate_limit_rpm: 600,
       })
     })
 
@@ -68,6 +92,14 @@ describe('entitlements', () => {
         api_tier: null,
         bulk_export: false,
         indices_api: false,
+        daily_alerts_enabled: false,
+        smart_alerts_enabled: false,
+        index_threshold_alerts_enabled: false,
+        indices_exports_enabled: false,
+        pulse_embeds_enabled: false,
+        indices_embeds_enabled: false,
+        api_key_max: 0,
+        api_rate_limit_rpm: 0,
       })
     })
 
@@ -85,6 +117,14 @@ describe('entitlements', () => {
         api_tier: null,
         bulk_export: false,
         indices_api: false,
+        daily_alerts_enabled: false,
+        smart_alerts_enabled: false,
+        index_threshold_alerts_enabled: false,
+        indices_exports_enabled: false,
+        pulse_embeds_enabled: false,
+        indices_embeds_enabled: false,
+        api_key_max: 0,
+        api_rate_limit_rpm: 0,
       })
     })
 
@@ -102,6 +142,14 @@ describe('entitlements', () => {
         api_tier: null,
         bulk_export: false,
         indices_api: false,
+        daily_alerts_enabled: false,
+        smart_alerts_enabled: false,
+        index_threshold_alerts_enabled: false,
+        indices_exports_enabled: false,
+        pulse_embeds_enabled: false,
+        indices_embeds_enabled: false,
+        api_key_max: 0,
+        api_rate_limit_rpm: 0,
       })
     })
 
@@ -142,7 +190,7 @@ describe('entitlements', () => {
 
       expect(free.history_max_days).toBe(30)
       expect(plus.history_max_days).toBe(90)
-      expect(enterprise.history_max_days).toBeNull()
+      expect(enterprise.history_max_days).toBe(365)
     })
 
     it('validates watchlist_items values', () => {
@@ -171,6 +219,14 @@ describe('entitlements', () => {
         'api_tier',
         'bulk_export',
         'indices_api',
+        'daily_alerts_enabled',
+        'smart_alerts_enabled',
+        'index_threshold_alerts_enabled',
+        'indices_exports_enabled',
+        'pulse_embeds_enabled',
+        'indices_embeds_enabled',
+        'api_key_max',
+        'api_rate_limit_rpm',
       ])
       expect(Object.keys(plus)).toEqual([
         'pulse_access',
@@ -183,6 +239,14 @@ describe('entitlements', () => {
         'api_tier',
         'bulk_export',
         'indices_api',
+        'daily_alerts_enabled',
+        'smart_alerts_enabled',
+        'index_threshold_alerts_enabled',
+        'indices_exports_enabled',
+        'pulse_embeds_enabled',
+        'indices_embeds_enabled',
+        'api_key_max',
+        'api_rate_limit_rpm',
       ])
       expect(Object.keys(enterprise)).toEqual([
         'pulse_access',
@@ -195,6 +259,14 @@ describe('entitlements', () => {
         'api_tier',
         'bulk_export',
         'indices_api',
+        'daily_alerts_enabled',
+        'smart_alerts_enabled',
+        'index_threshold_alerts_enabled',
+        'indices_exports_enabled',
+        'pulse_embeds_enabled',
+        'indices_embeds_enabled',
+        'api_key_max',
+        'api_rate_limit_rpm',
       ])
     })
   })

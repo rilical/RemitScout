@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto'
 import { createPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { syncModuleRegistry } from '../../../shared/module-registry-sync'
+import { getObservationSignalLayer } from '../../../shared/types/observation'
 import { formatError } from '../../../shared/utils/error-handling'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import type { FetchResult, CollectorRequest } from './types'
@@ -354,6 +356,8 @@ export abstract class BaseCollector {
       this.collectorType,
       this.startedAt,
     )
+
+    await syncModuleRegistry(this.pool)
 
     this.defaultProxyTier = getDefaultProxyTierForCollector(this.collectorType)
 
@@ -937,16 +941,26 @@ export abstract class BaseCollector {
     try {
       await this.pool.query(
         `INSERT INTO silver.observation
-         (module_id, provider_id, type, corridor_id, confidence, observed_at, ingestion_run_id, payload, schema_version)
-         VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7, 1)`,
+         (module_id, provider_id, owner_kind, owner_id, type, signal_layer, capture_method,
+          parser_version, source_ref, corridor_id, confidence, observed_at,
+          ingestion_run_id, payload, lineage, schema_version)
+         VALUES ($1, $2, 'provider', $2, $3, $4, $5,
+                 NULL, NULL, $6, $7, NOW(),
+                 $8, $9, $10, 1)`,
         [
           `${this.providerId}:${this.collectorType}`,
           this.providerId,
           params.type,
+          getObservationSignalLayer(params.type),
+          this.collectorType,
           params.corridorId,
           params.confidence ?? 'high',
           this.ingestionRunId || `obs-${Date.now()}`,
           JSON.stringify(params.payload),
+          JSON.stringify({
+            collector_type: this.collectorType,
+            provider_id: this.providerId,
+          }),
         ],
       )
     } catch (err) {

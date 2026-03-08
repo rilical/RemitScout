@@ -76,13 +76,12 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const route = useRoute()
-const runtimeConfig = useRuntimeConfig()
 const { isPlus, hydrated } = useEntitlements()
-const { pulseEnabled } = useFeatureFlags()
+const { pulseEnabled, adsEnabled } = useFeatureFlags()
 const { marketingConsent } = usePrivacySettings()
 const { fetchAdForPlacement, trackAdClick } = useAds()
 
-const allowAds = computed(() => runtimeConfig.public?.adsEnabled === true && marketingConsent.value)
+const allowAds = computed(() => adsEnabled.value && marketingConsent.value)
 
 const placementConfig = computed(() => getPlacementConfig(props.placement))
 const resolvedLayout = computed<AdLayout>(() => props.layout || placementConfig.value.layout)

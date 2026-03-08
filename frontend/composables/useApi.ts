@@ -13,6 +13,7 @@ type ApiFetchOptions = {
   body?: BodyInit | Record<string, unknown> | null
   headers?: Record<string, string>
   timeoutMs?: number
+  responseType?: 'json' | 'text' | 'blob' | 'arrayBuffer'
   validate?: (data: unknown) => unknown
   signal?: AbortSignal
   retries?: number
@@ -50,6 +51,7 @@ export function joinBase(base: string, path: string) {
 
 type ApiClientDeps = {
   base: string
+  adminBase?: string
   fetcher: (input: string, init?: FetchOptions) => Promise<unknown>
   getAccessToken?: () => string | null
   getAdminAccessToken?: () => string | null
@@ -79,7 +81,26 @@ export const createApiClient = (deps: ApiClientDeps) => {
       || normalized.startsWith('/ops')
       || normalized.startsWith('/analytics')
       || normalized.startsWith('/audit')
+      || normalized.startsWith('/indices/corrections')
+      || normalized === '/telemetry/analytics'
     )
+  }
+
+  const canUseDirectAdminBase = (): boolean => {
+    if (!deps.adminBase) return false
+    if (typeof window === 'undefined' || !window.location?.origin) {
+      return true
+    }
+    if (!/^https?:\/\//.test(deps.adminBase)) {
+      return true
+    }
+
+    try {
+      return new URL(deps.adminBase).origin === window.location.origin
+    }
+    catch {
+      return false
+    }
   }
 
   const makeRequestId = deps.makeRequestId || (() => {
@@ -125,7 +146,10 @@ export const createApiClient = (deps: ApiClientDeps) => {
   }
 
   async function request<T = unknown>(path: string, options: ApiFetchOptions = {}) {
-    const url = joinBase(deps.base, path)
+    const requestBase = isAdminSurfacePath(path) && canUseDirectAdminBase() && deps.adminBase
+      ? deps.adminBase
+      : deps.base
+    const url = joinBase(requestBase, path)
     const requestId = options.headers?.['x-request-id'] || makeRequestId()
     const cloudfrontRequestId = deps.getCloudFrontRequestId?.()
     const serverHeaders = deps.getServerHeaders?.() || {}
@@ -147,14 +171,13 @@ export const createApiClient = (deps: ApiClientDeps) => {
       const accessToken = deps.getAccessToken?.()
       const adminAccessToken = deps.getAdminAccessToken?.()
 
-      // Prefer the primary user session token when present.
-      // Only fall back to the short-lived Plane A admin token for admin surfaces
-      // when there is no primary user token available.
-      if (accessToken && !hasAuthHeader) {
-        headers.authorization = `Bearer ${accessToken}`
-      }
-      else if (adminAccessToken && !hasAuthHeader && isAdminSurfacePath(path)) {
+      // Privileged admin surfaces should use the short-lived Plane A admin token
+      // when it exists so revoked admin sessions fail deterministically.
+      if (adminAccessToken && !hasAuthHeader && isAdminSurfacePath(path)) {
         headers.authorization = `Bearer ${adminAccessToken}`
+      }
+      else if (accessToken && !hasAuthHeader) {
+        headers.authorization = `Bearer ${accessToken}`
       }
 
       if (cloudfrontRequestId) {
@@ -167,6 +190,7 @@ export const createApiClient = (deps: ApiClientDeps) => {
         body: options.body ?? undefined,
         headers,
         timeout: timeoutMs,
+        responseType: options.responseType,
         signal: options.signal,
       }) as unknown
 
@@ -273,6 +297,7 @@ export const useApi = () => {
 
   return createApiClient({
     base,
+    adminBase: config.public.apiBaseDirect || undefined,
     fetcher: $fetch as unknown as ApiClientDeps['fetcher'],
     getAccessToken: () => session.value?.access_token ?? null,
     getAdminAccessToken: () => {

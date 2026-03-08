@@ -17,6 +17,8 @@ describe('pulse lite content routes', () => {
 
     app = {
       get: vi.fn(),
+      delete: vi.fn(),
+      post: vi.fn(),
       container: {
         pool: {},
         repositories: {

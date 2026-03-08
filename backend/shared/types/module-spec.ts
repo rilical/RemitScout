@@ -25,6 +25,12 @@ export type ModuleQuarantineReason =
   | 'contract_test_failure'
   | 'security_concern'
 
+export type ModuleOwnerKind = 'provider' | 'signal_source'
+
+export type ModuleSignalLayer = 'quote' | 'factor' | 'stress' | 'health' | 'event'
+
+export type ModuleRolloutState = 'enabled' | 'shadow' | 'disabled'
+
 /**
  * Policy flags that govern module behavior.
  */
@@ -41,6 +47,11 @@ export type PolicyFlags = {
   maxParseErrorRate: number
   /** Cooldown period in ms after quarantine before retry */
   quarantineCooldownMs: number
+}
+
+export type ModuleLineage = {
+  schemaRef: string | null
+  sourceRef: string | null
 }
 
 /**
@@ -66,7 +77,11 @@ export type ModuleRuntimeState = {
 export type ModuleSpec = {
   /** Unique module identifier: `${providerId}:${collectorType}` */
   moduleId: string
-  /** Provider this module belongs to */
+  /** Ownership model for the module. */
+  ownerKind: ModuleOwnerKind
+  /** Owning provider/signal-source ID. */
+  ownerId: string
+  /** Legacy provider alias retained for quote-provider compatibility. */
   providerId: ProviderId
   /** Collector type (e.g., 'http', 'playwright', 'api') */
   collectorType: string
@@ -74,20 +89,30 @@ export type ModuleSpec = {
   displayName: string
   /** Current lifecycle status */
   status: ModuleStatus
+  /** Logical signal layer this module contributes to. */
+  signalLayer: ModuleSignalLayer
+  /** How the module captures data (http, api, queue, scrape, etc.). */
+  captureMethod: string
+  /** Runtime rollout intent independent of lifecycle status. */
+  rolloutState: ModuleRolloutState
   /** Corridors this module covers */
   supportedCorridors: string[]
   /** Amount buckets this module covers */
   supportedAmountBuckets: number[]
-  /** Payin method */
-  payinMethod: string
-  /** Payout method */
-  payoutMethod: string
+  /** Payin method, if applicable to quote modules. */
+  payinMethod: string | null
+  /** Payout method, if applicable to quote modules. */
+  payoutMethod: string | null
   /** Policy flags governing behavior */
   policy: PolicyFlags
+  /** Optional lineage metadata for schema and source tracing. */
+  lineage: ModuleLineage
   /** Runtime state (populated from DB/cache at runtime) */
   runtime?: ModuleRuntimeState
   /** Version of the module specification schema */
   specVersion: number
+  /** Version of the produced payload/schema contract. */
+  schemaVersion: number
   /** When this module was registered */
   registeredAt: string
   /** When this module spec was last updated */

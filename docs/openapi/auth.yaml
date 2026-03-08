@@ -14,34 +14,184 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  timestamp:
-                    type: string
-                    format: date-time
-                  user:
-                    type: object
-                    properties:
-                      user_id:
-                        type: string
-                      email:
-                        type: string
-                  plan:
-                    type: object
-                    properties:
-                      plan_code:
-                        type: string
-                      status:
-                        type: string
-                  entitlements:
-                    type: object
-                  usage:
-                    type: object
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    PlanCode:
+      type: string
+      enum: [free, plus, enterprise]
+    PlanStatus:
+      type: string
+      enum: [active, trialing, past_due, canceled, unpaid, incomplete_expired, expired, inactive]
+    PlanLifecycleState:
+      type: string
+      enum: [active, trialing, scheduled_cancel, past_due, canceled, unpaid, incomplete_expired, expired, inactive]
+    PlanRecoveryAction:
+      type: string
+      enum: [none, billing_portal, upgrade]
+    MeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+        user:
+          type: object
+          properties:
+            user_id:
+              type: string
+            email:
+              type: string
+            name:
+              type: string
+              nullable: true
+            role:
+              type: string
+              nullable: true
+            app_role:
+              type: string
+              nullable: true
+            is_admin:
+              type: boolean
+            mfa_verified:
+              type: boolean
+        plan:
+          type: object
+          properties:
+            plan_code:
+              $ref: "#/components/schemas/PlanCode"
+            status:
+              $ref: "#/components/schemas/PlanStatus"
+        plan_effective:
+          type: object
+          properties:
+            plan_code:
+              $ref: "#/components/schemas/PlanCode"
+            is_active:
+              type: boolean
+            lifecycle_state:
+              $ref: "#/components/schemas/PlanLifecycleState"
+            source:
+              type: string
+              enum: [internal_admin_override, stored_plan, inactive_or_default]
+            recovery_available:
+              type: boolean
+            recovery_action:
+              $ref: "#/components/schemas/PlanRecoveryAction"
+        billing:
+          type: object
+          properties:
+            next_billing_date:
+              type: string
+              format: date-time
+              nullable: true
+            current_period_end:
+              type: string
+              format: date-time
+              nullable: true
+            cancel_at_period_end:
+              type: boolean
+            amount:
+              type: number
+              nullable: true
+            currency:
+              type: string
+              nullable: true
+            status:
+              type: string
+              nullable: true
+            payment_method:
+              type: object
+              nullable: true
+              properties:
+                type:
+                  type: string
+                  nullable: true
+                last4:
+                  type: string
+                  nullable: true
+                brand:
+                  type: string
+                  nullable: true
+                exp_month:
+                  type: integer
+                  nullable: true
+                exp_year:
+                  type: integer
+                  nullable: true
+        entitlements:
+          type: object
+          properties:
+            pulse_access:
+              type: string
+              enum: [none, lite, full]
+            exports_enabled:
+              type: boolean
+            exports_max_days:
+              type: integer
+              nullable: true
+            alerts_max:
+              type: integer
+              nullable: true
+            history_max_days:
+              type: integer
+              nullable: true
+            watchlist_items:
+              type: integer
+              nullable: true
+            api_access:
+              type: boolean
+            api_tier:
+              type: integer
+              nullable: true
+            bulk_export:
+              type: boolean
+            indices_api:
+              type: boolean
+            daily_alerts_enabled:
+              type: boolean
+            smart_alerts_enabled:
+              type: boolean
+            index_threshold_alerts_enabled:
+              type: boolean
+            indices_exports_enabled:
+              type: boolean
+            pulse_embeds_enabled:
+              type: boolean
+            indices_embeds_enabled:
+              type: boolean
+            api_key_max:
+              type: integer
+            api_rate_limit_rpm:
+              type: integer
+        usage:
+          type: object
+          additionalProperties: true
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                additionalProperties: true
+            - type: object
+              additionalProperties: true

@@ -9,6 +9,7 @@ import { emitOpsEvent } from './ops-events'
 import { isNewRelicLogExportEnabled } from './newrelic-log-exporter'
 import { isNewRelicMetricExportEnabled } from './newrelic-metric-exporter'
 import { setTimeout as sleep } from 'timers/promises'
+import { resolveIngestFanoutQueueState } from './ingest-fanout-queues'
 
 const logger = createLogger('shared.startup')
 
@@ -142,6 +143,12 @@ export const runStartupChecks = async (params: {
 
   const resolveRequiredQueues = (): ValidationOptions['requiredQueues'] => {
     const queueRequirements = new Set<NonNullable<ValidationOptions['requiredQueues']>[number]>()
+    const ingestFanoutQueueState = resolveIngestFanoutQueueState({
+      mode: config.queues.ingestFanout.mode,
+      url: config.queues.ingestFanout.url,
+      tier1Url: config.queues.ingestFanout.tier1Url,
+      tier2Url: config.queues.ingestFanout.tier2Url,
+    })
     const explicitQueueRequirements = ([
       'requireQuoteRefreshQueue',
       'requireFxRateRefreshQueue',
@@ -177,9 +184,13 @@ export const runStartupChecks = async (params: {
       queueRequirements.add('exports')
     }
     if (requireIngestFanoutQueue) {
-      queueRequirements.add('ingest_fanout')
-      queueRequirements.add('ingest_fanout_tier1')
-      queueRequirements.add('ingest_fanout_tier2')
+      if (ingestFanoutQueueState.singleQueueConfigured) {
+        queueRequirements.add('ingest_fanout')
+      }
+      if (ingestFanoutQueueState.tieredConfigured || ingestFanoutQueueState.tierMisconfigured) {
+        queueRequirements.add('ingest_fanout_tier1')
+        queueRequirements.add('ingest_fanout_tier2')
+      }
     }
     if (requireNotificationsQueue) {
       queueRequirements.add('notifications')
