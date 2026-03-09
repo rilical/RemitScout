@@ -43,6 +43,10 @@ export type MacroLane = {
 const majorSendCurrencySet = new Set<string>(MAJOR_SEND_CURRENCIES)
 const hardCurrencyDestSet = new Set<string>(HARD_CURRENCY_DESTINATIONS)
 
+const SEND_COUNTRY_OVERRIDES: Partial<Record<string, readonly string[]>> = {
+  USD: ['US'],
+}
+
 const countryByCurrency = new Map<string, Country[]>()
 const countryByCode = new Map<string, Country>()
 
@@ -56,6 +60,11 @@ for (const country of COUNTRIES) {
 export function getSendCountries(): string[] {
   const result: string[] = []
   for (const currency of MAJOR_SEND_CURRENCIES) {
+    const override = SEND_COUNTRY_OVERRIDES[currency]
+    if (override) {
+      result.push(...override)
+      continue
+    }
     for (const country of countryByCurrency.get(currency) ?? []) {
       if (country.code !== 'EU') {
         result.push(country.code)

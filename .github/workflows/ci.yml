@@ -44,6 +44,7 @@ jobs:
       frontend_changed: ${{ steps.filter.outputs.frontend_changed }}
       infra_changed: ${{ steps.filter.outputs.infra_changed }}
       migrations_changed: ${{ steps.filter.outputs.migrations_changed }}
+      mutation_critical_changed: ${{ steps.filter.outputs.mutation_critical_changed }}
       issueops_changed: ${{ steps.filter.outputs.issueops_changed }}
       docs_only: ${{ steps.filter.outputs.docs_only }}
       run_backend: ${{ steps.flags.outputs.run_backend }}
@@ -75,6 +76,16 @@ jobs:
               - 'pnpm-workspace.yaml'
             migrations_changed:
               - 'backend/db/migrations/**'
+            mutation_critical_changed:
+              - 'backend/plane-a/src/services/alert-evaluator.ts'
+              - 'backend/plane-a/src/services/entitlements.ts'
+              - 'backend/plane-a/src/routes/billing/**'
+              - 'backend/shared/corridor.ts'
+              - 'backend/plane-b/src/normalize/quote-normalizer.ts'
+              - 'backend/plane-a/src/routes/popular-corridors.ts'
+              - 'backend/stryker.conf.json'
+              - 'backend/package.json'
+              - 'pnpm-lock.yaml'
             issueops_changed:
               - '.remit-scout/**'
             docs_only:
@@ -447,7 +458,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
+    if: needs.changes.outputs.mutation_critical_changed == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
@@ -655,6 +666,10 @@ jobs:
         with:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm -C frontend exec playwright install --with-deps chromium
       - run: pnpm release:gate:ci
 

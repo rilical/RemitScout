@@ -1,7 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-
-import bundledPolicyJson from '../../.remit-scout/providers/volume-policy.json'
 import {
   defaultModuleVolumePolicy,
   parseModuleVolumePolicy,
@@ -58,14 +56,6 @@ export const getProviderVolumePolicyPath = (): string => {
   return path.join(getRepoRoot(), '.remit-scout', 'providers', 'volume-policy.json')
 }
 
-const unwrapBundledCatalog = (raw: unknown): unknown => {
-  if (raw && typeof raw === 'object' && 'default' in raw) {
-    const withDefault = (raw as { default?: unknown }).default
-    if (withDefault != null) return withDefault
-  }
-  return raw
-}
-
 const parseCatalog = (raw: unknown, catalogPath: string): ProviderVolumePolicyCatalog => {
   if (!raw || typeof raw !== 'object') {
     throw new Error(`Provider volume policy catalog invalid JSON object: ${catalogPath}`)
@@ -106,11 +96,7 @@ const parseCatalog = (raw: unknown, catalogPath: string): ProviderVolumePolicyCa
 let cached: ProviderVolumePolicyCatalog | null = null
 
 const loadBundledCatalog = (): ProviderVolumePolicyCatalog | null => {
-  try {
-    return parseCatalog(unwrapBundledCatalog(bundledPolicyJson), 'bundled provider volume policy catalog')
-  } catch {
-    return null
-  }
+  return null
 }
 
 export const loadProviderVolumePolicyCatalog = (): ProviderVolumePolicyCatalog => {

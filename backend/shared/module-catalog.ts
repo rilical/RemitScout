@@ -1,7 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-
-import moduleCatalogJson from '../../.remit-scout/modules/catalog.json'
 import type { ProviderId } from './provider-catalog'
 import type {
   ModuleOwnerKind,
@@ -309,14 +307,6 @@ const normalizeSignalLayer = (value: unknown, ownerKind: ModuleOwnerKind): Modul
 
 let cached: ModuleCatalog | null = null
 
-const unwrapBundledCatalog = (raw: unknown): unknown => {
-  if (raw && typeof raw === 'object' && 'default' in raw) {
-    const withDefault = (raw as { default?: unknown }).default
-    if (withDefault != null) return withDefault
-  }
-  return raw
-}
-
 const parseCatalog = (raw: unknown, catalogPath: string): ModuleCatalog => {
   if (!raw || typeof raw !== 'object') {
     throw new Error(`Module catalog invalid JSON object: ${catalogPath}`)
@@ -403,11 +393,7 @@ const parseCatalog = (raw: unknown, catalogPath: string): ModuleCatalog => {
 }
 
 const loadBundledCatalog = (): ModuleCatalog | null => {
-  try {
-    return parseCatalog(unwrapBundledCatalog(moduleCatalogJson), 'bundled module catalog')
-  } catch {
-    return null
-  }
+  return null
 }
 
 export const loadModuleCatalog = (): ModuleCatalog => {

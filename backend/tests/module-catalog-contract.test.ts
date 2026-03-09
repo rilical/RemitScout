@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
-import path from 'node:path'
 
 import Ajv2020 from 'ajv/dist/2020'
 import { describe, expect, it } from 'vitest'
+import { resolveRepoPath } from './support/repo-paths'
 
 type ProviderCatalog = {
   providers: Array<{
@@ -11,12 +11,11 @@ type ProviderCatalog = {
 }
 
 describe('module catalog contract', () => {
-  const repoRoot = path.resolve(process.cwd(), '..')
-  const catalogPath = path.join(repoRoot, '.remit-scout', 'modules', 'catalog.json')
-  const schemaPath = path.join(repoRoot, '.remit-scout', 'schema', 'module-catalog.schema.json')
-  const providerCatalogPath = path.join(repoRoot, '.remit-scout', 'providers', 'catalog.json')
-  const providerVolumePath = path.join(repoRoot, '.remit-scout', 'providers', 'volume-policy.json')
-  const providerVolumeSchemaPath = path.join(repoRoot, '.remit-scout', 'schema', 'provider-volume-policy.schema.json')
+  const catalogPath = resolveRepoPath(__dirname, '.remit-scout', 'modules', 'catalog.json')
+  const schemaPath = resolveRepoPath(__dirname, '.remit-scout', 'schema', 'module-catalog.schema.json')
+  const providerCatalogPath = resolveRepoPath(__dirname, '.remit-scout', 'providers', 'catalog.json')
+  const providerVolumePath = resolveRepoPath(__dirname, '.remit-scout', 'providers', 'volume-policy.json')
+  const providerVolumeSchemaPath = resolveRepoPath(__dirname, '.remit-scout', 'schema', 'provider-volume-policy.schema.json')
   const catalog = JSON.parse(readFileSync(catalogPath, 'utf8')) as any
   const schema = JSON.parse(readFileSync(schemaPath, 'utf8')) as any
   const providerCatalog = JSON.parse(readFileSync(providerCatalogPath, 'utf8')) as ProviderCatalog

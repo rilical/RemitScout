@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import path from 'node:path'
+import { resolveRepoPath } from './support/repo-paths'
 
 type AuthBypassConfig = {
   bypass_paths: string[]
@@ -11,7 +11,7 @@ type AuthBypassConfig = {
 }
 
 const loadAuthBypassConfig = (): AuthBypassConfig => {
-  const docPath = path.resolve(__dirname, '../../docs/security/auth-bypass-paths.md')
+  const docPath = resolveRepoPath(__dirname, 'docs', 'security', 'auth-bypass-paths.md')
   const content = readFileSync(docPath, 'utf8')
   const match = content.match(/```json\s*([\s\S]*?)\s*```/)
   if (!match) {

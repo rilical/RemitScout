@@ -97,6 +97,68 @@ describe('westernunion parse', () => {
     expect(parsed.delivery_time_max_minutes).toBe(24 * 60)
   })
 
+  it('uses promotional rate for receive_amount when receive_amount is absent', () => {
+    const payload: WUResponse = {
+      response_status: { status: 0 },
+      services_groups: [
+        {
+          service: 'MONEY_IN_MINUTES',
+          service_name: 'Money in Minutes',
+          pay_groups: [
+            {
+              fund_in: 'CREDIT_CARD',
+              fx_rate: 79.92,
+              promotional_fx_rate: 81.20,
+              gross_fee: 0.99,
+              net_fee: 0,
+              send_amount: 100,
+              receive_amount: null,
+            },
+          ],
+        },
+      ],
+    }
+
+    const parsed = parseWesternUnionPayload(payload, buildRequest('credit_card', 'cash_pickup'))
+    expect(parsed).not.toBeNull()
+    if (!parsed) return
+
+    expect(parsed.promotional_rate).toBe(81.20)
+    expect(parsed.base_rate).toBe(79.92)
+    expect(parsed.receive_amount).toBe(8120) // 100 * 81.20 (promo rate, not base)
+    expect(parsed.fee_amount).toBe(0.99)
+    expect(parsed.promotional_fee_amount).toBe(0) // net_fee < gross_fee
+  })
+
+  it('falls back to base rate when no promotional rate exists and receive_amount is absent', () => {
+    const payload: WUResponse = {
+      response_status: { status: 0 },
+      services_groups: [
+        {
+          service: 'MONEY_IN_MINUTES',
+          service_name: 'Money in Minutes',
+          pay_groups: [
+            {
+              fund_in: 'CREDIT_CARD',
+              fx_rate: 79.92,
+              gross_fee: 2.99,
+              send_amount: 100,
+              receive_amount: null,
+            },
+          ],
+        },
+      ],
+    }
+
+    const parsed = parseWesternUnionPayload(payload, buildRequest('credit_card', 'cash_pickup'))
+    expect(parsed).not.toBeNull()
+    if (!parsed) return
+
+    expect(parsed.promotional_rate).toBeNull()
+    expect(parsed.base_rate).toBe(79.92)
+    expect(parsed.receive_amount).toBe(7992) // 100 * 79.92 (base rate)
+  })
+
   it('falls back to the best fx option when exact pair is missing', () => {
     const payload = loadPayload(corridorId)
     const parsed = parseWesternUnionPayload(payload, buildRequest('cash', 'bank_deposit'))
