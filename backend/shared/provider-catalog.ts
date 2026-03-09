@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import catalogJson from '../../.remit-scout/providers/catalog.json'
 
 /**
  * Provider catalog is repo-native data under `.remit-scout/providers/catalog.json`.
@@ -131,8 +132,22 @@ const parseCatalog = (raw: unknown, catalogPath: string): ProviderCatalog => {
   return { version, providers: parsed }
 }
 
+const unwrapBundledCatalog = (raw: unknown): unknown => {
+  if (raw && typeof raw === 'object' && 'default' in raw) {
+    const withDefault = (raw as { default?: unknown }).default
+    if (withDefault != null) {
+      return withDefault
+    }
+  }
+  return raw
+}
+
 const loadBundledCatalog = (): ProviderCatalog | null => {
-  return null
+  try {
+    return parseCatalog(unwrapBundledCatalog(catalogJson), 'bundled provider catalog')
+  } catch {
+    return null
+  }
 }
 
 export const loadProviderCatalog = (): ProviderCatalog => {
