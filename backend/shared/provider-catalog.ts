@@ -84,6 +84,16 @@ const isProviderId = (value: string): value is ProviderId =>
 
 let cached: ProviderCatalog | null = null
 
+const unwrapBundledCatalog = (raw: unknown): unknown => {
+  if (raw && typeof raw === 'object' && 'default' in raw) {
+    const withDefault = (raw as { default?: unknown }).default
+    if (withDefault != null) {
+      return withDefault
+    }
+  }
+  return raw
+}
+
 const parseCatalog = (raw: unknown, catalogPath: string): ProviderCatalog => {
   if (!raw || typeof raw !== 'object') {
     throw new Error(`Provider catalog invalid JSON object: ${catalogPath}`)
@@ -132,16 +142,6 @@ const parseCatalog = (raw: unknown, catalogPath: string): ProviderCatalog => {
   return { version, providers: parsed }
 }
 
-const unwrapBundledCatalog = (raw: unknown): unknown => {
-  if (raw && typeof raw === 'object' && 'default' in raw) {
-    const withDefault = (raw as { default?: unknown }).default
-    if (withDefault != null) {
-      return withDefault
-    }
-  }
-  return raw
-}
-
 const loadBundledCatalog = (): ProviderCatalog | null => {
   try {
     return parseCatalog(unwrapBundledCatalog(catalogJson), 'bundled provider catalog')
@@ -171,6 +171,10 @@ export const loadProviderCatalog = (): ProviderCatalog => {
 
 export const listProviders = (): ProviderId[] => {
   return loadProviderCatalog().providers.map((p) => p.provider_id)
+}
+
+export const clearProviderCatalogCache = (): void => {
+  cached = null
 }
 
 export const getProviderCatalogEntry = (providerId: ProviderId): ProviderCatalogEntry | null => {
