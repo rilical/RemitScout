@@ -31,7 +31,22 @@ const LinkStub = defineComponent({
       required: false,
     },
   },
-  template: '<a><slot /></a>',
+  computed: {
+    href(): string {
+      if (typeof this.to === 'string') return this.to
+      if (!this.to || typeof this.to !== 'object') return ''
+      const path = typeof this.to.path === 'string' ? this.to.path : ''
+      const query = this.to.query && typeof this.to.query === 'object'
+        ? new URLSearchParams(
+          Object.entries(this.to.query as Record<string, unknown>)
+            .filter(([, value]) => value !== undefined && value !== null)
+            .map(([key, value]) => [key, String(value)]),
+        ).toString()
+        : ''
+      return query ? `${path}?${query}` : path
+    },
+  },
+  template: '<a :href="href"><slot /></a>',
 })
 
 describe('plus checkout page', () => {
@@ -101,17 +116,13 @@ describe('plus checkout page', () => {
 
     expect(wrapper.text()).toContain('Sign in required')
     expect(wrapper.text()).toContain('Create a free account first.')
-    expect(wrapper.get('[data-testid="plus-checkout-submit"]').text()).toContain('Sign in to continue')
+    const cta = wrapper.get('[data-testid="plus-checkout-submit"]')
+    expect(cta.text()).toContain('Sign in to continue')
+    expect(decodeURIComponent(cta.attributes('href') || '')).toBe('/sign-in?redirect=/plus/checkout')
 
-    await wrapper.get('[data-testid="plus-checkout-submit"]').trigger('click')
-    await flushPromises()
-
-    expect(mockNavigateTo).toHaveBeenCalledWith({
-      path: '/sign-in',
-      query: { redirect: '/plus/checkout' },
-    })
     expect(mockCreateCheckoutSession).not.toHaveBeenCalled()
     expect(mockTrackCheckoutStart).not.toHaveBeenCalled()
+    expect(mockNavigateTo).not.toHaveBeenCalled()
   })
 
   it('starts the Plus checkout flow for authenticated users and tracks the attempt', async () => {
