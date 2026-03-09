@@ -44,7 +44,6 @@
             <form
               :data-ready="interactionReady ? 'true' : 'false'"
               class="space-y-6"
-              @submit.prevent="handleCheckout"
             >
               <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
                 <template v-if="isAuthenticated">
@@ -83,9 +82,10 @@
               <!-- Submit Button -->
               <button
                 data-testid="plus-checkout-submit"
-                type="submit"
+                type="button"
                 :disabled="processing || !interactionReady"
                 class="w-full h-14 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-body-lg font-semibold shadow-xl hover:shadow-2xl transition-all disabled:bg-neutral-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                @click="handleCheckout"
               >
                 <span v-if="!processing">
                   {{ isAuthenticated ? 'Continue to Stripe Checkout' : 'Sign in to continue' }}
