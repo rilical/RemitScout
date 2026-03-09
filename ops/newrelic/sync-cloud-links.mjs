@@ -137,7 +137,7 @@ const linkAccounts = async (awsAccounts) => {
   const data = await gql(mutation, {
     accountId: NEW_RELIC_ACCOUNT_ID,
     accounts: {
-      aws: awsAccounts,
+      aws: awsAccounts.map(({ expectedAwsAccountId, ...account }) => account),
     },
   })
 
