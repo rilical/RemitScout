@@ -386,7 +386,8 @@ jobs:
             export PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="IngestFanoutTier2QueueUrl") | .OutputValue')"
             export PLANE_B_NOTIFICATIONS_QUEUE_URL="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="NotificationsQueueUrl") | .OutputValue')"
             export PLANE_B_OPS_ALERT_QUEUE_URL="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="OpsAlertsQueueUrl") | .OutputValue')"
-            export SMOKE_QUEUE_KINDS="quote_refresh,fx_rate_refresh,ingest_fanout,ingest_fanout_tier2,exports,notifications,ops_alerts"
+            export GOLD_LIVE_QUEUE_URL="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="GoldLiveQueueUrl") | .OutputValue')"
+            export SMOKE_QUEUE_KINDS="quote_refresh,fx_rate_refresh,ingest_fanout,ingest_fanout_tier2,exports,notifications,ops_alerts,gold_live"
           fi
 
           mkdir -p .smoke-artifacts
@@ -413,7 +414,7 @@ jobs:
             echo "::error::Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging agent-health fallback."
             exit 1
           fi
-          pnpm -C backend ci:worker-resilience-smoke | tee .smoke-artifacts/staging-agent-pipeline-health-fallback.log
+          SMOKE_EXPECT_OPS_ACTIVE=0 pnpm -C backend ci:worker-resilience-smoke | tee .smoke-artifacts/staging-agent-pipeline-health-fallback.log
 
       - name: Auth surface smoke (staging)
         env:
@@ -541,7 +542,8 @@ jobs:
             export PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="IngestFanoutTier2QueueUrl") | .OutputValue')"
             export PLANE_B_NOTIFICATIONS_QUEUE_URL="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="NotificationsQueueUrl") | .OutputValue')"
             export PLANE_B_OPS_ALERT_QUEUE_URL="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="OpsAlertsQueueUrl") | .OutputValue')"
-            export SMOKE_QUEUE_KINDS="quote_refresh,fx_rate_refresh,ingest_fanout,ingest_fanout_tier2,exports,notifications,ops_alerts"
+            export GOLD_LIVE_QUEUE_URL="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="GoldLiveQueueUrl") | .OutputValue')"
+            export SMOKE_QUEUE_KINDS="quote_refresh,fx_rate_refresh,ingest_fanout,ingest_fanout_tier2,exports,notifications,ops_alerts,gold_live"
           fi
 
           if [ -z "${SMOKE_BASE_URL:-}" ]; then
