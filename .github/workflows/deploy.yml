@@ -907,6 +907,11 @@ jobs:
             echo "PUBLIC_NEW_RELIC_BROWSER_ENABLED=1 requires PUBLIC_NEW_RELIC_ACCOUNT_ID/TRUST_KEY/AGENT_ID/APPLICATION_ID/LICENSE_KEY."
             exit 1
           fi
+          if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
+             [ -z "${NEW_RELIC_INGEST_KEY_SECRET_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_INGEST_KEY_SECRET_ARN for New Relic AWS metric/log streaming."
+            exit 1
+          fi
 
       - name: Observability prereq gate (staging)
         env:
