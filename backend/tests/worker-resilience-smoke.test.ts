@@ -45,6 +45,18 @@ describe('worker resilience smoke admin auth', () => {
     })
   })
 
+  it('tolerates an MFA challenge when staging is explicitly configured to allow Supabase fallback', () => {
+    expect(resolveWorkerResilienceAdminAuth(403, {
+      error: 'mfa_required',
+      code: 'mfa_required',
+    }, 'supabase-token', true)).toEqual({
+      token: 'supabase-token',
+      source: 'supabase_fallback',
+      ok: true,
+      note: 'status=403 fallback=supabase_jwt mfa_challenge_tolerated',
+    })
+  })
+
   it('classifies direct queue lookup misses as non-fatal fallback issues', () => {
     expect(resolveQueueLookupIssue({
       name: 'AWS.SimpleQueueService.NonExistentQueue',

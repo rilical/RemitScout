@@ -358,6 +358,7 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
+          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
         run: |
           set -euo pipefail
           if [ -z "${DATABASE_URL_PLANE_B:-}" ]; then
@@ -517,6 +518,7 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
+          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
         run: |
           set -euo pipefail
           if [ -n "${STACK_NAME:-}" ]; then
