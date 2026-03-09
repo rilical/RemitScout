@@ -217,7 +217,7 @@ type MetricRow = {
 
 const { request } = useApi()
 
-const { data, pending, error } = await useAsyncData(
+const { data, pending, error, refresh } = await useAsyncData(
   'provider-metadata-featured',
   async () => {
     try {
@@ -314,6 +314,8 @@ const providers = computed(() => {
     .sort((a, b) => (b.remitScore || 0) - (a.remitScore || 0))
     .slice(0, 12)
 })
+
+const needsClientRecovery = computed(() => !pending.value && (Boolean(error.value) || providers.value.length === 0))
 
 const scrollContainer = ref<HTMLElement | null>(null)
 const canScrollLeft = ref(false)
@@ -436,6 +438,10 @@ onMounted(() => {
       }
     }
   })
+
+  if (needsClientRecovery.value) {
+    void refresh()
+  }
 })
 
 onBeforeUnmount(() => {

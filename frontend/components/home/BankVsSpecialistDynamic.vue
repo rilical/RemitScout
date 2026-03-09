@@ -509,7 +509,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 
 const amount = 500
@@ -518,13 +518,14 @@ const amount = 500
 const corridor = { from: 'US', to: 'MX' }
 
 const { formatMoney, formatRate, getRelativeTime } = useRemittanceApi()
-const { data, pending, error } = await useRemittanceApi().useBankVsSpecialist(
+const { data, pending, error, refresh } = await useRemittanceApi().useBankVsSpecialist(
   corridor.from,
   corridor.to,
   amount,
 )
 
 const comparison = computed(() => data.value?.data)
+const needsClientRecovery = computed(() => !pending.value && (Boolean(error.value) || !comparison.value))
 const errorMessage = computed(() => {
   const raw = error.value as { message?: string, data?: { message?: string }, statusMessage?: string } | null
   if (!raw) return 'Comparison service is temporarily unavailable.'
@@ -537,5 +538,11 @@ const errorMessage = computed(() => {
 const lastUpdated = computed(() => {
   if (!comparison.value) return ''
   return getRelativeTime(comparison.value.updatedAt)
+})
+
+onMounted(() => {
+  if (needsClientRecovery.value) {
+    void refresh()
+  }
 })
 </script>

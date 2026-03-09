@@ -186,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { getCountryByCode } from '~/utils/countries-currencies'
@@ -206,7 +206,7 @@ const emit = defineEmits<{
   'corridor-selected': [data: { from: string, to: string }]
 }>()
 
-const { data, pending, error } = await useRemittanceApi().usePopularCorridors()
+const { data, pending, error, refresh } = await useRemittanceApi().usePopularCorridors()
 
 const parseRoute = (route: string) => {
   if (!route) return { from: '', to: '' }
@@ -265,6 +265,7 @@ const corridors = computed(() => {
 })
 
 const hasCorridors = computed(() => corridors.value.length > 0)
+const needsClientRecovery = computed(() => !pending.value && (Boolean(error.value) || corridors.value.length === 0))
 
 const totalSlides = computed(() => {
   return Math.ceil(corridors.value.length / itemsPerSlide)
@@ -314,6 +315,12 @@ const updateSliderPosition = () => {
 watch(() => corridors.value.length, () => {
   if (currentSlide.value >= totalSlides.value) {
     currentSlide.value = Math.max(0, totalSlides.value - 1)
+  }
+})
+
+onMounted(() => {
+  if (needsClientRecovery.value) {
+    void refresh()
   }
 })
 </script>
