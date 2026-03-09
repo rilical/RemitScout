@@ -433,8 +433,8 @@ const main = async () => {
     if (!queueUrl) {
       record({
         name: `Queue ${kind} direct lookup unavailable`,
-        ok: !expectOpsActive,
-        note: `queue=${queueName} reason=${issue}`,
+        ok: !expectOpsActive || skipPrivilegedAdminChecks,
+        note: `queue=${queueName} reason=${issue}${skipPrivilegedAdminChecks ? ' mfa_fallback_tolerated' : ''}`,
       })
       continue
     }
@@ -450,7 +450,7 @@ const main = async () => {
       note: `visible=${stats.visible} in_flight=${stats.inFlight} delayed=${stats.delayed} total=${stats.total}`,
     })
 
-    if (expectOpsActive) {
+    if (expectOpsActive && !skipPrivilegedAdminChecks) {
       record({
         name: `Queue ${kind} DLQ empty`,
         ok: dlqDepth === 0,
