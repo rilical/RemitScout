@@ -142,6 +142,16 @@ const parseCatalog = (raw: unknown, catalogPath: string): ProviderCatalog => {
   return { version, providers: parsed }
 }
 
+const unwrapBundledCatalog = (raw: unknown): unknown => {
+  if (raw && typeof raw === 'object' && 'default' in raw) {
+    const withDefault = (raw as { default?: unknown }).default
+    if (withDefault != null) {
+      return withDefault
+    }
+  }
+  return raw
+}
+
 const loadBundledCatalog = (): ProviderCatalog | null => {
   try {
     return parseCatalog(unwrapBundledCatalog(catalogJson), 'bundled provider catalog')
