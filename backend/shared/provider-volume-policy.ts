@@ -104,14 +104,6 @@ const parseCatalog = (raw: unknown, catalogPath: string): ProviderVolumePolicyCa
 
 let cached: ProviderVolumePolicyCatalog | null = null
 
-const unwrapBundledCatalog = (raw: unknown): unknown => {
-  if (raw && typeof raw === 'object' && 'default' in raw) {
-    const withDefault = (raw as { default?: unknown }).default
-    if (withDefault != null) return withDefault
-  }
-  return raw
-}
-
 const loadBundledCatalog = (): ProviderVolumePolicyCatalog | null => {
   try {
     return parseCatalog(unwrapBundledCatalog(bundledPolicyJson), 'bundled provider volume policy catalog')
