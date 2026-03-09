@@ -5,9 +5,11 @@ import { resolveSmokeApiBaseUrl } from './alerts-watchlists-smoke'
 import { jsonFetch, maybeVerifySupabaseMfa, signInSupabase } from './auth-surface-smoke'
 import {
   isAdminMfaRequiredResponse,
+  readExpectedAdminMfa,
   readSmokeUserMfaCode,
   resolveAdminSmokeAuthToken,
   shouldSkipPrivilegedAdminChecks,
+  shouldUseSupabaseFallbackForMfaChallenge,
 } from './admin-surface-smoke'
 
 type Check = {
@@ -39,12 +41,17 @@ export const resolveWorkerResilienceAdminAuth = (
   status: number,
   body: AdminExchangeResponse | null | undefined,
   supabaseToken: string,
+  allowSupabaseMfaFallback = false,
 ) => {
-  const auth = resolveAdminSmokeAuthToken(status, body, supabaseToken)
+  const auth = resolveAdminSmokeAuthToken(
+    allowSupabaseMfaFallback ? 200 : status,
+    allowSupabaseMfaFallback ? { token_type: 'Bearer' } : body,
+    supabaseToken,
+  )
   return {
     ...auth,
-    ok: status < 400 && Boolean(auth.token),
-    note: `status=${status}${auth.source === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}`,
+    ok: (status < 400 || allowSupabaseMfaFallback) && Boolean(auth.token),
+    note: `status=${status}${auth.source === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}${allowSupabaseMfaFallback ? ' mfa_challenge_tolerated' : ''}`,
   }
 }
 
@@ -276,6 +283,8 @@ const main = async () => {
 
   const smokeUserEmail = mustEnv('SMOKE_USER_EMAIL')
   const smokeUserPassword = mustEnv('SMOKE_USER_PASSWORD')
+  const expectAdminMfa = readExpectedAdminMfa()
+  const smokeUserMfaCode = readSmokeUserMfaCode()
   const expectOpsActive = readBooleanEnv('SMOKE_EXPECT_OPS_ACTIVE', false)
   const apiBase = resolveSmokeApiBaseUrl(smokeBaseUrl)
   const envName = normalizeEnvName(
@@ -287,7 +296,6 @@ const main = async () => {
   const queueKinds = readQueueKinds()
   const checks: Check[] = []
   const record = (check: Check) => checks.push(check)
-  const smokeUserMfaCode = readSmokeUserMfaCode()
 
   let supabaseToken = await signInSupabase(
     supabaseUrl,
@@ -300,19 +308,30 @@ const main = async () => {
   supabaseToken = mfa.accessToken
 
   let adminExchange = await exchangeAdminSession(apiBase, supabaseToken)
-  const allowSupabaseMfaFallback =
+  const allowSupabaseMfaFallback = shouldUseSupabaseFallbackForMfaChallenge(
+    adminExchange.status,
+    adminExchange.body,
+    expectAdminMfa,
+    smokeUserMfaCode,
+  )
+  if (
     isAdminMfaRequiredResponse(adminExchange.status, adminExchange.body)
-    && smokeUserMfaCode.length === 0
-  if (isAdminMfaRequiredResponse(adminExchange.status, adminExchange.body) && !allowSupabaseMfaFallback && !mfa.factorVerified) {
+    && !allowSupabaseMfaFallback
+    && !mfa.factorVerified
+  ) {
+    if (!smokeUserMfaCode) {
+      throw new Error('Admin exchange requires MFA but SMOKE_USER_MFA_CODE is missing.')
+    }
     const verified = await maybeVerifySupabaseMfa(supabaseUrl, supabasePublishableKey, supabaseToken)
     supabaseToken = verified.accessToken
     adminExchange = await exchangeAdminSession(apiBase, supabaseToken)
   }
 
   const adminAuth = resolveWorkerResilienceAdminAuth(
-    allowSupabaseMfaFallback ? 200 : adminExchange.status,
-    allowSupabaseMfaFallback ? { token_type: 'Bearer' } : adminExchange.body,
+    adminExchange.status,
+    adminExchange.body,
     supabaseToken,
+    allowSupabaseMfaFallback,
   )
   const adminToken = adminAuth.token
   const fallbackAuthSource = adminAuth.source
@@ -324,7 +343,7 @@ const main = async () => {
   record({
     name: 'POST /sessions/admin/exchange',
     ok: adminAuth.ok,
-    note: `${adminAuth.note}${allowSupabaseMfaFallback ? ' mfa_challenge_tolerated' : ''}`,
+    note: adminAuth.note,
   })
 
   if (!adminToken) {
