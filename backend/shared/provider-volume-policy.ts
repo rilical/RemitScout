@@ -57,6 +57,14 @@ export const getProviderVolumePolicyPath = (): string => {
   return path.join(getRepoRoot(), '.remit-scout', 'providers', 'volume-policy.json')
 }
 
+const unwrapBundledCatalog = (raw: unknown): unknown => {
+  if (raw && typeof raw === 'object' && 'default' in raw) {
+    const withDefault = (raw as { default?: unknown }).default
+    if (withDefault != null) return withDefault
+  }
+  return raw
+}
+
 const parseCatalog = (raw: unknown, catalogPath: string): ProviderVolumePolicyCatalog => {
   if (!raw || typeof raw !== 'object') {
     throw new Error(`Provider volume policy catalog invalid JSON object: ${catalogPath}`)

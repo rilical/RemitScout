@@ -103,7 +103,7 @@ describe('plus checkout page', () => {
     expect(wrapper.text()).toContain('Create a free account first.')
     expect(wrapper.get('[data-testid="plus-checkout-submit"]').text()).toContain('Sign in to continue')
 
-    await wrapper.get('form').trigger('submit.prevent')
+    await wrapper.get('[data-testid="plus-checkout-submit"]').trigger('click')
     await flushPromises()
 
     expect(mockNavigateTo).toHaveBeenCalledWith({
@@ -126,7 +126,7 @@ describe('plus checkout page', () => {
     expect(wrapper.text()).toContain('user@example.com')
     expect(wrapper.get('[data-testid="plus-checkout-submit"]').text()).toContain('Continue to Stripe Checkout')
 
-    await wrapper.get('form').trigger('submit.prevent')
+    await wrapper.get('[data-testid="plus-checkout-submit"]').trigger('click')
     await flushPromises()
 
     expect(mockTrackCheckoutStart).toHaveBeenCalledWith(
