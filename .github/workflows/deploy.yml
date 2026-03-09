@@ -1410,14 +1410,15 @@ jobs:
         run: |
           set -euo pipefail
           cluster="remit-scout-${ENV_NAME}"
-          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
-          if [ -n "$services" ] && [ "$services" != "None" ]; then
-            read -r -a service_arns <<< "$services"
-            for ((i=0; i<${#service_arns[@]}; i+=10)); do
-              batch=("${service_arns[@]:i:10}")
-              aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
-            done
+          mapfile -t service_arns < <(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output json | jq -r '.[]')
+          if [ "${#service_arns[@]}" -eq 0 ]; then
+            echo "No ECS services found in ${cluster}; skipping stability wait."
+            exit 0
           fi
+          for ((i=0; i<${#service_arns[@]}; i+=10)); do
+            batch=("${service_arns[@]:i:10}")
+            aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
+          done
 
       - name: Deploy Frontend (staging)
         shell: bash
@@ -2864,14 +2865,15 @@ jobs:
         run: |
           set -euo pipefail
           cluster="remit-scout-${ENV_NAME}"
-          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
-          if [ -n "$services" ] && [ "$services" != "None" ]; then
-            read -r -a service_arns <<< "$services"
-            for ((i=0; i<${#service_arns[@]}; i+=10)); do
-              batch=("${service_arns[@]:i:10}")
-              aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
-            done
+          mapfile -t service_arns < <(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output json | jq -r '.[]')
+          if [ "${#service_arns[@]}" -eq 0 ]; then
+            echo "No ECS services found in ${cluster}; skipping stability wait."
+            exit 0
           fi
+          for ((i=0; i<${#service_arns[@]}; i+=10)); do
+            batch=("${service_arns[@]:i:10}")
+            aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
+          done
 
       - name: Post-deploy Smoke (prod) + Auto Rollback On Failure
         shell: bash
