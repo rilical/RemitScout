@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent, h, ref, Suspense } from 'vue'
 
-const mockEnsureAuthenticated = vi.hoisted(() => vi.fn())
+const mockEnsureHydrated = vi.hoisted(() => vi.fn())
 const mockNavigateTo = vi.hoisted(() => vi.fn())
 
 vi.mock('~/domains/dashboard/ui/DashboardSignedIn.vue', () => ({
@@ -14,6 +14,7 @@ vi.mock('~/domains/dashboard/ui/DashboardSignedIn.vue', () => ({
 
 describe('DashboardPage', () => {
   const isAuthenticated = ref(false)
+  const hydrated = ref(false)
 
   const mountPage = async () => {
     const DashboardPage = (await import('~/domains/dashboard/ui/DashboardPage.vue')).default
@@ -28,12 +29,16 @@ describe('DashboardPage', () => {
     vi.clearAllMocks()
     vi.resetModules()
     isAuthenticated.value = false
+    hydrated.value = false
     mockNavigateTo.mockResolvedValue(undefined)
-    mockEnsureAuthenticated.mockResolvedValue(false)
+    mockEnsureHydrated.mockImplementation(async () => {
+      hydrated.value = true
+    })
 
     vi.stubGlobal('useAuth', () => ({
-      ensureAuthenticated: (...args: unknown[]) => mockEnsureAuthenticated(...args),
+      ensureHydrated: (...args: unknown[]) => mockEnsureHydrated(...args),
       isAuthenticated,
+      hydrated,
     }))
     vi.stubGlobal('navigateTo', (...args: unknown[]) => mockNavigateTo(...args))
     vi.stubGlobal('useHead', vi.fn())
@@ -44,15 +49,15 @@ describe('DashboardPage', () => {
   })
 
   it('keeps the dashboard route when auth recovers after the initial bootstrap', async () => {
-    mockEnsureAuthenticated.mockImplementation(async () => {
+    mockEnsureHydrated.mockImplementation(async () => {
       isAuthenticated.value = true
-      return true
+      hydrated.value = true
     })
 
     const wrapper = await mountPage()
     await flushPromises()
 
-    expect(mockEnsureAuthenticated).toHaveBeenCalledTimes(1)
+    expect(mockEnsureHydrated).toHaveBeenCalledTimes(1)
     expect(mockNavigateTo).not.toHaveBeenCalled()
     expect(wrapper.find('[data-testid="dashboard-signed-in"]').exists()).toBe(true)
   })
@@ -61,7 +66,8 @@ describe('DashboardPage', () => {
     const wrapper = await mountPage()
     await flushPromises()
 
-    expect(mockEnsureAuthenticated).toHaveBeenCalledTimes(1)
+    expect(mockEnsureHydrated).toHaveBeenCalledTimes(1)
+    expect(mockNavigateTo).not.toHaveBeenCalled()
     expect(wrapper.find('[data-testid="dashboard-signed-in"]').exists()).toBe(false)
   })
 })
