@@ -177,8 +177,43 @@ const getQueueName = (envName: string, kind: QueueKind): string => {
   }
 }
 
+const normalizeQueueUrlEnv = (value: string | undefined): string => {
+  const normalized = String(value || '').trim()
+  return normalized && normalized.toLowerCase() !== 'null' ? normalized : ''
+}
+
+export const resolveQueueUrlFromEnv = (kind: QueueKind): string => {
+  switch (kind) {
+    case 'quote_refresh':
+      return normalizeQueueUrlEnv(process.env.QUOTE_REFRESH_QUEUE_URL)
+    case 'fx_rate_refresh':
+      return normalizeQueueUrlEnv(process.env.FX_RATE_REFRESH_QUEUE_URL)
+    case 'ingest_fanout':
+      return normalizeQueueUrlEnv(process.env.PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL)
+        || normalizeQueueUrlEnv(process.env.PLANE_B_INGEST_FANOUT_QUEUE_URL)
+    case 'ingest_fanout_tier2':
+      return normalizeQueueUrlEnv(process.env.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL)
+    case 'exports':
+      return normalizeQueueUrlEnv(process.env.EXPORT_JOB_QUEUE_URL)
+    case 'notifications':
+      return normalizeQueueUrlEnv(process.env.PLANE_B_NOTIFICATIONS_QUEUE_URL)
+    case 'ops_alerts':
+      return normalizeQueueUrlEnv(process.env.PLANE_B_OPS_ALERT_QUEUE_URL)
+    case 'gold_live':
+      return normalizeQueueUrlEnv(process.env.GOLD_LIVE_QUEUE_URL)
+  }
+}
+
 const resolveQueueUrl = async (envName: string, kind: QueueKind) => {
   const queueName = getQueueName(envName, kind)
+  const queueUrlFromEnv = resolveQueueUrlFromEnv(kind)
+  if (queueUrlFromEnv) {
+    return {
+      queueName,
+      queueUrl: queueUrlFromEnv,
+      issue: null,
+    }
+  }
   try {
     const response = await sqs.send(new GetQueueUrlCommand({ QueueName: queueName }))
     const queueUrl = String(response.QueueUrl || '').trim()

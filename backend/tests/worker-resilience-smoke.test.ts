@@ -1,8 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import {
   resolveQueueLookupIssue,
+  resolveQueueUrlFromEnv,
   resolveWorkerResilienceAdminAuth,
 } from '../scripts/ci/worker-resilience-smoke'
+
+const ORIGINAL_ENV = { ...process.env }
+
+afterEach(() => {
+  process.env = { ...ORIGINAL_ENV }
+})
 
 describe('worker resilience smoke admin auth', () => {
   it('accepts the admin exchange token when it is returned directly', () => {
@@ -50,5 +57,30 @@ describe('worker resilience smoke admin auth', () => {
     })).toBe('access_denied')
 
     expect(resolveQueueLookupIssue(new Error('socket timeout'))).toBeNull()
+  })
+
+  it('uses explicit queue URLs from env before any AWS queue-name lookup', () => {
+    process.env.QUOTE_REFRESH_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123/quote-refresh'
+    process.env.FX_RATE_REFRESH_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123/fx-rate-refresh'
+    process.env.EXPORT_JOB_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123/export-job'
+
+    expect(resolveQueueUrlFromEnv('quote_refresh')).toBe(process.env.QUOTE_REFRESH_QUEUE_URL)
+    expect(resolveQueueUrlFromEnv('fx_rate_refresh')).toBe(process.env.FX_RATE_REFRESH_QUEUE_URL)
+    expect(resolveQueueUrlFromEnv('exports')).toBe(process.env.EXPORT_JOB_QUEUE_URL)
+  })
+
+  it('prefers tiered ingest queue URLs and ignores null-like output placeholders', () => {
+    process.env.PLANE_B_INGEST_FANOUT_QUEUE_URL = 'null'
+    process.env.PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123/ingest-fanout'
+    process.env.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123/ingest-fanout-tier2'
+    process.env.PLANE_B_NOTIFICATIONS_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123/notifications'
+    process.env.PLANE_B_OPS_ALERT_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123/ops-alerts'
+    process.env.GOLD_LIVE_QUEUE_URL = '  '
+
+    expect(resolveQueueUrlFromEnv('ingest_fanout')).toBe(process.env.PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL)
+    expect(resolveQueueUrlFromEnv('ingest_fanout_tier2')).toBe(process.env.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL)
+    expect(resolveQueueUrlFromEnv('notifications')).toBe(process.env.PLANE_B_NOTIFICATIONS_QUEUE_URL)
+    expect(resolveQueueUrlFromEnv('ops_alerts')).toBe(process.env.PLANE_B_OPS_ALERT_QUEUE_URL)
+    expect(resolveQueueUrlFromEnv('gold_live')).toBe('')
   })
 })
