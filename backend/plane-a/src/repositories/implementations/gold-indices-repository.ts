@@ -3,6 +3,7 @@ import type { Pool } from 'pg'
 import { query } from '../../../../shared/db'
 import type {
   GoldIndicesAvailability,
+  GoldIndicesMethodologyRow,
   GoldIndicesRow,
   IGoldIndicesRepository,
   ResolveCorridorInput,
@@ -110,6 +111,44 @@ export class GoldIndicesRepository implements IGoldIndicesRepository {
     )
 
     return result.rows[0] ?? null
+  }
+
+  async getMethodologyRows(input: {
+    corridorId: string
+    amountBucket: number
+    methodProfile: string
+    modelVersion: string
+  }): Promise<GoldIndicesMethodologyRow[]> {
+    const result = await query<GoldIndicesMethodologyRow>(
+      `SELECT pws.provider_id,
+              COALESCE(sp.display_name, sp.name, pws.provider_id) AS provider_name,
+              pws.weight::double precision AS weight,
+              pws.quote_count::int AS quote_count,
+              pws.window_days::int AS window_days,
+              pws.weight_confidence::double precision AS weight_confidence,
+              MAX(lqp.collected_at) AS last_collected_at
+         FROM gold.provider_weight_snapshot pws
+         LEFT JOIN silver.provider sp
+           ON sp.provider_id = pws.provider_id
+         LEFT JOIN silver.latest_quote_by_provider lqp
+           ON lqp.provider_id = pws.provider_id
+          AND lqp.corridor_id = pws.corridor_id
+          AND lqp.amount_bucket = $2
+        WHERE pws.corridor_id = $1
+          AND pws.method_profile = $3::method_profile
+          AND pws.model_version = $4
+        GROUP BY pws.provider_id,
+                 COALESCE(sp.display_name, sp.name, pws.provider_id),
+                 pws.weight,
+                 pws.quote_count,
+                 pws.window_days,
+                 pws.weight_confidence
+        ORDER BY pws.weight DESC, provider_name ASC`,
+      [input.corridorId, input.amountBucket, input.methodProfile, input.modelVersion],
+      this.pool,
+    )
+
+    return result.rows
   }
 
   async resolveCorridorId(input: ResolveCorridorInput): Promise<string | null> {

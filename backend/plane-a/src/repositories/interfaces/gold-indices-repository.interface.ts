@@ -31,6 +31,16 @@ export type ResolveCorridorInput = {
   destCurrency?: string | null
 }
 
+export type GoldIndicesMethodologyRow = {
+  provider_id: string
+  provider_name: string
+  weight: number
+  quote_count: number | null
+  window_days: number | null
+  weight_confidence: number | null
+  last_collected_at: Date | null
+}
+
 export interface IGoldIndicesRepository {
   getAvailability(input: {
     corridorId: string
@@ -49,5 +59,11 @@ export interface IGoldIndicesRepository {
     amountBucket: number
     methodProfile: string
   }): Promise<GoldIndicesRow | null>
+  getMethodologyRows(input: {
+    corridorId: string
+    amountBucket: number
+    methodProfile: string
+    modelVersion: string
+  }): Promise<GoldIndicesMethodologyRow[]>
   resolveCorridorId(input: ResolveCorridorInput): Promise<string | null>
 }

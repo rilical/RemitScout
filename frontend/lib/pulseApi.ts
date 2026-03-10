@@ -491,6 +491,11 @@ const getPulseCorridorSlug = (corridor: PulseCorridor | null | undefined) => {
   return slug || undefined
 }
 
+const getPulseCorridorId = (corridor: PulseCorridor | null | undefined) => {
+  const corridorId = corridor?.corridorId?.trim()
+  return corridorId || undefined
+}
+
 export async function getHeroChartData(
   corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
@@ -655,6 +660,124 @@ export async function getCostTrendData(
   const { request } = useApi()
   return await request<CostTrendData[]>('/pulse/cost-trend', { query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount } })
 }
+
+// ── Indices API ─────────────────────────────────────────────────────────────
+
+export interface IndicesSeriesPoint {
+  date: string
+  teer: number
+  rci: number
+  rvi_bps: number
+  providerCount: number
+  suppressionFlag: boolean
+  suppressionReason: string | null
+  midMarketRate: number
+  weightConfidence: number
+  weightWindowDays: number
+}
+
+export interface IndicesMethodologyData {
+  providers: Array<{
+    providerId?: string
+    name: string
+    weight: number
+    quoteCount: number
+    freshness: string
+    suppressed: boolean
+    suppressionReason?: string
+  }>
+  totalProviders: number
+  contributingProviders: number
+  suppressedProviders: number
+  weightConfidence: number
+  weightWindowDays: number
+  methodologyVersion: string
+  consistency?: {
+    weightSumOk: boolean
+    contributingCountOk: boolean
+    suppressedCountOk: boolean
+    weightSum: number
+  }
+}
+
+export interface IndicesSeriesResponse {
+  corridorId: string
+  amountBucket: number
+  methodProfile: string
+  weightingModel: string
+  methodologyVersion: string
+  lastUpdated: string | null
+  series: IndicesSeriesPoint[]
+  dataWindow: {
+    requestedDays: number
+    availableDays: number | null
+    returnedDays: number
+    startDate: string
+    endDate: string
+    capped: boolean
+  }
+}
+
+export interface IndicesHeadlineData {
+  corridorId?: string
+  amountBucket?: number
+  methodProfile?: string
+  methodologyVersion?: string
+  teer: { value: number; delta7d: number; delta30d: number; confidence: string }
+  rci: { value: number; delta7d: number; delta30d: number }
+  rvi: { value: number; delta7d: number; delta30d: number }
+  lastUpdated: string | null
+}
+
+export async function getIndicesSeries(
+  corridor: PulseCorridor | null,
+  days: number = 30,
+  amountBucket: number = 500,
+  methodProfile: string = 'standard_bank',
+): Promise<IndicesSeriesResponse> {
+  const { request } = useApi()
+  return await request<IndicesSeriesResponse>('/indices/series', {
+    query: {
+      corridor_id: getPulseCorridorId(corridor),
+      corridor: getPulseCorridorSlug(corridor),
+      days,
+      amount_bucket: amountBucket,
+      method_profile: methodProfile,
+    },
+  })
+}
+
+export async function getIndicesMethodology(
+  corridor: PulseCorridor | null,
+  amountBucket: number = 500,
+  methodProfile: string = 'standard_bank',
+): Promise<IndicesMethodologyData> {
+  const { request } = useApi()
+  return await request<IndicesMethodologyData>('/indices/methodology', {
+    query: {
+      corridor_id: getPulseCorridorId(corridor),
+      corridor: getPulseCorridorSlug(corridor),
+      amount_bucket: amountBucket,
+      method_profile: methodProfile,
+    },
+  })
+}
+
+export async function getIndicesHeadline(
+  corridor: PulseCorridor | null,
+  amountBucket: number = 500,
+): Promise<IndicesHeadlineData> {
+  const { request } = useApi()
+  return await request<IndicesHeadlineData>('/indices/headline', {
+    query: {
+      corridor_id: getPulseCorridorId(corridor),
+      corridor: getPulseCorridorSlug(corridor),
+      amount_bucket: amountBucket,
+    },
+  })
+}
+
+// ── Screener ─────────────────────────────────────────────────────────────────
 
 export async function getPulseScreener(options?: {
   corridorIds?: string[]

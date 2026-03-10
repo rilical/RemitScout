@@ -187,67 +187,9 @@ class="overflow-hidden rounded-xl border border-brand-600/30 bg-brand-600/5"
                 class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-700 pt-4"
               >
                 <div class="flex items-center gap-3">
-                  <template v-if="indicesExportsEnabled">
-                    <button
-                      class="text-body-sm inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
-                      :disabled="isExporting"
-                      @click="handleExportCSV"
-                    >
-                      <svg
-class="h-4 w-4"
-fill="none"
-stroke="currentColor"
-viewBox="0 0 24 24"
->
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Export CSV
-                    </button>
-                    <button
-                      class="text-body-sm inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
-                      :disabled="isExporting"
-                      @click="handleExportPDF"
-                    >
-                      <svg
-class="h-4 w-4"
-fill="none"
-stroke="currentColor"
-viewBox="0 0 24 24"
->
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                        />
-                      </svg>
-                      Compliance PDF
-                    </button>
-                    <span
-                      v-if="exportStatusMessage"
-                      class="text-body-sm mt-1 text-neutral-200 sm:ml-3 sm:mt-0 sm:self-center"
-                    >
-                      {{ exportStatusMessage }}
-                    </span>
-                    <span
-                      v-if="exportErrorMessage"
-                      class="text-body-sm mt-1 text-danger-300 sm:ml-3 sm:mt-0 sm:self-center"
-                    >
-                      {{ exportErrorMessage }}
-                    </span>
-                  </template>
-                  <p
-v-else
-class="text-body-sm max-w-xl text-neutral-300"
->
-                    Pulse chart exports are available on Enterprise only. Signed-out, free, and Plus
-                    users can view this page, but only Enterprise can generate compliance-ready
-                    Pulse exports.
+                  <p class="text-body-sm max-w-xl text-neutral-300">
+                    Pulse exports are out of the current shipment scope. Use this page for live chart
+                    review, and route embed or licensed-data requests through sales.
                   </p>
                 </div>
                 <NuxtLink
@@ -388,7 +330,7 @@ viewBox="0 0 24 24"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M9 5l7-7 7"
+                  d="M9 5l7 7-7 7"
                 />
               </svg>
             </NuxtLink>
@@ -402,7 +344,7 @@ viewBox="0 0 24 24"
       :chart-id="chartId"
       :filters="filters"
       :range="selectedChartRange"
-      :chart-container-ref="chartContainerRef"
+      :chart-container-ref="getChartContainerElement()"
       @close="showEmbedModal = false"
     />
 
@@ -418,7 +360,7 @@ viewBox="0 0 24 24"
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent, watch } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import type { PulseFilters, AmountBucket, TimeRange } from '~/types/pulse'
 import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
@@ -426,7 +368,6 @@ import { getPulseOverview } from '~/lib/pulseApi'
 import { usePulseStore } from '~/stores/pulse'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { useEntitlements } from '~/composables/useEntitlements'
-import { useExports } from '~/composables/useExports'
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 import { getCorridorUrl } from '~/utils/country-slugs'
@@ -449,8 +390,7 @@ const route = useRoute()
 const store = usePulseStore()
 const { isAuthenticated } = useAuth()
 const saveAlertModal = useSaveAlertModal()
-const { pulseLevel, pulseEmbedsEnabled, indicesExportsEnabled } = useEntitlements()
-const exportsApi = useExports()
+const { pulseLevel, pulseEmbedsEnabled } = useEntitlements()
 
 const chartId = computed(() => route.params.chartId as string)
 
@@ -498,18 +438,11 @@ const isPro = computed(() => pulseLevel.value === 'full')
 const lastUpdated = ref<string>('')
 const showEmbedModal = ref(false)
 const authModalOpen = ref(false)
-const chartContainerRef = ref<HTMLElement | null>(null)
+const chartContainerRef = ref<HTMLDivElement | null>(null)
 const selectedChartRange = ref<TimeRange>(resolveInitialChartRange())
-const isExporting = ref(false)
-const exportStatusMessage = ref<string | null>(null)
-const exportErrorMessage = ref<string | null>(null)
-let exportPollTimer: ReturnType<typeof setInterval> | null = null
 
-const CHART_RANGE_TO_WINDOW_DAYS: Record<TimeRange, number> = {
-  '7d': 7,
-  '30d': 30,
-  '90d': 90,
-  '365d': 365,
+function getChartContainerElement(): HTMLElement | null {
+  return chartContainerRef.value instanceof HTMLElement ? chartContainerRef.value : null
 }
 
 const CHART_RANGE_LABELS: Record<TimeRange, string> = {
@@ -525,31 +458,6 @@ watch(
     selectedChartRange.value = resolveInitialChartRange()
   },
 )
-
-const exportCorridorId = computed(() => {
-  return filters.value.corridorId || store.corridor?.corridorId || ''
-})
-
-const toIsoDate = (value: Date) => value.toISOString().split('T')[0]
-
-const buildExportDateWindow = () => {
-  const requestedDays = CHART_RANGE_TO_WINDOW_DAYS[selectedChartRange.value] ?? 30
-  const windowDays = Math.max(1, requestedDays)
-  const dateToDate = new Date()
-  const dateFromDate = new Date()
-  dateFromDate.setDate(dateFromDate.getDate() - (windowDays - 1))
-  return {
-    dateFrom: toIsoDate(dateFromDate),
-    dateTo: toIsoDate(dateToDate),
-  }
-}
-
-const clearExportPolling = () => {
-  if (exportPollTimer) {
-    clearInterval(exportPollTimer)
-    exportPollTimer = null
-  }
-}
 
 const relatedCharts = computed(() => getRelatedCharts(chartId.value, 3))
 
@@ -636,123 +544,6 @@ const actionableInsight = computed(() => {
   )
 })
 
-const extractApiErrorCode = (error: unknown): string => {
-  const candidate = error as { data?: { error?: unknown } }
-  return typeof candidate?.data?.error === 'string' ? candidate.data.error : ''
-}
-
-const extractApiErrorMessage = (error: unknown): string | null => {
-  const candidate = error as { data?: { message?: unknown }, message?: unknown }
-  if (typeof candidate?.data?.message === 'string' && candidate.data.message.trim().length > 0) {
-    return candidate.data.message
-  }
-  if (
-    typeof candidate?.message === 'string'
-    && candidate.message.trim().length > 0
-    && candidate.message !== 'fetch failed'
-  ) {
-    return candidate.message
-  }
-  return null
-}
-
-function resolveIndicesExportError(error: unknown, fallback: string): string {
-  switch (extractApiErrorCode(error)) {
-    case 'indices_export_enterprise_only':
-    case 'enterprise_required':
-    case 'forbidden':
-      return 'Pulse chart exports are available on Enterprise only.'
-    case 'plan_inactive':
-      return 'Your paid plan is inactive. Reactivate billing to export Pulse charts.'
-    case 'export_limit_reached':
-      return (
-        extractApiErrorMessage(error)
-        || 'Your current plan export queue is full. Try again after existing jobs finish.'
-      )
-    default:
-      return extractApiErrorMessage(error) || fallback
-  }
-}
-
-const triggerExportDownload = (url: string) => {
-  if (import.meta.client) {
-    window.open(url, '_blank', 'noopener')
-  }
-}
-
-const pollExportStatus = async (jobId: string) => {
-  clearExportPolling()
-  exportPollTimer = setInterval(async () => {
-    try {
-      const status = await exportsApi.getExportStatus(jobId)
-      if (status.job.status === 'failed') {
-        exportErrorMessage.value = status.job.error || 'Export failed. Please try again.'
-        isExporting.value = false
-        clearExportPolling()
-        return
-      }
-      if (status.job.status === 'done') {
-        const download = await exportsApi.getExportDownloadUrl(jobId)
-        exportStatusMessage.value = 'Export ready. Downloading...'
-        triggerExportDownload(download.url)
-        isExporting.value = false
-        clearExportPolling()
-        return
-      }
-      exportStatusMessage.value = 'Export in progress...'
-    }
- catch (error: any) {
-      exportErrorMessage.value = resolveIndicesExportError(error, 'Failed to check export status.')
-      isExporting.value = false
-      clearExportPolling()
-    }
-  }, 2000)
-}
-
-const startIndicesExport = async (format: 'csv' | 'pdf') => {
-  if (isExporting.value) return
-
-  if (!exportCorridorId.value) {
-    exportErrorMessage.value
-      = 'Export is not available for this corridor. Select a corridor from the filter first.'
-    return
-  }
-
-  if (!indicesExportsEnabled.value) {
-    exportErrorMessage.value = 'Pulse chart exports are available on Enterprise only.'
-    return
-  }
-
-  exportErrorMessage.value = null
-  exportStatusMessage.value = null
-  isExporting.value = true
-
-  const { dateFrom, dateTo } = buildExportDateWindow()
-  try {
-    const response = await exportsApi.createExport({
-      dataType: 'indices',
-      format,
-      dateFrom,
-      dateTo,
-      corridorIds: [exportCorridorId.value],
-    })
-    exportStatusMessage.value = 'Export queued. We will start processing shortly.'
-    void pollExportStatus(response.job.id)
-  }
- catch (error: any) {
-    exportErrorMessage.value = resolveIndicesExportError(error, 'Failed to start export.')
-    isExporting.value = false
-  }
-}
-
-function handleExportCSV() {
-  void startIndicesExport('csv')
-}
-
-function handleExportPDF() {
-  void startIndicesExport('pdf')
-}
-
 function handleSetAlert() {
   if (!isAuthenticated.value) {
     authModalOpen.value = true
@@ -777,10 +568,6 @@ onMounted(async () => {
     }
   }
   await store.initFromRoute(route.query as Record<string, string>)
-})
-
-onBeforeUnmount(() => {
-  clearExportPolling()
 })
 
 const chartSeoTitle = computed(() =>

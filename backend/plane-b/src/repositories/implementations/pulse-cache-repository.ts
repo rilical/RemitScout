@@ -268,6 +268,54 @@ const buildChartSeries = (
     })),
   })
 
+  const winnerCandidatesByDay = new Map<number, Array<{ provider: string; value: number }>>()
+  for (const row of providerDaily) {
+    const timestamp = new Date(row.bucket as Date).getTime()
+    const provider = String(row.provider_name || row.provider_id || 'Unknown')
+    const value = toNumber(row.avg_receive, 0)
+    if (!winnerCandidatesByDay.has(timestamp)) {
+      winnerCandidatesByDay.set(timestamp, [])
+    }
+    winnerCandidatesByDay.get(timestamp)?.push({ provider, value })
+  }
+
+  const winnerHistory = Array.from(winnerCandidatesByDay.entries())
+    .sort((left, right) => left[0] - right[0])
+    .map(([timestamp, providers]) => {
+      const sorted = [...providers].sort((left, right) => right.value - left.value)
+      const winner = sorted[0]
+      const runnerUp = sorted[1]
+      if (!winner) return null
+
+      const edgeAmount = runnerUp ? Math.max(0, winner.value - runnerUp.value) : 0
+      const edgeBps = winner.value > 0
+        ? Number(((edgeAmount / winner.value) * 10000).toFixed(1))
+        : 0
+
+      return {
+        timestamp,
+        winner: winner.provider,
+        winnerValue: winner.value,
+        runnerUp: runnerUp?.provider ?? null,
+        edgeAmount,
+        edgeBps,
+      }
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+
+  const providerWins = new Map<string, number>()
+  for (const entry of winnerHistory) {
+    providerWins.set(entry.winner, (providerWins.get(entry.winner) ?? 0) + 1)
+  }
+
+  const providerOrder = Array.from(
+    new Set(providerDaily.map((row) => String(row.provider_name || row.provider_id || 'Unknown'))),
+  ).sort((left, right) => {
+    const winDiff = (providerWins.get(right) ?? 0) - (providerWins.get(left) ?? 0)
+    if (winDiff !== 0) return winDiff
+    return left.localeCompare(right)
+  })
+
   switch (chartId) {
     case 'all-in-cost': {
       const values = dailyMap.map((row) => {
@@ -316,56 +364,62 @@ const buildChartSeries = (
       break
     }
     case 'provider-winner': {
-      const grouped: Record<string, Array<{ t: number; v: number }>> = {}
-      for (const row of providerDaily) {
-        const provider = String(row.provider_name || row.provider_id || 'Unknown')
-        if (!grouped[provider]) grouped[provider] = []
-        grouped[provider].push({
-          t: new Date(row.bucket as Date).getTime(),
-          v: toNumber(row.avg_receive, 0),
-        })
-      }
-      for (const [provider, points] of Object.entries(grouped)) {
-        const sorted = points.sort((a, b) => a.t - b.t)
+      for (const provider of providerOrder) {
         series.push({
           id: provider.toLowerCase(),
           label: provider,
           color: getProviderColor(provider),
-          points: sorted.map((point) => ({ ...point })),
+          points: winnerHistory.map((entry) => ({
+            t: entry.timestamp,
+            v: entry.winner === provider ? 1 : 0,
+            ...(entry.winner === provider
+              ? {
+                  label: [
+                    `Winner: ${entry.winner}`,
+                    `Recipient gets: ${entry.winnerValue.toFixed(2)}`,
+                    entry.runnerUp
+                      ? `Edge vs #2 (${entry.runnerUp}): ${entry.edgeAmount.toFixed(2)} (${entry.edgeBps.toFixed(1)} bps)`
+                      : 'Only tracked provider on this publication',
+                  ].join(' · '),
+                }
+              : {}),
+          })),
         })
       }
       break
     }
     case 'leader-change-frequency': {
-      const winners: Array<{ t: number; provider: string }> = []
-      const byDay = new Map<number, { provider: string; value: number }>()
-      for (const row of providerDaily) {
-        const timestamp = new Date(row.bucket as Date).getTime()
-        const provider = String(row.provider_name || row.provider_id || 'Unknown')
-        const value = toNumber(row.avg_receive, 0)
-        const current = byDay.get(timestamp)
-        if (!current || value > current.value) {
-          byDay.set(timestamp, { provider, value })
-        }
-      }
-      for (const [timestamp, entry] of Array.from(byDay.entries()).sort((a, b) => a[0] - b[0])) {
-        winners.push({ t: timestamp, provider: entry.provider })
-      }
-      let lastProvider: string | null = null
-      const values = winners.map((winner) => {
-        const changed = lastProvider && lastProvider !== winner.provider
-        lastProvider = winner.provider
-        return changed ? 1 : 0
+      series.push({
+        id: 'leader-change',
+        label: 'Leader changes',
+        color: '#2563eb',
+        points: winnerHistory.map((entry, index) => {
+          const previous = winnerHistory[index - 1]
+          const changed = Boolean(previous && previous.winner !== entry.winner)
+          return {
+            t: entry.timestamp,
+            v: changed ? 1 : 0,
+            label: changed
+              ? `Leader flipped from ${previous?.winner ?? '—'} to ${entry.winner}`
+              : `Leader held steady: ${entry.winner}`,
+          }
+        }),
       })
-      series.push(buildLine('leader-change', 'Leader changes', '#2563eb', values))
       break
     }
     case 'leader-edge': {
-      const edges = dailyMap.map((row) => {
-        if (!row.best_rate || !row.worst_rate) return 0
-        return Math.max(0, ((row.best_rate - row.worst_rate) / row.best_rate) * 10000)
+      series.push({
+        id: 'leader-edge',
+        label: 'Leader edge',
+        color: '#2563eb',
+        points: winnerHistory.map((entry) => ({
+          t: entry.timestamp,
+          v: entry.edgeBps,
+          label: entry.runnerUp
+            ? `${entry.winner} led ${entry.runnerUp} by ${entry.edgeBps.toFixed(1)} bps`
+            : `${entry.winner} was the only contributing provider`,
+        })),
       })
-      series.push(buildLine('leader-edge', 'Leader edge', '#2563eb', edges))
       break
     }
     case 'pass-through-latency': {
@@ -890,9 +944,6 @@ export class PulseCacheRepository implements IPulseCacheRepository {
       const methodCoverage = methodCoverageRows.map((row) => ({
         provider: String(row.provider_name || row.provider_id || 'Unknown'),
         bank: Boolean(row.bank),
-        cash: Boolean(row.cash),
-        wallet: Boolean(row.wallet),
-        card: Boolean(row.card),
         speed: formatSpeed(
           row.min_delivery !== null ? toNumber(row.min_delivery, 0) : null,
           row.max_delivery !== null ? toNumber(row.max_delivery, 0) : null,
@@ -928,31 +979,16 @@ export class PulseCacheRepository implements IPulseCacheRepository {
       const providerHeatmapDays: Array<{ date: string; timestamp: number; winner: string; winnerColor: string; savings: number }> = []
       const providerWinCounts: Record<string, number> = {}
 
-      const dailyWinnerMap = new Map<number, Array<{ provider: string; value: number }>>()
-      for (const row of providerDaily) {
-        const timestamp = new Date(row.bucket as Date).getTime()
-        const provider = String(row.provider_name || row.provider_id || 'Unknown')
-        const value = toNumber(row.avg_receive, 0)
-        if (!dailyWinnerMap.has(timestamp)) {
-          dailyWinnerMap.set(timestamp, [])
-        }
-        dailyWinnerMap.get(timestamp)?.push({ provider, value })
-      }
-
-      for (const [timestamp, providers] of Array.from(dailyWinnerMap.entries()).sort((a, b) => a[0] - b[0])) {
-        const sorted = providers.sort((a, b) => b.value - a.value)
-        const winner = sorted[0]
-        const runnerUp = sorted[1]
-        if (!winner) continue
-        const date = new Date(timestamp).toISOString().slice(0, 10)
+      for (const entry of winnerHistory) {
+        const date = new Date(entry.timestamp).toISOString().slice(0, 10)
         providerHeatmapDays.push({
           date,
-          timestamp,
-          winner: winner.provider,
-          winnerColor: getProviderColor(winner.provider),
-          savings: runnerUp ? Math.max(0, winner.value - runnerUp.value) : 0,
+          timestamp: entry.timestamp,
+          winner: entry.winner,
+          winnerColor: getProviderColor(entry.winner),
+          savings: entry.edgeAmount,
         })
-        providerWinCounts[winner.provider] = (providerWinCounts[winner.provider] || 0) + 1
+        providerWinCounts[entry.winner] = (providerWinCounts[entry.winner] || 0) + 1
       }
 
       const providerStats: Record<string, { wins: number; percentage: number }> = {}

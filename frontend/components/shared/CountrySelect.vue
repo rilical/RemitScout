@@ -12,7 +12,7 @@ class="relative"
         class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
         :class="selectClass"
         :placeholder="placeholder"
-        :aria-label="props.label"
+        :aria-label="ariaLabel"
         role="combobox"
         aria-autocomplete="list"
         autocomplete="off"
@@ -99,7 +99,12 @@ to="body"
           @touchstart.prevent="selectCountry(country)"
         >
           <span class="inline-flex items-center gap-2">
-            <span class="text-lg leading-none">{{ country.flag }}</span>
+            <span
+              v-if="props.showFlags"
+              class="text-lg leading-none"
+            >
+              {{ country.flag }}
+            </span>
             <span>{{ country.name }}</span>
           </span>
         </button>
@@ -126,7 +131,7 @@ import { COUNTRIES, SUPPORTED_COUNTRY_CODES } from '~/utils/countries-currencies
 
 interface Props {
   modelValue: string
-  label: string
+  label?: string
   id?: string
   placeholder?: string
   disabled?: boolean
@@ -136,6 +141,8 @@ interface Props {
   theme?: 'light' | 'dark'
   excludeCountry?: string
   supportedOnly?: boolean
+  allowedCodes?: string[]
+  showFlags?: boolean
 }
 
 interface CountryOption {
@@ -149,6 +156,7 @@ interface CountryOption {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  label: '',
   id: undefined,
   placeholder: 'Select country',
   disabled: false,
@@ -158,7 +166,11 @@ const props = withDefaults(defineProps<Props>(), {
   theme: 'light',
   excludeCountry: undefined,
   supportedOnly: false,
+  allowedCodes: undefined,
+  showFlags: true,
 })
+
+const ariaLabel = computed(() => props.label || props.placeholder || 'Select country')
 
 const fallbackId = useId()
 const resolvedId = computed(() => props.id ?? `country-select-${fallbackId}`)
@@ -170,19 +182,25 @@ const emit = defineEmits<{
   'country-selected': [countryCode: string, currency: string]
 }>()
 
-const sourceCountries = props.supportedOnly
-  ? COUNTRIES.filter(c => SUPPORTED_COUNTRY_CODES.has(c.code))
-  : COUNTRIES
+const sourceCountries = computed(() =>
+  props.allowedCodes?.length
+    ? COUNTRIES.filter(country => props.allowedCodes?.includes(country.code))
+    : props.supportedOnly
+      ? COUNTRIES.filter(country => SUPPORTED_COUNTRY_CODES.has(country.code))
+      : COUNTRIES,
+)
 
-const allCountries: CountryOption[] = sourceCountries.map(country => ({
-  value: country.code,
-  label: country.name,
-  flag: country.flag,
-  name: country.name,
-  code: country.code,
-  searchText: `${country.name.toLowerCase()} ${country.code.toLowerCase()}`,
-  currency: country.currency,
-}))
+const allCountries = computed<CountryOption[]>(() =>
+  sourceCountries.value.map(country => ({
+    value: country.code,
+    label: country.name,
+    flag: country.flag,
+    name: country.name,
+    code: country.code,
+    searchText: `${country.name.toLowerCase()} ${country.code.toLowerCase()}`,
+    currency: country.currency,
+  })),
+)
 
 const rootRef = ref<HTMLElement | null>(null)
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -202,11 +220,11 @@ const activeDescendant = computed(() => {
 
 const getOptionId = (value: string) => `${resolvedId.value}-option-${value.toLowerCase()}`
 
-const getSelectedCountry = () => allCountries.find(country => country.value === props.modelValue)
+const getSelectedCountry = () => allCountries.value.find(country => country.value === props.modelValue)
 
 const getAvailableCountries = () => {
-  if (!props.excludeCountry) return allCountries
-  return allCountries.filter(country => country.value !== props.excludeCountry)
+  if (!props.excludeCountry) return allCountries.value
+  return allCountries.value.filter(country => country.value !== props.excludeCountry)
 }
 
 const restoreSelectedValue = () => {

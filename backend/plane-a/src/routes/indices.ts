@@ -44,12 +44,16 @@ const indicesApiKeyRouteOptions = apiAccessGuard
 const METHOD_PROFILES = ['standard_bank', 'standard_card', 'cash_pickup', 'mobile_wallet', 'airtime_topup', 'card_delivery', 'home_delivery'] as const
 
 const querySchema = z.object({
-  corridor_id: z.string().min(3),
+  corridor_id: z.string().min(3).optional(),
+  corridor: z.string().min(3).optional(),
   amount_bucket: z.coerce.number().int().positive().optional(),
   method_profile: z.enum(METHOD_PROFILES).optional(),
   days: z.coerce.number().int().positive().optional(),
   as_of: z.string().optional(),
   methodology: z.string().optional(),
+}).refine((value) => Boolean(value.corridor_id || value.corridor), {
+  message: 'corridor_id or corridor is required',
+  path: ['corridor_id'],
 })
 
 const embedSnapshotBodySchema = z.object({
@@ -164,6 +168,52 @@ type IndicesLatestResponse = {
   point: IndicesLatestPoint
 }
 
+type IndicesHeadlineMetric = {
+  value: number
+  delta7d: number
+  delta30d: number
+}
+
+type IndicesHeadlineResponse = {
+  corridorId: string
+  amountBucket: number
+  methodProfile: string
+  methodologyVersion: string
+  lastUpdated: string | null
+  teer: IndicesHeadlineMetric & { confidence: 'high' | 'medium' | 'low' }
+  rci: IndicesHeadlineMetric
+  rvi: IndicesHeadlineMetric
+}
+
+type IndicesMethodologyProvider = {
+  providerId: string
+  name: string
+  weight: number
+  quoteCount: number
+  freshness: string
+  suppressed: boolean
+  suppressionReason?: string
+}
+
+type IndicesMethodologyResponse = {
+  corridorId: string
+  amountBucket: number
+  methodProfile: string
+  methodologyVersion: string
+  totalProviders: number
+  contributingProviders: number
+  suppressedProviders: number
+  weightConfidence: number
+  weightWindowDays: number
+  providers: IndicesMethodologyProvider[]
+  consistency: {
+    weightSumOk: boolean
+    contributingCountOk: boolean
+    suppressedCountOk: boolean
+    weightSum: number
+  }
+}
+
 type DataAvailabilityResponse = {
   corridorId: string
   amountBucket: number
@@ -268,6 +318,114 @@ const getCollectionCadenceMinutes = (collectionTier: 'tier_1' | 'tier_2') =>
   Math.round(
     (collectionTier === 'tier_1' ? TIER_1_CADENCE_SECONDS : TIER_2_CADENCE_SECONDS) / 60,
   )
+
+const formatFreshness = (lastCollectedAt: Date | null): string => {
+  if (!lastCollectedAt) return 'n/a'
+  const minutes = Math.max(0, Math.round((Date.now() - lastCollectedAt.getTime()) / 60_000))
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.round(minutes / 60)
+  if (hours < 48) return `${hours}h`
+  return `${Math.round(hours / 24)}d`
+}
+
+const resolveConfidenceLabel = (value: number | null | undefined): 'high' | 'medium' | 'low' => {
+  if ((value ?? 0) >= 0.8) return 'high'
+  if ((value ?? 0) >= 0.5) return 'medium'
+  return 'low'
+}
+
+const normalizeIndicesCorridorId = (corridorId: string): string | null => {
+  const parsed = parseCorridorId(corridorId)
+  if (!parsed) return null
+  return formatCorridorId({
+    sourceCountry: parsed.sourceCountry.toUpperCase(),
+    destCountry: parsed.destCountry.toUpperCase(),
+    sourceCurrency: parsed.sourceCurrency.toUpperCase(),
+    destCurrency: parsed.destCurrency.toUpperCase(),
+  })
+}
+
+const pickClosestPoint = (
+  rows: Array<{ date: Date | string; teer_rate: number | null; rci_ratio: number | null; rvi_bps: number | null }>,
+  latestDate: Date,
+  daysBack: number,
+) => {
+  const target = new Date(latestDate)
+  target.setUTCDate(target.getUTCDate() - daysBack)
+  const targetMs = target.getTime()
+  const datedRows = rows
+    .map((row) => ({
+      row,
+      timestamp: row.date instanceof Date ? row.date.getTime() : new Date(row.date).getTime(),
+    }))
+    .filter((entry) => Number.isFinite(entry.timestamp) && entry.timestamp <= latestDate.getTime())
+    .sort((left, right) => left.timestamp - right.timestamp)
+
+  return [...datedRows]
+    .reverse()
+    .find((entry) => entry.timestamp <= targetMs)?.row
+    ?? datedRows[0]?.row
+    ?? null
+}
+
+const resolveRequestedCorridor = async (
+  corridorResolver: {
+    resolveCorridorId(input: {
+      sourceCountry?: string | null
+      destCountry?: string | null
+      sourceCurrency?: string | null
+      destCurrency?: string | null
+    }): Promise<string | null>
+  },
+  input: { corridor_id?: string; corridor?: string },
+): Promise<string | null> => {
+  if (input.corridor_id) {
+    const normalized = normalizeIndicesCorridorId(input.corridor_id)
+    if (!normalized) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_corridor_id',
+          message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)',
+        },
+      })
+    }
+    return normalized
+  }
+
+  const rawCorridor = input.corridor?.trim()
+  if (!rawCorridor) return null
+
+  const normalizedFullId = normalizeIndicesCorridorId(rawCorridor)
+  if (normalizedFullId) return normalizedFullId
+
+  const parts = rawCorridor
+    .split('-')
+    .map((part) => part.trim().toUpperCase())
+    .filter(Boolean)
+
+  if (parts.length === 4) {
+    return await corridorResolver.resolveCorridorId({
+      sourceCountry: parts[0],
+      destCountry: parts[1],
+      sourceCurrency: parts[2],
+      destCurrency: parts[3],
+    })
+  }
+
+  if (parts.length === 2) {
+    return await corridorResolver.resolveCorridorId({
+      sourceCurrency: parts[0],
+      destCurrency: parts[1],
+    })
+  }
+
+  throw new ValidationError('Invalid request', {
+    details: {
+      error: 'invalid_corridor',
+      message: 'Corridor must be a corridor_id (US-MX-USD-MXN) or a slug pair (USD-MXN).',
+    },
+  })
+}
 
 export const indicesRoutes = async (app: FastifyInstance) => {
   const { pool: planeAPool, repositories } = app.container
@@ -420,17 +578,18 @@ export const indicesRoutes = async (app: FastifyInstance) => {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const corridorId = parsed.data.corridor_id
-    const corridorParts = parseCorridorId(corridorId)
+    const normalizedCorridorId = await resolveRequestedCorridor(goldIndicesRepository, parsed.data)
+    if (!normalizedCorridorId) {
+      reply.code(404)
+      return {
+        error: 'corridor_not_tracked',
+        message: 'Requested corridor is not currently tracked.',
+      }
+    }
+    const corridorParts = parseCorridorId(normalizedCorridorId)
     if (!corridorParts) {
             throw new ValidationError('Invalid request', { details: { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' } })
     }
-    const normalizedCorridorId = formatCorridorId({
-      sourceCountry: corridorParts.sourceCountry.toUpperCase(),
-      destCountry: corridorParts.destCountry.toUpperCase(),
-      sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
-      destCurrency: corridorParts.destCurrency.toUpperCase(),
-    })
     const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
     const methodProfile = parsed.data.method_profile ?? 'standard_bank'
     const requestedWindowDays = Math.min(Math.max(parsed.data.days ?? 30, 1), 365)
@@ -643,17 +802,18 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const corridorId = parsed.data.corridor_id
-    const corridorParts = parseCorridorId(corridorId)
+    const normalizedCorridorId = await resolveRequestedCorridor(goldIndicesRepository, parsed.data)
+    if (!normalizedCorridorId) {
+      reply.code(404)
+      return {
+        error: 'corridor_not_tracked',
+        message: 'Requested corridor is not currently tracked.',
+      }
+    }
+    const corridorParts = parseCorridorId(normalizedCorridorId)
     if (!corridorParts) {
       throw new ValidationError('Invalid request', { details: { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' } })
     }
-    const normalizedCorridorId = formatCorridorId({
-      sourceCountry: corridorParts.sourceCountry.toUpperCase(),
-      destCountry: corridorParts.destCountry.toUpperCase(),
-      sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
-      destCurrency: corridorParts.destCurrency.toUpperCase(),
-    })
     const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
     const methodProfile = parsed.data.method_profile ?? 'standard_bank'
     const requestedWindowDays = Math.min(Math.max(parsed.data.days ?? 30, 1), 30) // Clamped to 30 days max for public access
@@ -974,17 +1134,18 @@ export const indicesRoutes = async (app: FastifyInstance) => {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const corridorId = parsed.data.corridor_id
-    const corridorParts = parseCorridorId(corridorId)
+    const normalizedCorridorId = await resolveRequestedCorridor(goldIndicesRepository, parsed.data)
+    if (!normalizedCorridorId) {
+      reply.code(404)
+      return {
+        error: 'corridor_not_tracked',
+        message: 'Requested corridor is not currently tracked.',
+      }
+    }
+    const corridorParts = parseCorridorId(normalizedCorridorId)
     if (!corridorParts) {
             throw new ValidationError('Invalid request', { details: { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' } })
     }
-    const normalizedCorridorId = formatCorridorId({
-      sourceCountry: corridorParts.sourceCountry.toUpperCase(),
-      destCountry: corridorParts.destCountry.toUpperCase(),
-      sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
-      destCurrency: corridorParts.destCurrency.toUpperCase(),
-    })
     const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
     const methodProfile = parsed.data.method_profile ?? 'standard_bank'
 
@@ -1094,6 +1255,182 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       })
       reply.code(500)
       return { error: 'internal_error', message: 'Failed to retrieve latest index data.' }
+    }
+  })
+
+  app.get('/indices/headline', indicesApiKeyRouteOptions, async (request, reply) => {
+    const parsed = querySchema.safeParse(request.query)
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+    }
+
+    const normalizedCorridorId = await resolveRequestedCorridor(goldIndicesRepository, parsed.data)
+    if (!normalizedCorridorId) {
+      reply.code(404)
+      return {
+        error: 'corridor_not_tracked',
+        message: 'Requested corridor is not currently tracked.',
+      }
+    }
+
+    const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
+    const methodProfile = parsed.data.method_profile ?? 'standard_bank'
+
+    try {
+      const latest = await goldIndicesRepository.getIndicesLatest({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+      })
+
+      if (!latest) {
+        reply.code(404)
+        return {
+          error: 'no_data',
+          message: `No headline data available for ${normalizedCorridorId}.`,
+        }
+      }
+
+      const endDate = latest.date instanceof Date ? latest.date : new Date(latest.date)
+      const startDate = new Date(endDate)
+      startDate.setUTCDate(startDate.getUTCDate() - 45)
+
+      const rows = await goldIndicesRepository.getIndicesSeries({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        startDate,
+        endDate,
+      })
+
+      const displayableRows = rows.filter((row) => !row.suppression_flag || (row.provider_count ?? 0) >= 2)
+      const latestDisplayable = [...displayableRows].reverse()[0] ?? latest
+      const latestDate = latestDisplayable.date instanceof Date ? latestDisplayable.date : new Date(latestDisplayable.date)
+      const point7 = pickClosestPoint(rows, latestDate, 7) ?? latestDisplayable
+      const point30 = pickClosestPoint(rows, latestDate, 30) ?? latestDisplayable
+
+      const response: IndicesHeadlineResponse = {
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        methodologyVersion: latestDisplayable.methodology_version || INDICES_METHODOLOGY_VERSION,
+        lastUpdated: latestDisplayable.created_at ? latestDisplayable.created_at.toISOString() : null,
+        teer: {
+          value: latestDisplayable.teer_rate ?? 0,
+          delta7d: (latestDisplayable.teer_rate ?? 0) - (point7?.teer_rate ?? 0),
+          delta30d: (latestDisplayable.teer_rate ?? 0) - (point30?.teer_rate ?? 0),
+          confidence: resolveConfidenceLabel(latestDisplayable.weight_confidence),
+        },
+        rci: {
+          value: latestDisplayable.rci_ratio ?? 0,
+          delta7d: (latestDisplayable.rci_ratio ?? 0) - (point7?.rci_ratio ?? 0),
+          delta30d: (latestDisplayable.rci_ratio ?? 0) - (point30?.rci_ratio ?? 0),
+        },
+        rvi: {
+          value: latestDisplayable.rvi_bps ?? 0,
+          delta7d: (latestDisplayable.rvi_bps ?? 0) - (point7?.rvi_bps ?? 0),
+          delta30d: (latestDisplayable.rvi_bps ?? 0) - (point30?.rvi_bps ?? 0),
+        },
+      }
+
+      return response
+    } catch (error) {
+      logger.error('indices_headline_failed', {
+        corridor_id: normalizedCorridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error', message: 'Failed to retrieve headline index data.' }
+    }
+  })
+
+  app.get('/indices/methodology', indicesApiKeyRouteOptions, async (request, reply) => {
+    const parsed = querySchema.safeParse(request.query)
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+    }
+
+    const normalizedCorridorId = await resolveRequestedCorridor(goldIndicesRepository, parsed.data)
+    if (!normalizedCorridorId) {
+      reply.code(404)
+      return {
+        error: 'corridor_not_tracked',
+        message: 'Requested corridor is not currently tracked.',
+      }
+    }
+
+    const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
+    const methodProfile = parsed.data.method_profile ?? 'standard_bank'
+
+    try {
+      const latest = await goldIndicesRepository.getIndicesLatest({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+      })
+
+      if (!latest) {
+        reply.code(404)
+        return {
+          error: 'no_data',
+          message: `No methodology data available for ${normalizedCorridorId}.`,
+        }
+      }
+
+      const methodologyVersion = latest.methodology_version || INDICES_METHODOLOGY_VERSION
+      const modelVersion = latest.weighting_model || DEFAULT_WEIGHT_MODEL
+      const rows = await goldIndicesRepository.getMethodologyRows({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        modelVersion,
+      })
+
+      const providers = rows.map((row) => {
+        const suppressed = !(row.weight > 0 && (row.quote_count ?? 0) > 0)
+        return {
+          providerId: row.provider_id,
+          name: row.provider_name,
+          weight: row.weight,
+          quoteCount: row.quote_count ?? 0,
+          freshness: formatFreshness(row.last_collected_at),
+          suppressed,
+          ...(suppressed ? { suppressionReason: 'No usable weight in the latest published snapshot' } : {}),
+        } satisfies IndicesMethodologyProvider
+      })
+
+      const totalProviders = providers.length
+      const contributingProviders = latest.provider_count ?? providers.filter((provider) => !provider.suppressed).length
+      const suppressedProviders = providers.filter((provider) => provider.suppressed).length
+      const weightSum = providers.reduce((total, provider) => total + provider.weight, 0)
+
+      const response: IndicesMethodologyResponse = {
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        methodologyVersion,
+        totalProviders,
+        contributingProviders,
+        suppressedProviders,
+        weightConfidence: latest.weight_confidence ?? 0,
+        weightWindowDays: latest.weight_window_days ?? 0,
+        providers,
+        consistency: {
+          weightSumOk: Math.abs(weightSum - 1) <= 0.03,
+          contributingCountOk: providers.filter((provider) => !provider.suppressed).length === contributingProviders,
+          suppressedCountOk: suppressedProviders === Math.max(0, totalProviders - contributingProviders),
+          weightSum,
+        },
+      }
+
+      return response
+    } catch (error) {
+      logger.error('indices_methodology_failed', {
+        corridor_id: normalizedCorridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error', message: 'Failed to retrieve methodology data.' }
     }
   })
 

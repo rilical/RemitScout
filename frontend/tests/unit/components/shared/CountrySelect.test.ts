@@ -151,4 +151,32 @@ describe('CountrySelect', () => {
 
     wrapper.unmount()
   })
+
+  it('can hide flag emojis in the dropdown list', async () => {
+    const wrapper = mount(CountrySelect, {
+      attachTo: document.body,
+      props: {
+        id: 'country-select-no-flags',
+        modelValue: 'US',
+        label: 'Sending from',
+        showFlags: false,
+        allowedCodes: ['US', 'CA'],
+      },
+    })
+
+    const input = wrapper.get('input')
+
+    await input.trigger('focus')
+    await flushPromises()
+
+    const options = Array.from(document.body.querySelectorAll('[role="option"]'))
+      .map(option => option.textContent?.trim())
+
+    expect(options).toContain('United States')
+    expect(options).toContain('Canada')
+    expect(document.body.textContent).not.toContain('🇺🇸')
+    expect(document.body.textContent).not.toContain('🇨🇦')
+
+    wrapper.unmount()
+  })
 })
