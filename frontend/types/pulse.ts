@@ -256,3 +256,7 @@ export type PulseScreenerResponse = {
   updatedAt: string | null
   rows: PulseScreenerRow[]
 }
+
+export type { PulseTab, PulseLevel, PulseTabDef } from '~/lib/pulseTabs'
+export type PulseDensity = 'light' | 'enterprise'
+export type PulseEmptyReason = 'no-data' | 'no-corridor' | 'suppressed' | 'warming-up' | 'unauthorized' | 'error'
