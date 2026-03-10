@@ -3,6 +3,7 @@ import { computed, useId } from 'vue'
 
 type StateVariant = 'terminal' | 'consumer'
 type StateMode = 'card' | 'inline' | 'page'
+type StateReason = 'no-data' | 'no-corridor' | 'suppressed' | 'warming-up' | 'unauthorized' | 'error' | 'loading'
 
 const props = withDefaults(
   defineProps<{
@@ -13,6 +14,12 @@ const props = withDefaults(
     details?: string
     variant?: StateVariant
     mode?: StateMode
+    corridorLabel?: string
+    reason?: StateReason
+    daysAvailable?: number
+    providerCount?: number
+    ctaLabel?: string
+    ctaTo?: string
   }>(),
   {
     title: undefined,
@@ -21,14 +28,60 @@ const props = withDefaults(
     details: undefined,
     variant: 'consumer',
     mode: 'card',
+    corridorLabel: undefined,
+    reason: undefined,
+    daysAvailable: undefined,
+    providerCount: undefined,
+    ctaLabel: undefined,
+    ctaTo: undefined,
   },
 )
 
 const titleId = useId()
 const descriptionId = useId()
 
-const hasTitle = computed(() => Boolean(props.title))
-const description = computed(() => props.description ?? props.message)
+const reasonTitle = computed<string | undefined>(() => {
+  if (!props.reason) return undefined
+  switch (props.reason) {
+    case 'no-data': return 'Data pending'
+    case 'no-corridor': return 'Select a corridor'
+    case 'suppressed': return 'Insufficient coverage'
+    case 'warming-up': return 'Warming up'
+    case 'unauthorized': return 'Upgrade required'
+    case 'error': return 'Unable to load'
+    case 'loading': return 'Loading'
+    default: return undefined
+  }
+})
+
+const reasonDescription = computed<string | undefined>(() => {
+  if (!props.reason) return undefined
+  const corridor = props.corridorLabel ?? 'this corridor'
+  switch (props.reason) {
+    case 'no-data':
+      return `We're collecting pricing data for ${corridor}. Check back in a few hours.`
+    case 'no-corridor':
+      return 'Choose a corridor above to see market intelligence data.'
+    case 'suppressed':
+      return `Only ${props.providerCount ?? 0} provider(s) available for ${corridor}. We need at least 2 for reliable data.`
+    case 'warming-up':
+      return `${props.daysAvailable ?? 0} day(s) of data collected. Full analytics require 7+ days of history.`
+    case 'unauthorized':
+      return 'This feature requires a Plus or Enterprise subscription.'
+    case 'error':
+      return "We couldn't load this data. Please try refreshing."
+    case 'loading':
+      return 'Loading data, please wait.'
+    default:
+      return undefined
+  }
+})
+
+const resolvedTitle = computed(() => props.title ?? reasonTitle.value)
+const resolvedDescription = computed(() => props.description ?? props.message ?? reasonDescription.value)
+
+const hasTitle = computed(() => Boolean(resolvedTitle.value))
+const description = computed(() => resolvedDescription.value)
 const hasDescription = computed(() => Boolean(description.value || props.details))
 
 const modeClass = computed(() => {
@@ -72,7 +125,7 @@ const contentWrapperClass = computed(() => {
           class="text-body-sm font-semibold"
           :class="props.variant === 'terminal' ? 'text-white' : 'text-rs-fg'"
         >
-          {{ props.title }}
+          {{ resolvedTitle }}
         </h3>
         <p
           v-if="description"
@@ -90,6 +143,19 @@ const contentWrapperClass = computed(() => {
         >
           {{ props.details }}
         </p>
+
+        <NuxtLink
+          v-if="ctaLabel && ctaTo"
+          :to="ctaTo"
+          class="mt-3 inline-flex items-center rounded-lg px-3 py-1.5 text-body-sm font-medium transition-colors"
+          :class="
+            props.variant === 'terminal'
+              ? 'bg-neutral-700 text-white hover:bg-neutral-600'
+              : 'bg-neutral-900 text-white hover:bg-neutral-700'
+          "
+        >
+          {{ ctaLabel }}
+        </NuxtLink>
 
         <div
           v-if="$slots.actions"
