@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { CorridorOption, PulseFilters, TimeRange } from '~/types/pulse'
+import type { PulseTab } from '~/lib/pulseTabs'
 
 export type PulseTimeframe = '24H' | '7D' | '30D' | '1Y' | 'MAX'
 export type PulseViewMode = 'sender' | 'analyst'
@@ -23,6 +24,7 @@ export interface PulseState {
   amount: number
   lastUpdated: string
   isLoading: boolean
+  activeTab: PulseTab
 }
 
 export const usePulseStore = defineStore('pulse', {
@@ -33,6 +35,7 @@ export const usePulseStore = defineStore('pulse', {
     amount: 500,
     lastUpdated: '',
     isLoading: false,
+    activeTab: 'snapshot',
   }),
 
   getters: {
@@ -131,6 +134,10 @@ export const usePulseStore = defineStore('pulse', {
 
     setLastUpdated(iso: string) {
       this.lastUpdated = iso
+    },
+
+    setActiveTab(tab: PulseTab) {
+      this.activeTab = tab
     },
 
     async initFromRoute(query: Record<string, string | undefined>) {
