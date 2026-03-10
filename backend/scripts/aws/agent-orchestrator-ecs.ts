@@ -26,12 +26,13 @@ export const registerBuiltInHandlers = (
   orchestrator: { registerHandler(queueName: string, handler: JobHandler): void },
   handlers: {
     parser: JobHandler
+    patchPipeline?: JobHandler
     contractTest: JobHandler
     stressResponse: JobHandler
     repairFallback: JobHandler
   },
 ): void => {
-  orchestrator.registerHandler('agent-patch-propose', handlers.parser)
+  orchestrator.registerHandler('agent-patch-propose', handlers.patchPipeline ?? handlers.parser)
   orchestrator.registerHandler('agent-contract-test', handlers.contractTest)
   orchestrator.registerHandler('agent-stress-respond', handlers.stressResponse)
   orchestrator.registerHandler('agent-repair', handlers.repairFallback)
@@ -145,6 +146,7 @@ export const handler = async (): Promise<number> => {
   const { startHealthServer } = await import('../../shared/health-server')
   const { AgentOrchestrator } = await import('../../plane-b/src/agents/orchestrator')
   const { ParserHandler } = await import('../../plane-b/src/handlers/parser')
+  const { PatchPipelineHandler } = await import('../../plane-b/src/handlers/patch-pipeline')
   const { ContractTestHandler } = await import('../../plane-b/src/handlers/contract-test')
   const { StressResponseHandler } = await import('../../plane-b/src/handlers/stress-response')
   const { RepairFallbackHandler } = await import('../../plane-b/src/handlers/repair-fallback')
@@ -158,6 +160,7 @@ export const handler = async (): Promise<number> => {
 
   registerBuiltInHandlers(orchestrator, {
     parser: new ParserHandler(),
+    patchPipeline: config.agent.patchPipelineEnabled ? new PatchPipelineHandler() : undefined,
     contractTest: new ContractTestHandler(),
     stressResponse: new StressResponseHandler(),
     repairFallback: new RepairFallbackHandler(),

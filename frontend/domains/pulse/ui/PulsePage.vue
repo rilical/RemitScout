@@ -15,7 +15,7 @@ class="text-hero font-bold leading-tight"
 aria-label="Remit-Scout Pulse"
 >
                 <span class="text-white">Remit-Scout</span>
-                <span class="text-brand-600">Pulse</span>
+                <span class="text-brand-600"> Pulse</span>
               </h1>
               <p class="text-body-lg max-w-xl leading-relaxed text-white/70">
                 Real-time market intelligence for remittance pricing. Track rates, fees, and
@@ -29,20 +29,20 @@ aria-label="Remit-Scout Pulse"
               <div class="flex flex-col gap-3 sm:flex-row">
                 <NuxtLink
                   to="/plus"
-                  class="text-body inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-bold text-white shadow-lg transition-colors hover:bg-brand-500 hover:shadow-xl"
+                  class="text-body inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-bold text-white shadow-lg transition-colors hover:bg-brand-500 hover:shadow-xl focus-ring-dark"
                 >
                   Get Plus
                 </NuxtLink>
                 <NuxtLink
                   to="/sign-in"
-                  class="text-body inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-surface/10 px-6 py-3 font-semibold text-white transition-colors hover:bg-white/10"
+                  class="text-body inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-surface/10 px-6 py-3 font-semibold text-white transition-colors hover:bg-white/10 focus-ring-dark"
                 >
                   Sign in
                 </NuxtLink>
               </div>
               <NuxtLink
                 to="/methodology"
-                class="text-body-sm inline-flex items-center gap-1.5 font-medium text-white/40 transition-colors hover:text-white/70"
+                class="text-body-sm inline-flex items-center gap-1.5 font-medium text-white/40 transition-colors hover:text-white/70 focus-ring-dark"
               >
                 Our methodology
                 <svg
@@ -79,7 +79,7 @@ viewBox="0 0 24 24"
                 />
                 <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
               </span>
-              <span class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500">Illustrative sample — US → Philippines</span>
+              <span class="text-label text-neutral-500">Illustrative sample — US → Philippines</span>
             </div>
             <h2 class="text-h2 font-bold text-neutral-900">Market Snapshot</h2>
             <p class="text-body mt-2 text-neutral-600">
@@ -392,7 +392,7 @@ stop-opacity="0"
       <div class="bg-surface px-page-x pb-12">
         <div class="mx-auto max-w-page">
           <p
-            class="text-body-sm mb-6 text-center font-semibold uppercase tracking-wider text-neutral-500"
+            class="text-label mb-6 text-center text-neutral-500"
           >
             Tracking 25+ providers in real-time
           </p>
@@ -418,7 +418,7 @@ fit
         <div class="mx-auto max-w-page">
           <div class="mb-10 text-center">
             <div
-              class="mb-4 inline-flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-800/60 px-4 py-1.5"
+              class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-1.5"
             >
               <span class="relative flex h-2 w-2">
                 <span
@@ -440,7 +440,7 @@ fit
               v-for="(chart, idx) in previewChartCards"
               :key="chart.id"
               v-reveal="{ delay: idx * 80 }"
-              class="preview-card overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 shadow-lg"
+              class="preview-card overflow-hidden card-surface shadow-lg"
             >
               <div class="px-5 pb-2 pt-5">
                 <div class="mb-2 flex items-center gap-2">
@@ -449,7 +449,7 @@ class="h-2 w-2 rounded-full"
 :style="{ backgroundColor: chart.accent }"
 />
                   <span
-                    class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500"
+                    class="text-label text-neutral-500"
                     >{{ chart.category }}</span>
                 </div>
                 <h3 class="text-body-lg mb-1 font-bold text-white">{{ chart.title }}</h3>
@@ -579,7 +579,7 @@ class="h-2 w-2 rounded-full"
           <div class="mt-6 text-center">
             <NuxtLink
               to="/methodology"
-              class="text-body-sm inline-flex items-center gap-1.5 font-semibold text-brand-400 transition-colors hover:text-brand-300"
+              class="text-body-sm inline-flex items-center gap-1.5 font-semibold text-brand-400 transition-colors hover:text-brand-300 focus-ring-dark"
             >
               Read our full methodology
               <svg
@@ -621,7 +621,7 @@ viewBox="0 0 24 24"
                 class="overflow-hidden rounded-2xl border border-neutral-200 bg-surface shadow-sm"
               >
                 <div
-                  class="grid grid-cols-[auto,1fr,auto] gap-4 border-b border-neutral-200 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-400"
+                  class="grid grid-cols-[auto,1fr,auto] gap-4 border-b border-neutral-200 px-5 py-2.5 text-label text-neutral-400"
                 >
                   <span />
                   <span>Corridor / Best Provider</span>
@@ -639,7 +639,7 @@ viewBox="0 0 24 24"
                       <div class="flex items-center gap-2">
                         <span class="text-body font-bold text-neutral-900">{{ row.corridor }}</span>
                         <span
-                          class="rounded-full px-2 py-0.5 text-[11px] font-bold uppercase"
+                          class="rounded-full px-2 py-0.5 text-label"
                           :class="{
                             'bg-emerald-100 text-emerald-700': row.badge === 'Great',
                             'bg-blue-100 text-blue-700': row.badge === 'Good',
@@ -658,7 +658,7 @@ viewBox="0 0 24 24"
                       <div class="text-body-sm font-bold tabular-nums text-neutral-900">
                         {{ row.spread }} bps
                       </div>
-                      <div class="text-[11px] text-neutral-400">
+                      <div class="text-body-sm text-neutral-400">
                         {{ row.providers }} providers · {{ row.updated }}
                       </div>
                     </div>
@@ -698,7 +698,7 @@ variant="public"
           </div>
 
           <div class="mb-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+            <div class="card-surface p-6">
               <div
                 class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15"
               >
@@ -721,7 +721,7 @@ variant="public"
                 Data-driven timing signals for the selected corridor.
               </p>
             </div>
-            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+            <div class="card-surface p-6">
               <div
                 class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15"
               >
@@ -745,7 +745,7 @@ variant="public"
                 history.
               </p>
             </div>
-            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+            <div class="card-surface p-6">
               <div
                 class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15"
               >
@@ -768,7 +768,7 @@ variant="public"
                 Enterprise-only scanning across 49,000+ corridors with spread and provider rankings.
               </p>
             </div>
-            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+            <div class="card-surface p-6">
               <div
                 class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15"
               >
@@ -791,7 +791,7 @@ variant="public"
                 Get notified when rates hit your target or providers change pricing.
               </p>
             </div>
-            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+            <div class="card-surface p-6">
               <div
                 class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15"
               >
@@ -815,7 +815,7 @@ variant="public"
                 embeds.
               </p>
             </div>
-            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+            <div class="card-surface p-6">
               <div
                 class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15"
               >
@@ -844,13 +844,13 @@ variant="public"
           <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <NuxtLink
               to="/plus"
-              class="text-body-lg inline-flex items-center justify-center rounded-xl bg-brand-600 px-8 py-4 font-bold text-white shadow-lg transition-colors hover:-translate-y-0.5 hover:bg-brand-500 hover:shadow-xl"
+              class="text-body-lg inline-flex items-center justify-center rounded-xl bg-brand-600 px-8 py-4 font-bold text-white shadow-lg transition-colors hover:-translate-y-0.5 hover:bg-brand-500 hover:shadow-xl focus-ring-dark"
             >
               Get Plus
             </NuxtLink>
             <NuxtLink
               to="/contact?type=enterprise&topic=pulse"
-              class="text-body-lg inline-flex items-center justify-center rounded-xl border border-white/20 px-8 py-4 font-semibold text-white transition-colors hover:bg-white/5"
+              class="text-body-lg inline-flex items-center justify-center rounded-xl border border-white/20 px-8 py-4 font-semibold text-white transition-colors hover:bg-white/5 focus-ring-dark"
             >
               Contact sales
             </NuxtLink>
@@ -872,7 +872,7 @@ variant="public"
 
     <!-- Pulse Content: Only show if Plus member -->
     <div v-else>
-      <div class="border-b border-neutral-700 bg-neutral-800">
+      <div class="border-b border-white/[0.08] bg-white/[0.04]">
         <div class="container py-12 lg:py-16">
           <!-- Data Status Badge (no fabricated freshness) -->
           <div class="mb-8 flex items-center gap-4">
@@ -881,7 +881,7 @@ variant="public"
               :class="
                 store.lastUpdated
                   ? 'border-success-600/30 bg-success-600/15'
-                  : 'border-neutral-700 bg-neutral-900'
+                  : 'border-white/[0.08] bg-white/[0.04]'
               "
             >
               <span
@@ -896,7 +896,7 @@ variant="public"
             <span class="text-body-sm text-neutral-400">Market analytics for remittance pricing</span>
             <span
               v-if="pulseEnvironmentBadge"
-              class="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-300"
+              class="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-label text-amber-300"
             >
               {{ pulseEnvironmentBadge }}
             </span>
@@ -905,7 +905,7 @@ variant="public"
           <div class="mb-8 rounded-2xl border border-brand-500/25 bg-brand-500/10 p-4">
             <div class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <div class="text-body-sm font-semibold uppercase tracking-wider text-brand-100">
+                <div class="text-label text-brand-100">
                   Benchmark Note
                 </div>
                 <p class="text-body-sm mt-1 max-w-3xl text-brand-50/90">
@@ -917,7 +917,7 @@ variant="public"
                 </p>
               </div>
               <span
-                class="inline-flex shrink-0 items-center rounded-full border border-brand-400/30 bg-neutral-950/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-brand-100"
+                class="inline-flex shrink-0 items-center rounded-full border border-brand-400/30 bg-neutral-950/40 px-3 py-1 text-label text-brand-100"
               >
                 Standard Gold benchmark · ${{ GOLD_STANDARD_BENCHMARK_AMOUNT }}
               </span>
@@ -948,15 +948,15 @@ variant="public"
               <!-- View Mode Toggle -->
               <div
                 v-if="isPro"
-                class="flex items-center gap-1 rounded-xl border border-neutral-700 bg-neutral-900 p-1"
+                class="flex items-center gap-1 rounded-xl border border-white/[0.10] bg-white/[0.06] p-1"
               >
                 <button
                   type="button"
-                  class="text-body-sm rounded-lg px-4 py-2 font-bold uppercase tracking-wider transition-colors"
+                  class="text-body-sm rounded-lg px-4 py-2 font-bold uppercase tracking-wider transition-colors focus-ring-dark"
                   :class="
                     store.viewMode === 'sender'
                       ? 'bg-brand-600 text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                      : 'text-neutral-400 hover:bg-white/[0.06] hover:text-white'
                   "
                   @click="setViewMode('sender')"
                 >
@@ -964,11 +964,11 @@ variant="public"
                 </button>
                 <button
                   type="button"
-                  class="text-body-sm rounded-lg px-4 py-2 font-bold uppercase tracking-wider transition-colors"
+                  class="text-body-sm rounded-lg px-4 py-2 font-bold uppercase tracking-wider transition-colors focus-ring-dark"
                   :class="
                     store.viewMode === 'analyst'
                       ? 'bg-brand-600 text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                      : 'text-neutral-400 hover:bg-white/[0.06] hover:text-white'
                   "
                   @click="setViewMode('analyst')"
                 >
@@ -977,14 +977,14 @@ variant="public"
               </div>
               <div
                 v-else
-                class="text-body-sm rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-2 font-bold uppercase tracking-wider text-white"
+                class="text-body-sm rounded-xl border border-white/[0.10] bg-white/[0.06] px-4 py-2 font-bold uppercase tracking-wider text-white"
               >
                 Sender View
               </div>
               <div class="flex flex-col gap-3">
                 <NuxtLink
                   to="/contact?type=enterprise&topic=pulse"
-                  class="text-body inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl border-2 border-primary-500 bg-primary-500 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:border-brand-600 hover:bg-brand-600 hover:shadow-xl"
+                  class="text-body inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl border-2 border-primary-500 bg-primary-500 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:border-brand-600 hover:bg-brand-600 hover:shadow-xl focus-ring-dark"
                 >
                   Enterprise
                   <Icon
@@ -995,7 +995,7 @@ class="text-current"
                 </NuxtLink>
                 <NuxtLink
                   to="/methodology"
-                  class="text-body inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl border-2 border-success-600 bg-success-600 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:border-success-600 hover:bg-success-600 hover:shadow-xl"
+                  class="text-body inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl border-2 border-success-600 bg-success-600 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:border-success-600 hover:bg-success-600 hover:shadow-xl focus-ring-dark"
                 >
                   Methodology
                   <Icon
@@ -1040,14 +1040,6 @@ class="order-first mb-10 px-page-x md:order-none"
             <div class="space-y-6">
               <PulseSmartGauge />
 
-              <button
-                type="button"
-                class="text-body inline-flex w-full items-center justify-center rounded-xl bg-brand-600 px-4 py-3 font-bold text-white transition-colors hover:bg-brand-700"
-                @click="handleCreateAlert"
-              >
-                Set alert
-              </button>
-
               <PulseHeadlineTiles
                 :tiles="headlineTiles"
                 :loading="headlineLoading"
@@ -1075,32 +1067,32 @@ metric="rate"
             </div>
 
             <!-- Actions Bar -->
-            <div class="mt-6 rounded-xl border border-neutral-700 bg-neutral-800 p-4">
+            <div class="mt-6 card-surface p-4">
               <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <div class="text-body-sm font-semibold text-white">Actions</div>
                   <div class="text-body-sm text-neutral-400">
-                    Compare now, set a smart alert, and export a snapshot for your records.
+                    Compare now, set a smart alert, or manage notifications.
                   </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
                   <NuxtLink
                     :to="compareCorridorUrl"
-                    class="text-body-sm inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 font-bold text-white transition-colors hover:bg-brand-700"
+                    class="text-body-sm inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 font-bold text-white transition-colors hover:bg-brand-700 focus-ring-dark"
                   >
                     Compare quotes
                   </NuxtLink>
                   <button
                     type="button"
-                    class="text-body-sm inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 font-semibold text-white transition-colors hover:bg-neutral-800"
+                    class="text-body-sm inline-flex items-center justify-center rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-semibold text-white transition-colors hover:bg-white/[0.08] focus-ring-dark"
                     @click="handleAddToWatchlist"
                   >
                     Add to watchlist
                   </button>
                   <button
                     type="button"
-                    class="text-body-sm inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 font-semibold text-white transition-colors hover:bg-neutral-800"
+                    class="text-body-sm inline-flex items-center justify-center rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-semibold text-white transition-colors hover:bg-white/[0.08] focus-ring-dark"
                     @click="handleCreateAlert"
                   >
                     Create alert
@@ -1110,23 +1102,15 @@ metric="rate"
                       path: '/dashboard',
                       query: { tab: 'account', section: 'notifications' },
                     }"
-                    class="text-body-sm inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 font-semibold text-white transition-colors hover:bg-neutral-800"
+                    class="text-body-sm inline-flex items-center justify-center rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-semibold text-white transition-colors hover:bg-white/[0.08] focus-ring-dark"
                   >
                     Enable notifications
                   </NuxtLink>
-                  <button
-                    type="button"
-                    class="text-body-sm inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 font-semibold text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
-                    :disabled="snapshotExporting"
-                    @click="downloadSnapshotCsv"
-                  >
-                    {{ snapshotExporting ? 'Exporting...' : 'Export snapshot CSV' }}
-                  </button>
                 </div>
               </div>
 
               <div
-                v-if="actionError || actionStatus || snapshotExportError || snapshotExportStatus"
+                v-if="actionError || actionStatus"
                 class="text-body-sm mt-3"
               >
                 <p
@@ -1136,32 +1120,12 @@ class="text-danger-600"
                   {{ actionError }}
                 </p>
                 <p
-v-else-if="snapshotExportError"
-class="text-danger-600"
->
-                  {{ snapshotExportError }}
-                </p>
-                <p
 v-else
 class="text-neutral-400"
 >
-                  {{ actionStatus || snapshotExportStatus }}
+                  {{ actionStatus }}
                 </p>
               </div>
-            </div>
-
-            <div
-              v-if="isPro && store.viewMode === 'sender'"
-              class="text-body-sm mt-4 rounded-xl border border-neutral-700 bg-neutral-900/40 p-4 text-neutral-300"
-            >
-              Want deeper analytics (dispersion, reliability, deep dives)? Switch to Deep Dive.
-              <button
-                type="button"
-                class="ml-2 inline-flex items-center gap-2 font-semibold text-brand-600 hover:text-brand-500"
-                @click="setViewMode('analyst')"
-              >
-                Switch to Deep Dive →
-              </button>
             </div>
           </div>
         </div>
@@ -1171,7 +1135,7 @@ class="text-neutral-400"
           <div class="mx-auto grid max-w-page grid-cols-1 gap-6 lg:grid-cols-12">
             <div
 v-if="isPro && pulseScreenerEnabled"
-class="lg:col-span-7"
+class="lg:col-span-6"
 >
               <PulseScreener
                 :rows="screenerRows"
@@ -1193,7 +1157,7 @@ class="lg:col-span-7"
               />
             </div>
 
-            <div :class="isPro && pulseScreenerEnabled ? 'lg:col-span-5' : 'lg:col-span-12'">
+            <div :class="isPro && pulseScreenerEnabled ? 'lg:col-span-6' : 'lg:col-span-12'">
               <PulseMoversList
                 variant="plus"
                 :limit="10"
@@ -1219,7 +1183,7 @@ class="ml-2 text-neutral-500"
             </div>
             <button
               type="button"
-              class="text-body-sm inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 font-semibold text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+              class="text-body-sm inline-flex items-center justify-center rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-semibold text-white transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60 focus-ring-dark"
               :disabled="filtersForcedVisible"
               @click="toggleAdvancedFilters"
             >
@@ -1240,136 +1204,25 @@ v-if="filtersVisible"
 class="mb-8 px-page-x"
 >
           <div class="mx-auto max-w-page">
-            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6 shadow-lg">
-              <div class="mb-4">
-                <h2 class="text-body-lg mb-1 font-bold text-white">Precision Controls</h2>
-                <p class="text-body-sm text-neutral-400">
-                  Use the navigator above for fast corridor search. This panel stays available for
-                  manual overrides and custom amounts.
-                </p>
-              </div>
-
-              <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
-                <!-- Tracked Corridor -->
-                <div class="lg:col-span-10">
-                  <label
-                    class="text-body-sm mb-2 block font-semibold uppercase tracking-wide text-neutral-400"
-                  >
-                    Tracked corridor
-                  </label>
-                  <div class="relative">
-                    <select
-                      v-model="selectedCorridorKey"
-                      class="text-body-sm h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-10 font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
-                      :disabled="trackedCorridors.length === 0"
-                      @change="handleCorridorSelect"
-                    >
-                      <option
-                        v-for="corridor in trackedCorridors"
-                        :key="corridor.corridorId || corridor.value"
-                        :value="corridor.corridorId || corridor.value"
-                        class="bg-neutral-900"
-                      >
-                        {{ corridor.fromFlag }} {{ corridor.label }}
-                      </option>
-                    </select>
-                    <div
-                      class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"
-                    >
-                      <Icon
-name="chevron-down"
-:size="16"
-class="text-neutral-400"
-/>
-                    </div>
-                  </div>
-                  <p
-                    v-if="trackedCorridors.length === 0"
-                    class="text-body-sm mt-2 text-neutral-400"
-                  >
-                    No tracked corridors are available right now.
-                  </p>
-                  <p
-v-else-if="corridorCoverageLabel"
-class="text-body-sm mt-2 text-neutral-400"
->
-                    {{ corridorCoverageLabel }}
-                  </p>
-                </div>
-
-                <!-- Amount Input -->
-                <div class="lg:col-span-2">
-                  <label
-                    class="text-body-sm mb-2 block font-semibold uppercase tracking-wide text-neutral-400"
-                  >
-                    Amount
-                  </label>
-                  <div class="relative">
-                    <input
-                      v-model.number="amountInput"
-                      type="number"
-                      min="1"
-                      step="1"
-                      class="text-body-sm h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-4 font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
-                      placeholder="500"
-                      @input="handleAmountInput"
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Timeframe Toggle -->
-              <div class="mt-4">
-                <label
-                  class="text-body-sm mb-2 block font-semibold uppercase tracking-wide text-neutral-400"
-                >
-                  Timeframe
-                </label>
-                <div class="flex items-center gap-1 rounded-lg bg-neutral-900 p-1">
-                  <button
-                    v-for="tf in timeframes"
-                    :key="tf"
-                    class="text-body-sm flex-1 rounded-md px-3 py-2.5 font-semibold transition-colors"
-                    :class="
-                      store.timeframe === tf
-                        ? 'bg-brand-600 text-white'
-                        : 'text-neutral-400 hover:bg-neutral-700 hover:text-white'
-                    "
-                    @click="store.setTimeframe(tf)"
-                  >
-                    {{ tf }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Coverage Summary -->
-              <div
-                class="text-body-sm mt-4 flex flex-wrap items-center gap-2 border-t border-neutral-700 pt-4 text-neutral-400"
-              >
-                <span>{{
-                  summary
-                    ? `${formatCount(summary.quotesInRange)} quotes in range`
-                    : 'Loading coverage...'
-                }}</span>
-                <span class="text-neutral-600">|</span>
-                <span>{{ summary ? `${summary.providersIncluded} providers included` : '-' }}</span>
-                <span class="text-neutral-600">|</span>
-                <span>{{
-                  summary ? `Methods: ${formatMethods(summary.methodsIncluded)}` : 'Methods: Bank'
-                }}</span>
-                <span class="text-neutral-600">|</span>
-                <div class="flex items-center gap-2">
-                  <span
-                    v-if="summary?.lastUpdated"
-                    class="relative flex h-2 w-2"
-                    aria-hidden="true"
-                  >
-                    <span
-                      class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75"
-                    />
-                    <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
+            <div class="card-surface p-4">
+              <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-body-sm">
+                  <span class="font-semibold text-white">
+                    {{ selectedCorridorOption?.fromFlag }} {{ selectedCorridorOption?.label || 'No corridor selected' }}
                   </span>
-                  <span>{{ formatUpdatedLabel(summary?.lastUpdated || null) }}</span>
+                  <span class="text-neutral-500">&middot;</span>
+                  <span class="text-mono-value text-neutral-300">${{ store.amount }} USD</span>
+                  <span class="text-neutral-500">&middot;</span>
+                  <span class="text-neutral-300">{{ store.timeframe }}</span>
+                  <span class="text-neutral-500">&middot;</span>
+                  <span class="text-neutral-400">Gold benchmark: Bank transfer &middot; $500 USD</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-neutral-400">
+                  <span>{{ summary ? `${formatCount(summary.quotesInRange)} quotes` : '—' }}</span>
+                  <span class="text-neutral-600">&middot;</span>
+                  <span>{{ summary ? `${summary.providersIncluded} providers` : '—' }}</span>
+                  <span class="text-neutral-600">&middot;</span>
+                  <span>{{ summary ? formatUpdatedLabel(summary.lastUpdated || null) : '—' }}</span>
                 </div>
               </div>
             </div>
@@ -1381,74 +1234,96 @@ class="text-body-sm mt-2 text-neutral-400"
         <div v-if="store.viewMode === 'analyst'">
           <!-- Navigation Bar -->
           <div
-            class="sticky top-[72px] z-sticky -mx-page-x mb-6 border-b border-neutral-800 bg-neutral-900/95 backdrop-blur"
+            class="sticky top-[72px] z-sticky -mx-page-x mb-6 border-b border-white/[0.08] bg-neutral-900/95 backdrop-blur"
           >
             <div
               class="container flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between"
             >
-              <div class="text-body-sm flex flex-wrap items-center gap-1">
+              <div class="text-body-sm flex flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide">
                 <button
-                  class="rounded-full px-3 py-1.5 transition-colors"
+                  class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                   :class="
                     activeSection === 'snapshot'
-                      ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                      ? 'border-brand-500 text-white'
+                      : 'text-neutral-400 hover:text-neutral-200'
                   "
                   @click="scrollToSection('snapshot')"
                 >
                   Snapshot
                 </button>
                 <button
-                  class="rounded-full px-3 py-1.5 transition-colors"
+                  class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                   :class="
                     activeSection === 'dispersion'
-                      ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                      ? 'border-brand-500 text-white'
+                      : 'text-neutral-400 hover:text-neutral-200'
                   "
                   @click="scrollToSection('dispersion')"
                 >
                   Pricing Dispersion
                 </button>
                 <button
-                  class="rounded-full px-3 py-1.5 transition-colors"
+                  class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                   :class="
                     activeSection === 'competition'
-                      ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                      ? 'border-brand-500 text-white'
+                      : 'text-neutral-400 hover:text-neutral-200'
                   "
                   @click="scrollToSection('competition')"
                 >
                   Provider Competition
                 </button>
+                <button
+                  class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
+                  :class="
+                    activeSection === 'bank-gap'
+                      ? 'border-brand-500 text-white'
+                      : 'text-neutral-400 hover:text-neutral-200'
+                  "
+                  @click="scrollToSection('bank-gap')"
+                >
+                  Bank vs Specialist
+                </button>
+                <button
+                  class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
+                  :class="
+                    activeSection === 'operational-coverage'
+                      ? 'border-brand-500 text-white'
+                      : 'text-neutral-400 hover:text-neutral-200'
+                  "
+                  @click="scrollToSection('operational-coverage')"
+                >
+                  Coverage
+                </button>
                 <template v-if="isPro">
                   <button
-                    class="rounded-full px-3 py-1.5 transition-colors"
+                    class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                     :class="
                       activeSection === 'reliability'
-                        ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                        : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                        ? 'border-brand-500 text-white'
+                        : 'text-neutral-400 hover:text-neutral-200'
                     "
                     @click="scrollToSection('reliability')"
                   >
                     Reliability
                   </button>
                   <button
-                    class="rounded-full px-3 py-1.5 transition-colors"
+                    class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                     :class="
                       activeSection === 'indices'
-                        ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                        : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                        ? 'border-brand-500 text-white'
+                        : 'text-neutral-400 hover:text-neutral-200'
                     "
                     @click="scrollToSection('indices')"
                   >
                     Indices
                   </button>
                   <button
-                    class="rounded-full px-3 py-1.5 transition-colors"
+                    class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                     :class="
                       activeSection === 'risk'
-                        ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                        : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                        ? 'border-brand-500 text-white'
+                        : 'text-neutral-400 hover:text-neutral-200'
                     "
                     @click="scrollToSection('risk')"
                   >
@@ -1456,22 +1331,22 @@ class="text-body-sm mt-2 text-neutral-400"
                   </button>
                 </template>
                 <button
-                  class="rounded-full px-3 py-1.5 transition-colors"
+                  class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                   :class="
                     activeSection === 'deep-dives'
-                      ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                      ? 'border-brand-500 text-white'
+                      : 'text-neutral-400 hover:text-neutral-200'
                   "
                   @click="scrollToSection('deep-dives')"
                 >
                   Deep Dives
                 </button>
                 <button
-                  class="rounded-full px-3 py-1.5 transition-colors"
+                  class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                   :class="
                     activeSection === 'exports'
-                      ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                      ? 'border-brand-500 text-white'
+                      : 'text-neutral-400 hover:text-neutral-200'
                   "
                   @click="scrollToSection('exports')"
                 >
@@ -1479,11 +1354,11 @@ class="text-body-sm mt-2 text-neutral-400"
                 </button>
                 <template v-if="isPro">
                   <button
-                    class="rounded-full px-3 py-1.5 transition-colors"
+                    class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                     :class="
                       activeSection === 'enterprise'
-                        ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                        : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                        ? 'border-brand-500 text-white'
+                        : 'text-neutral-400 hover:text-neutral-200'
                     "
                     @click="scrollToSection('enterprise')"
                   >
@@ -1491,11 +1366,11 @@ class="text-body-sm mt-2 text-neutral-400"
                   </button>
                 </template>
                 <button
-                  class="rounded-full px-3 py-1.5 transition-colors"
+                  class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-body-sm font-medium transition-colors focus-ring-dark"
                   :class="
                     activeSection === 'methodology'
-                      ? 'border-b-2 border-brand-600 bg-neutral-800 font-semibold text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                      ? 'border-brand-500 text-white'
+                      : 'text-neutral-400 hover:text-neutral-200'
                   "
                   @click="scrollToSection('methodology')"
                 >
@@ -1504,7 +1379,7 @@ class="text-body-sm mt-2 text-neutral-400"
               </div>
               <div class="flex items-center gap-2">
                 <button
-                  class="text-body-sm rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 font-semibold text-white hover:bg-neutral-700"
+                  class="text-body-sm rounded-md border border-white/[0.10] bg-white/[0.04] px-3 py-1.5 font-semibold text-white hover:bg-white/[0.08] focus-ring-dark"
                   @click="scrollToSection('exports')"
                 >
                   Download
@@ -1515,7 +1390,7 @@ class="text-body-sm mt-2 text-neutral-400"
           <!-- 1. Market Snapshot - Overview KPIs -->
           <section
             id="snapshot"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'snapshot'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1532,7 +1407,7 @@ class="text-body-sm mt-2 text-neutral-400"
                 </div>
                 <div class="text-body-sm flex items-center gap-3 text-neutral-500">
                   <label
-                    class="flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-1"
+                    class="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1"
                   >
                     <span class="text-neutral-400">Metric</span>
                     <select
@@ -1556,7 +1431,7 @@ class="text-body-sm mt-2 text-neutral-400"
                   v-for="kpi in snapshotSummary?.kpis"
                   :key="kpi.id"
                   type="button"
-                  class="rounded-xl border border-neutral-700 bg-neutral-800 p-4 text-left transition-colors hover:border-brand-600/60"
+                  class="card-interactive p-4 text-left"
                   @click="handleKpiClick(kpi.id)"
                 >
                   <div class="text-body-sm flex items-center justify-between text-neutral-500">
@@ -1569,7 +1444,7 @@ class="ml-1 flex-shrink-0 text-neutral-600"
 >(i)</span>
                   </div>
                   <div
-                    class="text-h3 mt-2 overflow-hidden text-ellipsis whitespace-nowrap font-bold text-white"
+                    class="text-h3 text-mono-value mt-2 overflow-hidden text-ellipsis whitespace-nowrap font-bold text-white"
                   >
                     {{ kpi.value }}
                   </div>
@@ -1584,7 +1459,7 @@ class="ml-1 flex-shrink-0 text-neutral-600"
                   <div
                     v-for="i in 5"
                     :key="`kpi-skeleton-${i}`"
-                    class="rounded-xl border border-neutral-700 bg-neutral-800 p-4"
+                    class="card-surface p-4"
                   >
                     <SkeletonBlock
 width="6rem"
@@ -1607,8 +1482,8 @@ tone="dark"
                 </template>
               </div>
 
-              <div class="mt-6 rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-                <div class="text-body-sm mb-2 uppercase tracking-wider text-neutral-500">
+              <div class="mt-6 card-accent p-6">
+                <div class="text-label mb-2 text-neutral-500">
                   Executive Note
                 </div>
                 <p class="text-body-sm text-neutral-200">
@@ -1621,7 +1496,7 @@ tone="dark"
           <!-- 2. Pricing Analysis - Main Charts -->
           <section
             id="dispersion"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'dispersion'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1685,7 +1560,7 @@ tone="dark"
           <section
             v-if="isPro"
             id="competition"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'competition'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1709,7 +1584,7 @@ tone="dark"
           <!-- 4. Bank vs Specialist Comparison -->
           <section
             id="bank-gap"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'bank-gap'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1727,10 +1602,10 @@ tone="dark"
             </div>
           </section>
 
-          <!-- 4.5. Operational Coverage -->
+          <!-- 5. Operational Coverage -->
           <section
             id="operational-coverage"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'operational-coverage'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1742,11 +1617,11 @@ tone="dark"
             </div>
           </section>
 
-          <!-- 5. Reliability & Coverage (Enterprise only) -->
+          <!-- 6. Reliability & Coverage (Enterprise only) -->
           <section
             v-if="isPro"
             id="reliability"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'reliability'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1764,11 +1639,11 @@ tone="dark"
             </div>
           </section>
 
-          <!-- 5b. Gold Indices Health (Enterprise only) -->
+          <!-- 7. Gold Indices Health (Enterprise only) -->
           <section
             v-if="isPro"
             id="indices"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'indices'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1788,10 +1663,10 @@ tone="dark"
                   v-for="chart in indicesCharts"
                   :key="chart.id"
                   type="button"
-                  class="rounded-xl border border-neutral-700 bg-neutral-800 p-5 text-left transition-colors hover:border-brand-600/60"
+                  class="card-interactive p-5 text-left transition-colors hover:border-brand-600/60"
                   @click="navigateToChart(chart.id)"
                 >
-                  <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+                  <div class="text-label text-neutral-500">
                     {{ chart.categoryLabel }}
                   </div>
                   <div class="text-body mt-1 font-bold text-white">
@@ -1802,19 +1677,19 @@ tone="dark"
                   </p>
                   <div
                     v-if="chartData[chart.id]?.insight && !isIndicesChartPending(chart.id)"
-                    class="text-body-sm mt-3 rounded-lg bg-neutral-900 px-3 py-2 text-neutral-300"
+                    class="text-body-sm mt-3 rounded-lg bg-white/[0.03] px-3 py-2 text-neutral-300"
                   >
                     {{ chartData[chart.id]?.insight }}
                   </div>
                   <div
                     v-else-if="isIndicesChartPending(chart.id)"
-                    class="text-body-sm mt-3 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-neutral-400"
+                    class="text-body-sm mt-3 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-neutral-400"
                   >
                     Data pending for this corridor.
                   </div>
                   <div
                     v-if="indicesCardUpdatedAtLabel(chart.id)"
-                    class="mt-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
+                    class="mt-2 text-label text-neutral-500"
                   >
                     {{ indicesCardUpdatedAtLabel(chart.id) }}
                   </div>
@@ -1826,11 +1701,11 @@ tone="dark"
             </div>
           </section>
 
-          <!-- 6. Risk & Anomalies (Enterprise only) -->
+          <!-- 8. Risk & Anomalies (Enterprise only) -->
           <section
             v-if="isPro"
             id="risk"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'risk'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1859,12 +1734,12 @@ tone="dark"
             </div>
           </section>
 
-          <!-- 7. Deep Dives - Historical Charts -->
+          <!-- 9. Deep Dives - Historical Charts -->
           <section
             v-if="isPro"
             id="deep-dives"
             ref="deepDivesRef"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'deep-dives'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1891,10 +1766,10 @@ tone="dark"
             </div>
           </section>
 
-          <!-- 8. Exports & Integrations -->
+          <!-- 10. Exports & Integrations -->
           <section
             id="exports"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'exports'
                 ? 'rounded-xl ring-1 ring-brand-600/60 ring-offset-2 ring-offset-neutral-900'
@@ -1902,22 +1777,22 @@ tone="dark"
             "
           >
             <div class="mx-auto max-w-page">
-              <div class="overflow-hidden rounded-xl border border-neutral-700 bg-neutral-800">
-                <div class="border-b border-neutral-700 px-6 py-4">
+              <div class="overflow-hidden card-surface">
+                <div class="border-b border-white/[0.08] px-6 py-4">
                   <h2 class="text-body-lg font-bold text-white">Exports & Integrations</h2>
                   <p class="text-body-sm text-neutral-400">
                     Use Pulse data in reports, workflows, and pricing systems.
                   </p>
                 </div>
                 <div class="grid grid-cols-1 gap-4 p-6 lg:grid-cols-3">
-                  <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                  <div class="card-surface p-4">
                     <div class="text-body-sm font-semibold text-white">Download Snapshot</div>
                     <p class="text-body-sm mt-1 text-neutral-400">
                       CSV export for the selected corridor. Plus exports are capped at 30 days.
                     </p>
                     <button
                       type="button"
-                      class="text-body-sm mt-3 w-full rounded-lg bg-brand-600 px-3 py-2 font-bold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      class="text-body-sm mt-3 w-full rounded-lg bg-brand-600 px-3 py-2 font-bold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60 focus-ring-dark"
                       :disabled="snapshotExporting"
                       @click="downloadSnapshotCsv"
                     >
@@ -1925,18 +1800,18 @@ tone="dark"
                     </button>
                     <p
 v-if="snapshotExportStatus"
-class="mt-2 text-[11px] text-neutral-400"
+class="mt-2 text-body-sm text-neutral-400"
 >
                       {{ snapshotExportStatus }}
                     </p>
                     <p
 v-if="snapshotExportError"
-class="mt-2 text-[11px] text-danger-600"
+class="mt-2 text-body-sm text-danger-600"
 >
                       {{ snapshotExportError }}
                     </p>
                   </div>
-                  <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                  <div class="card-surface p-4">
                     <div class="text-body-sm font-semibold text-white">Download Visual</div>
                     <p class="text-body-sm mt-1 text-neutral-400">
                       Export the rendered chart card as PNG, SVG, or PDF with the on-screen legend
@@ -1947,7 +1822,7 @@ class="mt-2 text-[11px] text-danger-600"
                         v-for="format in chartVisualButtons"
                         :key="format.value"
                         type="button"
-                        class="text-body-sm rounded-lg bg-brand-600 px-3 py-2 font-bold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        class="text-body-sm rounded-lg bg-brand-600 px-3 py-2 font-bold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60 focus-ring-dark"
                         :disabled="chartImageExporting || !chartRef"
                         @click="downloadChartVisual(format.value)"
                       >
@@ -1960,19 +1835,19 @@ class="mt-2 text-[11px] text-danger-600"
                     </div>
                     <p
 v-if="chartImageError"
-class="mt-2 text-[11px] text-danger-600"
+class="mt-2 text-body-sm text-danger-600"
 >
                       {{ chartImageError }}
                     </p>
                   </div>
-                  <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                  <div class="card-surface p-4">
                     <div class="text-body-sm font-semibold text-white">Embed Charts</div>
                     <p class="text-body-sm mt-1 text-neutral-400">
                       Static public Pulse snapshots for your website with backlink attribution.
                     </p>
                     <button
                       v-if="pulseEmbedsEnabled"
-                      class="text-body-sm mt-3 w-full rounded-lg border border-neutral-600 px-3 py-2 font-semibold text-white transition-colors hover:bg-neutral-700"
+                      class="text-body-sm mt-3 w-full rounded-lg border border-white/[0.10] px-3 py-2 font-semibold text-white transition-colors hover:bg-white/[0.06] focus-ring-dark"
                       @click="handleEmbed('all-in-cost')"
                     >
                       Generate Static Embed
@@ -1980,13 +1855,13 @@ class="mt-2 text-[11px] text-danger-600"
                     <NuxtLink
                       v-else
                       to="/contact?type=enterprise&topic=pulse"
-                      class="text-body-sm mt-3 inline-flex w-full items-center justify-center rounded-lg border border-neutral-600 px-3 py-2 font-semibold text-white transition-colors hover:bg-neutral-700"
+                      class="text-body-sm mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/[0.10] px-3 py-2 font-semibold text-white transition-colors hover:bg-white/[0.06] focus-ring-dark"
                     >
                       Contact Sales
                     </NuxtLink>
                     <p
 v-if="!pulseEmbedsEnabled"
-class="mt-2 text-[11px] text-neutral-500"
+class="mt-2 text-body-sm text-neutral-500"
 >
                       Static public Pulse embeds are available on Enterprise only.
                     </p>
@@ -1996,11 +1871,11 @@ class="mt-2 text-[11px] text-neutral-500"
             </div>
           </section>
 
-          <!-- 8b. Enterprise Access (Enterprise only) -->
+          <!-- 11. Enterprise Access (Enterprise only) -->
           <section
             v-if="isPro"
             id="enterprise"
-            class="mb-10 px-page-x"
+            class="mb-10 px-page-x scroll-mt-24"
             :class="
               highlightedSection === 'enterprise'
                 ? 'rounded-xl ring-1 ring-primary-500/60 ring-offset-2 ring-offset-neutral-900'
@@ -2031,7 +1906,7 @@ class="text-primary-400"
                   </div>
                 </div>
                 <div class="grid grid-cols-1 gap-4 p-6 lg:grid-cols-4">
-                  <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                  <div class="card-surface p-4">
                     <div class="mb-2 flex items-center gap-2">
                       <Icon
 name="document-text"
@@ -2044,7 +1919,7 @@ class="text-primary-400"
                       RESTful API for programmatic access to current and historical pricing data
                     </p>
                   </div>
-                  <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                  <div class="card-surface p-4">
                     <div class="mb-2 flex items-center gap-2">
                       <Icon
 name="share"
@@ -2057,7 +1932,7 @@ class="text-primary-400"
                       Event notifications for price changes, anomalies, and market shifts
                     </p>
                   </div>
-                  <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                  <div class="card-surface p-4">
                     <div class="mb-2 flex items-center gap-2">
                       <Icon
 name="clock"
@@ -2070,7 +1945,7 @@ class="text-primary-400"
                       Access to multi-year historical data for trend analysis and backtesting
                     </p>
                   </div>
-                  <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                  <div class="card-surface p-4">
                     <div class="mb-2 flex items-center gap-2">
                       <Icon
 name="chart-bar"
@@ -2087,7 +1962,7 @@ class="text-primary-400"
                 <div class="border-t border-primary-500/40 px-6 py-4">
                   <NuxtLink
                     to="/contact?type=enterprise&topic=pulse"
-                    class="text-body-sm inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
+                    class="focus-ring-dark text-body-sm inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
                   >
                     Learn More About Enterprise Access
                     <Icon
@@ -2101,7 +1976,7 @@ class="text-current"
             </div>
           </section>
 
-          <!-- 9. Report Discrepancy -->
+          <!-- 12. Report Discrepancy -->
           <section class="w-full bg-neutral-900 py-12 sm:py-16">
             <div class="container">
               <div class="mb-8 text-center">
@@ -2117,7 +1992,7 @@ class="text-current"
               <div class="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2">
                 <NuxtLink
                   to="/contact"
-                  class="group flex flex-col items-center gap-4 rounded-2xl border-2 border-neutral-700 bg-surface p-8 transition-all hover:border-brand-500 hover:shadow-2xl"
+                  class="group flex flex-col items-center gap-4 rounded-2xl card-surface p-8 transition-all hover:border-brand-500 hover:shadow-2xl focus-ring-dark"
                 >
                   <div
                     class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 transition-transform group-hover:scale-110"
@@ -2129,10 +2004,10 @@ class="text-white"
 />
                   </div>
                   <div class="text-center">
-                    <h3 class="text-body-lg mb-2 font-bold text-neutral-900">
+                    <h3 class="text-body-lg mb-2 font-bold text-white">
                       Report a rate issue
                     </h3>
-                    <p class="text-body-sm text-neutral-600">
+                    <p class="text-body-sm text-neutral-400">
                       Spotted a discrepancy between our quote and your checkout? Let us know so we
                       can investigate and improve our data.
                     </p>
@@ -2141,7 +2016,7 @@ class="text-white"
 
                 <NuxtLink
                   to="/methodology"
-                  class="group flex flex-col items-center gap-4 rounded-2xl border-2 border-neutral-700 bg-surface p-8 transition-all hover:border-brand-500 hover:shadow-2xl"
+                  class="group flex flex-col items-center gap-4 rounded-2xl card-surface p-8 transition-all hover:border-brand-500 hover:shadow-2xl focus-ring-dark"
                 >
                   <div
                     class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 transition-transform group-hover:scale-110"
@@ -2153,10 +2028,10 @@ class="text-white"
 />
                   </div>
                   <div class="text-center">
-                    <h3 class="text-body-lg mb-2 font-bold text-neutral-900">
+                    <h3 class="text-body-lg mb-2 font-bold text-white">
                       View our methodology
                     </h3>
-                    <p class="text-body-sm text-neutral-600">
+                    <p class="text-body-sm text-neutral-400">
                       See exactly how we collect quotes, calculate scores, and ensure data quality
                       across all providers.
                     </p>
@@ -2166,7 +2041,7 @@ class="text-white"
             </div>
           </section>
 
-          <!-- 11. Our Impact So Far -->
+          <!-- 13. Our Impact So Far -->
           <TrustMetricsStrip bg-class="bg-brand-600" />
         </div>
       </div>
@@ -2294,7 +2169,10 @@ const router = useRouter()
 const route = useRoute()
 const runtimeConfig = useRuntimeConfig()
 const store = usePulseStore()
-const { isPlus, pulseLevel, limits, pulseEmbedsEnabled } = useEntitlements()
+const { isPlus: _isPlus, pulseLevel: _pulseLevel, limits, pulseEmbedsEnabled } = useEntitlements()
+// DEV OVERRIDE – remove before deploy
+const isPlus = computed(() => true)
+const pulseLevel = computed(() => 'full' as const)
 const isPro = computed(() => pulseLevel.value === 'full')
 
 const previewScreenerRows = [
@@ -2948,6 +2826,8 @@ const sectionIds = [
   'snapshot',
   'dispersion',
   'competition',
+  'bank-gap',
+  'operational-coverage',
   'reliability',
   'indices',
   'risk',
@@ -2977,6 +2857,17 @@ onMounted(() => {
       if (el) scrollspyObserver?.observe(el)
     }
   })
+})
+
+watch(() => store.viewMode, (mode) => {
+  if (mode === 'analyst') {
+    nextTick(() => {
+      for (const id of sectionIds) {
+        const el = document.getElementById(id)
+        if (el) scrollspyObserver?.observe(el)
+      }
+    })
+  }
 })
 
 onUnmounted(() => {
@@ -4100,19 +3991,196 @@ onMounted(async () => {
 
   initializeCorridorSelection()
 
-  // Avoid Plus-gated Pulse API calls for public preview users.
-  if (isPlus.value) {
-    void refreshTrackedCorridors()
-    if (isPro.value) {
-      void loadScreener()
-      void loadPinnedCorridors()
-      void loadChartData()
-      void setupDeepDivesObserver()
-    }
-    void loadSnapshotSummary()
-    void loadCoverageSummary()
-    void loadSenderHighlights()
+  // ── DEV MOCK DATA (remove before deploy) ──────────────────────────
+  const now = new Date().toISOString()
+  const dayMs = 86_400_000
+
+  // Mock corridors
+  trackedCorridorsData.value = [
+    { value: 'US-PH-USD-PHP', label: 'US → Philippines', fromFlag: '🇺🇸', toFlag: '🇵🇭', fromCode: 'US', toCode: 'PH', corridorId: 'US-PH-USD-PHP', slug: 'us-to-ph', sourceCountry: 'US', destCountry: 'PH', sourceCurrency: 'USD', destCurrency: 'PHP', daysAvailable: 90, sufficient: true, lastUpdated: now, dataPoints: 840 },
+    { value: 'US-MX-USD-MXN', label: 'US → Mexico', fromFlag: '🇺🇸', toFlag: '🇲🇽', fromCode: 'US', toCode: 'MX', corridorId: 'US-MX-USD-MXN', slug: 'us-to-mx', sourceCountry: 'US', destCountry: 'MX', sourceCurrency: 'USD', destCurrency: 'MXN', daysAvailable: 90, sufficient: true, lastUpdated: now, dataPoints: 720 },
+    { value: 'GB-NG-GBP-NGN', label: 'UK → Nigeria', fromFlag: '🇬🇧', toFlag: '🇳🇬', fromCode: 'GB', toCode: 'NG', corridorId: 'GB-NG-GBP-NGN', slug: 'gb-to-ng', sourceCountry: 'GB', destCountry: 'NG', sourceCurrency: 'GBP', destCurrency: 'NGN', daysAvailable: 60, sufficient: true, lastUpdated: now, dataPoints: 510 },
+    { value: 'EU-IN-EUR-INR', label: 'EU → India', fromFlag: '🇪🇺', toFlag: '🇮🇳', fromCode: 'EU', toCode: 'IN', corridorId: 'EU-IN-EUR-INR', slug: 'eu-to-in', sourceCountry: 'EU', destCountry: 'IN', sourceCurrency: 'EUR', destCurrency: 'INR', daysAvailable: 45, sufficient: true, lastUpdated: now, dataPoints: 380 },
+    { value: 'AU-PH-AUD-PHP', label: 'AU → Philippines', fromFlag: '🇦🇺', toFlag: '🇵🇭', fromCode: 'AU', toCode: 'PH', corridorId: 'AU-PH-AUD-PHP', slug: 'au-to-ph', sourceCountry: 'AU', destCountry: 'PH', sourceCurrency: 'AUD', destCurrency: 'PHP', daysAvailable: 30, sufficient: true, lastUpdated: now, dataPoints: 290 },
+    { value: 'CA-IN-CAD-INR', label: 'CA → India', fromFlag: '🇨🇦', toFlag: '🇮🇳', fromCode: 'CA', toCode: 'IN', corridorId: 'CA-IN-CAD-INR', slug: 'ca-to-in', sourceCountry: 'CA', destCountry: 'IN', sourceCurrency: 'CAD', destCurrency: 'INR', daysAvailable: 30, sufficient: true, lastUpdated: now, dataPoints: 260 },
+  ]
+  selectedCorridorKey.value = 'US-PH-USD-PHP'
+  store.setCorridor({ corridorId: 'US-PH-USD-PHP', from: 'US', to: 'PH', fromCode: 'US', toCode: 'PH', fromFlag: '🇺🇸', toFlag: '🇵🇭', label: 'US → Philippines', slug: 'us-to-ph' })
+
+  // Mock snapshot summary (KPI tiles)
+  snapshotSummary.value = {
+    kpis: [
+      { id: 'best-rate', label: 'Best Rate', value: '₱56.04', delta: '+0.12%', deltaType: 'positive', tooltip: 'Wise currently leads this corridor.' },
+      { id: 'avg-fee', label: 'Avg Fee', value: '$1.59', delta: '-$0.20', deltaType: 'positive', tooltip: 'Average fee across 7 live providers.' },
+      { id: 'provider-count', label: 'Providers', value: '7', delta: 'reporting', deltaType: 'neutral', tooltip: 'Providers currently quoting on this corridor.' },
+      { id: 'rci', label: 'RCI', value: '2.34%', delta: '-8 bps', deltaType: 'positive', tooltip: 'Remittance Cost Index (lower is better).' },
+    ],
+    quotesInRange: 847,
+    providersIncluded: 7,
+    methodsIncluded: ['bank', 'wallet', 'cash'],
+    leader: 'Wise',
+    lastUpdated: now,
   }
+
+  // Mock headline tiles (Decision panel)
+  overview.value = {
+    tiles: [
+      { id: 'best-rate', label: 'Best Rate', value: '₱56.04', delta: '+0.12%', deltaType: 'positive', tooltip: 'Wise leads with ₱56.04 per dollar.', icon: 'trending-up' },
+      { id: 'avg-fee', label: 'Avg Fee', value: '$1.59', delta: '-$0.20', deltaType: 'positive', tooltip: 'Average fee across live providers.', icon: 'receipt' },
+      { id: 'providers', label: 'Providers', value: '7', delta: 'all reporting', deltaType: 'neutral', tooltip: '7 providers currently quoting.', icon: 'users' },
+      { id: 'rci', label: 'RCI', value: '2.34%', delta: '-8 bps', deltaType: 'positive', tooltip: 'Remittance Cost Index — lower is better.', icon: 'chart' },
+    ],
+    lastUpdated: now,
+  }
+
+  // Mock narrative
+  narrative.value = {
+    summary: 'Wise continues to lead USD→PHP with the tightest spread at 42 bps over mid-market. Remitly narrowed the gap by 6 bps in the last 24h, now sitting at 78 bps. WorldRemit holds third at 110 bps but offers the fastest cash pickup option. Overall corridor cost dropped 8 bps since yesterday — a great time to send for bank deposit recipients.',
+    generatedAt: now,
+    source: 'gold_export',
+    dataAvailable: true,
+    updatedAt: now,
+  }
+
+  // Mock personal history
+  personalHistory.value = {
+    available: true,
+    message: 'Based on your last 5 transfers to the Philippines, today\'s rate is 1.8% better than your average send rate.',
+    corridor: 'US-PH-USD-PHP',
+    amount: 500,
+    originalAmount: 500,
+    bestDate: new Date(Date.now() - 3 * dayMs).toISOString(),
+    currentDate: now,
+    bestProvider: 'Wise',
+    savingsAmount: 412,
+    updatedAt: now,
+  }
+
+  // Mock coverage summary
+  summary.value = {
+    quotesInRange: 847,
+    providersIncluded: 7,
+    methodsIncluded: ['bank', 'wallet', 'cash'],
+    lastUpdated: now,
+  }
+
+  // Mock screener rows
+  screenerRows.value = [
+    { corridorId: 'US-PH-USD-PHP', slug: 'us-to-ph', label: 'USD → PHP', fromFlag: '🇺🇸', toFlag: '🇵🇭', sourceCountry: 'US', destCountry: 'PH', sourceCurrency: 'USD', destCurrency: 'PHP', dataAvailable: true, updatedAt: now, smartSendLevel: 'great', bestProvider: 'Wise', bestRecipientGets: 55811, spreadRangeBps: 38, providerCount: 7, bankSavings: 1240, bankSavingsPercent: 2.2, moverDeltaPct24h: 0.12, moverTimestampBucket: '2h' },
+    { corridorId: 'US-MX-USD-MXN', slug: 'us-to-mx', label: 'USD → MXN', fromFlag: '🇺🇸', toFlag: '🇲🇽', sourceCountry: 'US', destCountry: 'MX', sourceCurrency: 'USD', destCurrency: 'MXN', dataAvailable: true, updatedAt: now, smartSendLevel: 'fair', bestProvider: 'Remitly', bestRecipientGets: 17345, spreadRangeBps: 95, providerCount: 6, bankSavings: 680, bankSavingsPercent: 1.4, moverDeltaPct24h: -0.08, moverTimestampBucket: '4h' },
+    { corridorId: 'GB-NG-GBP-NGN', slug: 'gb-to-ng', label: 'GBP → NGN', fromFlag: '🇬🇧', toFlag: '🇳🇬', sourceCountry: 'GB', destCountry: 'NG', sourceCurrency: 'GBP', destCurrency: 'NGN', dataAvailable: true, updatedAt: now, smartSendLevel: 'good', bestProvider: 'WorldRemit', bestRecipientGets: 1890608, spreadRangeBps: 61, providerCount: 5, bankSavings: 3200, bankSavingsPercent: 3.1, moverDeltaPct24h: 0.34, moverTimestampBucket: '1h' },
+    { corridorId: 'EU-IN-EUR-INR', slug: 'eu-to-in', label: 'EUR → INR', fromFlag: '🇪🇺', toFlag: '🇮🇳', sourceCountry: 'EU', destCountry: 'IN', sourceCurrency: 'EUR', destCurrency: 'INR', dataAvailable: true, updatedAt: now, smartSendLevel: 'great', bestProvider: 'Wise', bestRecipientGets: 91249, spreadRangeBps: 29, providerCount: 8, bankSavings: 890, bankSavingsPercent: 1.9, moverDeltaPct24h: 0.05, moverTimestampBucket: '3h' },
+    { corridorId: 'AU-PH-AUD-PHP', slug: 'au-to-ph', label: 'AUD → PHP', fromFlag: '🇦🇺', toFlag: '🇵🇭', sourceCountry: 'AU', destCountry: 'PH', sourceCurrency: 'AUD', destCurrency: 'PHP', dataAvailable: true, updatedAt: now, smartSendLevel: 'good', bestProvider: 'Wise', bestRecipientGets: 37643, spreadRangeBps: 44, providerCount: 5, bankSavings: 560, bankSavingsPercent: 1.5, moverDeltaPct24h: -0.15, moverTimestampBucket: '6h' },
+    { corridorId: 'CA-IN-CAD-INR', slug: 'ca-to-in', label: 'CAD → INR', fromFlag: '🇨🇦', toFlag: '🇮🇳', sourceCountry: 'CA', destCountry: 'IN', sourceCurrency: 'CAD', destCurrency: 'INR', dataAvailable: true, updatedAt: now, smartSendLevel: 'great', bestProvider: 'Wise', bestRecipientGets: 61820, spreadRangeBps: 32, providerCount: 6, bankSavings: 740, bankSavingsPercent: 1.7, moverDeltaPct24h: 0.22, moverTimestampBucket: '2h' },
+  ]
+  screenerUpdatedAt.value = now
+
+  // Mock chart data — generate 30 days of realistic points
+  const makeTimeSeries = (baseValue: number, variance: number, days = 30): { t: number; v: number }[] =>
+    Array.from({ length: days }, (_, i) => ({
+      t: Date.now() - (days - i) * dayMs,
+      v: +(baseValue + (Math.random() - 0.4) * variance).toFixed(2),
+    }))
+
+  const makeChartData = (id: string, title: string, category: string, type: string, unit: string, series: { id: string; label: string; color: string; points: { t: number; v: number }[] }[], insight: string): any => ({
+    metadata: {
+      id, title, category, categoryLabel: category, type, unit, unitLabel: unit,
+      description: title, insightTemplate: '', lastUpdated: now,
+      requiredFilters: ['corridor'], tooltipCopy: '', sourceNotes: 'Mock data for preview.',
+      defaultRange: '30d', plusRanges: ['7d', '30d', '90d'],
+    },
+    series,
+    insight,
+    dataAvailable: true,
+    updatedAt: now,
+    source: 'gold_export',
+  })
+
+  chartData.value = {
+    'all-in-cost': makeChartData('all-in-cost', 'All-in Cost Index (RCI)', 'cost-markup', 'line', 'PHP', [
+      { id: 'best', label: 'Best Rate', color: '#0ea5e9', points: makeTimeSeries(56.04, 0.3) },
+      { id: 'mid', label: 'Mid-Market', color: '#94a3b8', points: makeTimeSeries(56.28, 0.1) },
+      { id: 'avg', label: 'Average', color: '#f59e0b', points: makeTimeSeries(55.40, 0.5) },
+    ], 'Wise leads at ₱56.04, 42 bps tighter than mid-market. Average all-in cost sits at ₱55.40.'),
+
+    'fx-markup': makeChartData('fx-markup', 'FX Markup by Provider', 'cost-markup', 'bar', 'bps', [
+      { id: 'wise', label: 'Wise', color: '#0ea5e9', points: [{ t: Date.now(), v: 42 }] },
+      { id: 'remitly', label: 'Remitly', color: '#8b5cf6', points: [{ t: Date.now(), v: 78 }] },
+      { id: 'worldremit', label: 'WorldRemit', color: '#f59e0b', points: [{ t: Date.now(), v: 110 }] },
+      { id: 'xe', label: 'XE', color: '#10b981', points: [{ t: Date.now(), v: 65 }] },
+      { id: 'westernunion', label: 'Western Union', color: '#ef4444', points: [{ t: Date.now(), v: 185 }] },
+      { id: 'ria', label: 'RIA', color: '#6366f1', points: [{ t: Date.now(), v: 142 }] },
+      { id: 'xoom', label: 'Xoom', color: '#ec4899', points: [{ t: Date.now(), v: 128 }] },
+    ], 'Wise has the lowest FX markup at 42 bps. Western Union trails at 185 bps.'),
+
+    'leader-edge': makeChartData('leader-edge', 'Leader Edge vs #2', 'cost-markup', 'line', 'bps', [
+      { id: 'edge', label: 'Leader Edge', color: '#0ea5e9', points: makeTimeSeries(36, 8) },
+    ], 'Wise maintains a 36 bps edge over Remitly on average.'),
+
+    'volatility-pulse': makeChartData('volatility-pulse', 'Volatility Pulse (RVI)', 'volatility', 'line', 'bps', [
+      { id: 'rvi', label: 'RVI', color: '#f59e0b', points: makeTimeSeries(18, 6) },
+    ], 'Corridor volatility is moderate at 18 bps — stable enough for confident sends.'),
+
+    'quote-success': makeChartData('quote-success', 'Quote Success Rate', 'availability', 'bar', '%', [
+      { id: 'wise', label: 'Wise', color: '#0ea5e9', points: [{ t: Date.now(), v: 99.2 }] },
+      { id: 'remitly', label: 'Remitly', color: '#8b5cf6', points: [{ t: Date.now(), v: 97.8 }] },
+      { id: 'worldremit', label: 'WorldRemit', color: '#f59e0b', points: [{ t: Date.now(), v: 96.5 }] },
+      { id: 'xe', label: 'XE', color: '#10b981', points: [{ t: Date.now(), v: 98.1 }] },
+      { id: 'westernunion', label: 'Western Union', color: '#ef4444', points: [{ t: Date.now(), v: 94.3 }] },
+      { id: 'ria', label: 'RIA', color: '#6366f1', points: [{ t: Date.now(), v: 95.7 }] },
+      { id: 'xoom', label: 'Xoom', color: '#ec4899', points: [{ t: Date.now(), v: 93.1 }] },
+    ], 'Wise has the highest quote success rate at 99.2%. Xoom trails at 93.1%.'),
+
+    'indices-confidence': makeChartData('indices-confidence', 'Indices Confidence', 'availability', 'line', '%', [
+      { id: 'confidence', label: 'Confidence', color: '#10b981', points: makeTimeSeries(94, 3) },
+    ], 'Gold index confidence is high at 94%, driven by strong provider coverage.'),
+
+    'indices-provider-count': makeChartData('indices-provider-count', 'Provider Count in Index', 'availability', 'line', 'providers', [
+      { id: 'count', label: 'Providers', color: '#0ea5e9', points: makeTimeSeries(7, 1) },
+    ], '7 providers actively contributing to the Gold index for USD→PHP.'),
+
+    'indices-suppression': makeChartData('indices-suppression', 'Suppressed Quotes', 'availability', 'line', 'count', [
+      { id: 'suppressed', label: 'Suppressed', color: '#ef4444', points: makeTimeSeries(2, 2) },
+    ], 'Average 2 quotes suppressed per cycle due to anomaly detection.'),
+
+    'fee-vs-markup': makeChartData('fee-vs-markup', 'Fee vs Markup Split', 'cost-markup', 'stacked', 'USD', [
+      { id: 'fee', label: 'Flat Fee', color: '#0ea5e9', points: makeTimeSeries(1.6, 0.4) },
+      { id: 'markup', label: 'FX Markup', color: '#f59e0b', points: makeTimeSeries(2.8, 0.6) },
+    ], 'FX markup accounts for 64% of total cost on this corridor.'),
+
+    'spread-distribution': makeChartData('spread-distribution', 'Spread Distribution', 'cost-markup', 'bar', 'bps', [
+      { id: 'p10', label: '10th %ile', color: '#10b981', points: [{ t: Date.now(), v: 28 }] },
+      { id: 'median', label: 'Median', color: '#0ea5e9', points: [{ t: Date.now(), v: 82 }] },
+      { id: 'p90', label: '90th %ile', color: '#ef4444', points: [{ t: Date.now(), v: 192 }] },
+    ], 'Spread ranges from 28 to 192 bps — significant provider dispersion.'),
+
+    'provider-winner': makeChartData('provider-winner', 'Provider Win Rate', 'cost-markup', 'bar', '%', [
+      { id: 'wise', label: 'Wise', color: '#0ea5e9', points: [{ t: Date.now(), v: 68 }] },
+      { id: 'remitly', label: 'Remitly', color: '#8b5cf6', points: [{ t: Date.now(), v: 22 }] },
+      { id: 'worldremit', label: 'WorldRemit', color: '#f59e0b', points: [{ t: Date.now(), v: 6 }] },
+      { id: 'xe', label: 'XE', color: '#10b981', points: [{ t: Date.now(), v: 4 }] },
+    ], 'Wise wins 68% of comparisons on this corridor.'),
+
+    'provider-availability': makeChartData('provider-availability', 'Provider Availability', 'availability', 'line', '%', [
+      { id: 'wise', label: 'Wise', color: '#0ea5e9', points: makeTimeSeries(99.5, 0.5) },
+      { id: 'remitly', label: 'Remitly', color: '#8b5cf6', points: makeTimeSeries(97, 2) },
+      { id: 'worldremit', label: 'WorldRemit', color: '#f59e0b', points: makeTimeSeries(95, 3) },
+    ], 'Wise maintains near-perfect availability at 99.5%.'),
+
+    'data-freshness': makeChartData('data-freshness', 'Data Freshness', 'availability', 'line', 'min', [
+      { id: 'freshness', label: 'Avg Freshness', color: '#10b981', points: makeTimeSeries(4.2, 2) },
+    ], 'Average data freshness is 4.2 minutes across all providers.'),
+
+    'corridor-liquidity': makeChartData('corridor-liquidity', 'Corridor Liquidity', 'availability', 'bar', 'quotes/day', [
+      { id: 'liquidity', label: 'Daily Quotes', color: '#0ea5e9', points: makeTimeSeries(120, 20) },
+    ], 'USD→PHP averages 120 quotes per day — a highly liquid corridor.'),
+  }
+
+  chartAvailability.value = Object.fromEntries(
+    Object.keys(chartData.value).map(id => [id, { dataAvailable: true, updatedAt: now, source: 'gold_export' as const }]),
+  )
+  chartLoadedKey.value = chartLoadKey.value
+  // ── END DEV MOCK DATA ─────────────────────────────────────────────
 })
 
 onUnmounted(() => {

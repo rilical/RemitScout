@@ -154,57 +154,6 @@
         </div>
       </div>
 
-      <!-- Institutional Section -->
-      <div
-        v-if="enterpriseEnabled"
-        class="border-t border-white/10 pt-8 mb-8"
-      >
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div class="flex items-center gap-3">
-            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-surface/10">
-              <svg
-                class="w-5 h-5 text-white/80"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-body-sm font-semibold text-white">
-                For institutions
-              </h3>
-              <p class="text-body-sm text-white/60">
-                Institutional details available under NDA
-              </p>
-            </div>
-          </div>
-          <nav
-            class="flex flex-wrap items-center gap-x-6 gap-y-2"
-            aria-label="Institutional links"
-          >
-            <NuxtLink
-              to="/institutions"
-              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
-            >
-              Institutions
-            </NuxtLink>
-            <NuxtLink
-              to="/methodology"
-              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
-            >
-              Provenance
-            </NuxtLink>
-          </nav>
-        </div>
-      </div>
-
       <div class="pt-8 border-t border-white/20">
         <p class="text-body-sm text-white/50 leading-relaxed mb-6 max-w-3xl">
           Remit-Scout is an independent comparison service. We may earn affiliate commissions when you click provider links and sign up.
@@ -285,5 +234,5 @@ defineEmits<{
   'open-modal': []
 }>()
 
-const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
+const { pulseEnabled } = useFeatureFlags()
 </script>

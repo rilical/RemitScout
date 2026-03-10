@@ -6,7 +6,7 @@
       </h2>
       <span
         v-if="savingsLabel"
-        class="rounded-full border border-brand-600/40 bg-brand-600/20 px-2.5 py-1 text-[11px] font-bold text-brand-600"
+        class="rounded-full border border-brand-600/40 bg-brand-600/20 px-2.5 py-1 text-label font-bold text-brand-600 text-mono-value"
       >
         {{ savingsLabel }}
       </span>

@@ -242,6 +242,7 @@
                   <div
                     v-if="option.value === 'sendScore'"
                     class="w-full relative"
+                    :class="{ 'bg-brand-600/10 rounded px-2 py-1.5': option.highlight }"
                   >
                     <!-- Locked state: two-line layout -->
                     <template v-if="option.locked">
@@ -1075,35 +1076,9 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
             unavailableLabel,
             loading: isLoading,
             unavailableReason: smartAlertDisabledMessage.value ?? undefined,
+            highlight: true,
           })
         }
-        if (
-          indexThresholdAlertsEnabled.value
-          || metric.value === 'rci_threshold'
-          || metric.value === 'rvi_threshold'
-        ) {
-          options.push(
-            {
-              value: 'rci_threshold' as const,
-              label: 'RCI Threshold',
-              disabled: !indexThresholdAlertsEnabled.value,
-              locked: !indexThresholdAlertsEnabled.value,
-              lockLabel: 'Enterprise only',
-              upgradePath: '/contact?type=enterprise&topic=alerts',
-              upgradeLabel: 'Contact sales',
-            },
-            {
-              value: 'rvi_threshold' as const,
-              label: 'RVI Threshold',
-              disabled: !indexThresholdAlertsEnabled.value,
-              locked: !indexThresholdAlertsEnabled.value,
-              lockLabel: 'Enterprise only',
-              upgradePath: '/contact?type=enterprise&topic=alerts',
-              upgradeLabel: 'Contact sales',
-            },
-          )
-        }
-        options.push({ value: 'index' as const, label: 'Index' })
         break
       case 'fxPair':
         options.push({ value: 'rate' as const, label: 'FX rate' })
@@ -1144,6 +1119,7 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
     unavailableLabel?: string | undefined
     loading?: boolean
     unavailableReason?: string | undefined
+    highlight?: boolean
   }
 
   const selectedMetricOption = computed<MetricOption | null>(() => {
@@ -1179,8 +1155,6 @@ const comparatorOptions = computed(() => [
   { value: 'lte' as const, label: '≤' },
   { value: 'gt' as const, label: '>' },
   { value: 'lt' as const, label: '<' },
-  { value: 'crosses_above' as const, label: 'crosses above' },
-  { value: 'crosses_below' as const, label: 'crosses below' },
 ])
 
 const currencyOptions = computed(() => {

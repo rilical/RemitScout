@@ -10,12 +10,12 @@
         <div class="flex items-center gap-3">
           <div
             class="flex h-10 w-10 items-center justify-center rounded-xl"
-            :class="getCategoryIconBg()"
+            :class="getCategoryIconBg(category.category)"
           >
             <Icon
               :name="getCategoryIcon(category.category)"
               :size="20"
-              :class="getCategoryIconColor()"
+              :class="getCategoryIconColor(category.category)"
             />
           </div>
           <div>
@@ -129,7 +129,7 @@ const LazyChartSlot = defineComponent({
         isVisible.value
           ? slots.default?.()
           : h('div', {
-              class: 'rounded-xl border border-neutral-700 bg-neutral-800 p-5',
+              class: 'card-surface p-5',
             }, [
               h(SkeletonBlock, { width: '40%', height: '14', rounded: 'md', tone: 'dark' }),
               h(SkeletonBlock, { width: '70%', height: '20', rounded: 'md', tone: 'dark', class: 'mt-3' }),
@@ -204,12 +204,34 @@ function handleEmbed(chartId: string) {
   emit('embed', chartId)
 }
 
-function getCategoryIconBg(): string {
-  return 'bg-brand-600/20'
+function getCategoryIconBg(category: ChartCategory): string {
+  switch (category) {
+    case 'cost-markup':
+      return 'bg-blue-500/15'
+    case 'delivered-amount':
+      return 'bg-emerald-500/15'
+    case 'volatility':
+      return 'bg-amber-500/15'
+    case 'availability':
+      return 'bg-violet-500/15'
+    default:
+      return 'bg-neutral-500/15'
+  }
 }
 
-function getCategoryIconColor(): string {
-  return 'text-brand-600'
+function getCategoryIconColor(category: ChartCategory): string {
+  switch (category) {
+    case 'cost-markup':
+      return 'text-blue-400'
+    case 'delivered-amount':
+      return 'text-emerald-400'
+    case 'volatility':
+      return 'text-amber-400'
+    case 'availability':
+      return 'text-violet-400'
+    default:
+      return 'text-neutral-400'
+  }
 }
 
 function getCategoryDescription(category: ChartCategory): string {

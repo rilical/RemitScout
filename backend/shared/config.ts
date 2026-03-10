@@ -1598,6 +1598,7 @@ const rawConfig = {
     llmPromptVersion: toOptionalTrimmedString(process.env.AGENT_LLM_PROMPT_VERSION) || 'v1',
     telemetryDims: toList(process.env.AGENT_TELEMETRY_DIMS ?? ''),
     emitObservations: toBoolean(process.env.EMIT_OBSERVATIONS),
+    patchPipelineEnabled: toBoolean(process.env.AGENT_PATCH_PIPELINE_ENABLED),
   },
   knowledgePlane: {
     embeddingModel: process.env.KNOWLEDGE_PLANE_EMBEDDING_MODEL || 'text-embedding-3-small',

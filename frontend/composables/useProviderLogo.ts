@@ -31,14 +31,14 @@ const PROVIDER_LOGO_CANDIDATES: Record<string, { logos: string[], providers: str
     logos: ['/logos/wirebarley.png', '/logos/WIREBARELY_LOGO.PNG'],
     providers: ['/png/SVG/PROVIDERS/WIREBARLEY_LOGO.png'],
   },
-  'intermex': { logos: ['/logos/intermex.png'], providers: ['/png/SVG/PROVIDERS/INTERMEX_LOGO.png'] },
+  'intermex': { logos: ['/logos/intermex-dark.svg', '/logos/intermex.svg', '/logos/intermex.png'], providers: ['/png/SVG/PROVIDERS/INTERMEX_LOGO.png'] },
   'koronapay': { logos: ['/logos/koronapay.svg'], providers: ['/png/SVG/PROVIDERS/KORONAPAY_LOGO.svg'] },
   'remitbee': {
     logos: ['/logos/remitbee.svg', '/logos/remitbee.jpeg', '/logos/remitbee.jpg'],
     providers: ['/png/SVG/PROVIDERS/REMITBEE_LOGO.svg', '/png/SVG/PROVIDERS/REMITBEE_LOGO.jpeg'],
   },
   'ria': { logos: ['/logos/ria.svg'], providers: ['/png/SVG/PROVIDERS/RIA_LOGO.svg'] },
-  'al-ansari-exchange': { logos: ['/logos/alansari.png'], providers: ['/png/SVG/PROVIDERS/ALANSARI_LOGO.svg'] },
+  'al-ansari-exchange': { logos: ['/logos/alansari.svg', '/logos/alansari.png'], providers: ['/png/SVG/PROVIDERS/ALANSARI_LOGO.svg'] },
   'mukuru': {
     logos: ['/logos/mukuru.png', '/logos/MUKURU_LOGO.PNG'],
     providers: ['/png/SVG/PROVIDERS/MUKURU_LOGO.png'],

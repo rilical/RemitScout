@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-4">
+  <div class="card-surface p-4">
     <div class="mb-2 flex items-center justify-between gap-3">
       <h2 class="text-body font-semibold text-white">
         Market Narrative
@@ -7,13 +7,13 @@
       <div class="flex items-center gap-2">
         <span
           v-if="sourceLabel"
-          class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
+          class="text-label text-neutral-500"
         >
           {{ sourceLabel }}
         </span>
         <span
           v-if="generatedLabel"
-          class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
+          class="text-label text-neutral-500"
         >
           {{ generatedLabel }}
         </span>

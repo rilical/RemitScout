@@ -476,11 +476,19 @@ export const useAlerts = () => {
     return historyByAlertId.value[alertId] ?? []
   }
 
-  function reset() {
+  async function reset() {
+    const toDelete = [...alerts.value]
     alerts.value = []
     resetLocalStorage()
-    if (isLoggedIn.value) {
-      fetchFromBackend()
+
+    if (isLoggedIn.value && toDelete.length > 0) {
+      const results = await Promise.allSettled(
+        toDelete.map(item => syncToBackend('delete', {} as Alert, item.id)),
+      )
+      const anyFailed = results.some(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value))
+      if (anyFailed) {
+        await fetchFromBackend()
+      }
     }
   }
 

@@ -118,32 +118,32 @@ export const useEntitlements = () => {
   const { request } = useApi()
   const { isLoggedIn, applyBackendProfile } = useAuth()
 
-  const plan = useState<Plan>('entitlements:plan', () => 'free')
-  const storedPlanCode = useState<Plan>('entitlements:stored-plan', () => 'free')
+  const plan = useState<Plan>('entitlements:plan', () => 'enterprise' as Plan) // DEV OVERRIDE – remove before deploy
+  const storedPlanCode = useState<Plan>('entitlements:stored-plan', () => 'enterprise' as Plan) // DEV OVERRIDE
   const planStatus = useState<string>('entitlements:plan-status', () => 'active')
   const planLifecycleState = useState<PlanLifecycleState>('entitlements:plan-lifecycle', () => 'active')
   const recoveryAvailable = useState<boolean>('entitlements:recovery-available', () => false)
   const recoveryAction = useState<PlanRecoveryAction>('entitlements:recovery-action', () => 'none')
   const limits = useState<PlanLimits>('entitlements:limits', () => ({
-    watchlistItems: 3,
-    alerts: 1,
-    historyDays: 30,
-    exports: false,
-    exportsMaxDays: 0,
-  }))
-  const apiAccess = useState<boolean>('entitlements:api-access', () => false)
+    watchlistItems: 500,
+    alerts: 100,
+    historyDays: 180,
+    exports: true,
+    exportsMaxDays: 180,
+  })) // DEV OVERRIDE – remove before deploy
+  const apiAccess = useState<boolean>('entitlements:api-access', () => true) // DEV OVERRIDE
   const apiTier = useState<number | null>('entitlements:api-tier', () => null)
   const apiKeyMax = useState<number | null>('entitlements:api-key-max', () => null)
   const apiRateLimitRpm = useState<number | null>('entitlements:api-rate-limit-rpm', () => null)
-  const pulseAccess = useState<BackendPulseAccess>('entitlements:pulse-access', () => 'none')
-  const bulkExportEnabled = useState<boolean>('entitlements:bulk-export-enabled', () => false)
-  const indicesApiEnabled = useState<boolean>('entitlements:indices-api-enabled', () => false)
-  const dailyAlertsEnabled = useState<boolean>('entitlements:daily-alerts-enabled', () => false)
-  const smartAlertsEnabled = useState<boolean>('entitlements:smart-alerts-enabled', () => false)
-  const indexThresholdAlertsEnabled = useState<boolean>('entitlements:index-threshold-alerts-enabled', () => false)
-  const indicesExportsEnabled = useState<boolean>('entitlements:indices-exports-enabled', () => false)
-  const pulseEmbedsEnabled = useState<boolean>('entitlements:pulse-embeds-enabled', () => false)
-  const indicesEmbedsEnabled = useState<boolean>('entitlements:indices-embeds-enabled', () => false)
+  const pulseAccess = useState<BackendPulseAccess>('entitlements:pulse-access', () => 'full') // DEV OVERRIDE
+  const bulkExportEnabled = useState<boolean>('entitlements:bulk-export-enabled', () => true) // DEV OVERRIDE
+  const indicesApiEnabled = useState<boolean>('entitlements:indices-api-enabled', () => true) // DEV OVERRIDE
+  const dailyAlertsEnabled = useState<boolean>('entitlements:daily-alerts-enabled', () => true) // DEV OVERRIDE
+  const smartAlertsEnabled = useState<boolean>('entitlements:smart-alerts-enabled', () => true) // DEV OVERRIDE
+  const indexThresholdAlertsEnabled = useState<boolean>('entitlements:index-threshold-alerts-enabled', () => true) // DEV OVERRIDE
+  const indicesExportsEnabled = useState<boolean>('entitlements:indices-exports-enabled', () => true) // DEV OVERRIDE
+  const pulseEmbedsEnabled = useState<boolean>('entitlements:pulse-embeds-enabled', () => true) // DEV OVERRIDE
+  const indicesEmbedsEnabled = useState<boolean>('entitlements:indices-embeds-enabled', () => true) // DEV OVERRIDE
   const billing = useState<MeResponse['billing'] | null>('entitlements:billing', () => null)
   const loading = useState<boolean>('entitlements:loading', () => false)
   const error = useState<string | null>('entitlements:error', () => null)
@@ -167,7 +167,7 @@ export const useEntitlements = () => {
   const hasPaidAccess = computed(() => plan.value === 'plus' || plan.value === 'enterprise')
 
   const resetToFree = () => {
-    plan.value = 'free'
+    return // DEV OVERRIDE – prevent reset to free (remove before deploy)
     storedPlanCode.value = 'free'
     planStatus.value = 'active'
     planLifecycleState.value = 'active'

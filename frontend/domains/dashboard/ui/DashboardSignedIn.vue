@@ -2272,28 +2272,6 @@ class="space-y-6"
                       </div>
                     </div>
                   </label>
-                  <label
-                    v-if="indicesExportsEnabled || exportSettings.dataType === 'indices'"
-                    class="flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3.5 transition-all"
-                    :class="
-                      exportSettings.dataType === 'indices'
-                        ? 'border-primary-500 bg-primary-50 shadow-sm'
-                        : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'
-                    "
-                  >
-                    <input
-                      v-model="exportSettings.dataType"
-                      type="radio"
-                      value="indices"
-                      class="h-4 w-4 border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    >
-                    <div class="flex-1">
-                      <div class="text-body-sm font-semibold text-rs-fg">TEER / RCI / RVI</div>
-                      <div class="text-body-sm mt-0.5 text-rs-muted">
-                        Indices history and export-ready snapshots
-                      </div>
-                    </div>
-                  </label>
                 </div>
               </div>
 
@@ -7571,8 +7549,21 @@ async function handleExport() {
   isExporting.value = true
 
   try {
-    const itemIds
-      = exportSettings.value.dataType === 'history' && selectedExportItems.value.length > 0
+    const dataTypeCountMap: Record<string, number> = {
+      history: compareCount.value,
+      watchlist: watchlistCount.value,
+      alerts: alertsCount.value,
+      all: compareCount.value + watchlistCount.value + alertsCount.value,
+    }
+    const selectedCount = dataTypeCountMap[exportSettings.value.dataType]
+    if (selectedCount !== undefined && selectedCount === 0) {
+      exportErrorMessage.value = 'Nothing to export — this section is empty.'
+      isExporting.value = false
+      return
+    }
+
+    const itemIds =
+      exportSettings.value.dataType === 'history' && selectedExportItems.value.length > 0
         ? selectedExportItems.value
         : undefined
 

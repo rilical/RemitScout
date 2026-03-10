@@ -1,7 +1,7 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
+  <div class="card-surface overflow-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
+    <div class="flex items-center justify-between border-b border-white/[0.08] px-6 py-4">
       <div>
         <h2 class="text-body-lg font-bold text-white">
           Provider Quotes
@@ -12,7 +12,7 @@
       </div>
       <div class="flex items-center gap-2 text-body-sm">
         <span class="text-neutral-400">Mid-market:</span>
-        <span class="font-mono font-bold text-white">{{ midMarketRateDisplay }}</span>
+        <span class="font-mono text-mono-value font-bold text-white">{{ midMarketRateDisplay }}</span>
         <span class="text-neutral-500">{{ store.corridor?.toCode }}/{{ store.corridor?.fromCode }}</span>
       </div>
     </div>
@@ -37,7 +37,7 @@
           v-for="(quote, index) in data?.quotes"
           :key="quote.provider"
           class="group relative flex items-center justify-between rounded-lg border p-4 transition-all cursor-pointer hover:border-brand-600"
-          :class="index === 0 ? 'border-brand-600 bg-brand-600/10' : 'border-neutral-700 bg-neutral-900'"
+          :class="index === 0 ? 'border-brand-600 bg-brand-600/10' : 'border-white/[0.08] bg-white/[0.04]'"
         >
           <!-- Winner Badge -->
           <div
@@ -103,7 +103,7 @@
       <!-- Analyst View: Additional Details -->
       <div
         v-if="store.viewMode === 'analyst' && data"
-        class="mt-6 border-t border-neutral-700 pt-4"
+        class="mt-6 border-t border-white/[0.08] pt-4"
       >
         <div class="grid grid-cols-3 gap-4 text-body-sm">
           <div>
@@ -135,7 +135,7 @@
     </div>
 
     <!-- Compare CTA -->
-    <div class="border-t border-neutral-700 px-6 py-3">
+    <div class="border-t border-white/[0.08] px-6 py-3">
       <NuxtLink
         :to="compareCorridorUrl"
         class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white transition-colors hover:bg-brand-700"

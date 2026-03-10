@@ -8,7 +8,7 @@
     <div
       v-for="index in 4"
       :key="`headline-skeleton-${index}`"
-      class="rounded-xl border border-neutral-700 bg-neutral-800 p-4"
+      class="card-surface p-4"
     >
       <div class="mb-3 h-10 w-10 animate-pulse rounded-lg bg-neutral-700/80" />
       <div class="mb-2 h-4 w-24 animate-pulse rounded bg-neutral-700/70" />
@@ -23,7 +23,7 @@
     <div
       v-for="tile in tiles"
       :key="tile.id"
-      class="group relative cursor-pointer rounded-xl border border-neutral-700 bg-neutral-800 p-4 transition-all duration-200 hover:border-brand-600 hover:scale-[1.02]"
+      class="group relative card-interactive p-4"
       role="button"
       tabindex="0"
       :aria-label="`${tile.label}: ${tile.value}`"
@@ -68,7 +68,7 @@
       </div>
 
       <!-- Value (with number tween) -->
-      <div class="mb-2 text-h4 font-bold text-white tabular-nums">
+      <div class="mb-2 text-h4 font-bold text-white text-mono-value">
         {{ tweenedValues[tile.id] ?? tile.value }}
       </div>
 

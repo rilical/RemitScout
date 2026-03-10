@@ -1,16 +1,16 @@
 <template>
   <div
-    class="group relative rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden transition-all duration-200 hover:border-brand-600"
+    class="group relative card-interactive overflow-hidden hover:border-brand-600"
   >
     <div
       v-if="daysAvailable > 0 && daysAvailable < 7 && !isGated"
-      class="absolute top-3 right-3 z-10 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-[11px] font-semibold text-amber-300"
+      class="absolute top-3 right-3 z-10 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-label text-amber-300"
     >
       Warming up ({{ daysAvailable }} days)
     </div>
     <div
       v-else-if="daysAvailable >= 7 && daysAvailable < 30 && !isGated"
-      class="absolute top-3 right-3 z-10 rounded-lg border border-blue-500/40 bg-blue-500/15 px-2 py-1 text-[11px] font-semibold text-blue-300"
+      class="absolute top-3 right-3 z-10 rounded-lg border border-blue-500/40 bg-blue-500/15 px-2 py-1 text-label text-blue-300"
     >
       Early data
     </div>
@@ -27,7 +27,7 @@
     </div>
 
     <div class="p-5">
-      <div class="mb-3 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
+      <div class="mb-3 text-label text-neutral-500">
         {{ metadata.categoryLabel }}
       </div>
 
@@ -93,10 +93,10 @@
         class="mb-4 flex items-end justify-between gap-4"
       >
         <div>
-          <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+          <div class="text-label text-neutral-500">
             Now
           </div>
-          <div class="text-h4 font-bold text-white">
+          <div class="text-h4 font-bold text-white text-mono-value">
             {{ calloutCurrentLabel }}
           </div>
           <p
@@ -110,11 +110,11 @@
           v-if="calloutDeltaLabel"
           class="text-right"
         >
-          <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+          <div class="text-label text-neutral-500">
             Δ
           </div>
           <div
-            class="text-body-sm font-semibold"
+            class="text-body-sm font-semibold text-mono-value"
             :class="deltaClass"
           >
             {{ calloutDeltaLabel }}
@@ -152,7 +152,7 @@
 
       <p
         v-if="!isGated && updatedAtLabel"
-        class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
+        class="mb-3 text-label text-neutral-500"
       >
         {{ updatedAtLabel }}
       </p>
@@ -212,7 +212,7 @@
           v-if="isTeaserLocked && sparklinePoints.length >= 2"
           class="pointer-events-none absolute inset-y-0 right-0 w-[38%] border-l border-neutral-700/90 bg-gradient-to-r from-transparent via-neutral-900/65 to-neutral-900/95"
         >
-          <div class="flex h-full items-center justify-center px-2 text-center text-[11px] font-semibold uppercase tracking-wider text-neutral-300">
+          <div class="flex h-full items-center justify-center px-2 text-center text-label text-neutral-300">
             Unlock full history
           </div>
         </div>
@@ -267,7 +267,7 @@
       </template>
       <template v-else>
         <button
-          class="text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
+          class="focus-ring-dark text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
           @click="handleView"
         >
           <Icon
@@ -280,7 +280,7 @@
         <div class="flex items-center gap-3">
           <button
             v-if="canEmbed"
-            class="text-body-sm text-neutral-400 hover:text-white transition-colors"
+            class="focus-ring-dark text-body-sm text-neutral-400 hover:text-white transition-colors"
             @click="handleEmbed"
           >
             Embed

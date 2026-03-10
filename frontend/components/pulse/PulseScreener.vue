@@ -5,6 +5,7 @@ import type { PulseTimeframe } from '~/stores/pulse'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import { formatUpdatedLabel } from '~/shared/lib/format'
 import { getAvailableTimeframes, isTimeframeAvailable } from '~/composables/usePulseTimeframes'
+import { Icon } from '~/ui'
 
 const TIMEFRAMES: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
 
@@ -110,15 +111,15 @@ const levelClass = (level: PulseScreenerRow['smartSendLevel']) => {
     case 'wait':
       return 'bg-danger-600/15 text-danger-400 border border-danger-600/30'
     default:
-      return 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+      return 'bg-white/[0.04] text-neutral-300 border border-white/[0.08]'
   }
 }
 
 const moverClass = (delta: number | null) => {
-  if (delta === null) return 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+  if (delta === null) return 'bg-white/[0.04] text-neutral-300 border border-white/[0.08]'
   if (delta > 0) return 'bg-success-600/15 text-success-400 border border-success-600/30'
   if (delta < 0) return 'bg-danger-600/15 text-danger-400 border border-danger-600/30'
-  return 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+  return 'bg-white/[0.04] text-neutral-300 border border-white/[0.08]'
 }
 
 const handleSelect = (row: PulseScreenerRow) => {
@@ -154,8 +155,8 @@ const screenerSummaryLabel = computed(() => {
 </script>
 
 <template>
-  <section class="overflow-hidden rounded-2xl border border-neutral-700 bg-neutral-800 shadow-lg">
-    <div class="border-b border-neutral-700 px-6 py-5">
+  <section class="card-elevated overflow-hidden">
+    <div class="border-b border-white/[0.08] px-6 py-5">
       <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 class="text-body-lg font-bold text-white">Gold Corridor Screener</h2>
@@ -163,7 +164,7 @@ const screenerSummaryLabel = computed(() => {
             {{ screenerSummaryLabel }}
           </p>
         </div>
-        <div class="font-mono text-[11px] uppercase tracking-wider text-neutral-500">
+        <div class="text-label font-mono text-neutral-500">
           {{ screenerContextLabel }}
         </div>
       </div>
@@ -184,7 +185,7 @@ class="space-y-3"
         <div
           v-for="n in 6"
           :key="n"
-          class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-4"
+          class="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4"
         >
           <SkeletonBlock
 width="11rem"
@@ -218,7 +219,7 @@ tone="dark"
 
       <div
         v-else-if="!hasRows"
-        class="text-body-sm rounded-xl border border-neutral-700 bg-neutral-900/30 p-6 text-neutral-300"
+        class="text-body-sm rounded-xl border border-white/[0.08] bg-white/[0.02] p-6 text-neutral-300"
       >
         No Gold-supported corridors are available right now.
       </div>
@@ -231,11 +232,11 @@ class="space-y-3"
           v-for="row in rows"
           :key="row.corridorId"
           type="button"
-          class="w-full rounded-xl border bg-neutral-900/30 p-4 text-left transition hover:border-brand-600/60 hover:bg-neutral-900/50 disabled:cursor-not-allowed disabled:opacity-60"
+          class="w-full rounded-xl border bg-white/[0.02] p-4 text-left transition hover:border-brand-600/60 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60 focus-ring-dark"
           :class="[
             row.corridorId === selectedCorridorId
               ? 'border-brand-600/70 ring-1 ring-brand-600/40'
-              : 'border-neutral-700',
+              : 'border-white/[0.08]',
           ]"
           :disabled="!row.dataAvailable"
           @click="handleSelect(row)"
@@ -246,7 +247,7 @@ class="space-y-3"
                 <span class="mr-2">{{ row.fromFlag }}</span>{{ row.label }}
                 <span
                   v-if="getDaysAvailableForRow(row) > 0 && getDaysAvailableForRow(row) < 7"
-                  class="ml-2 rounded border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300"
+                  class="ml-2 rounded border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-label text-amber-300"
                 >
                   Insufficient data
                 </span>
@@ -269,36 +270,22 @@ class="text-brand-400"
               <button
                 v-if="pinnedCorridorIds"
                 type="button"
-                class="inline-flex items-center justify-center rounded-lg p-1 text-neutral-500 transition-colors hover:text-brand-400"
+                class="inline-flex items-center justify-center rounded-lg p-1 text-neutral-500 transition-colors hover:text-brand-400 focus-ring-dark"
                 :class="pinnedSet.has(row.corridorId) ? 'text-brand-400' : ''"
                 :title="pinnedSet.has(row.corridorId) ? 'Unpin corridor' : 'Pin corridor'"
                 @click="handlePinToggle($event, row)"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  class="h-4 w-4"
-                >
-                  <path
-                    v-if="pinnedSet.has(row.corridorId)"
-                    d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z"
-                  />
-                  <path
-                    v-else
-                    d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3z"
-                  />
-                </svg>
+                <Icon name="bookmark" :size="14" />
               </button>
               <span
-                class="inline-flex items-center rounded-lg px-2.5 py-1 text-[11px] font-bold"
+                class="inline-flex items-center rounded-lg px-2.5 py-1 text-label"
                 :class="levelClass(row.smartSendLevel)"
               >
                 {{ levelLabel(row.smartSendLevel) }}
               </span>
               <span
                 v-if="row.moverDeltaPct24h !== null"
-                class="inline-flex items-center rounded-lg px-2.5 py-1 font-mono text-[11px] font-bold"
+                class="inline-flex items-center rounded-lg px-2.5 py-1 text-label text-mono-value font-mono"
                 :class="moverClass(row.moverDeltaPct24h)"
                 :title="
                   getDaysAvailableForRow(row) < 30
@@ -311,7 +298,7 @@ class="text-brand-400"
                 {{ formatPct(row.moverDeltaPct24h) }}
                 <span
                   v-if="getDaysAvailableForRow(row) > 0 && getDaysAvailableForRow(row) < 30"
-                  class="ml-1 text-[9px] font-normal text-neutral-500"
+                  class="ml-1 text-body-sm font-normal text-neutral-500"
                 >
                   (preliminary)
                 </span>
@@ -324,12 +311,12 @@ class="text-brand-400"
               v-for="tf in TIMEFRAMES"
               :key="tf"
               type="button"
-              class="rounded px-2 py-1 text-[11px] font-semibold transition-colors"
+              class="rounded px-2 py-1 text-label transition-colors focus-ring-dark"
               :class="
                 isTimeframeAvailable(getDaysAvailableForRow(row), tf)
                   ? row.corridorId === selectedCorridorId && selectedTimeframe === tf
                     ? 'bg-brand-600 text-white'
-                    : 'text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                    : 'text-neutral-400 hover:bg-white/[0.06] hover:text-white'
                   : 'cursor-not-allowed text-neutral-600 opacity-50'
               "
               :disabled="!isTimeframeAvailable(getDaysAvailableForRow(row), tf)"
@@ -341,26 +328,26 @@ class="text-brand-400"
 
           <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <div>
-              <div class="font-mono text-[10px] uppercase tracking-wider text-neutral-600">
+              <div class="text-label font-mono text-neutral-600">
                 Spread (bps)
               </div>
-              <div class="text-body-sm mt-0.5 font-mono font-bold text-white">
+              <div class="text-body-sm mt-0.5 font-mono font-bold text-mono-value text-white">
                 {{ row.spreadRangeBps === null ? '—' : formatNumber(row.spreadRangeBps) }}
               </div>
             </div>
             <div>
-              <div class="font-mono text-[10px] uppercase tracking-wider text-neutral-600">
+              <div class="text-label font-mono text-neutral-600">
                 Providers
               </div>
-              <div class="text-body-sm mt-0.5 font-mono font-bold text-white">
+              <div class="text-body-sm mt-0.5 font-mono font-bold text-mono-value text-white">
                 {{ row.providerCount === null ? '—' : row.providerCount }}
               </div>
             </div>
             <div>
-              <div class="font-mono text-[10px] uppercase tracking-wider text-neutral-600">
+              <div class="text-label font-mono text-neutral-600">
                 Bank gap
               </div>
-              <div class="text-body-sm mt-0.5 font-mono font-bold text-white">
+              <div class="text-body-sm mt-0.5 font-mono font-bold text-mono-value text-white">
                 {{
                   row.bankSavingsPercent === null
                     ? '—'
@@ -369,7 +356,7 @@ class="text-brand-400"
               </div>
             </div>
             <div>
-              <div class="font-mono text-[10px] uppercase tracking-wider text-neutral-600">
+              <div class="text-label font-mono text-neutral-600">
                 Stress
               </div>
               <div class="mt-0.5">
@@ -381,15 +368,15 @@ class="text-brand-400"
                 />
                 <span
 v-else
-class="text-body-sm font-mono font-bold text-white"
+class="text-body-sm font-mono font-bold text-mono-value text-white"
 >—</span>
               </div>
             </div>
             <div>
-              <div class="font-mono text-[10px] uppercase tracking-wider text-neutral-600">
+              <div class="text-label font-mono text-neutral-600">
                 Updated
               </div>
-              <div class="text-body-sm mt-0.5 font-mono font-bold text-white">
+              <div class="text-body-sm mt-0.5 font-mono font-bold text-mono-value text-white">
                 {{
                   row.updatedAt
                     ? formatUpdatedLabel(row.updatedAt)

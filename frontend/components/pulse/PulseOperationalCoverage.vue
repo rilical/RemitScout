@@ -1,6 +1,6 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
-    <div class="border-b border-neutral-700 px-6 py-4">
+  <div class="card-surface overflow-hidden">
+    <div class="border-b border-white/[0.08] px-6 py-4">
       <div class="flex items-center gap-3 mb-2">
         <Icon
           name="chart-bar"
@@ -19,7 +19,7 @@
 
     <div class="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
       <!-- Quote Success Rate -->
-      <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+      <div class="card-interactive border-t-2 border-t-emerald-500 p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-body-sm font-semibold text-white">
             Quote Success Rate
@@ -27,7 +27,7 @@
           <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-h3 font-bold text-white mb-1">
+          <div class="text-h3 font-bold text-white mb-1 text-mono-value">
             {{ quoteSuccessRate !== null ? `${quoteSuccessRate.toFixed(1)}%` : 'n/a' }}
           </div>
           <div class="text-body-sm text-neutral-400">
@@ -53,21 +53,21 @@
             mode="inline"
           />
         </div>
-        <div class="mt-3 flex gap-2">
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+        <div class="mt-3 flex gap-1.5">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             View
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             Share
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             Embed
           </button>
         </div>
       </div>
 
       <!-- Provider Availability -->
-      <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+      <div class="card-interactive border-t-2 border-t-blue-500 p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-body-sm font-semibold text-white">
             Provider Availability
@@ -75,7 +75,7 @@
           <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-h3 font-bold text-white mb-1">
+          <div class="text-h3 font-bold text-white mb-1 text-mono-value">
             Average availability {{ providerAvailability !== null ? providerAvailability.toFixed(1) : 'n/a' }} providers
           </div>
           <div class="text-body-sm text-neutral-400">
@@ -100,21 +100,21 @@
             mode="inline"
           />
         </div>
-        <div class="mt-3 flex gap-2">
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+        <div class="mt-3 flex gap-1.5">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             View
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             Share
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             Embed
           </button>
         </div>
       </div>
 
       <!-- Data Freshness -->
-      <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+      <div class="card-interactive border-t-2 border-t-amber-500 p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-body-sm font-semibold text-white">
             Data Freshness (p50/p95)
@@ -122,7 +122,7 @@
           <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-h3 font-bold text-white mb-1">
+          <div class="text-h3 font-bold text-white mb-1 text-mono-value">
             p95 freshness {{ freshnessP95 !== null ? freshnessP95 : 'n/a' }} min
           </div>
           <div class="text-body-sm text-neutral-400">
@@ -147,21 +147,21 @@
             mode="inline"
           />
         </div>
-        <div class="mt-3 flex gap-2">
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+        <div class="mt-3 flex gap-1.5">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             View
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             Share
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             Embed
           </button>
         </div>
       </div>
 
       <!-- Corridor Liquidity Signal -->
-      <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+      <div class="card-interactive border-t-2 border-t-violet-500 p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-body-sm font-semibold text-white">
             Corridor Liquidity Signal
@@ -169,7 +169,7 @@
           <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-h3 font-bold text-white mb-1">
+          <div class="text-h3 font-bold text-white mb-1 text-mono-value">
             Liquidity index {{ liquidityIndex !== null ? liquidityIndex : 'n/a' }}
           </div>
           <div class="text-body-sm text-neutral-400">
@@ -194,14 +194,14 @@
             mode="inline"
           />
         </div>
-        <div class="mt-3 flex gap-2">
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+        <div class="mt-3 flex gap-1.5">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             View
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             Share
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-2 py-1 text-xs font-semibold text-white hover:bg-neutral-700 focus-ring-dark">
             Embed
           </button>
         </div>

@@ -93,7 +93,7 @@ watch(() => route.path, () => {
       <div class="flex items-center gap-6">
         <NuxtLink
           to="/"
-          class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md"
+          class="flex items-center gap-2 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-md"
         >
           <NuxtImg
             v-if="isPlus && !logoError"
@@ -295,7 +295,7 @@ watch(() => route.path, () => {
         >
           <div class="flex items-center justify-end border-b border-rs-border px-4 py-4">
             <button
-              class="rounded-md p-2 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              class="rounded-md p-2 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               aria-label="Close menu"
               @click="closeMobileMenu"
             >
@@ -407,7 +407,7 @@ watch(() => route.path, () => {
           <div class="border-t border-rs-border p-4">
             <NuxtLink
               :to="compareUrl"
-              class="flex items-center justify-center w-full rounded-md bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              class="flex items-center justify-center w-full rounded-md bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             >
               Compare providers
             </NuxtLink>

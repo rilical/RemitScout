@@ -1792,6 +1792,7 @@ export const createEcsTasks = (
       AGENT_ENABLED: 'true',
       AGENT_ORCHESTRATOR_ENABLED: 'true',
       HEALTH_PORT: '8080',
+      AGENT_PATCH_PIPELINE_ENABLED: scope.node.tryGetContext('agentPatchPipelineEnabled') ?? '0',
     },
     ...secretsConfig,
     logging: LogDrivers.awsLogs({

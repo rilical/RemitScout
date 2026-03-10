@@ -61,3 +61,9 @@
   .text-h1 { @apply text-scale-7 leading-10; }
   .text-hero { @apply text-scale-8; }
 }
+
+/* Label typography — replaces arbitrary text-[10px] / text-[11px] */
+.text-label { font-size: 0.6875rem; line-height: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Mono numeric values — tabular lining for aligned columns */
+.text-mono-value { font-variant-numeric: tabular-nums lining-nums; }

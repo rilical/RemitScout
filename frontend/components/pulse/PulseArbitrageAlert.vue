@@ -1,7 +1,7 @@
 <template>
   <div
     class="rounded-xl border overflow-hidden flex flex-col h-full"
-    :class="hasOpportunity ? 'border-brand-600/50 bg-gradient-to-br from-brand-600/10 to-neutral-800' : 'border-neutral-700 bg-neutral-800'"
+    :class="hasOpportunity ? 'border-brand-600/50 bg-gradient-to-br from-brand-600/10 to-neutral-800' : 'card-surface'"
   >
     <!-- Header -->
     <div
@@ -67,7 +67,7 @@
             <span class="text-body-sm font-bold text-brand-600">ANOMALY DETECTED</span>
           </div>
           <h3 class="text-h3 font-bold text-white mb-2">
-            {{ data.provider }} is {{ data.savingsPercent.toFixed(1) }}% under market
+            {{ data.provider }} is <span class="text-mono-value">{{ data.savingsPercent.toFixed(1) }}%</span> under market
           </h3>
           <p class="text-body-sm text-neutral-400">
             relative to the corridor average
@@ -80,7 +80,7 @@
             <div class="text-body-sm text-neutral-500 mb-1">
               Current Rate
             </div>
-            <div class="text-h4 font-mono font-bold text-brand-600">
+            <div class="text-h4 font-mono font-bold text-brand-600 text-mono-value">
               {{ data.currentRate.toFixed(4) }}
             </div>
           </div>
@@ -88,7 +88,7 @@
             <div class="text-body-sm text-neutral-500 mb-1">
               Average Rate
             </div>
-            <div class="text-h4 font-mono font-bold text-white">
+            <div class="text-h4 font-mono font-bold text-white text-mono-value">
               {{ data.averageRate.toFixed(4) }}
             </div>
           </div>
@@ -98,7 +98,7 @@
         <div class="mb-6">
           <div class="flex justify-between text-body-sm text-neutral-500 mb-2">
             <span>Rate Distribution</span>
-            <span>{{ data.percentile }}th percentile</span>
+            <span><span class="text-mono-value">{{ data.percentile }}</span>th percentile</span>
           </div>
           <div class="relative h-4 w-full rounded-full bg-neutral-700 overflow-hidden">
             <div
@@ -110,7 +110,7 @@
               :style="{ left: `${data.percentile}%` }"
             />
           </div>
-          <div class="flex justify-between text-[10px] text-neutral-500 mt-1">
+          <div class="flex justify-between text-label text-neutral-500 mt-1">
             <span>Worst rates</span>
             <span>Best rates</span>
           </div>
@@ -126,13 +126,13 @@
         <div class="mt-auto pt-6 grid grid-cols-2 gap-3">
           <button
             type="button"
-            class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-bold text-white transition-colors hover:bg-brand-700"
+            class="focus-ring-dark flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-bold text-white transition-colors hover:bg-brand-700"
           >
             Create Monitor
           </button>
           <button
             type="button"
-            class="flex items-center justify-center gap-2 rounded-lg border border-neutral-600 bg-neutral-800 px-4 py-2 text-body-sm font-semibold text-white transition-colors hover:bg-neutral-700"
+            class="focus-ring-dark flex items-center justify-center gap-2 rounded-lg border border-neutral-600 bg-neutral-800 px-4 py-2 text-body-sm font-semibold text-white transition-colors hover:bg-neutral-700"
           >
             View Details
           </button>
@@ -177,7 +177,7 @@
         <div class="mt-auto pt-4">
           <button
             type="button"
-            class="flex items-center justify-center gap-2 w-full rounded-lg border border-neutral-600 bg-neutral-700 px-6 py-3 text-body-sm font-semibold text-white transition-colors hover:bg-neutral-600"
+            class="focus-ring-dark flex items-center justify-center gap-2 w-full rounded-lg border border-neutral-600 bg-neutral-700 px-6 py-3 text-body-sm font-semibold text-white transition-colors hover:bg-neutral-600"
           >
             <Icon
               name="bell-alert"

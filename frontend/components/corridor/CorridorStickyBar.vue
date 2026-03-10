@@ -82,7 +82,6 @@
               v-model="localFromCurrency"
               :currencies="availableFromCurrenciesArray"
               :country-code="localFromCountry"
-              :exclude-currency="localToCurrency"
               placeholder="USD"
               code-only
               :disabled="!isInteractionReady"
@@ -100,7 +99,6 @@
               v-model="localToCurrency"
               :currencies="availableToCurrenciesArray"
               :country-code="localToCountry"
-              :exclude-currency="localFromCurrency"
               placeholder="USD"
               code-only
               :disabled="!isInteractionReady"
@@ -162,8 +160,11 @@ viewBox="0 0 24 24"
       </div>
     </div>
 
-    <!-- Actions Bar -->
-    <div class="border-t border-rs-border bg-neutral-50/50 px-5 py-4">
+    <!-- Actions Bar — only visible when results are available -->
+    <div
+      v-if="isInteractionReady && props.hasResults"
+      class="border-t border-rs-border bg-neutral-50/50 px-5 py-4"
+    >
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <!-- Payout Methods -->
         <div class="flex items-center gap-2">
@@ -211,7 +212,7 @@ viewBox="0 0 24 24"
               :key="method.value"
               type="button"
               :class="[
-                'text-body-sm inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-semibold transition-all',
+                'text-body-sm inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50',
                 localPayoutMethod === method.value
                   ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-neutral-600 hover:bg-neutral-50',
@@ -257,7 +258,7 @@ class="h-3.5 w-3.5"
             <button
               type="button"
               :class="[
-                'rounded-lg p-2 transition-colors',
+                'rounded-lg p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50',
                 props.watchlistActive
                   ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100'
                   : 'text-rs-muted hover:bg-brand-50 hover:text-brand-600',
@@ -287,7 +288,7 @@ class="h-3.5 w-3.5"
             <button
               type="button"
               :class="[
-                'rounded-lg p-2 transition-colors',
+                'rounded-lg p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50',
                 props.alertActive
                   ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100'
                   : 'text-rs-muted hover:bg-brand-50 hover:text-brand-600',
@@ -316,9 +317,10 @@ class="h-3.5 w-3.5"
             </button>
             <button
               type="button"
-              class="rounded-lg p-2 text-rs-muted transition-colors hover:bg-brand-50 hover:text-brand-600"
+              class="rounded-lg p-2 text-rs-muted transition-colors hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
               title="Share"
               aria-label="Share"
+              :disabled="!isInteractionReady"
               @click="emit('share')"
             >
               <svg
@@ -337,6 +339,21 @@ viewBox="0 0 24 24"
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Inline loading indicator -->
+    <div
+      v-if="props.loading"
+      data-testid="corridor-refresh-gate"
+      class="border-t border-rs-border"
+    >
+      <div class="flex items-center justify-center gap-3 px-5 py-5">
+        <div class="h-4 w-4 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+        <span class="text-body-sm font-medium text-rs-muted">Checking live provider quotes…</span>
+      </div>
+      <div class="relative h-1 w-full overflow-hidden bg-brand-100">
+        <div class="loading-bar-slide absolute inset-y-0 left-0 w-1/3 rounded-full bg-brand-500" />
       </div>
     </div>
   </div>
@@ -418,6 +435,8 @@ const props = withDefaults(
     availableFromCurrencies?: string | string[]
     availableMethods?: string | string[]
     methodsLoading?: boolean
+    loading?: boolean
+    hasResults?: boolean
     watchlistActive?: boolean
     alertActive?: boolean
   }>(),
@@ -430,6 +449,8 @@ const props = withDefaults(
     availableFromCurrencies: () => [],
     availableMethods: () => [],
     methodsLoading: false,
+    loading: false,
+    hasResults: false,
     watchlistActive: false,
     alertActive: false,
   },
@@ -470,10 +491,11 @@ const localFromCurrency = ref(props.fromCurrency || 'USD')
 const localFromCountry = ref(props.fromCountry || 'US')
 const localToCountry = ref(props.toCountry || 'MX')
 const isSearching = ref(false)
-const isInteractionReady = ref(false)
+const mounted = ref(false)
+const isInteractionReady = computed(() => mounted.value && !props.loading)
 
 onMounted(() => {
-  isInteractionReady.value = true
+  mounted.value = true
 })
 
 const availableToCurrenciesArray = computed(() => {

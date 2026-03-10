@@ -1,6 +1,6 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden flex flex-col h-full">
-    <div class="border-b border-neutral-700 px-6 py-4">
+  <div class="card-surface overflow-hidden flex flex-col h-full">
+    <div class="border-b border-white/[0.08] px-6 py-4">
       <h2 class="text-body-lg font-bold text-white">
         Market Events
       </h2>
@@ -27,7 +27,8 @@
         <div
           v-for="event in events"
           :key="event.id"
-          class="flex items-start justify-between gap-4 rounded-lg border border-neutral-700 bg-neutral-900 p-4"
+          class="flex items-start justify-between gap-4 rounded-lg border border-neutral-700 bg-neutral-900 p-4 border-l-2"
+          :class="getSeverityBorderClass(event.severity)"
         >
           <div class="flex items-start gap-3">
             <span
@@ -38,7 +39,7 @@
               <div class="flex items-center gap-2 text-body-sm text-neutral-500">
                 <span>{{ formatTimestamp(event.timestamp) }}</span>
                 <span
-                  class="uppercase tracking-wider text-[10px]"
+                  class="text-label"
                   :class="getSeverityText(event.severity)"
                 >
                   {{ event.severity.toUpperCase() }}
@@ -56,7 +57,7 @@
           <button
             v-if="event.chartId"
             type="button"
-            class="shrink-0 rounded-md border border-neutral-600 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700"
+            class="shrink-0 rounded-md border border-neutral-600 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700 focus-ring-dark"
             @click="$emit('view', event.chartId)"
           >
             View
@@ -65,7 +66,7 @@
       </div>
     </div>
 
-    <div class="border-t border-neutral-700 px-6 py-3 text-body-sm text-neutral-500">
+    <div class="border-t border-white/[0.08] px-6 py-3 text-body-sm text-neutral-500">
       Events are derived from automated quote monitoring and anomaly detection.
     </div>
   </div>
@@ -85,6 +86,15 @@ const loading = ref(true)
 defineEmits<{
   view: [chartId: string]
 }>()
+
+function getSeverityBorderClass(level: PulseEventItem['severity']): string {
+  switch (level) {
+    case 'high': return 'border-l-red-500'
+    case 'medium': return 'border-l-amber-500'
+    case 'low': return 'border-l-blue-500'
+    default: return 'border-l-neutral-600'
+  }
+}
 
 function getSeverityColor(level: PulseEventItem['severity']) {
   if (level === 'high') return 'bg-danger-600'

@@ -1,6 +1,6 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
-    <div class="border-b border-neutral-700 px-6 py-4">
+  <div class="card-surface overflow-hidden">
+    <div class="border-b border-white/[0.08] px-6 py-4">
       <h2 class="text-body-lg font-bold text-white">
         Provider Leaderboard
       </h2>
@@ -21,7 +21,7 @@
       </div>
 
       <div
-        v-else
+        v-else-if="rows.length"
         class="overflow-x-auto"
       >
         <table class="min-w-full text-body-sm">
@@ -60,48 +60,67 @@
             <tr
               v-for="(row, index) in rows"
               :key="row.provider"
-              class="transition-colors"
+              class="odd:bg-white/[0.02] transition-colors"
               :class="index === 0 ? 'bg-brand-600/10' : 'hover:bg-neutral-900'"
             >
-              <td class="px-3 py-3 text-left font-semibold text-white">
+              <td
+                class="px-3 py-3 text-left"
+                :class="[
+                  index === 0 ? 'text-emerald-400 font-bold' :
+                  index === 1 ? 'text-blue-400 font-semibold' :
+                  index === 2 ? 'text-amber-400 font-semibold' :
+                  'text-neutral-500'
+                ]"
+              >
                 #{{ index + 1 }}
               </td>
               <td class="px-3 py-3 text-left text-white">
                 {{ row.provider }}
               </td>
-              <td class="px-3 py-3 text-right font-semibold text-white">
+              <td class="px-3 py-3 text-right font-semibold text-white text-mono-value">
                 {{ deliveredMoney(row.deliveredAmount) }}
               </td>
               <td class="px-3 py-3 text-right">
-                <div class="font-semibold text-white">
+                <div class="font-semibold text-white text-mono-value">
                   {{ sendMoney(row.totalCost) }}
                 </div>
-                <div class="text-body-sm text-neutral-500">
+                <div class="text-body-sm text-neutral-500 text-mono-value">
                   {{ row.totalCostBps }} bps
                 </div>
               </td>
-              <td class="px-3 py-3 text-right text-neutral-300">
+              <td class="px-3 py-3 text-right text-neutral-300 text-mono-value">
                 {{ sendMoney(row.fee) }}
               </td>
-              <td class="px-3 py-3 text-right text-neutral-300">
+              <td class="px-3 py-3 text-right text-neutral-300 text-mono-value">
                 {{ row.markupBps }} bps
               </td>
               <td class="px-3 py-3 text-left text-neutral-300">
                 {{ row.speed }}
               </td>
-              <td class="px-3 py-3 text-right text-neutral-300">
+              <td class="px-3 py-3 text-right text-neutral-300 text-mono-value">
                 {{ formatPercent(row.winRate, { digits: 0 }) }}
               </td>
-              <td class="px-3 py-3 text-right text-neutral-300">
+              <td class="px-3 py-3 text-right text-neutral-300 text-mono-value">
                 {{ formatPercent(row.reliability, { digits: 1 }) }}
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <div
+        v-else
+        class="flex flex-col items-center justify-center py-12 text-center"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="mb-3 h-10 w-10 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
+        </svg>
+        <p class="text-body-sm font-medium text-neutral-400">No provider data available</p>
+        <p class="mt-1 text-body-sm text-neutral-600">Select a corridor to see the leaderboard</p>
+      </div>
     </div>
 
-    <div class="border-t border-neutral-700 px-6 py-3 text-body-sm text-neutral-500">
+    <div class="border-t border-white/[0.08] px-6 py-3 text-body-sm text-neutral-500">
       Winner = highest delivered amount at the selected amount and method.
     </div>
 

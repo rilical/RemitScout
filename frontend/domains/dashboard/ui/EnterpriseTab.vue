@@ -14,6 +14,7 @@ import {
 } from '~/composables/useChartImageExport'
 import { buildCorridorSearchText, formatCorridorCountryPair } from '~/utils/corridorLabels'
 import { getCountryByCode } from '~/utils/countries-currencies'
+import CountrySelect from '~/components/shared/CountrySelect.vue'
 
 type EmbedVisualKey = 'teer' | 'rci' | 'rvi_bps'
 type NoticeTone = 'danger' | 'warning' | 'info'
@@ -46,6 +47,12 @@ type EnterpriseNotice = {
 
 const EXPORT_DELAY_THRESHOLD_MINUTES = 15
 
+const SCOPE_META: Record<string, { label: string, description: string, icon: string }> = {
+  'indices:read': { label: 'Market Indices', description: 'TEER, RCI, RVI time-series and latest values for any corridor', icon: 'chart-bar' },
+  'corridors:read': { label: 'Corridor Coverage', description: 'Provider coverage, freshness status, and publish-gate metadata per corridor', icon: 'globe-alt' },
+  'exports:read': { label: 'Data Exports', description: 'CSV and Parquet bulk extracts of index data (premium tier)', icon: 'arrow-down-tray' },
+}
+
 const EXPORT_JOB_TYPE_LABELS: Record<string, string> = {
   history: 'Quote history',
   watchlist: 'Watchlist',
@@ -69,6 +76,43 @@ const INDEX_DEFINITIONS: Record<string, { full: string, description: string }> =
   rci: { full: 'Remittance Cost Index', description: 'Total cost as a % of send amount — lower is cheaper.' },
   rvi_bps: { full: 'Rate Volatility Index', description: 'Pricing dispersion across providers in basis points — higher means more variation.' },
 }
+
+const EXPORT_TYPE_DESCRIPTIONS: Record<string, string> = {
+  history: 'Historical rate comparisons across all providers you\'ve checked.',
+  watchlist: 'Your saved corridor rates tracked over time.',
+  alerts: 'Alert trigger history and rate snapshots.',
+  all: 'Complete data export across all categories.',
+  indices: 'TEER, RCI, and RVI index time-series for selected corridors.',
+}
+
+const windowOptions = [
+  { label: '1 week', value: 7 },
+  { label: '2 weeks', value: 14 },
+  { label: '1 month', value: 30 },
+  { label: '2 months', value: 60 },
+  { label: '3 months', value: 90 },
+]
+
+const themeOptions = [
+  { label: 'Dark', value: 'dark' },
+  { label: 'Light', value: 'light' },
+]
+
+const exportTypeOptions = [
+  { label: 'Quote history', value: 'history' },
+  { label: 'Watchlist', value: 'watchlist' },
+  { label: 'Alerts', value: 'alerts' },
+  { label: 'All data', value: 'all' },
+  { label: 'TEER / RCI / RVI', value: 'indices' },
+]
+
+const exportFormatOptions = [
+  { label: 'CSV', value: 'csv' },
+  { label: 'PDF', value: 'pdf' },
+  { label: 'Parquet', value: 'parquet' },
+]
+
+const windowLabel = computed(() => windowOptions.find(o => o.value === embedDays.value)?.label ?? `${embedDays.value}d`)
 
 const { apiAccess, apiTier, apiRateLimitRpm, indicesEmbedsEnabled, indicesExportsEnabled, limits }
   = useEntitlements()
@@ -172,6 +216,61 @@ const embedFormError = ref<string | null>(null)
 const exportFormError = ref<string | null>(null)
 const revokeConfirmId = ref<string | null>(null)
 let revokeConfirmTimeout: ReturnType<typeof setTimeout> | null = null
+
+const embedFromCountry = ref('')
+const embedToCountry = ref('')
+const exportFromCountry = ref('')
+const exportToCountry = ref('')
+
+const embedMatchingCorridors = computed(() => {
+  if (!embedFromCountry.value || !embedToCountry.value) return []
+  return corridors.value.filter(
+    c => c.sourceCountry === embedFromCountry.value && c.destCountry === embedToCountry.value,
+  )
+})
+
+const exportMatchingCorridors = computed(() => {
+  if (!exportFromCountry.value || !exportToCountry.value) return []
+  return corridors.value.filter(
+    c => c.sourceCountry === exportFromCountry.value && c.destCountry === exportToCountry.value,
+  )
+})
+
+const goldSendCountries = computed(() =>
+  [...new Set(corridors.value.map(c => c.sourceCountry))].sort(),
+)
+const goldReceiveCountries = computed(() =>
+  [...new Set(corridors.value.map(c => c.destCountry))].sort(),
+)
+
+function handleEmbedCountrySelected(direction: 'from' | 'to', countryCode: string) {
+  if (direction === 'from') embedFromCountry.value = countryCode
+  else embedToCountry.value = countryCode
+  autoSelectEmbedCorridor()
+}
+
+function autoSelectEmbedCorridor() {
+  const matches = embedMatchingCorridors.value
+  if (matches.length === 1) {
+    selectEmbedCorridor(matches[0].corridorId)
+  }
+  else if (matches.length === 0) {
+    embedCorridorInput.value = ''
+  }
+}
+
+function handleExportCountrySelected(direction: 'from' | 'to', countryCode: string) {
+  if (direction === 'from') exportFromCountry.value = countryCode
+  else exportToCountry.value = countryCode
+}
+
+function addMatchingExportCorridors() {
+  for (const corridor of exportMatchingCorridors.value) {
+    if (!selectedExportCorridorIdSet.value.has(corridor.corridorId)) {
+      addExportCorridor(corridor.corridorId)
+    }
+  }
+}
 
 const showGettingStarted = ref(
   import.meta.client ? localStorage.getItem('rs-enterprise-getting-started-dismissed') !== '1' : true,
@@ -626,203 +725,205 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (revokeConfirmTimeout) clearTimeout(revokeConfirmTimeout)
 })
+
+const CORRIDOR_ID_PATTERN = /^[A-Z]{2}-[A-Z]{2}-[A-Z]{3}-[A-Z]{3}$/
+const isCorridorId = (value: string) => CORRIDOR_ID_PATTERN.test(normalizeCorridorId(value))
+
+const normalizedEmbedCorridorInput = computed(() => normalizeCorridorId(embedCorridorInput.value))
+const manualEmbedCorridorId = computed(() =>
+  isCorridorId(embedCorridorInput.value) ? normalizedEmbedCorridorInput.value : '',
+)
+
+const manualExportCorridorId = computed(() => {
+  const normalized = normalizeCorridorId(exportCorridorSearch.value)
+  if (!isCorridorId(normalized)) return ''
+  return selectedExportCorridorIdSet.value.has(normalized) ? '' : normalized
+})
+
+const METHOD_PROFILE_LABELS: Record<string, string> = {
+  standard_bank: 'Bank to bank',
+  standard_card: 'Card to bank',
+  cash_pickup: 'Cash pickup',
+  mobile_wallet: 'Mobile wallet',
+  airtime_topup: 'Airtime top-up',
+  card_delivery: 'Card delivery',
+  home_delivery: 'Home delivery',
+}
+
+function getMethodProfileLabel(methodProfile: string) {
+  return METHOD_PROFILE_LABELS[methodProfile] || methodProfile
+}
+
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 </script>
 
+
 <template>
-  <div class="space-y-6">
-    <section
-      class="overflow-hidden rounded-2xl border border-rs-border bg-gradient-to-br from-neutral-950 via-neutral-900 to-brand-950 text-white shadow-sm"
-    >
-      <div class="grid gap-6 p-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)] lg:p-8">
-        <div class="space-y-4">
-          <div
-            class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70"
-          >
-            <Icon
-name="building-library"
-:size="16"
-class="text-current"
-/>
-            Enterprise
-          </div>
-          <div class="space-y-2">
-            <h2 class="text-h4 font-semibold text-white">Enterprise Data Console</h2>
-            <p class="text-body-sm text-white/72 max-w-2xl leading-6">
-              Manage API access, publish static TEER / RCI / RVI embeds, and build export jobs from
-              a real corridor catalog instead of raw IDs. When staging is degraded, this surface now
-              says so instead of pretending everything is healthy.
+  <div class="space-y-8">
+    <!-- ─── Hero ─── -->
+    <section class="overflow-hidden rounded-xl border border-brand-700 bg-brand-600 text-white">
+      <div class="px-8 pb-0 pt-8">
+        <div class="flex items-start justify-between gap-6">
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
+              <Icon name="building-library" :size="14" class="text-current" />
+              Enterprise
+            </div>
+            <h2 class="text-2xl font-semibold tracking-tight text-white">Data Console</h2>
+            <p class="max-w-xl text-sm leading-relaxed text-white/70">
+              Manage API keys, publish index embeds, and create data exports across your corridor catalog.
             </p>
+            <NuxtLink
+              to="/docs/enterprise"
+              class="mt-1 inline-flex items-center gap-1.5 rounded-md border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+            >
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+              API Documentation
+            </NuxtLink>
           </div>
-          <div class="text-body-sm flex flex-wrap gap-3 text-white/80">
-            <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-              Tier {{ apiTier || 2 }} API access
-            </div>
-            <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-              {{ apiRateLimitRpm ?? 600 }} req/min
-            </div>
-            <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-              Exports window {{ exportWindowLimitDays }} days
-            </div>
+          <div class="hidden items-center gap-2 text-xs text-white/70 sm:flex">
+            <span class="rounded-md border border-white/15 bg-white/10 px-2.5 py-1 font-medium">Tier {{ apiTier || 2 }}</span>
+            <span class="rounded-md border border-white/15 bg-white/10 px-2.5 py-1 font-medium">{{ apiRateLimitRpm ?? 600 }} req/min</span>
+            <span class="rounded-md border border-white/15 bg-white/10 px-2.5 py-1 font-medium">{{ exportWindowLimitDays }}-day window</span>
           </div>
         </div>
-
-        <div class="grid gap-3 sm:grid-cols-2">
-          <div class="bg-white/6 rounded-2xl border border-white/10 p-4 backdrop-blur-sm">
-            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
-              API Keys
-            </div>
-            <div class="text-h4 mt-2 font-semibold text-white">{{ apiKeyUsageLabel }}</div>
-            <div class="text-body-sm text-white/68 mt-1">Active keys vs account cap</div>
-          </div>
-          <div class="bg-white/6 rounded-2xl border border-white/10 p-4 backdrop-blur-sm">
-            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
-              Published Embeds
-            </div>
-            <div class="text-h4 mt-2 font-semibold text-white">{{ activePublishedEmbedCount }}</div>
-            <div class="text-body-sm text-white/68 mt-1">Active public embed bundles</div>
-          </div>
-          <div class="bg-white/6 rounded-2xl border border-white/10 p-4 backdrop-blur-sm">
-            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
-              Corridor Catalog
-            </div>
-            <div class="text-h4 mt-2 font-semibold text-white">{{ corridorCatalogCount }}</div>
-            <div class="text-body-sm text-white/68 mt-1">Available corridor suggestions</div>
-          </div>
-          <div class="bg-white/6 rounded-2xl border border-white/10 p-4 backdrop-blur-sm">
-            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
-              Export Queue
-            </div>
-            <div class="text-h4 mt-2 font-semibold text-white">{{ delayedExportJobs.length }}</div>
-            <div class="text-body-sm text-white/68 mt-1">Delayed jobs over 15 minutes</div>
-          </div>
+      </div>
+      <div class="mt-6 grid grid-cols-2 divide-x divide-white/15 border-t border-white/15 lg:grid-cols-4">
+        <div class="px-8 py-5">
+          <div class="text-2xl font-semibold tabular-nums text-white">{{ apiKeyUsageLabel }}</div>
+          <div class="mt-1 text-xs text-white/70">API Keys</div>
+        </div>
+        <div class="px-8 py-5">
+          <div class="text-2xl font-semibold tabular-nums text-white">{{ activePublishedEmbedCount }}</div>
+          <div class="mt-1 text-xs text-white/70">Published Embeds</div>
+        </div>
+        <div class="px-8 py-5">
+          <div class="text-2xl font-semibold tabular-nums text-white">{{ corridorCatalogCount }}</div>
+          <div class="mt-1 text-xs text-white/70">Corridors</div>
+        </div>
+        <div class="px-8 py-5">
+          <div class="text-2xl font-semibold tabular-nums text-white">{{ delayedExportJobs.length }}</div>
+          <div class="mt-1 text-xs text-white/70">Delayed Exports</div>
         </div>
       </div>
     </section>
 
-    <div v-if="showGettingStarted" class="mb-6 rounded-2xl border border-brand-200 bg-brand-50/50 px-6 py-5">
-      <div class="flex items-start justify-between">
-        <div>
-          <h3 class="text-body-sm font-bold text-brand-900">Getting started with Enterprise</h3>
-          <div class="mt-3 space-y-2 text-body-sm text-brand-800">
-            <p><strong>1.</strong> Create an API key to authenticate server-to-server requests.</p>
-            <p><strong>2.</strong> Pick a corridor (e.g. US → Philippines) to monitor.</p>
-            <p><strong>3.</strong> Publish an embed or create a data export.</p>
-          </div>
-          <div class="mt-3 flex items-center gap-4 text-[11px]">
-            <NuxtLink to="/indices-methodology" class="font-semibold text-brand-700 hover:text-brand-800">
-              What are TEER, RCI &amp; RVI? →
-            </NuxtLink>
-            <NuxtLink to="/api-docs" class="font-semibold text-brand-700 hover:text-brand-800">
-              API documentation →
-            </NuxtLink>
-          </div>
-        </div>
-        <button
-          type="button"
-          class="ml-4 shrink-0 text-brand-400 hover:text-brand-600"
-          @click="dismissGettingStarted"
+    <!-- ─── Onboarding Steps ─── -->
+    <nav class="flex items-center gap-3 rounded-xl border border-rs-border bg-surface px-5 py-4">
+      <a
+        href="#enterprise-api"
+        class="inline-flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm font-medium text-rs-fg transition-colors hover:bg-brand-50 hover:text-brand-700"
+        @click.prevent="scrollToSection('enterprise-api')"
+      >
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">1</span>
+        Create an API key
+      </a>
+      <svg class="h-4 w-4 flex-shrink-0 text-neutral-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      <a
+        href="#enterprise-embeds"
+        class="inline-flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm font-medium text-rs-fg transition-colors hover:bg-brand-50 hover:text-brand-700"
+        @click.prevent="scrollToSection('enterprise-embeds')"
+      >
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">2</span>
+        Pick a corridor
+      </a>
+      <svg class="h-4 w-4 flex-shrink-0 text-neutral-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      <a
+        href="#enterprise-exports"
+        class="inline-flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm font-medium text-rs-fg transition-colors hover:bg-brand-50 hover:text-brand-700"
+        @click.prevent="scrollToSection('enterprise-exports')"
+      >
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">3</span>
+        Publish or export
+      </a>
+      <div class="ml-auto">
+        <NuxtLink
+          to="/docs/enterprise"
+          class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-brand-700"
         >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+          Full documentation
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+        </NuxtLink>
       </div>
-    </div>
+    </nav>
 
-    <div
-v-if="enterpriseNotices.length > 0"
-class="space-y-3"
->
+    <!-- ─── Notices ─── -->
+    <div v-if="enterpriseNotices.length > 0" class="space-y-2">
       <div
         v-for="notice in enterpriseNotices"
         :key="`${notice.tone}-${notice.title}`"
-        class="rounded-xl border px-4 py-3"
+        class="flex items-start gap-3 rounded-lg border px-4 py-3"
         :class="getNoticeClasses(notice.tone)"
       >
-        <div class="flex items-start gap-3">
-          <div class="mt-0.5 rounded-full bg-white/60 p-1">
-            <Icon
-:name="getNoticeIcon(notice.tone)"
-:size="16"
-class="text-current"
-/>
-          </div>
-          <div>
-            <div class="text-body-sm font-semibold">{{ notice.title }}</div>
-            <p class="text-body-sm mt-1 leading-6">
-              {{ notice.body }}
-            </p>
-          </div>
+        <Icon :name="getNoticeIcon(notice.tone)" :size="16" class="mt-0.5 flex-shrink-0 text-current" />
+        <div class="min-w-0">
+          <div class="text-sm font-medium">{{ notice.title }}</div>
+          <p class="mt-0.5 text-sm leading-relaxed opacity-80">{{ notice.body }}</p>
         </div>
       </div>
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-      <section class="space-y-5 rounded-2xl border border-rs-border bg-surface p-6">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 class="text-body-lg font-semibold text-rs-fg">API Access</h3>
-            <p class="text-body-sm mt-1 text-rs-muted">
-              Issue scoped keys for server-to-server access. Tokens are only shown once, rotation is
-              immediate, and revoked keys stop working without waiting for a deploy.
-            </p>
-          </div>
-          <button
-            type="button"
-            class="text-body-sm inline-flex items-center gap-2 rounded-full border border-rs-border px-3 py-1.5 font-semibold text-rs-fg transition-colors hover:border-brand-200 hover:text-brand-700 disabled:opacity-60"
-            :disabled="apiKeysLoading || !apiAccess"
-            @click="fetchApiKeys"
-          >
-            <Icon
-name="arrows-right-left"
-:size="16"
-class="text-current"
-/>
-            Refresh
-          </button>
+    <!-- ─── API Access ─── -->
+    <section id="enterprise-api" class="rounded-xl border border-rs-border bg-surface">
+      <div class="flex items-center justify-between border-b border-rs-border px-6 py-4">
+        <div>
+          <h3 class="text-base font-semibold text-rs-fg">API Access</h3>
+          <p class="mt-0.5 text-sm text-rs-muted">Scoped keys for server-to-server integration.</p>
         </div>
-
-        <div
-          class="grid gap-3 rounded-2xl border border-rs-border bg-neutral-50 p-4 lg:grid-cols-[minmax(0,1fr)_auto]"
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-rs-border px-3 py-1.5 text-xs font-medium text-rs-muted transition-colors hover:border-neutral-400 hover:text-rs-fg disabled:opacity-50"
+          :disabled="apiKeysLoading || !apiAccess"
+          @click="fetchApiKeys"
         >
-          <div class="space-y-3">
-            <div class="flex flex-wrap gap-2 text-[11px] text-rs-muted">
-              <span class="rounded-full bg-surface px-2.5 py-1 font-semibold text-rs-fg">
-                {{ activeApiKeyCount }}/{{ maxApiKeys }} keys used
-              </span>
-              <span class="rounded-full bg-surface px-2.5 py-1 font-semibold text-rs-fg">
-                {{ apiRateLimitRpm ?? 600 }} req/min
-              </span>
-              <span class="rounded-full bg-surface px-2.5 py-1 font-semibold text-rs-fg">
-                Tier {{ apiTier || 2 }}
-              </span>
+          <Icon name="arrows-right-left" :size="14" class="text-current" />
+          Refresh
+        </button>
+      </div>
+
+      <div class="space-y-5 p-6">
+        <!-- Create key form -->
+        <div class="flex flex-col gap-3 rounded-lg border border-rs-border bg-neutral-50 p-4 lg:flex-row lg:items-end">
+          <div class="flex-1 space-y-2">
+            <div class="flex flex-wrap items-center gap-2 text-xs text-rs-muted">
+              <span class="rounded bg-surface px-2 py-0.5 font-medium text-rs-fg">{{ activeApiKeyCount }}/{{ maxApiKeys }} keys</span>
+              <span class="rounded bg-surface px-2 py-0.5 font-medium text-rs-fg">{{ apiRateLimitRpm ?? 600 }} req/min</span>
+              <span class="rounded bg-surface px-2 py-0.5 font-medium text-rs-fg">Tier {{ apiTier || 2 }}</span>
             </div>
             <input
               v-model="apiKeyName"
               type="text"
               placeholder="Key name"
-              class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-            >
-            <div class="flex flex-wrap gap-2">
+              class="h-10 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+            <div class="grid gap-2 sm:grid-cols-3">
               <label
                 v-for="scope in availableScopes"
                 :key="scope.value"
-                class="text-body-sm inline-flex cursor-pointer items-center gap-2 rounded-full border border-rs-border bg-surface px-3 py-1.5 text-rs-fg transition-colors hover:border-brand-200"
+                class="flex cursor-pointer items-start gap-3 rounded-lg border bg-surface p-3 transition-colors"
+                :class="apiKeyScopes.includes(scope.value) ? 'border-brand-300 bg-brand-50/50' : 'border-rs-border hover:border-neutral-300'"
               >
                 <input
                   v-model="apiKeyScopes"
                   type="checkbox"
                   :value="scope.value"
-                  class="rounded border-rs-border text-brand-600 focus:ring-brand-200"
-                >
-                <span class="font-mono text-[11px]">{{ scope.value }}</span>
+                  class="mt-0.5 rounded border-rs-border text-brand-600 focus:ring-brand-200"
+                />
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <Icon :name="SCOPE_META[scope.value]?.icon || 'document'" :size="14" class="flex-shrink-0 text-brand-600" />
+                    <span class="text-xs font-semibold text-rs-fg">{{ SCOPE_META[scope.value]?.label || scope.value }}</span>
+                  </div>
+                  <p class="mt-0.5 text-[11px] leading-snug text-rs-muted">{{ SCOPE_META[scope.value]?.description || scope.value }}</p>
+                </div>
               </label>
             </div>
           </div>
-
           <button
             type="button"
-            class="text-body-sm inline-flex min-h-[44px] items-center justify-center rounded-xl bg-brand-600 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
+            class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
             :disabled="apiKeysLoading || !apiAccess"
             @click="createEnterpriseApiKey"
           >
@@ -830,46 +931,33 @@ class="text-current"
           </button>
         </div>
 
-        <p
-v-if="apiKeysError"
-class="text-body-sm text-danger-600"
->
-          {{ apiKeysError }}
-        </p>
+        <p v-if="apiKeysError" class="text-sm text-danger-600">{{ apiKeysError }}</p>
 
-        <div
-          v-if="apiKeyToken"
-          class="rounded-2xl border border-success-200 bg-success-50 p-4 text-success-900"
-        >
-          <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- New token banner -->
+        <div v-if="apiKeyToken" class="rounded-lg border border-success-200 bg-success-50 p-4">
+          <div class="flex items-center justify-between gap-3">
             <div>
-              <div class="text-body-sm font-semibold">New token issued</div>
-              <p class="mt-1 text-[11px] text-success-700">
-                Save this now. For security, the full token is not shown again.
-              </p>
+              <div class="text-sm font-medium text-success-900">Token created</div>
+              <p class="mt-0.5 text-xs text-success-700">Copy now — this token won't be shown again.</p>
             </div>
             <button
               type="button"
-              class="text-body-sm font-semibold text-success-700 hover:text-success-800"
+              class="rounded-lg border border-success-300 px-3 py-1.5 text-xs font-medium text-success-700 transition-colors hover:bg-success-100"
               @click="copyApiKeyToken"
             >
-              Copy token
+              Copy
             </button>
           </div>
-          <div
-            class="mt-3 break-all rounded-xl border border-success-200 bg-white/70 px-3 py-3 font-mono text-[11px] text-success-900"
-          >
+          <div class="mt-3 break-all rounded-md border border-success-200 bg-white/70 px-3 py-2.5 font-mono text-xs text-success-900">
             {{ apiKeyToken }}
           </div>
-          <div
-            v-if="apiKeyTokenLabel || apiKeyCopyStatus"
-            class="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-success-700"
-          >
+          <div v-if="apiKeyTokenLabel || apiKeyCopyStatus" class="mt-2 flex items-center gap-3 text-xs text-success-600">
             <span v-if="apiKeyTokenLabel">Prefix {{ apiKeyTokenLabel }}</span>
             <span v-if="apiKeyCopyStatus">{{ apiKeyCopyStatus }}</span>
           </div>
         </div>
 
+        <!-- Keys table -->
         <DataTable
           variant="consumer"
           caption="API keys"
@@ -877,111 +965,88 @@ class="text-body-sm text-danger-600"
           :rows="apiKeys"
           :row-key="apiKeyTableRowKey"
           :loading="apiKeysLoading"
-          :empty="{ title: 'No API keys yet', message: 'Create a key to get started.' }"
+          :empty="{ title: 'No API keys', message: 'Create your first key above.' }"
         >
           <template #cell-name="{ row }">
-            <span class="text-rs-fg">{{ apiKeyFromRow(row).name || 'Untitled' }}</span>
+            <span class="font-medium text-rs-fg">{{ apiKeyFromRow(row).name || 'Untitled' }}</span>
           </template>
-
           <template #cell-key_prefix="{ row }">
-            <span class="text-body-sm font-mono text-neutral-600">
-              {{ apiKeyFromRow(row).key_prefix }}••••
-            </span>
+            <span class="font-mono text-xs text-neutral-500">{{ apiKeyFromRow(row).key_prefix }}••••</span>
           </template>
-
           <template #cell-scopes="{ row }">
-            <span class="text-body-sm text-rs-muted">
-              {{ apiKeyFromRow(row).scopes.join(', ') || '—' }}
-            </span>
+            <div class="flex flex-wrap gap-1">
+              <span
+                v-for="scope in apiKeyFromRow(row).scopes"
+                :key="scope"
+                class="inline-flex items-center gap-1 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-600"
+              >
+                <Icon v-if="SCOPE_META[scope]" :name="SCOPE_META[scope].icon" :size="10" class="text-neutral-400" />
+                {{ SCOPE_META[scope]?.label || scope }}
+              </span>
+              <span v-if="apiKeyFromRow(row).scopes.length === 0" class="text-xs text-rs-muted">—</span>
+            </div>
           </template>
-
           <template #cell-last_used_at="{ row }">
-            <span class="text-body-sm text-rs-muted">
-              {{
-                apiKeyFromRow(row).last_used_at ? formatDate(apiKeyFromRow(row).last_used_at!) : '—'
-              }}
-            </span>
+            <span class="text-xs text-rs-muted">{{ apiKeyFromRow(row).last_used_at ? formatRelativeTime(apiKeyFromRow(row).last_used_at!) : 'Never' }}</span>
           </template>
-
           <template #cell-revoked_at="{ row }">
             <span
               v-if="apiKeyFromRow(row).revoked_at"
-              class="text-body-sm rounded-full bg-neutral-100 px-2 py-0.5 text-rs-muted"
-            >
-              Revoked
-            </span>
+              class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-500"
+            >Revoked</span>
             <span
               v-else
-              class="text-body-sm rounded-full bg-success-100 px-2 py-0.5 text-success-700"
-            >
-              Active
-            </span>
+              class="inline-flex items-center rounded-full bg-success-50 px-2 py-0.5 text-[11px] font-medium text-success-700"
+            >Active</span>
           </template>
-
           <template #row-actions="{ row }">
-            <div class="flex items-center justify-end gap-2">
+            <div class="flex items-center justify-end gap-3">
               <button
                 type="button"
-                class="text-body-sm font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                class="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
                 :disabled="apiKeysLoading || !apiAccess || Boolean(apiKeyFromRow(row).revoked_at)"
                 @click="rotateEnterpriseApiKey(apiKeyFromRow(row))"
-              >
-                Rotate
-              </button>
+              >Rotate</button>
               <button
                 v-if="!apiKeyFromRow(row).revoked_at"
                 type="button"
-                class="text-body-sm font-semibold text-danger-600 hover:text-danger-700 disabled:opacity-50"
+                class="text-xs font-medium text-danger-600 hover:text-danger-700 disabled:opacity-50"
                 :disabled="apiKeysLoading || !apiAccess"
                 @click="revokeEnterpriseApiKey(apiKeyFromRow(row))"
-              >
-                Revoke
-              </button>
+              >Revoke</button>
             </div>
           </template>
         </DataTable>
 
-        <div class="rounded-2xl border border-rs-border bg-neutral-50 p-4">
+        <!-- API Reference -->
+        <div class="rounded-lg border border-rs-border">
           <button
             type="button"
-            class="text-body-sm flex w-full items-center justify-between font-semibold text-rs-fg"
+            class="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-rs-fg"
             @click="showApiReference = !showApiReference"
           >
             <span>API Reference</span>
-            <Icon
-              :name="showApiReference ? 'chevron-up' : 'chevron-down'"
-              :size="16"
-              class="text-neutral-400"
-            />
+            <Icon :name="showApiReference ? 'chevron-up' : 'chevron-down'" :size="14" class="text-neutral-400" />
           </button>
-
-          <div
-v-if="showApiReference"
-class="mt-4 space-y-4"
->
+          <div v-if="showApiReference" class="space-y-4 border-t border-rs-border px-4 pb-4 pt-4">
             <div class="grid gap-3 sm:grid-cols-2">
-              <div class="text-body-sm rounded-xl border border-rs-border bg-surface p-3">
-                <div class="text-rs-muted">Auth header</div>
-                <div class="mt-1 font-mono text-[11px] text-rs-fg">X-API-Key: &lt;token&gt;</div>
+              <div class="rounded-lg border border-rs-border bg-neutral-50 p-3">
+                <div class="text-xs text-rs-muted">Auth header</div>
+                <div class="mt-1 font-mono text-xs text-rs-fg">X-API-Key: &lt;token&gt;</div>
               </div>
-              <div class="text-body-sm rounded-xl border border-rs-border bg-surface p-3">
-                <div class="text-rs-muted">Key policy</div>
-                <div class="mt-1 text-rs-fg">Rotate immediately if a token is exposed.</div>
+              <div class="rounded-lg border border-rs-border bg-neutral-50 p-3">
+                <div class="text-xs text-rs-muted">Key policy</div>
+                <div class="mt-1 text-xs text-rs-fg">Rotate immediately if exposed.</div>
               </div>
             </div>
-
-            <div class="rounded-xl border border-rs-border bg-surface p-4">
-              <div
-                class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400"
-              >
-                Core endpoints
-              </div>
-              <div class="space-y-1.5 font-mono text-[11px] text-rs-fg">
+            <div class="rounded-lg border border-rs-border bg-neutral-50 p-4">
+              <div class="mb-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">Endpoints</div>
+              <div class="grid gap-1 font-mono text-xs text-rs-fg sm:grid-cols-2">
                 <div><span class="text-brand-600">GET</span> /api/v1/indices/series</div>
                 <div><span class="text-brand-600">GET</span> /api/v1/indices/latest</div>
                 <div><span class="text-brand-600">GET</span> /api/v1/indices/corridors</div>
                 <div><span class="text-brand-600">GET</span> /api/v1/indices/health</div>
-                <div><span class="text-success-700">POST</span> /api/v1/exports</div>
+                <div><span class="text-success-600">POST</span> /api/v1/exports</div>
                 <div><span class="text-brand-600">GET</span> /api/v1/exports</div>
                 <div><span class="text-brand-600">GET</span> /api/v1/exports/:id/download</div>
                 <div><span class="text-brand-600">GET</span> /api/v1/providers</div>
@@ -990,723 +1055,550 @@ class="mt-4 space-y-4"
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="space-y-5 rounded-2xl border border-rs-border bg-surface p-6">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 class="text-body-lg font-semibold text-rs-fg">Static Index Embeds</h3>
-            <p class="text-body-sm mt-1 text-rs-muted">
-              Publish durable TEER / RCI / RVI embed bundles with corridor search, clear preview
-              state, and download controls for the exact rendered chart.
-            </p>
-            <NuxtLink to="/indices-methodology" class="text-[11px] font-semibold text-brand-600 hover:text-brand-700">
-              Learn about TEER, RCI &amp; RVI →
-            </NuxtLink>
-          </div>
-          <button
-            type="button"
-            class="text-body-sm inline-flex items-center gap-2 rounded-full border border-rs-border px-3 py-1.5 font-semibold text-rs-fg transition-colors hover:border-brand-200 hover:text-brand-700 disabled:opacity-60"
-            :disabled="publishedEmbedsLoading"
-            @click="fetchPublishedEmbeds"
-          >
-            <Icon
-name="arrows-right-left"
-:size="16"
-class="text-current"
-/>
-            Refresh embeds
-          </button>
+    <!-- ─── Static Index Embeds ─── -->
+    <section id="enterprise-embeds" class="rounded-xl border border-rs-border bg-surface">
+      <div class="flex items-center justify-between border-b border-rs-border px-6 py-4">
+        <div>
+          <h3 class="text-base font-semibold text-rs-fg">Static Index Embeds</h3>
+          <p class="mt-0.5 text-sm text-rs-muted">Publish immutable TEER / RCI / RVI embed bundles.</p>
         </div>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-rs-border px-3 py-1.5 text-xs font-medium text-rs-muted transition-colors hover:border-neutral-400 hover:text-rs-fg disabled:opacity-50"
+          :disabled="publishedEmbedsLoading"
+          @click="fetchPublishedEmbeds"
+        >
+          <Icon name="arrows-right-left" :size="14" class="text-current" />
+          Refresh
+        </button>
+      </div>
 
-        <div class="rounded-2xl border border-rs-border bg-neutral-50 p-4">
-          <div class="space-y-3">
-            <div>
-              <label class="text-body-sm font-semibold text-neutral-700">Corridor</label>
-              <div class="mt-2">
+      <div class="space-y-6 p-6">
+        <!-- Corridor search + config -->
+        <div class="rounded-lg border border-rs-border bg-neutral-50 p-5">
+          <div class="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <!-- Left: corridor picker -->
+            <div class="space-y-3">
+              <label class="text-xs font-medium uppercase tracking-wider text-neutral-500">Corridor</label>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label class="mb-1.5 block text-xs font-medium text-neutral-600">From</label>
+                  <CountrySelect
+                    v-model="embedFromCountry"
+                    placeholder="Sending from…"
+                    :allowed-codes="goldSendCountries"
+                    @country-selected="(code: string) => handleEmbedCountrySelected('from', code)"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-xs font-medium text-neutral-600">To</label>
+                  <CountrySelect
+                    v-model="embedToCountry"
+                    placeholder="Sending to…"
+                    :allowed-codes="goldReceiveCountries"
+                    :exclude-country="embedFromCountry"
+                    @country-selected="(code: string) => handleEmbedCountrySelected('to', code)"
+                  />
+                </div>
+              </div>
+              <!-- Currency pair selector (when multiple corridors match) -->
+              <div v-if="embedMatchingCorridors.length > 1" class="space-y-1.5">
+                <label class="text-xs font-medium text-neutral-600">Currency pair</label>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="corridor in embedMatchingCorridors"
+                    :key="corridor.corridorId"
+                    type="button"
+                    class="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+                    :class="embedCorridorId === corridor.corridorId ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-rs-border bg-surface text-rs-fg hover:border-brand-300'"
+                    @click="selectEmbedCorridor(corridor.corridorId)"
+                  >{{ corridor.sourceCurrency }}/{{ corridor.destCurrency }}</button>
+                </div>
+              </div>
+              <div v-else-if="embedFromCountry && embedToCountry && embedMatchingCorridors.length === 0 && !corridorsLoading" class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-3 text-center text-xs text-rs-muted">
+                No corridors found for this pair.
+              </div>
+              <!-- Manual corridor ID fallback -->
+              <details class="text-xs text-rs-muted">
+                <summary class="cursor-pointer hover:text-rs-fg">Or enter corridor ID directly</summary>
                 <input
                   v-model="embedCorridorInput"
                   type="text"
-                  placeholder="e.g. US → Philippines, GB → Nigeria"
-                  class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                  placeholder="e.g. US-PH-USD-PHP"
+                  class="mt-2 h-9 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg placeholder:text-neutral-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   @keydown.enter.prevent="commitEmbedSearch"
-                >
-              </div>
-              <div
-                class="mt-2 max-h-56 overflow-auto rounded-xl border border-rs-border bg-surface"
-              >
-                <div
-v-if="corridorsLoading"
-class="text-body-sm px-3 py-4 text-rs-muted"
->
-                  Loading corridor catalog…
-                </div>
-                <template
-                  v-for="(corridor, index) in embedCorridorCandidates"
-                  :key="corridor.corridorId"
-                >
-                  <div
-                    v-if="embedGroupHeaders.has(corridor.corridorId)"
-                    class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-rs-muted"
-                  >
-                    {{ embedGroupHeaders.get(corridor.corridorId) }}
+                />
+                <button
+                  v-if="manualEmbedCorridorId && (!selectedEmbedCorridor || selectedEmbedCorridor.corridorId !== manualEmbedCorridorId)"
+                  type="button"
+                  class="mt-2 inline-flex items-center gap-1.5 rounded-md border border-rs-border bg-surface px-2.5 py-1.5 text-xs font-medium text-rs-fg transition-colors hover:border-brand-300"
+                  @click="selectEmbedCorridor(manualEmbedCorridorId)"
+                >Use {{ manualEmbedCorridorId }}</button>
+              </details>
+            </div>
+
+            <!-- Right: config form -->
+            <div class="space-y-3">
+              <div v-if="selectedEmbedCorridor || manualEmbedCorridorId" class="rounded-lg border border-brand-200 bg-brand-50/50 p-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <div class="text-sm font-medium text-rs-fg">
+                      {{ selectedEmbedCorridor ? corridorTitle(selectedEmbedCorridor) : manualEmbedCorridorId }}
+                    </div>
+                    <div class="mt-0.5 text-xs text-rs-muted">
+                      {{ selectedEmbedCorridor ? `${selectedEmbedCorridor.corridorId} · ${corridorSubtitle(selectedEmbedCorridor)}` : 'Manual ID' }}
+                    </div>
                   </div>
                   <button
+                    v-if="exportJobType === 'indices' && manualEmbedCorridorId && !selectedExportCorridorIdSet.has(manualEmbedCorridorId)"
                     type="button"
-                    class="flex w-full items-start justify-between gap-3 border-b border-rs-border px-3 py-3 text-left transition-colors last:border-b-0 hover:bg-neutral-50"
-                    @click="selectEmbedCorridor(corridor.corridorId)"
-                  >
-                    <div>
-                      <div class="text-body-sm font-semibold text-rs-fg">
-                        {{ corridorTitle(corridor) }}
-                      </div>
-                      <div class="mt-1 text-[11px] text-rs-muted">
-                        {{ corridorSubtitle(corridor) }}
-                      </div>
-                    </div>
-                    <div class="text-[11px] text-rs-muted">
-                      {{
-                        corridor.lastUpdated
-                          ? formatRelativeTime(corridor.lastUpdated)
-                          : 'No recent update'
-                      }}
-                    </div>
-                  </button>
-                </template>
-                <div
-                  v-if="!corridorsLoading && embedCorridorCandidates.length === 0"
-                  class="text-body-sm px-3 py-4 text-rs-muted"
-                >
-                  No corridor matches that search.
+                    class="text-xs font-medium text-brand-600 hover:text-brand-700"
+                    @click="useEmbedCorridorForExport"
+                  >Add to export</button>
                 </div>
               </div>
-            </div>
 
-            <div
-              v-if="selectedEmbedCorridor"
-              class="rounded-2xl border border-rs-border bg-surface p-4"
-            >
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div class="flex flex-wrap items-center gap-2 text-xs text-rs-muted">
+                <span class="rounded bg-surface px-2 py-0.5 font-medium text-rs-fg">$500 USD bucket</span>
+                <span class="rounded bg-surface px-2 py-0.5 font-medium text-rs-fg">Bank deposit</span>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <div class="text-body-sm font-semibold text-rs-fg">
-                    {{ corridorTitle(selectedEmbedCorridor) }}
-                  </div>
-                  <div class="mt-1 text-[11px] text-rs-muted">
-                    {{ corridorSubtitle(selectedEmbedCorridor) }}
+                  <label class="text-xs font-medium text-neutral-600">Window</label>
+                  <div class="mt-1.5">
+                    <UniversalDropdown
+                      :model-value="embedDays"
+                      :options="windowOptions"
+                      placeholder="Select window"
+                      @update:model-value="(v: string | number) => embedDays = Number(v)"
+                    />
                   </div>
                 </div>
+                <div>
+                  <label class="text-xs font-medium text-neutral-600">Theme</label>
+                  <div class="mt-1.5">
+                    <UniversalDropdown
+                      :model-value="embedTheme"
+                      :options="themeOptions"
+                      placeholder="Select theme"
+                      @update:model-value="(v: string | number) => embedTheme = String(v) as 'dark' | 'light'"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 pt-1">
                 <button
-                  v-if="
-                    exportJobType === 'indices'
-                    && !selectedExportCorridorIdSet.has(selectedEmbedCorridor.corridorId)
-                  "
                   type="button"
-                  class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
-                  @click="useEmbedCorridorForExport"
-                >
-                  Add to current export
-                </button>
+                  class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+                  :disabled="embedPublishedGenerating || !indicesEmbedsEnabled"
+                  @click="handlePublishEmbed"
+                >{{ embedPublishedGenerating ? 'Publishing…' : 'Publish embed' }}</button>
+                <div class="flex flex-wrap items-center gap-1.5 text-xs text-rs-muted">
+                  <span class="rounded bg-neutral-200/60 px-1.5 py-0.5 text-neutral-600">Bank deposit</span>
+                  <span class="text-neutral-300">&middot;</span>
+                  <span class="rounded bg-neutral-200/60 px-1.5 py-0.5 text-neutral-600">${{ embedAmountBucket }}</span>
+                  <span class="text-neutral-300">&middot;</span>
+                  <span class="rounded bg-neutral-200/60 px-1.5 py-0.5 text-neutral-600">{{ windowLabel }}</span>
+                  <span class="text-neutral-300">&middot;</span>
+                  <span class="rounded bg-neutral-200/60 px-1.5 py-0.5 capitalize text-neutral-600">{{ embedTheme }}</span>
+                </div>
               </div>
             </div>
-
-            <div class="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label class="text-body-sm font-semibold text-neutral-700">Amount bucket</label>
-                <p class="mt-0.5 text-[11px] text-rs-muted">Transfer amount used for price comparison</p>
-                <select
-                  v-model.number="embedAmountBucket"
-                  class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                >
-                  <option
-                    v-for="amt in amountBucketPresets"
-                    :key="amt"
-                    :value="amt"
-                  >
-                    ${{ amt.toLocaleString() }}
-                  </option>
-                </select>
-              </div>
-              <div>
-                <label class="text-body-sm font-semibold text-neutral-700">Delivery method</label>
-                <select
-                  v-model="embedMethodProfile"
-                  class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                >
-                  <option
-                    v-for="opt in methodProfileOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                  >
-                    {{ opt.label }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label class="text-body-sm font-semibold text-neutral-700">History window (days)</label>
-                <p class="mt-0.5 text-[11px] text-rs-muted">Days of historical data to include</p>
-                <input
-                  v-model.number="embedDays"
-                  type="number"
-                  min="1"
-                  max="365"
-                  class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                >
-              </div>
-              <div>
-                <label class="text-body-sm font-semibold text-neutral-700">Theme</label>
-                <select
-                  v-model="embedTheme"
-                  class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                >
-                  <option value="dark">Dark</option>
-                  <option value="light">Light</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                class="text-body-sm inline-flex min-h-[44px] items-center justify-center rounded-xl bg-brand-600 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
-                :disabled="embedPublishedGenerating || !indicesEmbedsEnabled"
-                @click="handlePublishEmbed"
-              >
-                {{ embedPublishedGenerating ? 'Publishing embed…' : 'Publish static embed bundle' }}
-              </button>
-              <span class="text-[11px] text-rs-muted">
-                {{ selectedMethodLabel }} • ${{ embedAmountBucket.toLocaleString() }} • {{ embedDays }} days
-              </span>
-            </div>
-
-            <p class="text-[11px] leading-5 text-rs-muted">
-              Published embeds are immutable public snapshots.
-            </p>
           </div>
         </div>
 
-        <p
-v-if="embedCopyStatus"
-class="text-body-sm text-success-600"
->
-          {{ embedCopyStatus }}
-        </p>
-        <p
-v-if="effectiveEmbedError"
-class="text-body-sm text-danger-600"
->
-          {{ effectiveEmbedError }}
-        </p>
+        <p v-if="embedCopyStatus" class="text-sm text-success-600">{{ embedCopyStatus }}</p>
+        <p v-if="effectiveEmbedError" class="text-sm text-danger-600">{{ effectiveEmbedError }}</p>
 
-        <div
-          v-if="embedPublishedId"
-          class="rounded-2xl border border-success-200 bg-success-50 p-4 text-success-900"
-        >
-          <div class="text-body-sm font-semibold">Published bundle ready</div>
-          <div class="mt-1 text-[11px] text-success-700">
-            Published ID <span class="font-mono">{{ embedPublishedId }}</span>
-          </div>
-          <div
-v-if="embedPublishedAt"
-class="mt-1 text-[11px] text-success-700"
->
-            Published {{ formatDate(embedPublishedAt) }}
+        <!-- Publish success -->
+        <div v-if="embedPublishedId" class="rounded-lg border border-success-200 bg-success-50 p-4">
+          <div class="text-sm font-medium text-success-900">Bundle published</div>
+          <div class="mt-1 text-xs text-success-700">
+            ID <span class="font-mono">{{ embedPublishedId }}</span>
+            <template v-if="embedPublishedAt"> · {{ formatDate(embedPublishedAt) }}</template>
           </div>
         </div>
 
-        <div class="space-y-4">
+        <!-- TEER / RCI / RVI cards -->
+        <div class="grid gap-4 lg:grid-cols-3">
           <div
             v-for="item in embedIndices"
             :key="item.key"
-            class="rounded-2xl border border-rs-border bg-neutral-50 p-4"
+            class="rounded-lg border border-rs-border bg-neutral-50"
           >
-            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center justify-between border-b border-rs-border px-4 py-3">
               <div>
-                <div class="text-body-sm font-semibold text-rs-fg">{{ item.label }} embed</div>
-                <p class="mt-1 text-[11px] text-rs-muted">
-                  Static code, public URL, and rendered image export for {{ item.label }}.
-                </p>
-                <p class="text-[11px] text-rs-muted">
-                  {{ INDEX_DEFINITIONS[item.key]?.full }} — {{ INDEX_DEFINITIONS[item.key]?.description }}
-                </p>
+                <div class="text-sm font-semibold text-rs-fg">{{ INDEX_DEFINITIONS[item.key]?.full || item.label }}</div>
+                <div class="mt-0.5 text-[11px] leading-snug text-rs-muted">{{ INDEX_DEFINITIONS[item.key]?.description }}</div>
               </div>
-              <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1.5">
                 <button
                   type="button"
-                  class="text-body-sm font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                  class="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
                   :disabled="!embedCodes[item.key]"
                   @click="copyEmbedCode(item.key)"
-                >
-                  Copy code
-                </button>
+                >Code</button>
                 <button
                   v-for="format in embedVisualButtons"
                   :key="`${item.key}-${format.value}`"
                   type="button"
-                  class="rounded-full border border-rs-border px-2.5 py-1 text-[11px] font-semibold text-rs-fg transition-colors hover:border-brand-200 hover:text-brand-700 disabled:opacity-50"
+                  class="rounded border border-rs-border px-2 py-0.5 text-[10px] font-medium text-rs-fg transition-colors hover:border-brand-300 hover:text-brand-700 disabled:opacity-50"
                   :disabled="!embedUrls[item.key] || visualExporting"
                   @click="downloadEmbedVisual(item.key, item.label, format.value)"
-                >
-                  {{
-                    visualExporting
-                    && activeVisualExportKey === item.key
-                    && activeVisualExportFormat === format.value
-                      ? `Generating ${format.label}…`
-                      : format.label
-                  }}
-                </button>
+                >{{ visualExporting && activeVisualExportKey === item.key && activeVisualExportFormat === format.value ? '…' : format.label }}</button>
               </div>
             </div>
-
-            <textarea
-              class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-3 font-mono text-neutral-700"
-              rows="5"
-              readonly
-              :value="embedCodes[item.key]"
-            />
-
-            <p
-v-if="embedVisualErrors[item.key]"
-class="text-body-sm mt-2 text-danger-600"
->
+            <div class="overflow-hidden" style="height: 200px">
+              <iframe
+                v-if="embedUrls[item.key]"
+                :src="embedUrls[item.key]"
+                :ref="element => setEmbedPreviewFrame(item.key, element)"
+                class="h-full w-full"
+                loading="lazy"
+              />
+              <div v-else class="flex h-full items-center justify-center text-xs text-rs-muted">
+                Publish to preview
+              </div>
+            </div>
+            <div v-if="embedCodes[item.key]" class="border-t border-rs-border">
+              <textarea
+                class="w-full resize-none bg-transparent px-4 py-3 font-mono text-[11px] text-neutral-500 focus:outline-none"
+                rows="3"
+                readonly
+                :value="embedCodes[item.key]"
+              />
+            </div>
+            <p v-if="embedVisualErrors[item.key]" class="border-t border-rs-border px-4 py-2 text-xs text-danger-600">
               {{ embedVisualErrors[item.key] }}
             </p>
-
-            <div class="mt-3">
-              <div class="text-body-sm mb-2 text-rs-muted">Preview</div>
-              <div
-                class="overflow-hidden rounded-xl border border-rs-border bg-surface"
-                style="height: 240px"
-              >
-                <iframe
-                  v-if="embedUrls[item.key]"
-                  :ref="element => setEmbedPreviewFrame(item.key, element)"
-                  :src="embedUrls[item.key]"
-                  class="h-full w-full"
-                  loading="lazy"
-                />
-                <div
-                  v-else
-                  class="text-body-sm flex h-full items-center justify-center px-4 text-center text-rs-muted"
-                >
-                  Publish a static embed bundle to preview this variant.
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        <div class="rounded-2xl border border-rs-border bg-neutral-50 p-4">
-          <div class="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <div class="text-body-sm font-semibold text-rs-fg">Published bundles</div>
-              <p class="mt-1 text-[11px] text-rs-muted">
-                Active public embed bundles. Revocation is manual and immediate.
-              </p>
-            </div>
+        <!-- Published bundles -->
+        <div>
+          <div class="mb-3 flex items-center justify-between">
+            <h4 class="text-sm font-medium text-rs-fg">Published Bundles</h4>
           </div>
 
-          <div
-            v-if="publishedEmbedsLoading && publishedEmbeds.length === 0"
-            class="text-body-sm rounded-xl border border-rs-border bg-surface px-3 py-4 text-rs-muted"
-          >
-            Loading published embeds…
+          <div v-if="publishedEmbedsLoading && publishedEmbeds.length === 0" class="rounded-lg border border-rs-border px-4 py-4 text-xs text-rs-muted">
+            Loading…
           </div>
-
-          <div
-            v-else-if="publishedEmbeds.length === 0"
-            class="text-body-sm rounded-xl border border-dashed border-rs-border bg-surface px-3 py-4 text-rs-muted"
-          >
+          <div v-else-if="publishedEmbeds.length === 0" class="rounded-lg border border-dashed border-rs-border px-4 py-6 text-center text-xs text-rs-muted">
             No published embeds yet.
           </div>
-
-          <div
-v-else
-class="space-y-3"
->
+          <div v-else class="space-y-3">
             <div
               v-for="embed in publishedEmbeds"
               :key="embed.id"
-              class="rounded-xl border border-rs-border bg-surface p-4"
+              class="rounded-lg border border-rs-border p-4"
             >
-              <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="text-body-sm font-semibold text-rs-fg">
-                    {{ formatPublishedEmbedTitle(embed.title) }}
-                  </div>
-                  <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-rs-muted">
-                    <span class="rounded-full bg-neutral-100 px-2 py-0.5">
-                      {{ embed.surfaceKind === 'pulse' ? 'Pulse' : 'Indices' }}
-                    </span>
-                    <span>Published {{ formatDate(embed.publishedAt) }}</span>
-                    <span>Theme {{ embed.theme }}</span>
-                    <span
-                      v-if="embed.revokedAt"
-                      class="rounded-full bg-danger-100 px-2 py-0.5 text-danger-700"
-                    >
-                      Revoked {{ formatDate(embed.revokedAt) }}
-                    </span>
-                    <span
-v-else
-class="rounded-full bg-success-100 px-2 py-0.5 text-success-700"
->
-                      Active
-                    </span>
+                  <div class="text-sm font-medium text-rs-fg">{{ embed.title }}</div>
+                  <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-rs-muted">
+                    <span class="rounded bg-neutral-100 px-1.5 py-0.5 font-medium">{{ embed.surfaceKind === 'pulse' ? 'Pulse' : 'Indices' }}</span>
+                    <span>{{ formatDate(embed.publishedAt) }}</span>
+                    <span>{{ embed.theme }}</span>
+                    <span v-if="embed.revokedAt" class="rounded bg-danger-50 px-1.5 py-0.5 font-medium text-danger-600">Revoked</span>
+                    <span v-else class="rounded bg-success-50 px-1.5 py-0.5 font-medium text-success-700">Active</span>
                   </div>
                 </div>
-                <div v-if="!embed.revokedAt" class="flex items-center gap-2">
-                  <button
-                    v-if="revokeConfirmId !== embed.id"
-                    type="button"
-                    class="text-body-sm font-semibold text-danger-600 hover:text-danger-700 disabled:opacity-60"
-                    :disabled="publishedEmbedsLoading"
-                    @click="initiateRevoke(embed.id)"
-                  >
-                    Revoke
-                  </button>
-                  <template v-else>
-                    <button
-                      type="button"
-                      class="text-body-sm rounded-lg bg-danger-600 px-3 py-1 font-semibold text-white hover:bg-danger-700"
-                      @click="confirmRevoke(embed.id)"
-                    >
-                      Confirm revoke?
-                    </button>
-                    <button
-                      type="button"
-                      class="text-body-sm font-semibold text-rs-muted hover:text-rs-fg"
-                      @click="revokeConfirmId = null"
-                    >
-                      Cancel
-                    </button>
-                  </template>
-                </div>
+                <button
+                  v-if="!embed.revokedAt"
+                  type="button"
+                  class="text-xs font-medium text-danger-600 hover:text-danger-700 disabled:opacity-50"
+                  :disabled="publishedEmbedsLoading"
+                  @click="revokePublishedEmbed(embed.id)"
+                >Revoke</button>
               </div>
-
-              <div class="mt-3 space-y-3">
+              <div class="mt-3 space-y-2">
                 <div
                   v-for="variant in embed.variants"
                   :key="`${embed.id}-${variant.key}`"
-                  class="rounded-xl border border-rs-border bg-neutral-50 p-3"
+                  class="flex items-center justify-between gap-3 rounded-md border border-rs-border bg-neutral-50 px-3 py-2"
                 >
-                  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <div class="text-body-sm font-semibold text-rs-fg">{{ variant.label }}</div>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        class="text-body-sm font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-60"
-                        :disabled="Boolean(embed.revokedAt)"
-                        @click="copyPublishedUrl(variant.publicUrl, variant.label)"
-                      >
-                        Copy URL
-                      </button>
-                      <button
-                        type="button"
-                        class="text-body-sm font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-60"
-                        :disabled="Boolean(embed.revokedAt)"
-                        @click="copyPublishedCode(variant.embedCode, variant.label)"
-                      >
-                        Copy embed
-                      </button>
-                      <a
-                        v-if="!embed.revokedAt"
-                        :href="variant.publicUrl"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
-                      >
-                        Open
-                      </a>
-                    </div>
+                  <div class="min-w-0">
+                    <div class="text-xs font-medium text-rs-fg">{{ variant.label }}</div>
+                    <div class="mt-0.5 truncate font-mono text-[10px] text-rs-muted">{{ variant.publicUrl }}</div>
                   </div>
-                  <div class="font-mono text-[11px] text-rs-muted" :title="variant.publicUrl">
-                    {{ truncateUrl(variant.publicUrl) }}
+                  <div class="flex flex-shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      class="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                      :disabled="Boolean(embed.revokedAt)"
+                      @click="copyPublishedUrl(variant.publicUrl, variant.label)"
+                    >URL</button>
+                    <button
+                      type="button"
+                      class="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                      :disabled="Boolean(embed.revokedAt)"
+                      @click="copyPublishedCode(variant.embedCode, variant.label)"
+                    >Embed</button>
+                    <a
+                      v-if="!embed.revokedAt"
+                      :href="variant.publicUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-xs font-medium text-brand-600 hover:text-brand-700"
+                    >Open</a>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
 
-    <section class="space-y-5 rounded-2xl border border-rs-border bg-surface p-6">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <!-- ─── Data Exports ─── -->
+    <section id="enterprise-exports" class="rounded-xl border border-rs-border bg-surface">
+      <div class="flex items-center justify-between border-b border-rs-border px-6 py-4">
         <div>
-          <h3 class="text-body-lg font-semibold text-rs-fg">Data Exports</h3>
-          <p class="text-body-sm mt-1 text-rs-muted">
-            Build export jobs with a real corridor picker, clearer status copy, and visible delay
-            warnings when the export pipeline is falling behind.
-          </p>
+          <h3 class="text-base font-semibold text-rs-fg">Data Exports</h3>
+          <p class="mt-0.5 text-sm text-rs-muted">Build and download export jobs from your data catalog.</p>
         </div>
         <button
           type="button"
-          class="text-body-sm inline-flex items-center gap-2 rounded-full border border-rs-border px-3 py-1.5 font-semibold text-rs-fg transition-colors hover:border-brand-200 hover:text-brand-700 disabled:opacity-60"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-rs-border px-3 py-1.5 text-xs font-medium text-rs-muted transition-colors hover:border-neutral-400 hover:text-rs-fg disabled:opacity-50"
           :disabled="exportJobsLoading"
           @click="fetchExportJobs"
         >
-          <Icon
-name="arrows-right-left"
-:size="16"
-class="text-current"
-/>
-          Refresh jobs
+          <Icon name="arrows-right-left" :size="14" class="text-current" />
+          Refresh
         </button>
       </div>
 
-      <div
-        class="grid gap-3 rounded-2xl border border-rs-border bg-neutral-50 p-4 lg:grid-cols-[minmax(180px,0.95fr)_minmax(140px,0.8fr)_minmax(0,1.4fr)_auto]"
-      >
-        <select
-          v-model="exportJobType"
-          class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-        >
-          <option value="history">Quote history</option>
-          <option value="watchlist">Watchlist</option>
-          <option value="alerts">Alerts</option>
-          <option value="all">All data</option>
-          <option value="indices">TEER / RCI / RVI</option>
-        </select>
-        <select
-          v-model="exportFormat"
-          class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-        >
-          <option value="csv">CSV</option>
-          <option value="pdf">PDF</option>
-          <option value="parquet">Parquet</option>
-        </select>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <input
-            v-model="exportDateFrom"
-            type="date"
-            class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-            placeholder="From"
-          >
-          <input
-            v-model="exportDateTo"
-            type="date"
-            class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-            placeholder="To"
-          >
-        </div>
-        <button
-          type="button"
-          class="text-body-sm inline-flex min-h-[44px] items-center justify-center rounded-xl bg-brand-600 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
-          :disabled="exportCreating || (exportJobType === 'indices' && !indicesExportsEnabled)"
-          @click="handleCreateExport"
-        >
-          {{ exportCreating ? 'Creating…' : 'Create export' }}
-        </button>
-      </div>
-
-      <div
-        v-if="exportJobType === 'indices'"
-        class="rounded-2xl border border-rs-border bg-neutral-50 p-4"
-      >
-        <div class="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div class="space-y-3">
+      <div class="space-y-5 p-6">
+        <!-- Create export bar -->
+        <div class="flex flex-col gap-3 rounded-lg border border-rs-border bg-neutral-50 p-4 lg:flex-row lg:items-end">
+          <div class="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <label class="text-body-sm font-semibold text-neutral-700">Add corridors</label>
-              <input
-                v-model="exportCorridorSearch"
-                type="text"
-                placeholder="e.g. US → Philippines, GB → Nigeria"
-                class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                @keydown.enter.prevent="commitExportSearch"
-              >
+              <label class="text-xs font-medium text-neutral-500">Type</label>
+              <div class="mt-1.5">
+                <UniversalDropdown
+                  :model-value="exportJobType"
+                  :options="exportTypeOptions"
+                  placeholder="Select type"
+                  @update:model-value="(v: string | number) => exportJobType = String(v)"
+                />
+              </div>
+              <p v-if="EXPORT_TYPE_DESCRIPTIONS[exportJobType]" class="mt-1 text-[11px] leading-snug text-rs-muted">
+                {{ EXPORT_TYPE_DESCRIPTIONS[exportJobType] }}
+              </p>
             </div>
-
-            <div class="max-h-64 overflow-auto rounded-xl border border-rs-border bg-surface">
-              <div
-v-if="corridorsLoading"
-class="text-body-sm px-3 py-4 text-rs-muted"
->
-                Loading corridor catalog…
+            <div>
+              <label class="text-xs font-medium text-neutral-500">Format</label>
+              <div class="mt-1.5">
+                <UniversalDropdown
+                  :model-value="exportFormat"
+                  :options="exportFormatOptions"
+                  placeholder="Select format"
+                  @update:model-value="(v: string | number) => exportFormat = String(v)"
+                />
               </div>
-              <template
-                v-for="(corridor, index) in exportCorridorCandidates"
-                :key="corridor.corridorId"
-              >
-                <div
-                  v-if="exportGroupHeaders.has(corridor.corridorId)"
-                  class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-rs-muted"
-                >
-                  {{ exportGroupHeaders.get(corridor.corridorId) }}
-                </div>
-                <button
-                  type="button"
-                  class="flex w-full items-start justify-between gap-3 border-b border-rs-border px-3 py-3 text-left transition-colors last:border-b-0 hover:bg-neutral-50"
-                  @click="addExportCorridor(corridor.corridorId)"
-                >
-                  <div>
-                    <div class="text-body-sm font-semibold text-rs-fg">
-                      {{ corridorTitle(corridor) }}
-                    </div>
-                    <div class="mt-1 text-[11px] text-rs-muted">
-                      {{ corridorSubtitle(corridor) }}
-                    </div>
-                  </div>
-                  <div class="text-[11px] font-semibold text-brand-600">Add</div>
-                </button>
-              </template>
-              <div
-                v-if="!corridorsLoading && exportCorridorCandidates.length === 0"
-                class="text-body-sm px-3 py-4 text-rs-muted"
-              >
-                No more matching corridors.
-              </div>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-neutral-500">From</label>
+              <input
+                v-model="exportDateFrom"
+                type="date"
+                class="mt-1.5 h-10 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-neutral-500">To</label>
+              <input
+                v-model="exportDateTo"
+                type="date"
+                class="mt-1.5 h-10 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
             </div>
           </div>
+          <button
+            type="button"
+            class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+            :disabled="exportCreating || (exportJobType === 'indices' && !indicesExportsEnabled)"
+            @click="handleCreateExport"
+          >{{ exportCreating ? 'Creating…' : 'Create export' }}</button>
+        </div>
 
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <div class="text-body-sm font-semibold text-neutral-700">Selected corridors</div>
-              <div class="text-[11px] text-rs-muted">
-                {{ selectedExportCorridorIds.length }} selected
+        <!-- Indices corridor picker -->
+        <div v-if="exportJobType === 'indices'" class="rounded-lg border border-rs-border bg-neutral-50 p-5">
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="space-y-3">
+              <label class="text-xs font-medium uppercase tracking-wider text-neutral-500">Add corridors</label>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label class="mb-1.5 block text-xs font-medium text-neutral-600">From</label>
+                  <CountrySelect
+                    v-model="exportFromCountry"
+                    placeholder="Sending from…"
+                    :allowed-codes="goldSendCountries"
+                    @country-selected="(code: string) => handleExportCountrySelected('from', code)"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-xs font-medium text-neutral-600">To</label>
+                  <CountrySelect
+                    v-model="exportToCountry"
+                    placeholder="Sending to…"
+                    :allowed-codes="goldReceiveCountries"
+                    :exclude-country="exportFromCountry"
+                    @country-selected="(code: string) => handleExportCountrySelected('to', code)"
+                  />
+                </div>
               </div>
+              <!-- Matching corridors for this pair -->
+              <div v-if="exportMatchingCorridors.length > 0" class="space-y-1.5">
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="corridor in exportMatchingCorridors"
+                    :key="corridor.corridorId"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-rs-border bg-surface px-3 py-1.5 text-xs font-medium text-rs-fg transition-colors hover:border-brand-300 disabled:opacity-50"
+                    :disabled="selectedExportCorridorIdSet.has(corridor.corridorId)"
+                    @click="addExportCorridor(corridor.corridorId)"
+                  >
+                    {{ corridor.sourceCurrency }}/{{ corridor.destCurrency }}
+                    <span v-if="selectedExportCorridorIdSet.has(corridor.corridorId)" class="text-success-600">Added</span>
+                    <span v-else class="text-brand-600">Add</span>
+                  </button>
+                </div>
+                <button
+                  v-if="exportMatchingCorridors.some(c => !selectedExportCorridorIdSet.has(c.corridorId))"
+                  type="button"
+                  class="text-xs font-medium text-brand-600 hover:text-brand-700"
+                  @click="addMatchingExportCorridors"
+                >Add all {{ exportMatchingCorridors.length }} pairs</button>
+              </div>
+              <div v-else-if="exportFromCountry && exportToCountry && !corridorsLoading" class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-3 text-center text-xs text-rs-muted">
+                No corridors found for this pair.
+              </div>
+              <!-- Manual corridor ID fallback -->
+              <details class="text-xs text-rs-muted">
+                <summary class="cursor-pointer hover:text-rs-fg">Or enter corridor ID directly</summary>
+                <input
+                  v-model="exportCorridorSearch"
+                  type="text"
+                  placeholder="e.g. US-PH-USD-PHP"
+                  class="mt-2 h-9 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg placeholder:text-neutral-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  @keydown.enter.prevent="commitExportSearch"
+                />
+                <button
+                  v-if="manualExportCorridorId"
+                  type="button"
+                  class="mt-2 inline-flex items-center gap-1.5 rounded-md border border-rs-border bg-surface px-2.5 py-1.5 text-xs font-medium text-rs-fg transition-colors hover:border-brand-300"
+                  @click="addExportCorridor(manualExportCorridorId)"
+                >Add {{ manualExportCorridorId }}</button>
+              </details>
             </div>
 
-            <div
-              v-if="selectedExportCorridors.length === 0"
-              class="text-body-sm rounded-xl border border-dashed border-rs-border bg-surface px-3 py-6 text-center text-rs-muted"
-            >
-              Add one or more corridors to export indices data.
-            </div>
-
-            <div
-v-else
-class="max-h-64 space-y-2 overflow-auto pr-1"
->
-              <div
-                v-for="corridor in selectedExportCorridors"
-                :key="corridor.corridorId"
-                class="rounded-xl border border-rs-border bg-surface p-3"
-              >
-                <div class="flex items-start justify-between gap-3">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-medium uppercase tracking-wider text-neutral-500">Selected</label>
+                <span class="text-xs tabular-nums text-rs-muted">{{ selectedExportCorridorIds.length }}</span>
+              </div>
+              <div v-if="selectedExportCorridors.length === 0" class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-6 text-center text-xs text-rs-muted">
+                Add corridors to export indices data.
+              </div>
+              <div v-else class="max-h-52 space-y-2 overflow-auto">
+                <div
+                  v-for="corridor in selectedExportCorridors"
+                  :key="corridor.corridorId"
+                  class="flex items-center justify-between gap-3 rounded-lg border border-rs-border bg-surface p-3"
+                >
                   <div>
-                    <div class="text-body-sm font-semibold text-rs-fg">
-                      {{ corridorTitle(corridor) }}
-                    </div>
-                    <div class="mt-1 text-[11px] text-rs-muted">
-                      {{ corridorSubtitle(corridor) }}
-                    </div>
+                    <div class="text-sm font-medium text-rs-fg">{{ corridorTitle(corridor) }}</div>
+                    <div class="mt-0.5 text-xs text-rs-muted">{{ corridor.corridorId }} · {{ corridor.sourceCurrency }}/{{ corridor.destCurrency }}</div>
                   </div>
                   <button
                     type="button"
-                    class="text-body-sm font-semibold text-danger-600 hover:text-danger-700"
+                    class="text-xs font-medium text-danger-600 hover:text-danger-700"
                     @click="removeExportCorridor(corridor.corridorId)"
-                  >
-                    Remove
-                  </button>
+                  >Remove</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="flex flex-wrap items-center gap-3 text-[11px] text-rs-muted">
-        <span class="rounded-full border border-rs-border bg-neutral-50 px-2.5 py-1">
-          Export window
-          {{
-            limits.exportsMaxDays === 'unlimited' ? exportWindowLimitDays : limits.exportsMaxDays
-          }}
-          day{{
-            (limits.exportsMaxDays === 'unlimited'
-              ? exportWindowLimitDays
-              : limits.exportsMaxDays) === 1
-              ? ''
-              : 's'
-          }}
-        </span>
-        <span class="rounded-full border border-rs-border bg-neutral-50 px-2.5 py-1">
-          Parquet is available for enterprise export jobs
-        </span>
-        <span
-          v-if="delayedExportJobs.length > 0"
-          class="rounded-full border border-warning-200 bg-warning-50 px-2.5 py-1 text-warning-800"
-        >
-          Delivery delayed on this environment
-        </span>
-      </div>
-
-      <p
-v-if="effectiveExportError"
-class="text-body-sm text-danger-600"
->
-        {{ effectiveExportError }}
-      </p>
-
-      <DataTable
-        variant="consumer"
-        caption="Export jobs"
-        :columns="exportJobTableColumns"
-        :rows="exportJobs"
-        :row-key="exportJobTableRowKey"
-        :loading="exportJobsLoading"
-        :empty="{ title: 'No exports yet', message: 'Create an export to get started.' }"
-      >
-        <template #cell-jobType="{ row }">
-          <span class="text-rs-fg">{{ formatExportJobType(exportJobFromRow(row).jobType) }}</span>
-        </template>
-
-        <template #cell-status="{ row }">
-          <div class="flex flex-wrap items-center gap-2">
-            <span
-              class="text-body-sm rounded-full px-2 py-0.5"
-              :class="exportStatusClasses(exportJobFromRow(row).status)"
-            >
-              {{ exportJobFromRow(row).status }}
-            </span>
-            <span
-              v-if="['queued', 'running'].includes(exportJobFromRow(row).status)"
-              class="text-[11px] text-rs-muted"
-            >
-              {{ formatJobAgeLabel(exportJobFromRow(row).createdAt) }}
-            </span>
-            <span
-              v-if="isDelayedJob(exportJobFromRow(row))"
-              class="rounded-full bg-warning-50 px-2 py-0.5 text-[11px] font-semibold text-warning-800"
-            >
-              Delayed
-            </span>
-          </div>
-        </template>
-
-        <template #cell-createdAt="{ row }">
-          <div class="space-y-1">
-            <div class="text-body-sm text-rs-fg">
-              {{ formatDate(exportJobFromRow(row).createdAt) }}
-            </div>
-            <div class="text-[11px] text-rs-muted">
-              {{ formatRelativeTime(exportJobFromRow(row).createdAt) }}
-            </div>
-          </div>
-        </template>
-
-        <template #row-actions="{ row }">
-          <button
-            v-if="exportJobFromRow(row).status === 'done'"
-            type="button"
-            class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
-            @click="downloadExport(exportJobFromRow(row).id)"
-          >
-            Download
-          </button>
-          <span
-            v-else-if="exportJobFromRow(row).status === 'failed'"
-            class="text-body-sm text-danger-600"
-          >
-            Failed
+        <!-- Export metadata pills -->
+        <div class="flex flex-wrap items-center gap-2 text-xs text-rs-muted">
+          <span class="rounded-md border border-rs-border bg-neutral-50 px-2 py-1">
+            {{ limits.exportsMaxDays === 'unlimited' ? exportWindowLimitDays : limits.exportsMaxDays }}-day window
           </span>
+          <span class="rounded-md border border-rs-border bg-neutral-50 px-2 py-1">Parquet available</span>
           <span
-v-else
-class="text-body-sm text-neutral-400"
-> Pending </span>
-        </template>
-      </DataTable>
+            v-if="delayedExportJobs.length > 0"
+            class="rounded-md border border-warning-200 bg-warning-50 px-2 py-1 font-medium text-warning-700"
+          >Delivery delayed</span>
+        </div>
+
+        <p v-if="effectiveExportError" class="text-sm text-danger-600">{{ effectiveExportError }}</p>
+
+        <!-- Export jobs table -->
+        <DataTable
+          variant="consumer"
+          caption="Export jobs"
+          :columns="exportJobTableColumns"
+          :rows="exportJobs"
+          :row-key="exportJobTableRowKey"
+          :loading="exportJobsLoading"
+          :empty="{ title: 'No exports yet', message: 'Create an export to get started.' }"
+        >
+          <template #cell-jobType="{ row }">
+            <span class="font-medium text-rs-fg">{{ formatExportJobType(exportJobFromRow(row).jobType) }}</span>
+          </template>
+          <template #cell-status="{ row }">
+            <div class="flex flex-wrap items-center gap-2">
+              <span
+                class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                :class="exportStatusClasses(exportJobFromRow(row).status)"
+              >{{ exportJobFromRow(row).status }}</span>
+              <span
+                v-if="['queued', 'running'].includes(exportJobFromRow(row).status)"
+                class="text-xs text-rs-muted"
+              >{{ formatJobAgeLabel(exportJobFromRow(row).createdAt) }}</span>
+              <span
+                v-if="isDelayedJob(exportJobFromRow(row))"
+                class="rounded-full bg-warning-50 px-2 py-0.5 text-[11px] font-medium text-warning-700"
+              >Delayed</span>
+            </div>
+            <div
+              v-if="exportJobFromRow(row).status === 'failed' && exportJobFromRow(row).error"
+              class="mt-1 text-xs text-danger-500"
+            >{{ exportJobFromRow(row).error }}</div>
+          </template>
+          <template #cell-createdAt="{ row }">
+            <div>
+              <div class="text-sm text-rs-fg">{{ formatDate(exportJobFromRow(row).createdAt) }}</div>
+              <div class="mt-0.5 text-xs text-rs-muted">{{ formatRelativeTime(exportJobFromRow(row).createdAt) }}</div>
+              <div
+                v-if="exportJobFromRow(row).finishedAt"
+                class="mt-0.5 text-xs text-rs-muted"
+              >Finished {{ formatRelativeTime(exportJobFromRow(row).finishedAt) }}</div>
+              <div
+                v-if="exportJobFromRow(row).expiresAt"
+                class="mt-0.5 text-[10px] text-neutral-400"
+              >Expires {{ formatDate(exportJobFromRow(row).expiresAt) }}</div>
+            </div>
+          </template>
+          <template #row-actions="{ row }">
+            <button
+              v-if="exportJobFromRow(row).status === 'done'"
+              type="button"
+              class="text-xs font-medium text-brand-600 hover:text-brand-700"
+              @click="downloadExport(exportJobFromRow(row).id)"
+            >Download</button>
+            <span v-else-if="exportJobFromRow(row).status === 'failed'" class="text-xs text-danger-600">Failed</span>
+            <span v-else class="text-xs text-neutral-400">Pending</span>
+          </template>
+        </DataTable>
+      </div>
     </section>
   </div>
 </template>

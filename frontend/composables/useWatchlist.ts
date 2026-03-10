@@ -580,11 +580,19 @@ export const useWatchlist = () => {
     }
   }
 
-  function reset() {
+  async function reset() {
+    const toDelete = [...items.value]
     items.value = []
     resetLocalStorage()
-    if (isLoggedIn.value) {
-      fetchFromBackend()
+
+    if (isLoggedIn.value && toDelete.length > 0) {
+      const results = await Promise.allSettled(
+        toDelete.map(item => syncToBackend('delete', {} as WatchTarget, item.id)),
+      )
+      const anyFailed = results.some(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value))
+      if (anyFailed) {
+        await fetchFromBackend()
+      }
     }
   }
 

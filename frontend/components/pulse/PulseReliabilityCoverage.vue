@@ -1,6 +1,6 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
-    <div class="border-b border-neutral-700 px-6 py-4">
+  <div class="card-surface overflow-hidden">
+    <div class="border-b border-white/[0.08] px-6 py-4">
       <h2 class="text-body-lg font-bold text-white">
         Reliability & Coverage
       </h2>
@@ -15,7 +15,7 @@
           <div class="text-body-sm text-neutral-500 mb-2">
             Quote Success Rate
           </div>
-          <div class="text-h2 font-bold text-white mb-1">
+          <div class="text-h2 font-bold text-white mb-1 text-mono-value">
             {{ quoteSuccessRate !== null ? `${quoteSuccessRate.toFixed(1)}%` : 'n/a' }}
           </div>
           <div class="text-body-sm text-neutral-400">
@@ -27,7 +27,7 @@
           <div class="text-body-sm text-neutral-500 mb-2">
             Data Freshness
           </div>
-          <div class="text-h2 font-bold text-white mb-1">
+          <div class="text-h2 font-bold text-white mb-1 text-mono-value">
             {{ freshnessMedian !== null ? `${freshnessMedian}m median` : 'n/a' }}
           </div>
           <div class="text-body-sm text-neutral-400">
@@ -39,7 +39,7 @@
           <div class="text-body-sm text-neutral-500 mb-2">
             Coverage
           </div>
-          <div class="text-h2 font-bold text-white mb-1">
+          <div class="text-h2 font-bold text-white mb-1 text-mono-value">
             {{ coverage.providersIncluded }} providers
           </div>
           <div class="text-body-sm text-neutral-400">

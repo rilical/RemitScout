@@ -1,7 +1,7 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
+  <div class="card-surface overflow-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
+    <div class="flex items-center justify-between border-b border-white/[0.08] px-6 py-4">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
           <Icon
@@ -23,7 +23,7 @@
         <div class="text-body-sm text-neutral-500">
           Providers
         </div>
-        <div class="text-h4 font-bold text-white">
+        <div class="text-h4 font-bold text-white text-mono-value">
           {{ data?.providerCount || 0 }}
         </div>
       </div>
@@ -53,7 +53,7 @@
         <!-- Rate Ladder -->
         <div class="space-y-3">
           <!-- Best Rate -->
-          <div class="flex items-center justify-between rounded-lg bg-brand-600/10 border border-brand-600/30 px-4 py-3">
+          <div class="flex items-center justify-between rounded-lg border-l-2 border-l-emerald-500 bg-brand-600/10 border-y border-r border-brand-600/30 px-4 py-3 shadow-[inset_0_0_20px_rgba(16,185,129,0.06)]">
             <div class="flex items-center gap-3">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600">
                 <span class="text-body-sm font-bold text-white">1</span>
@@ -68,14 +68,14 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="text-body-lg font-mono font-bold text-brand-600">
+              <div class="text-lg font-mono font-semibold text-brand-600 text-mono-value">
                 {{ formatRate(data?.bestRate) }}
               </div>
             </div>
           </div>
 
           <!-- Second Best -->
-          <div class="flex items-center justify-between rounded-lg bg-neutral-700/50 px-4 py-3">
+          <div class="flex items-center justify-between rounded-lg border-l-2 border-l-emerald-500/40 bg-neutral-700/50 px-4 py-3">
             <div class="flex items-center gap-3">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-600">
                 <span class="text-body-sm font-bold text-white">2</span>
@@ -90,14 +90,14 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="text-body-lg font-mono font-bold text-white">
+              <div class="text-body-lg font-mono font-bold text-white text-mono-value">
                 {{ formatRate(data?.secondBestRate) }}
               </div>
             </div>
           </div>
 
           <!-- Median -->
-          <div class="flex items-center justify-between rounded-lg bg-neutral-700/30 px-4 py-2">
+          <div class="flex items-center justify-between rounded-lg border-l-2 border-l-amber-500/60 bg-neutral-700/30 px-4 py-2">
             <div class="flex items-center gap-3">
               <div class="flex h-6 w-6 items-center justify-center">
                 <span class="text-body-sm text-neutral-500">-</span>
@@ -107,14 +107,14 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="font-mono text-neutral-300">
+              <div class="font-mono text-neutral-300 text-mono-value">
                 {{ formatRate(data?.medianRate) }}
               </div>
             </div>
           </div>
 
           <!-- Worst -->
-          <div class="flex items-center justify-between rounded-lg bg-danger-600/10 border border-danger-600/30 px-4 py-3">
+          <div class="flex items-center justify-between rounded-lg border-l-2 border-l-red-500 bg-danger-600/10 border-y border-r border-danger-600/30 px-4 py-3 shadow-[inset_0_0_20px_rgba(239,68,68,0.06)]">
           <div class="flex items-center gap-3">
             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-danger-600/20">
               <Icon
@@ -133,7 +133,7 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="text-body-lg font-mono font-bold text-danger-600">
+              <div class="text-body-lg font-mono font-bold text-danger-600 text-mono-value">
                 {{ formatRate(data?.worstRate) }}
               </div>
             </div>
@@ -144,30 +144,33 @@
         <div class="mt-6 rounded-lg bg-neutral-900 p-4">
           <div class="flex items-center justify-between">
             <div>
-              <div class="text-body-sm font-medium text-neutral-500 uppercase tracking-wider">
+              <div class="text-label text-neutral-500">
                 Market Spread
               </div>
-              <div class="text-h3 font-bold text-white">
+              <div class="text-h3 font-bold text-white text-mono-value">
                 {{ spreadRangeBpsDisplay }}
               </div>
             </div>
             <div class="text-right">
-              <div class="text-body-sm font-medium text-neutral-500 uppercase tracking-wider">
+              <div class="text-label text-neutral-500">
                 Range
               </div>
-              <div class="text-body-lg font-mono text-neutral-300">
+              <div class="text-body-lg font-mono text-neutral-300 text-mono-value">
                 {{ formatRate(data?.spreadRange) }}
               </div>
             </div>
           </div>
           <div class="mt-3">
-            <div class="h-2 w-full rounded-full bg-neutral-700 overflow-hidden">
-              <div
-                class="h-full rounded-full bg-gradient-to-r from-brand-600 to-danger-600"
-                :style="{ width: `${spreadBarWidth}%` }"
-              />
+            <div class="flex items-center gap-3">
+              <div class="h-2 flex-1 overflow-hidden rounded-full bg-neutral-800">
+                <div
+                  class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-amber-500"
+                  :style="{ width: `${spreadBarWidth}%` }"
+                />
+              </div>
+              <span class="text-label text-neutral-400 text-mono-value">{{ spreadRangeBpsDisplay }}</span>
             </div>
-            <div class="mt-1 flex justify-between text-[10px] text-neutral-500">
+            <div class="mt-1 flex justify-between text-label text-neutral-500">
               <span>Tight (0)</span>
               <span>Wide (500+ bps)</span>
             </div>

@@ -83,7 +83,26 @@ const toFlagEmoji = (code: string) => {
 const deltaClass = (deltaPct: number) => {
   if (deltaPct > 0) return 'bg-success-600/15 text-success-400 border border-success-600/30'
   if (deltaPct < 0) return 'bg-danger-600/15 text-danger-400 border border-danger-600/30'
-  return 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+  return 'bg-white/[0.04] text-neutral-300 border border-white/[0.08]'
+}
+
+const borderClass = (deltaPct: number) => {
+  if (deltaPct > 0) return 'border-l-emerald-500'
+  if (deltaPct < 0) return 'border-l-red-500'
+  return 'border-l-neutral-600'
+}
+
+function generateSparklinePath(seed: number, trending: 'up' | 'down' | 'flat'): string {
+  const points: number[] = []
+  let value = 50
+  for (let i = 0; i < 7; i++) {
+    const noise = ((seed * (i + 1) * 7919) % 20) - 10
+    if (trending === 'up') value += noise + 3
+    else if (trending === 'down') value += noise - 3
+    else value += noise
+    points.push(Math.max(5, Math.min(95, value)))
+  }
+  return points.map((y, i) => `${i * 10},${100 - y}`).join(' ')
 }
 
 const isSaved = (m: PulseTeaserMover) => {
@@ -117,8 +136,8 @@ const handleAdd = async (m: PulseTeaserMover) => {
 </script>
 
 <template>
-  <section class="rounded-2xl border border-neutral-700 bg-neutral-800 shadow-lg overflow-hidden">
-    <div class="border-b border-neutral-700 px-6 py-5">
+  <section class="card-elevated overflow-hidden">
+    <div class="border-b border-white/[0.08] px-6 py-5">
       <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 class="text-body-lg font-bold text-white">
@@ -131,7 +150,7 @@ const handleAdd = async (m: PulseTeaserMover) => {
             Last {{ windowHours }}h window
           </p>
         </div>
-        <div class="text-[11px] font-mono uppercase tracking-wider text-neutral-500">
+        <div class="text-label font-mono text-neutral-500">
           Source: Gold Export
         </div>
       </div>
@@ -154,7 +173,7 @@ const handleAdd = async (m: PulseTeaserMover) => {
 
       <div
         v-else-if="movers.length === 0"
-        class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-6 text-body-sm text-neutral-300"
+        class="rounded-xl border border-white/[0.08] bg-white/[0.02] p-6 text-body-sm text-neutral-300"
       >
         <span v-if="variant === 'public'">
           No live movers are available yet. Check back after the next Gold export refresh.
@@ -169,15 +188,18 @@ const handleAdd = async (m: PulseTeaserMover) => {
         class="space-y-3"
       >
         <div
-          v-for="m in movers"
+          v-for="(m, index) in movers"
           :key="m.corridorId"
-          class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-4"
-          :class="m.corridorId === selectedCorridorId ? 'border-brand-600/60 ring-1 ring-brand-600/30' : ''"
+          class="card-interactive border-l-2 rounded-xl p-4"
+          :class="[
+            borderClass(m.deltaPct),
+            m.corridorId === selectedCorridorId ? 'border-brand-600/60 ring-1 ring-brand-600/30' : '',
+          ]"
         >
           <div class="flex items-start justify-between gap-3">
             <button
               type="button"
-              class="text-left"
+              class="focus-ring-dark text-left"
               :class="props.variant === 'plus' ? 'hover:opacity-90' : 'cursor-default'"
               @click="props.variant === 'plus' ? handleSelect(m) : undefined"
             >
@@ -193,16 +215,27 @@ const handleAdd = async (m: PulseTeaserMover) => {
 
             <div class="flex items-center gap-2">
               <div
-                class="rounded-lg px-2.5 py-1 text-body-sm font-bold"
+                class="rounded-lg px-2.5 py-1 text-body-sm font-bold text-mono-value"
                 :class="deltaClass(m.deltaPct)"
               >
                 {{ formatPct(m.deltaPct) }}
               </div>
 
+              <svg class="h-4 w-12 flex-shrink-0" viewBox="0 0 60 100" preserveAspectRatio="none">
+                <polyline
+                  :points="generateSparklinePath(index, m.deltaPct > 0 ? 'up' : m.deltaPct < 0 ? 'down' : 'flat')"
+                  fill="none"
+                  :stroke="m.deltaPct > 0 ? '#10b981' : m.deltaPct < 0 ? '#ef4444' : '#737373'"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+
               <button
                 v-if="canShowAdd"
                 type="button"
-                class="rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                class="focus-ring-dark rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-2 text-body-sm font-semibold text-white hover:bg-white/[0.08] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 :disabled="isSaved(m)"
                 @click="handleAdd(m)"
               >

@@ -63,6 +63,8 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
             'cloudformation:ExecuteChangeSet',
             'cloudformation:CreateStack',
             'cloudformation:UpdateStack',
+            'cloudformation:CancelUpdateStack',
+            'cloudformation:ContinueUpdateRollback',
           ],
           resources: [stackResource],
         }),

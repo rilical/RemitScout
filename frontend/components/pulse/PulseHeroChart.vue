@@ -14,13 +14,13 @@
       <div class="flex items-center gap-4">
         <span
           v-if="daysAvailable > 0 && daysAvailable < 7"
-          class="rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-300"
+          class="rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-label text-amber-300"
         >
           Limited data ({{ daysAvailable }} days)
         </span>
         <span
           v-else-if="daysAvailable >= 7 && daysAvailable < 30"
-          class="rounded-lg border border-blue-500/40 bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-blue-300"
+          class="rounded-lg border border-blue-500/40 bg-blue-500/15 px-2.5 py-1 text-label text-blue-300"
         >
           {{ daysAvailable }} days of data
         </span>
@@ -28,7 +28,7 @@
           <div class="text-body-sm text-neutral-400">
             Current markup
           </div>
-          <div class="text-body-lg font-bold text-brand-600">
+          <div class="text-body-lg font-bold text-brand-600 text-mono-value">
             {{ formatNumber(currentSpreadBps, { maximumFractionDigits: 0 }) }} bps
           </div>
         </div>
@@ -37,7 +37,7 @@
           <div class="text-body-sm text-neutral-400">
             Markup cost for {{ amountLabel }}
           </div>
-          <div class="text-body-lg font-bold text-danger-600">
+          <div class="text-body-lg font-bold text-danger-600 text-mono-value">
             {{ lossDisplay }}
           </div>
         </div>
@@ -55,7 +55,7 @@
 
         <div
           v-if="tooltipData"
-          class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 shadow-xl"
+          class="absolute z-20 pointer-events-none rounded-lg border border-white/[0.10] bg-neutral-900 px-4 py-3 shadow-xl"
           :style="{ left: tooltipPosition.x + 'px', top: tooltipPosition.y + 'px' }"
         >
           <div class="mb-2 text-body-sm font-medium text-neutral-400">
@@ -67,32 +67,32 @@
                 <span class="h-2 w-2 rounded-full bg-neutral-500" />
                 <span class="text-body-sm text-neutral-300">{{ midLabel }}</span>
               </div>
-              <span class="text-body-sm font-semibold text-white">{{ tooltipData.midMarket }}</span>
+              <span class="text-body-sm font-semibold text-white text-mono-value">{{ tooltipData.midMarket }}</span>
             </div>
             <div class="flex items-center justify-between gap-4">
               <div class="flex items-center gap-2">
                 <span class="h-2 w-2 rounded-full bg-brand-600" />
                 <span class="text-body-sm text-neutral-300">{{ tooltipData.bestProvider }}</span>
               </div>
-              <span class="text-body-sm font-semibold text-brand-600">{{ tooltipData.bestRate }}</span>
+              <span class="text-body-sm font-semibold text-brand-600 text-mono-value">{{ tooltipData.bestRate }}</span>
             </div>
             <div class="flex items-center justify-between gap-4">
               <div class="flex items-center gap-2">
                 <span class="h-2 w-2 rounded-full bg-danger-600" />
                 <span class="text-body-sm text-neutral-300">Bank average</span>
               </div>
-              <span class="text-body-sm font-semibold text-danger-600">{{ tooltipData.bankRate }}</span>
+              <span class="text-body-sm font-semibold text-danger-600 text-mono-value">{{ tooltipData.bankRate }}</span>
             </div>
           </div>
-          <div class="mt-2 border-t border-neutral-700 pt-2">
+          <div class="mt-2 border-t border-white/[0.08] pt-2">
             <div class="text-body-sm text-neutral-500">
-              Markup: <span class="text-white">{{ tooltipData.spread }}</span>
+              Markup: <span class="text-white text-mono-value">{{ tooltipData.spread }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center justify-center gap-6 border-t border-neutral-700 pt-4">
+      <div class="flex flex-wrap items-center justify-center gap-6 border-t border-white/[0.08] pt-4">
         <div class="flex items-center gap-2">
           <span class="h-0.5 w-6 border-t-2 border-dashed border-neutral-400" />
           <span class="text-body-sm text-neutral-400">{{ midLabel }}</span>

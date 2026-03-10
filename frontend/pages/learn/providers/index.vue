@@ -11,7 +11,7 @@
         <div class="mt-10 text-center">
           <h1 class="text-h1 font-bold leading-tight mb-4">
             <span class="text-white">Supported</span>
-            <span class="text-brand-600"> Money Transfer </span>
+            <span class="text-white"> Money Transfer </span>
             <span class="text-white">Providers</span>
           </h1>
           <p class="text-h4 leading-relaxed text-neutral-300 mb-8">

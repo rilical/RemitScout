@@ -136,6 +136,7 @@ interface Props {
   theme?: 'light' | 'dark'
   excludeCountry?: string
   supportedOnly?: boolean
+  allowedCodes?: string[]
 }
 
 interface CountryOption {
@@ -158,6 +159,7 @@ const props = withDefaults(defineProps<Props>(), {
   theme: 'light',
   excludeCountry: undefined,
   supportedOnly: false,
+  allowedCodes: undefined,
 })
 
 const fallbackId = useId()
@@ -170,19 +172,25 @@ const emit = defineEmits<{
   'country-selected': [countryCode: string, currency: string]
 }>()
 
-const sourceCountries = props.supportedOnly
-  ? COUNTRIES.filter(c => SUPPORTED_COUNTRY_CODES.has(c.code))
-  : COUNTRIES
+const sourceCountries = computed(() =>
+  props.allowedCodes?.length
+    ? COUNTRIES.filter(c => props.allowedCodes!.includes(c.code))
+    : props.supportedOnly
+      ? COUNTRIES.filter(c => SUPPORTED_COUNTRY_CODES.has(c.code))
+      : COUNTRIES,
+)
 
-const allCountries: CountryOption[] = sourceCountries.map(country => ({
-  value: country.code,
-  label: country.name,
-  flag: country.flag,
-  name: country.name,
-  code: country.code,
-  searchText: `${country.name.toLowerCase()} ${country.code.toLowerCase()}`,
-  currency: country.currency,
-}))
+const allCountries = computed<CountryOption[]>(() =>
+  sourceCountries.value.map(country => ({
+    value: country.code,
+    label: country.name,
+    flag: country.flag,
+    name: country.name,
+    code: country.code,
+    searchText: `${country.name.toLowerCase()} ${country.code.toLowerCase()}`,
+    currency: country.currency,
+  })),
+)
 
 const rootRef = ref<HTMLElement | null>(null)
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -202,11 +210,11 @@ const activeDescendant = computed(() => {
 
 const getOptionId = (value: string) => `${resolvedId.value}-option-${value.toLowerCase()}`
 
-const getSelectedCountry = () => allCountries.find(country => country.value === props.modelValue)
+const getSelectedCountry = () => allCountries.value.find(country => country.value === props.modelValue)
 
 const getAvailableCountries = () => {
-  if (!props.excludeCountry) return allCountries
-  return allCountries.filter(country => country.value !== props.excludeCountry)
+  if (!props.excludeCountry) return allCountries.value
+  return allCountries.value.filter(country => country.value !== props.excludeCountry)
 }
 
 const restoreSelectedValue = () => {
@@ -507,6 +515,13 @@ watch(
         scrollHighlightedOptionIntoView()
       })
     }
+  },
+)
+
+watch(
+  () => props.allowedCodes,
+  () => {
+    updateFilteredCountries(true)
   },
 )
 

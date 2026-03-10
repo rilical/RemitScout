@@ -1,7 +1,7 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
+  <div class="card-surface overflow-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
+    <div class="flex items-center justify-between border-b border-white/[0.08] px-6 py-4">
       <div>
         <h2 class="text-body-lg font-bold text-white">
           Winner Timeline
@@ -21,12 +21,12 @@
             :style="{ backgroundColor: getProviderColor(provider) }"
           />
           <span class="text-body-sm text-neutral-400">{{ provider }}</span>
-          <span class="text-body-sm font-semibold text-white">{{ stats.percentage }}%</span>
+          <span class="text-body-sm font-semibold text-white text-mono-value">{{ stats.percentage }}%</span>
         </div>
         <div class="flex items-center gap-2 text-body-sm text-neutral-400">
           <span class="h-2.5 w-2.5 rounded-full bg-neutral-600" />
           <span>Leader changes</span>
-          <span class="text-body-sm font-semibold text-white">{{ leaderChangeCount }}</span>
+          <span class="text-body-sm font-semibold text-white text-mono-value">{{ leaderChangeCount }}</span>
         </div>
       </div>
     </div>
@@ -71,7 +71,7 @@
               <!-- Day Label (only show some in non-compact) -->
               <div
                 v-if="!compactView && index % 7 === 0"
-                class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-neutral-500"
+                class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-label text-neutral-500"
               >
                 {{ formatDayLabel(day.timestamp) }}
               </div>
@@ -94,7 +94,7 @@
               <span class="text-body-sm text-neutral-300">{{ hoveredDay.winner }}</span>
               <span class="text-body-sm font-semibold text-brand-600">was leader</span>
             </div>
-            <div class="mt-1 text-body-sm text-neutral-500">
+            <div class="mt-1 text-body-sm text-neutral-500 text-mono-value">
               Edge ~${{ hoveredDay.savings.toFixed(2) }} vs #2
             </div>
           </div>
@@ -109,7 +109,7 @@
     </div>
 
     <!-- Legend (compact view toggle) -->
-    <div class="flex items-center justify-between border-t border-neutral-700 px-6 py-3">
+    <div class="flex items-center justify-between border-t border-white/[0.08] px-6 py-3">
       <div class="flex items-center gap-4">
         <div
           v-for="(stats, provider) in data?.providerStats"
@@ -124,7 +124,7 @@
         </div>
       </div>
       <button
-        class="text-body-sm text-neutral-400 hover:text-white transition-colors"
+        class="text-body-sm text-neutral-400 hover:text-white transition-colors focus-ring-dark"
         @click="compactView = !compactView"
       >
         {{ compactView ? 'Expand view' : 'Compact view' }}

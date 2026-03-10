@@ -1,7 +1,7 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
+  <div class="card-surface overflow-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
+    <div class="flex items-center justify-between border-b border-white/[0.08] px-6 py-4">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-danger-600/20">
           <Icon
@@ -47,7 +47,7 @@
           <p class="text-body-sm text-neutral-400">
             If you send
           </p>
-          <p class="text-h2 font-bold text-white">
+          <p class="text-h2 font-bold text-white text-mono-value">
             {{ amountDisplay }}
           </p>
           <p class="text-body-sm text-neutral-400">
@@ -70,16 +70,16 @@
             <div class="space-y-2">
               <div class="flex justify-between text-body-sm">
                 <span class="text-neutral-400">Hidden markup</span>
-                <span class="font-semibold text-danger-600">{{ money(data?.bankMarkup) }}</span>
+                <span class="font-semibold text-danger-600 text-mono-value">{{ money(data?.bankMarkup) }}</span>
               </div>
               <div class="flex justify-between text-body-sm">
                 <span class="text-neutral-400">Wire fee</span>
-                <span class="font-semibold text-white">{{ money(data?.bankFee) }}</span>
+                <span class="font-semibold text-white text-mono-value">{{ money(data?.bankFee) }}</span>
               </div>
               <div class="border-t border-danger-600/30 pt-2 mt-2">
                 <div class="flex justify-between">
                   <span class="text-body-sm font-semibold text-white">Total cost</span>
-                  <span class="text-body-lg font-bold text-danger-600">{{ money(data?.bankTotalCost) }}</span>
+                  <span class="text-body-lg font-bold text-danger-600 text-mono-value">{{ money(data?.bankTotalCost) }}</span>
                 </div>
               </div>
             </div>
@@ -98,16 +98,16 @@
             <div class="space-y-2">
               <div class="flex justify-between text-body-sm">
                 <span class="text-neutral-400">Hidden markup</span>
-                <span class="font-semibold text-brand-600">{{ money(data?.bestSpecialistMarkup) }}</span>
+                <span class="font-semibold text-brand-600 text-mono-value">{{ money(data?.bestSpecialistMarkup) }}</span>
               </div>
               <div class="flex justify-between text-body-sm">
                 <span class="text-neutral-400">Transfer fee</span>
-                <span class="font-semibold text-white">{{ money(data?.bestSpecialistFee) }}</span>
+                <span class="font-semibold text-white text-mono-value">{{ money(data?.bestSpecialistFee) }}</span>
               </div>
               <div class="border-t border-brand-600/30 pt-2 mt-2">
                 <div class="flex justify-between">
                   <span class="text-body-sm font-semibold text-white">Total cost</span>
-                  <span class="text-body-lg font-bold text-brand-600">{{ money(data?.bestSpecialistTotalCost) }}</span>
+                  <span class="text-body-lg font-bold text-brand-600 text-mono-value">{{ money(data?.bestSpecialistTotalCost) }}</span>
                 </div>
               </div>
             </div>
@@ -115,10 +115,10 @@
         </div>
 
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4 text-center">
-          <div class="text-body-sm text-neutral-500 uppercase tracking-wider mb-1">
+          <div class="text-label text-neutral-500 mb-1">
             Benchmark Gap
           </div>
-          <div class="text-h2 font-bold text-white">
+          <div class="text-h2 font-bold text-white text-mono-value">
             {{ money(data?.savings) }}
           </div>
           <div class="text-body-sm text-neutral-400">

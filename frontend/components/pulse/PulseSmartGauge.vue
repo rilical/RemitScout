@@ -1,7 +1,7 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
+  <div class="card-elevated overflow-hidden">
     <!-- Header -->
-    <div class="border-b border-neutral-700 px-6 py-4">
+    <div class="border-b border-white/[0.08] px-6 py-4">
       <!-- Consumer Mode Header -->
       <template v-if="store.viewMode === 'sender'">
         <h2 class="text-body-lg font-bold text-white">
@@ -23,7 +23,7 @@
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-body-sm font-mono text-neutral-500">{{ store.corridor?.label }}</span>
+            <span class="text-body-sm font-mono text-mono-value text-neutral-500">{{ store.corridor?.label }}</span>
             <span class="inline-flex items-center rounded bg-neutral-700 px-2 py-0.5 text-body-sm font-semibold text-neutral-300">
               {{ executionSignalBadge }}
             </span>
@@ -36,7 +36,7 @@
     <div class="p-6">
       <div
         v-if="loading"
-        class="flex h-48 w-full items-center justify-center"
+        class="flex h-48 w-full items-center justify-center animate-pulse"
         role="status"
         aria-live="polite"
         aria-label="Loading chart"
@@ -107,7 +107,7 @@ aria-live="polite"
           >
             {{ analystLevelLabel }}
           </span>
-          <span class="text-body-sm font-mono text-neutral-400">
+          <span class="text-body-sm font-mono text-mono-value text-neutral-400">
             {{ bpsDelta >= 0 ? '+' : '' }}{{ bpsDelta.toFixed(1) }}%
           </span>
         </div>
@@ -144,27 +144,27 @@ title="Score is a 0-100 percentile based on the current effective rate relative 
           <!-- Primary Metrics -->
           <div class="grid grid-cols-3 gap-4">
             <div class="text-center">
-              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
+              <div class="text-label text-neutral-500">
                 Spot Rate
               </div>
-              <div class="text-body-lg font-bold font-mono text-white">
+              <div class="text-body-lg font-bold font-mono text-mono-value text-white">
                 {{ data.currentRate.toFixed(4) }}
               </div>
             </div>
             <div class="text-center">
-              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
+              <div class="text-label text-neutral-500">
                 30D VWAP
               </div>
-              <div class="text-body-lg font-bold font-mono text-white">
+              <div class="text-body-lg font-bold font-mono text-mono-value text-white">
                 {{ data.avg30Day.toFixed(4) }}
               </div>
             </div>
             <div class="text-center">
-              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
+              <div class="text-label text-neutral-500">
                 Δ vs Avg
               </div>
               <div
-                class="text-body-lg font-bold font-mono"
+                class="text-body-lg font-bold font-mono text-mono-value"
                 :class="data.percentFromAvg >= 0 ? 'text-brand-600' : 'text-danger-600'"
               >
                 {{ data.percentFromAvg >= 0 ? '+' : '' }}{{ data.percentFromAvg.toFixed(2) }}%
@@ -173,10 +173,10 @@ title="Score is a 0-100 percentile based on the current effective rate relative 
           </div>
 
           <!-- Confidence Bar -->
-          <div class="pt-4 border-t border-neutral-700">
+          <div class="pt-4 border-t border-white/[0.08]">
             <div class="flex items-center justify-between text-body-sm text-neutral-500 mb-1">
-              <span class="uppercase tracking-wider">Signal Confidence</span>
-              <span class="font-mono">{{ Math.round(data.confidence * 100) }}%</span>
+              <span class="text-label uppercase tracking-wider">Signal Confidence</span>
+              <span class="font-mono text-mono-value">{{ Math.round(data.confidence * 100) }}%</span>
             </div>
             <div class="h-2 rounded-full bg-neutral-700">
               <div
@@ -188,8 +188,8 @@ title="Score is a 0-100 percentile based on the current effective rate relative 
 
           <!-- Latency & Freshness -->
           <div class="flex items-center justify-between text-body-sm text-neutral-500 pt-2">
-            <span>Data Latency: <span class="font-mono text-neutral-400">{{ dataLatency }}ms</span></span>
-            <span>Last Tick: <span class="font-mono text-neutral-400">{{ lastTick }}</span></span>
+            <span>Data Latency: <span class="font-mono text-mono-value text-neutral-400">{{ dataLatency }}ms</span></span>
+            <span>Last Tick: <span class="font-mono text-mono-value text-neutral-400">{{ lastTick }}</span></span>
           </div>
         </div>
 

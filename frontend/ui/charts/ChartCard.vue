@@ -52,7 +52,7 @@ const styles = computed(() => {
   }
 
   return {
-    outer: 'overflow-hidden rounded-xl border border-neutral-700 bg-neutral-800',
+    outer: 'card-surface overflow-hidden',
     header: 'flex items-start justify-between gap-6 border-b border-neutral-700 px-6 py-4',
     title: 'text-h4 text-white',
     subtitle: 'mt-1 text-body-sm text-neutral-400',

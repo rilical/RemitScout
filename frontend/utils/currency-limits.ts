@@ -172,6 +172,11 @@ export const FIXED_EXCHANGE_RATES: Record<string, number> = {
 export const MIN_AMOUNT_USD = 50
 
 /**
+ * Suggested minimum amount in USD for better corridor coverage
+ */
+export const SUGGESTED_MIN_AMOUNT_USD = 200
+
+/**
  * Base maximum amount in USD
  */
 export const MAX_AMOUNT_USD = 10000
@@ -214,6 +219,29 @@ export function getMinAmount(currencyCode: string): number {
   }
   else {
     return Math.ceil(minAmount * 10) / 10 // Round up to 1 decimal
+  }
+}
+
+/**
+ * Get the suggested minimum amount for better provider coverage.
+ * Converts $200 USD to the target currency using fixed rates.
+ */
+export function getSuggestedMinAmount(currencyCode: string): number {
+  const currency = currencyCode.toUpperCase()
+  const rate = FIXED_EXCHANGE_RATES[currency] || 1.0
+  const amount = SUGGESTED_MIN_AMOUNT_USD * rate
+
+  if (amount >= 1000) {
+    return Math.ceil(amount / 100) * 100
+  }
+  else if (amount >= 100) {
+    return Math.ceil(amount / 10) * 10
+  }
+  else if (amount >= 10) {
+    return Math.ceil(amount)
+  }
+  else {
+    return Math.ceil(amount * 10) / 10
   }
 }
 

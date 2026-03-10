@@ -181,75 +181,6 @@ class="text-body-sm leading-relaxed text-white/80"
               </div>
             </div>
 
-            <div class="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                    Live sweep status
-                  </p>
-                  <p class="text-body-lg mt-2 font-semibold text-white">
-                    {{ heroRefreshStatusTitle }}
-                  </p>
-                  <p class="text-body-sm mt-1 text-white/70">
-                    {{ heroRefreshStatusBody }}
-                  </p>
-                </div>
-                <p
-                  class="text-body-sm min-w-[7.5rem] text-right font-semibold tabular-nums text-white/80"
-                >
-                  {{
-                    showHeroRefreshStatus
-                      ? `${refreshProgress}%`
-                      : hasApiQuotes
-                        ? 'Locked in'
-                        : 'Stand by'
-                  }}
-                </p>
-              </div>
-
-              <div class="mt-4">
-                <div
-                  class="relative overflow-hidden rounded-full border border-white/10 bg-white/10 p-[3px]"
-                >
-                  <div
-                    class="absolute inset-[3px] rounded-full bg-gradient-to-r from-white/5 via-white/10 to-white/5"
-                  />
-                  <div class="relative h-2.5 overflow-hidden rounded-full bg-white/5">
-                    <div
-                      class="relative h-full rounded-full transition-[width] duration-500 ease-out"
-                      :class="heroRefreshBarClass"
-                      :style="{ width: heroRefreshBarWidth }"
-                    >
-                      <div
-                        v-if="showHeroRefreshStatus"
-                        class="loading-bar-animate absolute inset-y-0 left-0 rounded-full bg-white/35"
-                      />
-                      <div
-                        v-if="showHeroRefreshStatus"
-                        class="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-full bg-white/25 blur-md"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="mt-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40"
-                >
-                  <span>Queued</span>
-                  <span>In flight</span>
-                  <span>Ready</span>
-                </div>
-              </div>
-
-              <div class="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-white/55">
-                <span>{{ providerCount }} providers tracked</span>
-                <span v-if="mostRecentUpdate && hasApiQuotes">
-                  Last live update {{ mostRecentUpdateLabel }}
-                </span>
-                <span v-else-if="showHeroRefreshStatus && refreshSecondsRemaining > 0">
-                  About {{ refreshSecondsRemaining }}s remaining
-                </span>
-              </div>
-            </div>
 
             <!-- Quick Actions -->
             <div class="flex flex-wrap items-center gap-3">
@@ -758,6 +689,8 @@ class="scroll-mt-20 bg-surface"
             :available-from-currencies="availableFromCurrencies"
             :available-methods="availableMethods"
             :methods-loading="isRefreshQueued && !availableMethods.length"
+            :loading="shouldBlockResults"
+            :has-results="hasApiQuotes"
             :watchlist-active="isCorridorSaved"
             :alert-active="hasCorridorAlerts"
             @update="handleBarUpdate"
@@ -770,73 +703,7 @@ class="scroll-mt-20 bg-surface"
         </div>
 
         <!-- Refresh Gate -->
-        <div
-          v-if="showRefreshGate"
-          data-testid="corridor-refresh-gate"
-          class="mb-8 rounded-2xl border border-rs-border bg-surface p-8 shadow-sm"
-        >
-          <div class="mx-auto flex max-w-2xl flex-col gap-5 py-4">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">
-                  Live sweep status
-                </p>
-                <p class="text-body-lg mt-2 font-semibold text-rs-fg">
-                  {{ heroRefreshStatusTitle }}
-                </p>
-                <p class="text-body-sm mt-1 text-rs-muted">
-                  {{ heroRefreshStatusBody }}
-                </p>
-              </div>
-              <p class="text-body-sm font-semibold tabular-nums text-brand-700 sm:text-right">
-                {{ `${refreshProgress}%` }}
-              </p>
-            </div>
-
-            <div>
-              <div
-                class="relative overflow-hidden rounded-full border border-brand-200 bg-neutral-100 p-[3px]"
-              >
-                <div
-                  class="absolute inset-[3px] rounded-full bg-gradient-to-r from-brand-50 via-white to-brand-50"
-                />
-                <div class="relative h-2.5 overflow-hidden rounded-full bg-white">
-                  <div
-                    class="relative h-full rounded-full transition-[width] duration-500 ease-out"
-                    :class="heroRefreshBarClass"
-                    :style="{ width: heroRefreshBarWidth }"
-                  >
-                    <div
-                      class="loading-bar-animate absolute inset-y-0 left-0 rounded-full bg-white/45"
-                    />
-                    <div
-                      class="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-full bg-white/30 blur-md"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div
-                class="mt-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-rs-muted"
-              >
-                <span>Queued</span>
-                <span>In flight</span>
-                <span>Ready</span>
-              </div>
-            </div>
-
-            <div
-              class="flex flex-wrap items-center justify-center gap-3 text-[11px] text-rs-muted sm:justify-start"
-            >
-              <span>{{ providerCount }} providers tracked</span>
-              <span v-if="refreshSecondsRemaining > 0">
-                About {{ refreshSecondsRemaining }}s remaining
-              </span>
-              <span v-else>Locking in the live ranking</span>
-            </div>
-          </div>
-        </div>
-
-        <template v-else>
+        <template v-if="!showRefreshGate">
           <!-- Section Header -->
           <div
             v-if="hasApiQuotes"
@@ -904,17 +771,34 @@ viewBox="0 0 24 24"
           <div
             v-else-if="quotesUnavailable"
             data-testid="corridor-quotes-unavailable-state"
-            class="text-body-sm rounded-xl border-2 border-rs-border bg-neutral-50 p-4 text-neutral-700"
+            class="rounded-2xl border border-brand-200 bg-brand-50/40 px-6 py-12 text-center"
           >
-            We are still waiting on fresh live quotes for this route. Try again in a moment or
-            adjust the amount or delivery method above.
-            <p
-v-if="supportedMethods.length"
-class="mt-2 text-neutral-600"
->
-              Supported delivery methods: {{ formatMethodLabels(supportedMethods) }}. Live
-              availability is still warming up.
-            </p>
+            <div class="mx-auto max-w-md">
+              <template v-if="displayAmount < suggestedMinAmount">
+                <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100">
+                  <svg class="h-6 w-6 text-brand-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-brand-900">Try a higher amount</h3>
+                <p class="mt-2 text-sm leading-relaxed text-brand-700/80">
+                  No providers returned quotes for this amount. Try sending at least
+                  <span class="font-semibold text-brand-800">{{ formatCurrency(suggestedMinAmount, fromCurrencyCode) }}</span>
+                  (approx. $200 USD) for better provider coverage.
+                </p>
+              </template>
+              <template v-else>
+                <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100">
+                  <svg class="h-6 w-6 text-brand-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-brand-900">No providers on this route</h3>
+                <p class="mt-2 text-sm leading-relaxed text-brand-700/80">
+                  None of the providers we track currently cover this corridor. Try a different destination or currency pair.
+                </p>
+              </template>
+            </div>
           </div>
 
           <div
@@ -2331,7 +2215,7 @@ import {
   getCanonicalCorridorUrl,
   needsCanonicalRedirect,
 } from '~/utils/country-slugs'
-import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
+import { formatCurrency, getMaxAmount, getMinAmount, getSuggestedMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 import { useWatchlist } from '~/composables/useWatchlist'
 import { useAlerts } from '~/composables/useAlerts'
 import { useAuth } from '~/composables/useAuth'
@@ -2610,6 +2494,7 @@ const amountLimits = computed(() => ({
   maxAmount: getMaxAmount(fromCurrencyCode.value),
   strict: true,
 }))
+const suggestedMinAmount = computed(() => getSuggestedMinAmount(fromCurrencyCode.value))
 const payoutMethod = ref<Method>(initialMethod.value)
 watch(
   amountParam,
@@ -2777,70 +2662,6 @@ const getRefreshPollDelayMs = (attempt: number) => {
 }
 const refreshTimeoutSeconds = Math.round(REFRESH_STATUS_TIMEOUT_MS / 1000)
 const MAX_B2C_STALE_MS = 4 * 60 * 60 * 1000
-const refreshProgress = computed(() => {
-  if (!shouldBlockResults.value || refreshTimeoutSeconds <= 0) return 0
-  const raw = Math.round((refreshElapsedSeconds.value / refreshTimeoutSeconds) * 100)
-  return Math.min(100, Math.max(0, raw))
-})
-const refreshSecondsRemaining = computed(() =>
-  Math.max(0, refreshTimeoutSeconds - refreshElapsedSeconds.value),
-)
-const refreshQueueLabel = computed(() => {
-  const pending = refreshCompletion.value?.pending
-  const total = refreshCompletion.value?.total
-  if (pending === undefined || total === undefined || total === 0) {
-    return 'Waiting for providers to respond...'
-  }
-  if (pending === 0) {
-    return 'Finalizing results...'
-  }
-  return `${pending} of ${total} providers still responding`
-})
-const showHeroRefreshStatus = computed(() => {
-  if (refreshTimedOut.value) return true
-  if (refreshFinalizing.value) return true
-  if (quoteRefreshPending.value) return true
-  if (isRefreshQueued.value) return true
-  if (isQuotesLoading.value) return true
-  return shouldBlockResults.value
-})
-const heroRefreshStatusTitle = computed(() => {
-  if (refreshTimedOut.value) return 'Live sweep is taking longer than expected'
-  if (refreshFinalizing.value) return 'Locking in the live ranking'
-  if (quoteRefreshPending.value) return 'Queueing the next provider sweep'
-  if (showHeroRefreshStatus.value && hasApiQuotes.value) return 'Updating the live ranking'
-  if (showHeroRefreshStatus.value) return 'Checking live provider quotes'
-  return 'Live ranking is ready'
-})
-const heroRefreshStatusBody = computed(() => {
-  if (refreshTimedOut.value) {
-    return hasApiQuotes.value
-      ? 'Showing the latest available ranking while slower providers finish responding.'
-      : 'The first live sweep is still delayed. Retry or change the amount to trigger another pass.'
-  }
-  if (showHeroRefreshStatus.value) {
-    if (hasApiQuotes.value) {
-      return `${refreshQueueLabel.value}. Rankings will tighten as the remaining providers respond.`
-    }
-    return `${refreshQueueLabel.value}. The table unlocks as soon as the current sweep completes.`
-  }
-  if (mostRecentUpdate.value) {
-    return `Last live update ${mostRecentUpdateLabel.value}. Rankings reflect this route, amount, and bank-deposit delivery path.`
-  }
-  return 'Live ranking will appear here once the first provider sweep completes.'
-})
-const heroRefreshBarClass = computed(() => {
-  if (refreshTimedOut.value) return 'bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500'
-  if (!showHeroRefreshStatus.value)
-    return 'bg-gradient-to-r from-emerald-400 via-sky-400 to-emerald-500'
-  if (hasApiQuotes.value) return 'bg-gradient-to-r from-sky-400 via-brand-400 to-emerald-400'
-  return 'bg-gradient-to-r from-brand-400 via-sky-400 to-cyan-300'
-})
-const heroRefreshBarWidth = computed(() => {
-  if (!showHeroRefreshStatus.value) return '100%'
-  return `${Math.max(10, refreshProgress.value)}%`
-})
-
 const clearRefreshPoll = () => {
   if (!import.meta.client) return
   refreshPollController?.abort()
