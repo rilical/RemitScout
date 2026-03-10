@@ -1,5 +1,5 @@
 <template>
-  <PulsePagePublic v-if="!isPlus" />
+  <PulsePagePublic v-if="pulseEnabled && !isPlus" />
   <PulseTabShell v-else />
 </template>
 
@@ -10,12 +10,11 @@ import { useEntitlements } from '~/composables/useEntitlements'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 
 const { pulseEnabled } = useFeatureFlags()
+const { isPlus, isEnterprise } = useEntitlements()
 
-if (!pulseEnabled.value) {
+if (!pulseEnabled.value && !isEnterprise.value) {
   await navigateTo('/plus', { redirectCode: 302 })
 }
-
-const { isPlus } = useEntitlements()
 
 useHead({
   title: 'Remit-Scout Pulse | Remittance Market Dashboard',
