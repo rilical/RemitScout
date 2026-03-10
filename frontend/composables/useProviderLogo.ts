@@ -4,6 +4,7 @@
 
 const PROVIDER_LOGO_ALIASES: Record<string, string> = {
   westernunion: 'western-union',
+  'western union': 'western-union',
   xe: 'xe-money',
   alansari: 'al-ansari-exchange',
   bossmoney: 'boss-money',

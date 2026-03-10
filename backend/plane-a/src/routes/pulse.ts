@@ -754,9 +754,6 @@ const mapMethodCoverage = (payload: unknown) => {
       {
         provider: 'All Providers',
         bank: methods.includes('bank'),
-        cash: methods.includes('cash'),
-        wallet: methods.includes('wallet'),
-        card: methods.includes('card'),
         speed: 'Varies',
       },
     ]

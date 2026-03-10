@@ -118,9 +118,6 @@ export interface PulseOverview {
 export interface MethodCoverageRow {
   provider: string
   bank: boolean
-  cash: boolean
-  wallet: boolean
-  card: boolean
   speed: string
 }
 
