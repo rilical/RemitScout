@@ -43,9 +43,9 @@ const emit = defineEmits<{
 const isEmDash = computed(() => props.value === '—' || props.value === '\u2014')
 
 const cardClass = computed(() => {
-  const base = 'relative overflow-hidden rounded-xl transition-all duration-150'
+  const base = 'relative h-full overflow-hidden rounded-2xl transition-all duration-150'
   const terminal = 'bg-neutral-800/50 border border-neutral-700/50'
-  const consumer = 'bg-white border border-neutral-200 shadow-sm'
+  const consumer = 'bg-white border border-[#D8E5F8] shadow-[0_10px_24px_rgba(37,99,235,0.05)]'
   const clickable = props.clickable ? 'cursor-pointer hover:border-blue-500/40' : ''
   return [base, props.variant === 'terminal' ? terminal : consumer, clickable].filter(Boolean).join(' ')
 })

@@ -12,7 +12,7 @@ class="relative"
         class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
         :class="selectClass"
         :placeholder="placeholder"
-        :aria-label="props.label"
+        :aria-label="ariaLabel"
         role="combobox"
         aria-autocomplete="list"
         autocomplete="off"
@@ -99,7 +99,12 @@ to="body"
           @touchstart.prevent="selectCountry(country)"
         >
           <span class="inline-flex items-center gap-2">
-            <span class="text-lg leading-none">{{ country.flag }}</span>
+            <span
+              v-if="props.showFlags"
+              class="text-lg leading-none"
+            >
+              {{ country.flag }}
+            </span>
             <span>{{ country.name }}</span>
           </span>
         </button>
@@ -126,7 +131,7 @@ import { COUNTRIES, SUPPORTED_COUNTRY_CODES } from '~/utils/countries-currencies
 
 interface Props {
   modelValue: string
-  label: string
+  label?: string
   id?: string
   placeholder?: string
   disabled?: boolean
@@ -137,6 +142,7 @@ interface Props {
   excludeCountry?: string
   supportedOnly?: boolean
   allowedCodes?: string[]
+  showFlags?: boolean
 }
 
 interface CountryOption {
@@ -150,6 +156,7 @@ interface CountryOption {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  label: '',
   id: undefined,
   placeholder: 'Select country',
   disabled: false,
@@ -160,7 +167,10 @@ const props = withDefaults(defineProps<Props>(), {
   excludeCountry: undefined,
   supportedOnly: false,
   allowedCodes: undefined,
+  showFlags: true,
 })
+
+const ariaLabel = computed(() => props.label || props.placeholder || 'Select country')
 
 const fallbackId = useId()
 const resolvedId = computed(() => props.id ?? `country-select-${fallbackId}`)

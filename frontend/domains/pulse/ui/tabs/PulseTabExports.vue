@@ -1,176 +1,106 @@
 <template>
   <div class="space-y-6">
-    <!-- Light layout -->
     <template v-if="density === 'light'">
-      <!-- ROW 1: Section header -->
       <RsSectionHeader
         title="Exports"
-        description="Download data and compare quotes"
-        icon="↓"
+        description="Download corridor data and share chart views"
+        icon-name="arrow-down-tray"
         :variant="variant"
       />
 
-      <!-- ROW 2: Action cards -->
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <!-- Card 1: Download Snapshot -->
-        <div :class="[cardSurface, 'p-5 flex flex-col gap-4']">
-          <div class="flex items-start gap-3">
-            <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-neutral-700/60' : 'bg-neutral-100'"
-            >
-              <span
-                class="text-lg"
-                :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-600'"
-                aria-hidden="true"
-              >↓</span>
-            </div>
-            <div>
-              <p
-                class="font-semibold"
-                :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
-              >
-                Download Snapshot
-              </p>
-              <p
-                class="mt-0.5 text-sm"
-                :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
-              >
-                Download CSV for this corridor (30 day history)
-              </p>
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <button
-              class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-              :class="downloadCsvClasses"
-              :disabled="csvDownloading || !corridor"
-              @click="handleCsvDownload"
-            >
-              <span v-if="csvDownloading" class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
-              {{ csvDownloading ? 'Generating...' : 'Download CSV' }}
-            </button>
-          </div>
-          <p
-            v-if="csvError"
-            class="text-xs text-red-500"
-          >
-            {{ csvError }}
-          </p>
-        </div>
-
-        <!-- Card 2: Compare Live Quotes -->
-        <div :class="[cardSurface, 'p-5 flex flex-col gap-4']">
-          <div class="flex items-start gap-3">
-            <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-neutral-700/60' : 'bg-neutral-100'"
-            >
-              <span
-                class="text-lg"
-                :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-600'"
-                aria-hidden="true"
-              >⇄</span>
-            </div>
-            <div>
-              <p
-                class="font-semibold"
-                :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
-              >
-                Compare Live Quotes
-              </p>
-              <p
-                class="mt-0.5 text-sm"
-                :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
-              >
-                Compare current quotes from all providers
-              </p>
-            </div>
-          </div>
-          <NuxtLink
-            :to="compareHref"
-            class="inline-flex w-fit items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-            :class="variant === 'terminal'
-              ? 'bg-neutral-700 text-white hover:bg-neutral-600'
-              : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200'"
-          >
-            Compare Now
-          </NuxtLink>
-        </div>
-      </div>
-
-      <!-- ROW 3: Upgrade prompt -->
       <div
-        class="rounded-xl p-6"
+        class="rounded-2xl border p-8"
         :class="variant === 'terminal'
-          ? 'bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-700/40'
-          : 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200'"
+          ? 'border-blue-500/20 bg-neutral-900 text-white'
+          : 'border-blue-200 bg-blue-50/70'"
       >
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="mx-auto flex max-w-2xl flex-col items-center gap-5 text-center">
+          <div
+            class="flex h-14 w-14 items-center justify-center rounded-2xl"
+            :class="variant === 'terminal' ? 'bg-blue-500/15 text-blue-300' : 'bg-blue-600 text-white'"
+          >
+            <span class="text-2xl" aria-hidden="true">&#8595;</span>
+          </div>
           <div>
             <p
-              class="font-semibold"
+              class="text-lg font-bold"
               :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
             >
-              Need API access, webhooks, or extended history?
+              Exports are available on Pulse Plus
             </p>
             <p
-              class="mt-1 text-sm"
+              class="mt-2 text-body-sm leading-relaxed"
               :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-600'"
             >
-              Enterprise plans include programmatic access to all market data.
+              Pulse Plus includes downloadable corridor snapshots, chart image exports, and embeddable chart views for the routes you track.
             </p>
           </div>
-          <NuxtLink
-            to="/contact?type=enterprise&topic=pulse"
-            class="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
-            :class="variant === 'terminal'
-              ? 'bg-indigo-600 text-white hover:bg-indigo-500'
-              : 'bg-indigo-600 text-white hover:bg-indigo-700'"
-          >
-            Learn about Enterprise
-          </NuxtLink>
+
+          <ul class="grid grid-cols-1 gap-2 text-left text-body-sm sm:grid-cols-2">
+            <li
+              v-for="feature in lightUpgradeFeatures"
+              :key="feature"
+              class="flex items-center gap-2"
+              :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-700'"
+            >
+              <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] text-emerald-500" aria-hidden="true">&#10003;</span>
+              {{ feature }}
+            </li>
+          </ul>
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <NuxtLink
+              to="/pricing"
+              class="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors"
+              :class="variant === 'terminal'
+                ? 'bg-blue-600 text-white hover:bg-blue-500'
+                : 'bg-blue-600 text-white hover:bg-blue-700'"
+            >
+              View Pulse Plus
+            </NuxtLink>
+            <NuxtLink
+              to="/contact?type=enterprise&topic=exports"
+              class="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
+              :class="variant === 'terminal'
+                ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
+                : 'bg-white text-neutral-700 hover:bg-neutral-100'"
+            >
+              Talk to sales
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </template>
 
-    <!-- Enterprise layout -->
     <template v-else>
-      <!-- ROW 1: Section header -->
       <RsSectionHeader
-        title="Exports & Integrations"
-        description="Download data, export charts, and manage programmatic access"
-        icon="↓"
+        title="Exports"
+        description="Download corridor snapshots, export chart visuals, and share embeddable views"
+        icon-name="arrow-down-tray"
         :variant="variant"
       />
 
-      <!-- ROW 2: 3 action cards -->
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <!-- Card 1: Download Snapshot (CSV / XLSX) -->
-        <div :class="[cardSurface, 'p-5 flex flex-col gap-4']">
+        <div :class="[cardSurface, 'flex flex-col gap-4 p-5']">
           <div class="flex items-start gap-3">
             <div
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-neutral-700/60' : 'bg-neutral-100'"
+              :class="variant === 'terminal' ? 'bg-neutral-800 text-neutral-300' : 'bg-neutral-100 text-neutral-600'"
             >
-              <span
-                class="text-lg"
-                :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-600'"
-                aria-hidden="true"
-              >↓</span>
+              <span class="text-lg" aria-hidden="true">&#8595;</span>
             </div>
             <div>
               <p
                 class="font-semibold"
                 :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
               >
-                Download Snapshot
+                Download snapshot
               </p>
               <p
-                class="mt-0.5 text-sm"
+                class="mt-0.5 text-body-sm"
                 :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
               >
-                Export corridor data as CSV or XLSX
+                Export the current corridor view as CSV or spreadsheet-friendly XLSX.
               </p>
             </div>
           </div>
@@ -194,39 +124,31 @@
               {{ xlsxDownloading ? 'Generating...' : 'XLSX' }}
             </button>
           </div>
-          <p
-            v-if="csvError"
-            class="text-xs text-red-500"
-          >
+          <p v-if="csvError" class="text-xs text-red-500">
             {{ csvError }}
           </p>
         </div>
 
-        <!-- Card 2: Download Visual -->
-        <div :class="[cardSurface, 'p-5 flex flex-col gap-4']">
+        <div :class="[cardSurface, 'flex flex-col gap-4 p-5']">
           <div class="flex items-start gap-3">
             <div
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-neutral-700/60' : 'bg-neutral-100'"
+              :class="variant === 'terminal' ? 'bg-neutral-800 text-neutral-300' : 'bg-neutral-100 text-neutral-600'"
             >
-              <span
-                class="text-lg"
-                :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-600'"
-                aria-hidden="true"
-              >◫</span>
+              <span class="text-lg" aria-hidden="true">&#9645;</span>
             </div>
             <div>
               <p
                 class="font-semibold"
                 :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
               >
-                Download Visual
+                Export visual
               </p>
               <p
-                class="mt-0.5 text-sm"
+                class="mt-0.5 text-body-sm"
                 :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
               >
-                Export chart as PNG or SVG image
+                Save the active chart as a PNG or SVG for decks, docs, and client updates.
               </p>
             </div>
           </div>
@@ -250,59 +172,47 @@
               SVG
             </button>
           </div>
-          <p
-            v-if="visualExportError"
-            class="text-xs text-red-500"
-          >
+          <p v-if="visualExportError" class="text-xs text-red-500">
             {{ visualExportError }}
           </p>
         </div>
 
-        <!-- Card 3: Embed Charts -->
-        <div :class="[cardSurface, 'p-5 flex flex-col gap-4']">
+        <div :class="[cardSurface, 'flex flex-col gap-4 p-5']">
           <div class="flex items-start gap-3">
             <div
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-neutral-700/60' : 'bg-neutral-100'"
+              :class="variant === 'terminal' ? 'bg-neutral-800 text-neutral-300' : 'bg-neutral-100 text-neutral-600'"
             >
-              <span
-                class="text-lg"
-                :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-600'"
-                aria-hidden="true"
-              >&lt;/&gt;</span>
+              <span class="text-lg" aria-hidden="true">&lt;/&gt;</span>
             </div>
             <div>
               <p
                 class="font-semibold"
                 :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
               >
-                Embed Charts
+                Embed chart view
               </p>
               <p
-                class="mt-0.5 text-sm"
+                class="mt-0.5 text-body-sm"
                 :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
               >
-                Generate a static iframe embed for your site
+                Copy an iframe snippet for the current corridor and benchmark setup.
               </p>
             </div>
           </div>
           <button
             class="inline-flex w-fit items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
             :class="variant === 'terminal'
-              ? 'bg-neutral-700 text-white hover:bg-neutral-600'
+              ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
               : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200'"
             @click="showEmbedCode = !showEmbedCode"
           >
-            {{ showEmbedCode ? 'Hide Code' : 'Show Embed Code' }}
+            {{ showEmbedCode ? 'Hide code' : 'Show embed code' }}
           </button>
 
-          <!-- Embed code preview -->
           <div
             v-if="showEmbedCode"
-            class="rounded-lg p-3 font-mono text-xs"
-            :class="variant === 'terminal'
-              ? 'bg-neutral-900 text-emerald-400 border border-neutral-700'
-              : 'bg-neutral-900 text-emerald-400'"
+            class="rounded-lg bg-neutral-900 p-3 font-mono text-xs text-emerald-400"
           >
             <div class="flex items-start justify-between gap-2">
               <pre class="overflow-x-auto whitespace-pre-wrap break-all">{{ embedCodeSnippet }}</pre>
@@ -320,139 +230,32 @@
         </div>
       </div>
 
-      <!-- ROW 3: Enterprise access cards -->
-      <div>
-        <RsSectionHeader
-          title="Enterprise Access"
-          description="Programmatic and real-time access to all market data"
-          :variant="variant"
-          class="mb-4"
-        />
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <!-- API Access -->
-          <div :class="[cardSurface, 'p-5 flex flex-col gap-3']">
-            <div
-              class="flex h-9 w-9 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-indigo-900/40' : 'bg-indigo-50'"
-            >
-              <span class="text-base text-indigo-400" aria-hidden="true">{ }</span>
-            </div>
-            <div>
-              <p
-                class="font-semibold"
-                :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
-              >
-                API Access
-              </p>
-              <p
-                class="mt-0.5 text-sm"
-                :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
-              >
-                Programmatic access to all quotes and indices
-              </p>
-            </div>
-            <NuxtLink
-              to="/contact?type=enterprise&topic=api"
-              class="mt-auto inline-flex w-fit items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
-              :class="enterpriseLinkClasses"
-            >
-              Learn more
-            </NuxtLink>
-          </div>
-
-          <!-- Webhooks -->
-          <div :class="[cardSurface, 'p-5 flex flex-col gap-3']">
-            <div
-              class="flex h-9 w-9 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-amber-900/40' : 'bg-amber-50'"
-            >
-              <span class="text-base text-amber-400" aria-hidden="true">&#9656;</span>
-            </div>
-            <div>
-              <p
-                class="font-semibold"
-                :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
-              >
-                Webhooks
-              </p>
-              <p
-                class="mt-0.5 text-sm"
-                :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
-              >
-                Real-time notifications for rate changes
-              </p>
-            </div>
-            <NuxtLink
-              to="/contact?type=enterprise&topic=webhooks"
-              class="mt-auto inline-flex w-fit items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
-              :class="enterpriseLinkClasses"
-            >
-              Learn more
-            </NuxtLink>
-          </div>
-
-          <!-- Extended History -->
-          <div :class="[cardSurface, 'p-5 flex flex-col gap-3']">
-            <div
-              class="flex h-9 w-9 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-emerald-900/40' : 'bg-emerald-50'"
-            >
-              <span class="text-base text-emerald-400" aria-hidden="true">&#128337;</span>
-            </div>
-            <div>
-              <p
-                class="font-semibold"
-                :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
-              >
-                Extended History
-              </p>
-              <p
-                class="mt-0.5 text-sm"
-                :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
-              >
-                365+ days of historical data
-              </p>
-            </div>
-            <NuxtLink
-              to="/contact?type=enterprise&topic=history"
-              class="mt-auto inline-flex w-fit items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
-              :class="enterpriseLinkClasses"
-            >
-              Learn more
-            </NuxtLink>
-          </div>
-
-          <!-- Advanced Signals -->
-          <div :class="[cardSurface, 'p-5 flex flex-col gap-3']">
-            <div
-              class="flex h-9 w-9 items-center justify-center rounded-lg"
-              :class="variant === 'terminal' ? 'bg-rose-900/40' : 'bg-rose-50'"
-            >
-              <span class="text-base text-rose-400" aria-hidden="true">&#9888;</span>
-            </div>
-            <div>
-              <p
-                class="font-semibold"
-                :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
-              >
-                Advanced Signals
-              </p>
-              <p
-                class="mt-0.5 text-sm"
-                :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
-              >
-                Stress signals, anomalies, and alerts
-              </p>
-            </div>
-            <NuxtLink
-              to="/contact?type=enterprise&topic=signals"
-              class="mt-auto inline-flex w-fit items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
-              :class="enterpriseLinkClasses"
-            >
-              Learn more
-            </NuxtLink>
-          </div>
+      <div
+        :class="[cardSurface, 'flex flex-col gap-4 rounded-2xl border border-dashed p-5 lg:flex-row lg:items-center lg:justify-between']"
+      >
+        <div>
+          <p
+            class="font-semibold"
+            :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
+          >
+            Need recurring delivery or licensed data access?
+          </p>
+          <p
+            class="mt-1 text-body-sm leading-relaxed"
+            :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-600'"
+          >
+            For scheduled reporting, historical extracts, or integration access, route the request through sales so we can scope it against the data we actually publish today.
+          </p>
         </div>
+        <NuxtLink
+          to="/contact?type=enterprise&topic=exports"
+          class="inline-flex w-fit items-center rounded-xl px-4 py-2 text-sm font-semibold transition-colors"
+          :class="variant === 'terminal'
+            ? 'bg-blue-600 text-white hover:bg-blue-500'
+            : 'bg-blue-600 text-white hover:bg-blue-700'"
+        >
+          Contact sales
+        </NuxtLink>
       </div>
     </template>
   </div>
@@ -460,11 +263,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { PulseDensity, PulseFilters, CorridorOption } from '~/types/pulse'
+import type { CorridorOption, PulseDensity, PulseFilters } from '~/types/pulse'
 import { getMarketSnapshot, getTableData } from '~/lib/pulseApi'
 import { useChartImageExport } from '~/composables/useChartImageExport'
-
-// ── Props ─────────────────────────────────────────────────────────────────────
+import RsSectionHeader from '~/ui/layout/RsSectionHeader.vue'
 
 interface Props {
   density: PulseDensity
@@ -474,11 +276,14 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// ── Theme ─────────────────────────────────────────────────────────────────────
-
 const { variant, cardSurface } = usePulseTheme()
 
-// ── CSV/XLSX download ─────────────────────────────────────────────────────────
+const lightUpgradeFeatures = [
+  'CSV and XLSX corridor snapshots',
+  'PNG and SVG chart exports',
+  'Embeddable chart views',
+  'Historical delivery packs on request',
+]
 
 const csvDownloading = ref(false)
 const xlsxDownloading = ref(false)
@@ -496,38 +301,36 @@ function buildFilename(ext: 'csv' | 'xlsx'): string {
 }
 
 function rowsToCsv(headers: string[], rows: string[][]): string {
-  const escape = (v: string) => (v.includes(',') || v.includes('"') || v.includes('\n'))
-    ? `"${v.replace(/"/g, '""')}"`
-    : v
+  const escape = (value: string) => (value.includes(',') || value.includes('"') || value.includes('\n'))
+    ? `"${value.replace(/"/g, '""')}"`
+    : value
 
-  const lines = [
+  return [
     headers.map(escape).join(','),
     ...rows.map(row => row.map(escape).join(',')),
-  ]
-  return lines.join('\r\n')
+  ].join('\r\n')
 }
 
 function triggerTextDownload(content: string, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType })
   const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
 
-async function fetchSnapshotRows(): Promise<{ headers: string[], rows: string[][] }> {
+async function fetchSnapshotRows(): Promise<{ headers: string[]; rows: string[][] }> {
   if (!props.corridor) {
     throw new Error('No corridor selected.')
   }
 
-  // Try the rich table endpoint first; fall back to the market snapshot.
   try {
     const tableData = await getTableData('all-in-cost', props.filters, '30d', 1, 500)
-    const headers = tableData.columns.map(c => c.label)
+    const headers = tableData.columns.map(column => column.label)
     const rows = tableData.rows.map(row => [
       new Date(row.timestamp).toISOString().slice(0, 10),
       row.provider,
@@ -542,8 +345,7 @@ async function fetchSnapshotRows(): Promise<{ headers: string[], rows: string[][
     return { headers, rows }
   }
   catch {
-    // Fallback: use the live market snapshot.
-    const pulseCorridor = {
+    const snapshot = await getMarketSnapshot({
       from: props.corridor.sourceCountry ?? props.corridor.fromCode ?? '',
       to: props.corridor.destCountry ?? props.corridor.toCode ?? '',
       fromCode: props.corridor.fromCode ?? '',
@@ -553,19 +355,20 @@ async function fetchSnapshotRows(): Promise<{ headers: string[], rows: string[][
       label: props.corridor.label ?? '',
       slug: props.corridor.slug ?? props.corridor.value ?? '',
       corridorId: props.corridor.corridorId,
-    }
-    const snapshot = await getMarketSnapshot(pulseCorridor, props.filters.amount)
+    }, props.filters.amount)
+
+    const headers = ['Date', 'Provider', 'Recipient Gets', 'Currency', 'Fee', 'FX Markup (bps)', 'Speed']
     const date = new Date().toISOString().slice(0, 10)
-    const headers = ['Date', 'Provider', 'Recipient Gets', 'Currency', 'Fee (USD)', 'FX Markup (bps)', 'Speed']
-    const rows = snapshot.quotes.map(q => [
+    const rows = snapshot.quotes.map(quote => [
       date,
-      q.provider,
-      String(q.recipientGets),
+      quote.provider,
+      String(quote.recipientGets),
       snapshot.currency,
-      String(q.fee),
-      String(q.markupBps),
-      q.speed,
+      String(quote.fee),
+      String(quote.markupBps),
+      quote.speed,
     ])
+
     return { headers, rows }
   }
 }
@@ -574,14 +377,13 @@ async function handleCsvDownload() {
   if (csvDownloading.value || !props.corridor) return
   csvDownloading.value = true
   csvError.value = null
+
   try {
     const { headers, rows } = await fetchSnapshotRows()
-    const csv = rowsToCsv(headers, rows)
-    triggerTextDownload(csv, buildFilename('csv'), 'text/csv;charset=utf-8;')
+    triggerTextDownload(rowsToCsv(headers, rows), buildFilename('csv'), 'text/csv;charset=utf-8;')
   }
-  catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to generate CSV.'
-    csvError.value = message
+  catch (error: unknown) {
+    csvError.value = error instanceof Error ? error.message : 'Failed to generate CSV.'
   }
   finally {
     csvDownloading.value = false
@@ -592,27 +394,22 @@ async function handleXlsxDownload() {
   if (xlsxDownloading.value || !props.corridor) return
   xlsxDownloading.value = true
   csvError.value = null
+
   try {
     const { headers, rows } = await fetchSnapshotRows()
-    // Build a minimal tab-separated values file that Excel/Sheets opens natively.
-    // A full XLSX library would be an unnecessary heavy dependency for this CTA tab.
-    const tsvLines = [
+    const content = [
       headers.join('\t'),
       ...rows.map(row => row.join('\t')),
-    ]
-    const tsvContent = tsvLines.join('\r\n')
-    triggerTextDownload(tsvContent, buildFilename('xlsx'), 'application/vnd.ms-excel')
+    ].join('\r\n')
+    triggerTextDownload(content, buildFilename('xlsx'), 'application/vnd.ms-excel')
   }
-  catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to generate XLSX.'
-    csvError.value = message
+  catch (error: unknown) {
+    csvError.value = error instanceof Error ? error.message : 'Failed to generate XLSX.'
   }
   finally {
     xlsxDownloading.value = false
   }
 }
-
-// ── Visual export ─────────────────────────────────────────────────────────────
 
 const { exportVisual } = useChartImageExport()
 const visualExporting = ref(false)
@@ -624,22 +421,21 @@ async function handleVisualExport(format: 'png' | 'svg') {
   visualExporting.value = true
   activeVisualFormat.value = format
   visualExportError.value = null
+
   try {
-    // Target the closest chart export root in the DOM.
     const root = document.querySelector<HTMLElement>('[data-chart-export-root]')
     if (!root) {
-      throw new Error('No chart available to export. Navigate to a chart tab first.')
+      throw new Error('No chart is available to export. Open a chart tab first.')
     }
-    const slug = corridorSlug()
+
     await exportVisual(root, {
       format,
-      filename: `remit-scout-${slug}-chart`,
-      bgColor: variant.value === 'terminal' ? '#0a0a0a' : '#ffffff',
+      filename: `remit-scout-${corridorSlug()}-chart`,
+      bgColor: variant.value === 'terminal' ? '#0f172a' : '#ffffff',
     })
   }
-  catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Visual export failed.'
-    visualExportError.value = message
+  catch (error: unknown) {
+    visualExportError.value = error instanceof Error ? error.message : 'Visual export failed.'
   }
   finally {
     visualExporting.value = false
@@ -647,22 +443,18 @@ async function handleVisualExport(format: 'png' | 'svg') {
   }
 }
 
-// ── Embed code ────────────────────────────────────────────────────────────────
-
 const showEmbedCode = ref(false)
 const embedCopied = ref(false)
 
 const embedCodeSnippet = computed(() => {
-  const slug = corridorSlug()
-  const amount = props.filters.amount
   const base = typeof window !== 'undefined' ? window.location.origin : 'https://remit-scout.com'
   return `<iframe
-  src="${base}/embed/pulse?corridor=${encodeURIComponent(slug)}&amount=${amount}"
+  src="${base}/embed/pulse?corridor=${encodeURIComponent(corridorSlug())}&amount=${props.filters.amount}"
   width="100%"
   height="400"
   frameborder="0"
   allowtransparency="true"
-  title="Remit Scout — ${props.corridor?.label ?? slug}"
+  title="Remit-Scout Pulse — ${props.corridor?.label ?? corridorSlug()}"
 ></iframe>`
 })
 
@@ -676,41 +468,25 @@ async function copyEmbedCode() {
     }, 2000)
   }
   catch {
-    // Clipboard write failed silently — user can still copy manually.
+    // Ignore clipboard errors and leave manual copy available.
   }
 }
 
-// ── Compare href ──────────────────────────────────────────────────────────────
-
-const compareHref = computed(() => {
-  const slug = props.corridor?.slug ?? props.corridor?.value ?? ''
-  if (!slug) return '/compare'
-  return `/compare?corridor=${encodeURIComponent(slug)}`
-})
-
-// ── Style helpers ─────────────────────────────────────────────────────────────
-
 const downloadCsvClasses = computed(() =>
   variant.value === 'terminal'
-    ? 'bg-emerald-700 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed'
-    : 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed',
+    ? 'bg-emerald-700 text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50'
+    : 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50',
 )
 
 const downloadXlsxClasses = computed(() =>
   variant.value === 'terminal'
-    ? 'bg-neutral-700 text-white hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed'
-    : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed',
+    ? 'bg-neutral-800 text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50'
+    : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50',
 )
 
 const visualExportClasses = computed(() =>
   variant.value === 'terminal'
-    ? 'bg-neutral-700 text-white hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed'
-    : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed',
-)
-
-const enterpriseLinkClasses = computed(() =>
-  variant.value === 'terminal'
-    ? 'bg-neutral-700 text-neutral-200 hover:bg-neutral-600'
-    : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
+    ? 'bg-neutral-800 text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50'
+    : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50',
 )
 </script>

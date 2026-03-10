@@ -11,13 +11,13 @@
 export const REMIT_SCOUT_THEME = {
   color: [
     '#2563EB',
-    '#6366F1',
+    '#0B1F59',
+    '#8CB8FF',
+    '#5A6F9E',
     '#10B981',
-    '#F59E0B',
-    '#EF4444',
-    '#8B5CF6',
-    '#06B6D4',
-    '#EC4899',
+    '#D97706',
+    '#DC2626',
+    '#DCEAFE',
   ],
 
   backgroundColor: 'transparent',
@@ -92,19 +92,20 @@ export const REMIT_SCOUT_THEME = {
   },
 
   tooltip: {
-    backgroundColor: '#1E293B',
-    borderColor: '#334155',
-    borderRadius: 8,
+    backgroundColor: '#0B1F59',
+    borderColor: '#1E4FBF',
+    borderRadius: 12,
     textStyle: {
       color: '#F8FAFC',
       fontSize: 12,
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     },
-    extraCssText: 'box-shadow: 0 4px 16px rgba(0,0,0,0.4);',
+    extraCssText: 'box-shadow: 0 12px 32px rgba(11,31,89,0.28);',
     axisPointer: {
-      type: 'cross',
-      crossStyle: {
-        color: '#475569',
+      type: 'line',
+      lineStyle: {
+        color: '#8CB8FF',
+        opacity: 0.45,
       },
     },
   },
@@ -158,7 +159,7 @@ export const REMIT_SCOUT_THEME = {
     {
       type: 'inside',
       backgroundColor: '#1E293B',
-      fillerColor: 'rgba(37, 99, 235, 0.15)',
+      fillerColor: 'rgba(37, 99, 235, 0.18)',
       borderColor: '#334155',
       handleStyle: {
         color: '#2563EB',
@@ -176,7 +177,7 @@ export const REMIT_SCOUT_THEME = {
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     },
     inRange: {
-      color: ['#1E293B', '#2563EB', '#6366F1'],
+      color: ['#DCEAFE', '#2563EB', '#0B1F59'],
     },
   },
 
@@ -222,13 +223,13 @@ export const REMIT_SCOUT_THEME = {
 export const REMIT_SCOUT_CONSUMER_THEME = {
   color: [
     '#2563EB',
-    '#6366F1',
+    '#0B1F59',
+    '#8CB8FF',
+    '#5A6F9E',
     '#10B981',
-    '#F59E0B',
-    '#EF4444',
-    '#8B5CF6',
-    '#06B6D4',
-    '#EC4899',
+    '#D97706',
+    '#DC2626',
+    '#DCEAFE',
   ],
 
   backgroundColor: 'transparent',
@@ -303,19 +304,20 @@ export const REMIT_SCOUT_CONSUMER_THEME = {
   },
 
   tooltip: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
+    backgroundColor: '#0B1F59',
+    borderColor: '#1E4FBF',
+    borderRadius: 12,
     textStyle: {
-      color: '#1E293B',
+      color: '#F8FAFC',
       fontSize: 12,
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     },
-    extraCssText: 'box-shadow: 0 4px 16px rgba(0,0,0,0.08);',
+    extraCssText: 'box-shadow: 0 12px 32px rgba(11,31,89,0.18);',
     axisPointer: {
-      type: 'cross',
-      crossStyle: {
-        color: '#CBD5E1',
+      type: 'line',
+      lineStyle: {
+        color: '#8CB8FF',
+        opacity: 0.45,
       },
     },
   },
@@ -369,7 +371,7 @@ export const REMIT_SCOUT_CONSUMER_THEME = {
     {
       type: 'inside',
       backgroundColor: '#F8FAFC',
-      fillerColor: 'rgba(37, 99, 235, 0.1)',
+      fillerColor: 'rgba(37, 99, 235, 0.16)',
       borderColor: '#E2E8F0',
       handleStyle: {
         color: '#2563EB',
@@ -387,7 +389,7 @@ export const REMIT_SCOUT_CONSUMER_THEME = {
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     },
     inRange: {
-      color: ['#EFF6FF', '#2563EB', '#6366F1'],
+      color: ['#DCEAFE', '#2563EB', '#0B1F59'],
     },
   },
 

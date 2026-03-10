@@ -18,6 +18,8 @@ import CountrySelect from '~/components/shared/CountrySelect.vue'
 
 type EmbedVisualKey = 'teer' | 'rci' | 'rvi_bps'
 type NoticeTone = 'danger' | 'warning' | 'info'
+type EnterpriseExportJobType = 'history' | 'watchlist' | 'alerts' | 'all' | 'indices'
+type EnterpriseExportFormat = 'csv' | 'pdf' | 'parquet'
 
 type EnterpriseCorridorRecord = {
   corridorId: string
@@ -98,15 +100,15 @@ const themeOptions = [
   { label: 'Light', value: 'light' },
 ]
 
-const exportTypeOptions = [
+const exportTypeOptions: Array<{ label: string, value: EnterpriseExportJobType }> = [
   { label: 'Quote history', value: 'history' },
   { label: 'Watchlist', value: 'watchlist' },
   { label: 'Alerts', value: 'alerts' },
   { label: 'All data', value: 'all' },
   { label: 'TEER / RCI / RVI', value: 'indices' },
-]
+] 
 
-const exportFormatOptions = [
+const exportFormatOptions: Array<{ label: string, value: EnterpriseExportFormat }> = [
   { label: 'CSV', value: 'csv' },
   { label: 'PDF', value: 'pdf' },
   { label: 'Parquet', value: 'parquet' },
@@ -270,6 +272,28 @@ function addMatchingExportCorridors() {
       addExportCorridor(corridor.corridorId)
     }
   }
+}
+
+function handleExportJobTypeChange(value: string | number) {
+  const next = String(value)
+  if (exportTypeOptions.some(option => option.value === next)) {
+    exportJobType.value = next as EnterpriseExportJobType
+  }
+}
+
+function handleExportFormatChange(value: string | number) {
+  const next = String(value)
+  if (exportFormatOptions.some(option => option.value === next)) {
+    exportFormat.value = next as EnterpriseExportFormat
+  }
+}
+
+function formatOptionalDate(value: string | null) {
+  return value ? formatDate(value) : '—'
+}
+
+function formatOptionalRelativeTime(value: string | null) {
+  return value ? formatRelativeTime(value) : '—'
 }
 
 const showGettingStarted = ref(
@@ -1383,7 +1407,7 @@ function scrollToSection(id: string) {
                   :model-value="exportJobType"
                   :options="exportTypeOptions"
                   placeholder="Select type"
-                  @update:model-value="(v: string | number) => exportJobType = String(v)"
+                  @update:model-value="handleExportJobTypeChange"
                 />
               </div>
               <p v-if="EXPORT_TYPE_DESCRIPTIONS[exportJobType]" class="mt-1 text-[11px] leading-snug text-rs-muted">
@@ -1397,7 +1421,7 @@ function scrollToSection(id: string) {
                   :model-value="exportFormat"
                   :options="exportFormatOptions"
                   placeholder="Select format"
-                  @update:model-value="(v: string | number) => exportFormat = String(v)"
+                  @update:model-value="handleExportFormatChange"
                 />
               </div>
             </div>
@@ -1575,16 +1599,16 @@ function scrollToSection(id: string) {
           </template>
           <template #cell-createdAt="{ row }">
             <div>
-              <div class="text-sm text-rs-fg">{{ formatDate(exportJobFromRow(row).createdAt) }}</div>
-              <div class="mt-0.5 text-xs text-rs-muted">{{ formatRelativeTime(exportJobFromRow(row).createdAt) }}</div>
+              <div class="text-sm text-rs-fg">{{ formatOptionalDate(exportJobFromRow(row).createdAt) }}</div>
+              <div class="mt-0.5 text-xs text-rs-muted">{{ formatOptionalRelativeTime(exportJobFromRow(row).createdAt) }}</div>
               <div
                 v-if="exportJobFromRow(row).finishedAt"
                 class="mt-0.5 text-xs text-rs-muted"
-              >Finished {{ formatRelativeTime(exportJobFromRow(row).finishedAt) }}</div>
+              >Finished {{ formatOptionalRelativeTime(exportJobFromRow(row).finishedAt) }}</div>
               <div
                 v-if="exportJobFromRow(row).expiresAt"
                 class="mt-0.5 text-[10px] text-neutral-400"
-              >Expires {{ formatDate(exportJobFromRow(row).expiresAt) }}</div>
+              >Expires {{ formatOptionalDate(exportJobFromRow(row).expiresAt) }}</div>
             </div>
           </template>
           <template #row-actions="{ row }">

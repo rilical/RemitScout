@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import RsBadge from '../badges/RsBadge.vue'
+import { Icon } from '../Icon'
+import type { IconName } from '../Icon/icons'
 
 type Variant = 'terminal' | 'consumer'
 type BadgeVariant = 'brand' | 'neutral' | 'warning' | 'enterprise' | 'plus'
@@ -10,6 +12,7 @@ const props = withDefaults(
     title: string
     description?: string
     icon?: string
+    iconName?: IconName
     iconBg?: string
     iconColor?: string
     variant?: Variant
@@ -19,6 +22,7 @@ const props = withDefaults(
   {
     description: undefined,
     icon: undefined,
+    iconName: undefined,
     iconBg: undefined,
     iconColor: undefined,
     variant: 'terminal',
@@ -45,11 +49,19 @@ const descriptionClass = computed(() =>
     <!-- Left: icon + title + description -->
     <div class="flex items-center gap-3 min-w-0">
       <div
-        v-if="icon"
+        v-if="icon || iconName"
         class="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
         :class="iconBg ?? (variant === 'terminal' ? 'bg-neutral-700/60' : 'bg-neutral-100')"
       >
+        <Icon
+          v-if="iconName"
+          :name="iconName"
+          :size="16"
+          class="shrink-0"
+          :class="iconColor ?? (variant === 'terminal' ? 'text-neutral-300' : 'text-brand-600')"
+        />
         <span
+          v-else
           class="text-sm"
           :class="iconColor ?? (variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-600')"
           aria-hidden="true"

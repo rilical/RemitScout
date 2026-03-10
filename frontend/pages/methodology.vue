@@ -14,7 +14,7 @@
           <div class="space-y-8">
             <div>
               <h1 class="text-h1 font-bold leading-tight text-white">
-                The <span class="text-brand-600">Evaluation Standard</span>
+                The Evaluation Standard
               </h1>
 
               <p class="mt-4 max-w-4xl text-body-lg leading-relaxed text-neutral-300">

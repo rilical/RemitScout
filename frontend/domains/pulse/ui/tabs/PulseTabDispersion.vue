@@ -14,16 +14,17 @@
     <template v-else-if="density === 'light'">
       <!-- ROW 1: Section header -->
       <RsSectionHeader
-        title="Pricing Dispersion"
-        description="How much do providers differ?"
+        title="Pricing"
+        description="How far apart active providers price the same $500 bank-deposit benchmark"
+        icon-name="chart-bar"
         :variant="variant"
       />
 
       <!-- ROW 2: Hero chart — Effective Rate vs Mid-Market (full width) -->
       <ChartCard
         :variant="variant"
-        title="Effective Rate vs Mid-Market"
-        subtitle="All-in provider cost overlaid with FX markup over the period"
+        title="Benchmark Cost vs FX Markup"
+        subtitle="Cost (%) on the left axis and FX markup (bps) on the right"
         :loading="loadingCharts"
         :error="errorCharts ? { message: errorCharts } : null"
         :data-available="isChartAvailable(allInCostChart) || isChartAvailable(fxMarkupChart)"
@@ -51,7 +52,7 @@
           tooltip="Spread between best and worst provider in basis points"
         />
         <RsStatCard
-          label="Best vs Worst"
+          label="Recipient Range"
           :value="lightMetrics.bestVsWorst"
           :delta="lightMetrics.savingsGap"
           delta-label="savings gap"
@@ -67,8 +68,9 @@
     <template v-else>
       <!-- ROW 1: Section header -->
       <RsSectionHeader
-        title="Pricing Dispersion"
-        description="How much do providers differ?"
+        title="Pricing"
+        description="How far apart active providers price the same $500 bank-deposit benchmark"
+        icon-name="chart-bar"
         :variant="variant"
       />
 
@@ -78,8 +80,8 @@
         <div class="lg:col-span-8">
           <ChartCard
             :variant="variant"
-            title="Effective Rate vs Mid-Market"
-            subtitle="All-in cost overlay with FX markup — two-series comparison"
+            title="Benchmark Cost vs FX Markup"
+            subtitle="Cost (%) on the left axis and FX markup (bps) on the right"
             :loading="loadingCharts"
             :error="errorCharts ? { message: errorCharts } : null"
             :data-available="isChartAvailable(allInCostChart) || isChartAvailable(fxMarkupChart)"
@@ -97,40 +99,44 @@
         </div>
 
         <!-- Spread sidebar: 4 stat cards stacked -->
-        <div class="flex flex-col gap-3 lg:col-span-4">
+        <div class="grid auto-rows-fr gap-3 lg:col-span-4">
           <RsStatCard
             label="Market Spread"
             :value="enterpriseMetrics.spread"
             delta-label="bps range"
             delta-type="neutral"
-            size="sm"
+            size="lg"
+            class="h-full"
             :variant="variant"
             :loading="loadingOverview"
             tooltip="Spread between best and worst provider in basis points"
           />
           <RsStatCard
-            label="Best Price"
+            label="Best Recipient Gets"
             :value="enterpriseMetrics.bestPrice"
             delta-type="positive"
-            size="sm"
+            size="lg"
+            class="h-full"
             :variant="variant"
             :loading="loadingOverview"
             tooltip="Highest delivered amount across all providers"
           />
           <RsStatCard
-            label="Worst Price"
+            label="Lowest Recipient Gets"
             :value="enterpriseMetrics.worstPrice"
             delta-type="negative"
-            size="sm"
+            size="lg"
+            class="h-full"
             :variant="variant"
             :loading="loadingOverview"
             tooltip="Lowest delivered amount across all providers"
           />
           <RsStatCard
-            label="Median Rate"
+            label="Median Recipient Gets"
             :value="enterpriseMetrics.medianRate"
             delta-type="neutral"
-            size="sm"
+            size="lg"
+            class="h-full"
             :variant="variant"
             :loading="loadingOverview"
             tooltip="Median delivered amount across providers"
@@ -188,12 +194,17 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import type { EChartsOption } from 'echarts'
 import type { PulseDensity, PulseFilters, CorridorOption, PulseOverview } from '~/types/pulse'
+import RsStatCard from '~/ui/cards/RsStatCard.vue'
+import ChartCard from '~/ui/charts/ChartCard.vue'
+import RsChart from '~/ui/charts/RsChart.vue'
+import RsSectionHeader from '~/ui/layout/RsSectionHeader.vue'
+import EmptyState from '~/ui/states/EmptyState.vue'
 import {
   getChartsBatch,
   getPulseOverview,
 } from '~/lib/pulseApi'
 import type { PulseChartsBatchItem } from '~/lib/pulseApi'
-import { buildChartOption, buildLineOption } from '~/lib/pulseChartBuilders'
+import { buildChartOption, buildCostMarkupDualAxisOption } from '~/lib/pulseChartBuilders'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -299,14 +310,8 @@ watch(
 const effectiveRateOption = computed<EChartsOption>(() => {
   const costSeries = allInCostChart.value?.chart?.series ?? []
   const fxSeries = fxMarkupChart.value?.chart?.series ?? []
-
-  const combined = [
-    ...costSeries.map(s => ({ ...s, label: `All-in Cost — ${s.label}` })),
-    ...fxSeries.map(s => ({ ...s, label: `FX Markup — ${s.label}` })),
-  ]
-
-  if (!combined.length) return {}
-  return buildLineOption(combined, { showArea: false })
+  if (!costSeries.length && !fxSeries.length) return {}
+  return buildCostMarkupDualAxisOption(costSeries, fxSeries)
 })
 
 const feeVsMarkupOption = computed<EChartsOption>(() => {
@@ -352,7 +357,7 @@ const lightMetrics = computed(() => {
   const worstVal = worstTile?.value ?? null
 
   const bestVsWorst = bestVal && worstVal
-    ? `Best: ${bestVal} | Worst: ${worstVal}`
+    ? `${bestVal} to ${worstVal}`
     : bestVal ?? worstVal ?? '—'
 
   // Savings gap: delta from the overview tile if available, else derive from best/worst tile deltas.

@@ -1,9 +1,17 @@
 <template>
   <div class="min-h-screen">
     <!-- Hero -->
-    <div class="px-page-x pb-12 pt-16">
+    <div class="relative overflow-hidden bg-neutral-950 px-page-x pb-12 pt-16">
+      <div
+        class="pointer-events-none absolute inset-0 opacity-90"
+        aria-hidden="true"
+      >
+        <div class="absolute inset-x-0 top-0 h-full bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.22),_transparent_42%)]" />
+        <div class="absolute right-0 top-12 h-80 w-80 rounded-full bg-brand-600/10 blur-3xl" />
+        <div class="absolute left-0 bottom-0 h-72 w-72 rounded-full bg-brand-500/8 blur-3xl" />
+      </div>
       <div class="mx-auto max-w-page">
-        <div class="grid grid-cols-1 gap-12 lg:grid-cols-[1fr,1.1fr] lg:items-center">
+        <div class="relative grid grid-cols-1 gap-12 lg:grid-cols-[1fr,1.1fr] lg:items-center">
           <div class="space-y-6">
             <h1
               class="text-hero font-bold leading-tight"

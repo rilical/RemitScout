@@ -3,8 +3,8 @@
     <!-- ROW 1: Section Header -->
     <RsSectionHeader
       title="Provider Competition"
-      description="Leaderboard, benchmarking, and competitive dynamics across providers"
-      icon="🏆"
+      description="Leaderboard, benchmarking, and provider positioning for the selected benchmark"
+      icon-name="user-group"
       :variant="variant"
     />
 
@@ -46,13 +46,13 @@
           :class="variant === 'terminal' ? 'border-neutral-700' : 'border-neutral-200'"
         >
           <p
-            class="text-sm font-semibold"
+            class="text-body-sm font-semibold"
             :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
           >
             Top Providers
           </p>
           <p
-            class="text-xs mt-0.5"
+            class="text-body-sm mt-0.5"
             :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
           >
             Ranked by delivered amount for selected filters
@@ -61,7 +61,7 @@
 
         <div v-if="benchmarkRows.length === 0">
           <div
-            class="px-4 py-8 text-center text-sm"
+            class="px-4 py-8 text-center text-body-sm"
             :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
           >
             No provider data available for this corridor.
@@ -75,7 +75,7 @@
             class="flex items-center gap-3 px-4 py-3 transition-colors"
             :class="[
               index === 0
-                ? 'border-l-2 border-emerald-500'
+                ? 'border-l-2 border-brand-600'
                 : '',
               variant === 'terminal'
                 ? 'hover:bg-neutral-800/60'
@@ -86,7 +86,7 @@
             <span
               class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0"
               :class="index === 0
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-brand-600 text-white'
                 : variant === 'terminal'
                   ? 'bg-neutral-700 text-neutral-300'
                   : 'bg-neutral-100 text-neutral-600'"
@@ -104,14 +104,14 @@
                 @error="($event.target as HTMLImageElement).style.display = 'none'"
               >
               <span
-                class="text-sm font-medium truncate"
+                class="text-body-sm font-medium truncate"
                 :class="variant === 'terminal' ? 'text-neutral-200' : 'text-neutral-800'"
               >{{ row.provider }}</span>
             </div>
 
             <!-- Delivered amount -->
             <span
-              class="text-sm tabular-nums shrink-0"
+              class="text-body-sm tabular-nums shrink-0"
               :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-700'"
             >
               {{ formatDelivered(row.deliveredAmount) }}
@@ -119,9 +119,9 @@
 
             <!-- Cost % -->
             <span
-              class="text-xs tabular-nums shrink-0 font-medium"
+              class="text-body-sm tabular-nums shrink-0 font-medium"
               :class="index === 0
-                ? 'text-emerald-500'
+                ? 'text-brand-700'
                 : variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
             >
               {{ formatCostPct(row.totalCostBps) }}
@@ -137,7 +137,7 @@
           :class="[cardSurface, 'p-5']"
         >
           <p
-            class="text-xs font-semibold uppercase tracking-wider mb-3"
+            class="text-label mb-3"
             :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
           >
             Leader This Period
@@ -154,11 +154,11 @@
             >
             <div class="min-w-0">
               <p
-                class="text-base font-semibold truncate"
+                class="text-body font-semibold truncate"
                 :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
               >{{ leaderRow.provider }}</p>
               <p
-                class="text-sm mt-0.5"
+                class="text-body-sm mt-0.5"
                 :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
               >
                 {{ leaderWinLabel }}
@@ -167,7 +167,7 @@
           </div>
           <div
             v-else
-            class="text-sm"
+            class="text-body-sm"
             :class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'"
           >
             No leader data available
@@ -183,7 +183,7 @@
           delta-label="cost advantage"
           :variant="variant"
           :sparkline="leaderEdgeSparkline"
-          sparkline-color="#10B981"
+          sparkline-color="#2563EB"
         />
       </div>
     </template>
@@ -250,7 +250,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ChartCard
           title="Provider Winner Timeline"
-          subtitle="Who led each day over the selected period"
+          subtitle="Leader by publication day across the selected window"
           :variant="variant"
           :loading="chartsLoading"
           :data-available="isProviderWinnerAvailable"
@@ -268,12 +268,12 @@
 
         <ChartCard
           title="Leader Change Frequency"
-          subtitle="How often the market leader changes"
+          subtitle="Actual leader flips between publication snapshots"
           :variant="variant"
           :loading="chartsLoading"
           :data-available="isLeaderChangeAvailable"
-          :updated-at="leaderChangeChart?.updatedAt"
-          :empty="!isLeaderChangeAvailable ? { title: 'No data', message: 'Leader change data not available.' } : null"
+          :updated-at="providerWinnerChart?.updatedAt"
+          :empty="!isLeaderChangeAvailable ? { title: 'No data', message: 'Winner history is too sparse to calculate leader changes yet.' } : null"
         >
           <template #chart>
             <RsChart
@@ -327,12 +327,12 @@
       <!-- ROW 6: Provider Heatmap -->
       <ChartCard
         title="Provider Heatmap"
-        subtitle="Daily winner map — which provider led on each day"
+        subtitle="Provider-by-publication win matrix derived from the same winner history"
         :variant="variant"
-        :loading="heatmapLoading"
+        :loading="chartsLoading"
         :data-available="isHeatmapAvailable"
-        :updated-at="heatmapData?.lastUpdated ?? null"
-        :empty="!isHeatmapAvailable ? { title: 'No data', message: 'Provider heatmap data not available.' } : null"
+        :updated-at="providerWinnerChart?.updatedAt ?? null"
+        :empty="!isHeatmapAvailable ? { title: 'No data', message: 'Winner history is too sparse to render a useful heatmap for this corridor yet.' } : null"
       >
         <template #chart>
           <RsChart
@@ -357,13 +357,13 @@ import { usePulseDataSafety } from '~/composables/usePulseDataSafety'
 import {
   getProviderBenchmarkingData,
   getChartsBatch,
-  getProviderHeatmapData,
 } from '~/lib/pulseApi'
-import type { ProviderHeatmapData, PulseChartsBatchItem } from '~/lib/pulseApi'
+import type { PulseChartsBatchItem } from '~/lib/pulseApi'
 import {
   buildChartOption,
-  buildBarOption,
-  buildHeatmapOption,
+  buildLeaderChangeFrequencyOption,
+  buildProviderWinHeatmapOption,
+  buildWinnerTimelineOption,
 } from '~/lib/pulseChartBuilders'
 import RsSectionHeader from '~/ui/layout/RsSectionHeader.vue'
 import RsStatCard from '~/ui/cards/RsStatCard.vue'
@@ -393,10 +393,8 @@ const { isChartAvailable } = usePulseDataSafety()
 const loading = ref(false)
 const loadError = ref<string | null>(null)
 const chartsLoading = ref(false)
-const heatmapLoading = ref(false)
 
 const benchmarkRows = ref<PulseProviderBenchmarkRow[]>([])
-const heatmapData = ref<ProviderHeatmapData | null>(null)
 
 // Chart batch items keyed by chart id
 const chartItems = ref<Record<string, PulseChartsBatchItem>>({})
@@ -489,18 +487,69 @@ const leaderEdgeSparkline = computed((): number[] => {
 const feeVsMarkupChart = computed(() => chartItems.value['fee-vs-markup'] ?? null)
 const spreadDistributionChart = computed(() => chartItems.value['spread-distribution'] ?? null)
 const providerWinnerChart = computed(() => chartItems.value['provider-winner'] ?? null)
-const leaderChangeChart = computed(() => chartItems.value['leader-change-frequency'] ?? null)
 const leaderEdgeChart = computed(() => chartItems.value['leader-edge'] ?? null)
 const passThroughChart = computed(() => chartItems.value['pass-through-latency'] ?? null)
 
 const isFeeVsMarkupAvailable = computed(() => isChartAvailable(feeVsMarkupChart.value))
 const isSpreadDistributionAvailable = computed(() => isChartAvailable(spreadDistributionChart.value))
-const isProviderWinnerAvailable = computed(() => isChartAvailable(providerWinnerChart.value))
-const isLeaderChangeAvailable = computed(() => isChartAvailable(leaderChangeChart.value))
+const isProviderWinnerAvailable = computed(() => winnerTimelinePoints.value.length > 0)
+const isLeaderChangeAvailable = computed(() => leaderChangePoints.value.length > 0)
 const isLeaderEdgeAvailable = computed(() => isChartAvailable(leaderEdgeChart.value))
 const isPassThroughAvailable = computed(() => isChartAvailable(passThroughChart.value))
-const isHeatmapAvailable = computed(() => {
-  return Boolean(heatmapData.value && heatmapData.value.days.length > 0)
+const isHeatmapAvailable = computed(() =>
+  winnerTimelinePoints.value.length >= 5 && heatmapProviders.value.length >= 2,
+)
+
+const winnerTimelinePoints = computed(() => {
+  const item = providerWinnerChart.value
+  if (!item?.chart?.series?.length) return [] as Array<{ timestamp: number; provider: string; color: string; detail?: string }>
+
+  const timeline = new Map<number, { timestamp: number; provider: string; color: string; detail?: string }>()
+  for (const series of item.chart.series) {
+    for (const point of series.points) {
+      if ((point.v ?? 0) < 0.5) continue
+      timeline.set(point.t, {
+        timestamp: point.t,
+        provider: series.label,
+        color: series.color,
+        detail: point.label,
+      })
+    }
+  }
+
+  return [...timeline.values()].sort((left, right) => left.timestamp - right.timestamp)
+})
+
+const heatmapProviders = computed(() => {
+  const item = providerWinnerChart.value
+  if (!item?.chart?.series?.length) return [] as string[]
+  return item.chart.series.map(series => series.label)
+})
+
+const leaderChangePoints = computed(() =>
+  winnerTimelinePoints.value
+    .slice(1)
+    .map((point, index) => ({
+      timestamp: point.timestamp,
+      from: winnerTimelinePoints.value[index]?.provider,
+      to: point.provider,
+      changed: winnerTimelinePoints.value[index]?.provider !== point.provider,
+    })),
+)
+
+const heatmapCells = computed(() => {
+  const providers = heatmapProviders.value
+  const timeline = winnerTimelinePoints.value
+  if (!providers.length || !timeline.length) return [] as Array<{ timestamp: number; provider: string; value: number; detail?: string }>
+
+  return timeline.flatMap((point) =>
+    providers.map((provider) => ({
+      timestamp: point.timestamp,
+      provider,
+      value: provider === point.provider ? 1 : 0,
+      detail: provider === point.provider ? point.detail : undefined,
+    })),
+  )
 })
 
 // ----- Chart ECharts options -----
@@ -518,16 +567,13 @@ const spreadDistributionOption = computed(() => {
 })
 
 const providerWinnerOption = computed(() => {
-  const item = providerWinnerChart.value
-  if (!item?.chart?.series) return {}
-  // Horizontal stacked bar
-  return buildBarOption(item.chart.series, { stacked: true, horizontal: true })
+  if (!winnerTimelinePoints.value.length) return {}
+  return buildWinnerTimelineOption(winnerTimelinePoints.value)
 })
 
 const leaderChangeOption = computed(() => {
-  const item = leaderChangeChart.value
-  if (!item?.chart?.series) return {}
-  return buildChartOption('leader-change-frequency', item.chart.series)
+  if (!leaderChangePoints.value.length) return {}
+  return buildLeaderChangeFrequencyOption(leaderChangePoints.value)
 })
 
 const leaderEdgeOption = computed(() => {
@@ -545,37 +591,12 @@ const passThroughOption = computed(() => {
 // ----- Heatmap option -----
 
 const heatmapOption = computed(() => {
-  if (!heatmapData.value || heatmapData.value.days.length === 0) return {}
-
-  const days = heatmapData.value.days
-  const providerNames = Object.keys(heatmapData.value.providerStats)
-
-  // x = providers, y = days of week — shows win frequency per provider per weekday
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  const xLabels = providerNames.length > 0 ? providerNames : ['—']
-  const yLabels = dayNames
-
-  // Build win matrix: wins per provider per day-of-week
-  const winMatrix: Record<string, Record<number, number>> = {}
-  for (const provider of xLabels) {
-    winMatrix[provider] = {}
-    for (let dow = 0; dow < 7; dow++) winMatrix[provider][dow] = 0
-  }
-  for (const d of days) {
-    const dow = new Date(d.date).getDay()
-    if (winMatrix[d.winner]) {
-      winMatrix[d.winner][dow] = (winMatrix[d.winner][dow] ?? 0) + 1
-    }
-  }
-
-  const heatData: Array<[number, number, number]> = []
-  for (let xi = 0; xi < xLabels.length; xi++) {
-    for (let yi = 0; yi < yLabels.length; yi++) {
-      heatData.push([xi, yi, winMatrix[xLabels[xi]]?.[yi] ?? 0])
-    }
-  }
-
-  return buildHeatmapOption(heatData, xLabels, yLabels)
+  if (!winnerTimelinePoints.value.length || !heatmapProviders.value.length) return {}
+  return buildProviderWinHeatmapOption(
+    winnerTimelinePoints.value.map(point => point.timestamp),
+    heatmapProviders.value,
+    heatmapCells.value,
+  )
 })
 
 // ----- Skeleton bg class -----
@@ -637,7 +658,6 @@ async function fetchCharts() {
           'fee-vs-markup',
           'spread-distribution',
           'provider-winner',
-          'leader-change-frequency',
           'leader-edge',
           'pass-through-latency',
         ]
@@ -659,20 +679,6 @@ async function fetchCharts() {
   }
 }
 
-async function fetchHeatmap() {
-  if (!props.corridor || props.density !== 'enterprise') return
-  heatmapLoading.value = true
-  try {
-    heatmapData.value = await getProviderHeatmapData(props.corridor, store.timeframe)
-  }
-  catch {
-    heatmapData.value = null
-  }
-  finally {
-    heatmapLoading.value = false
-  }
-}
-
 function timeframeToRange(): '7d' | '30d' | '90d' | '365d' {
   const map: Record<string, '7d' | '30d' | '90d' | '365d'> = {
     '24H': '7d',
@@ -686,7 +692,7 @@ function timeframeToRange(): '7d' | '30d' | '90d' | '365d' {
 
 async function fetchAll() {
   if (props.density === 'enterprise') {
-    await Promise.all([fetchBenchmarkData(), fetchCharts(), fetchHeatmap()])
+    await Promise.all([fetchBenchmarkData(), fetchCharts()])
   }
   else {
     await Promise.all([fetchBenchmarkData(), fetchCharts()])

@@ -12,6 +12,13 @@
 
     <!-- Light layout -->
     <template v-else-if="density === 'light'">
+      <RsSectionHeader
+        title="Market Overview"
+        description="Best delivered value, cost movement, and current provider positioning for the selected corridor"
+        icon-name="signal"
+        :variant="variant"
+      />
+
       <!-- ROW 1: Smart gauge — Best Time to Send -->
       <ChartCard
         :variant="variant"
@@ -52,7 +59,7 @@
       <!-- ROW 2: 4 KPI tiles -->
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <RsStatCard
-          label="Best Rate"
+          label="Best Recipient Gets"
           :value="kpiBestRate.value"
           :delta="kpiBestRate.delta"
           :delta-type="kpiBestRate.deltaType"
@@ -110,7 +117,7 @@
             {{ narrativeData.summary }}
           </p>
           <div
-            class="mt-3 flex flex-wrap items-center gap-3 text-xs"
+            class="mt-3 flex flex-wrap items-center gap-3 text-body-sm"
             :class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'"
           >
             <span v-if="narrativeData.source">Source: {{ narrativeData.source }}</span>
@@ -200,14 +207,14 @@
               >
               <div class="min-w-0">
                 <p
-                  class="truncate text-sm font-semibold capitalize"
+                  class="truncate text-body-sm font-semibold capitalize"
                   :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
                 >
                   {{ quote.provider }}
                 </p>
                 <p
                   v-if="quote.isPromo && quote.promoText"
-                  class="truncate text-xs text-amber-500"
+                  class="truncate text-body-sm text-amber-500"
                 >
                   {{ quote.promoText }}
                 </p>
@@ -217,13 +224,13 @@
             <!-- Delivered amount (hero) -->
             <div class="mb-2">
               <p
-                class="text-2xl font-bold"
+                class="text-h3 font-bold"
                 :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
               >
                 {{ currencySymbol(marketSnapshotData.currency) }}{{ quote.recipientGets.toLocaleString('en-US', { maximumFractionDigits: 2 }) }}
               </p>
               <p
-                class="text-xs"
+                class="text-body-sm"
                 :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
               >
                 recipient gets
@@ -232,7 +239,7 @@
 
             <!-- Fee + speed row -->
             <div
-              class="flex items-center justify-between gap-2 border-t pt-2 text-xs"
+              class="flex items-center justify-between gap-2 border-t pt-2 text-body-sm"
               :class="variant === 'terminal' ? 'border-neutral-700 text-neutral-400' : 'border-neutral-200 text-neutral-500'"
             >
               <span>Fee: {{ quote.fee > 0 ? `$${quote.fee.toFixed(2)}` : 'Free' }}</span>
@@ -246,17 +253,133 @@
 
     <!-- Enterprise layout -->
     <template v-else>
+      <RsSectionHeader
+        title="Market Overview"
+        description="Best delivered value, cost movement, and current provider positioning for the selected corridor"
+        icon-name="signal"
+        :variant="variant"
+      />
+
+      <!-- TEER/RCI/RVI Headline Banner -->
+      <div
+        v-if="indicesHeadline || loadingIndices"
+        class="grid grid-cols-1 gap-3 md:grid-cols-3"
+      >
+        <!-- TEER -->
+        <div :class="[cardSurface, 'relative overflow-hidden p-4']">
+          <div
+            v-if="loadingIndices"
+            class="space-y-2"
+          >
+            <div class="h-3 w-16 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+            <div class="h-7 w-24 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+          </div>
+          <template v-else-if="indicesHeadline">
+            <div class="mb-1 flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-blue-500" />
+              <span class="text-label font-semibold" :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'">TEER</span>
+              <span
+                class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase"
+                :class="indicesHeadline.teer.confidence === 'HIGH'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : indicesHeadline.teer.confidence === 'MEDIUM'
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-red-100 text-red-700'"
+              >{{ indicesHeadline.teer.confidence }}</span>
+            </div>
+            <p class="text-h3 font-bold tabular-nums" :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'">
+              {{ indicesHeadline.teer.value.toFixed(2) }}%
+            </p>
+            <div class="mt-1 flex gap-3 text-body-sm tabular-nums">
+              <span :class="indicesHeadline.teer.delta7d > 0 ? 'text-red-500' : indicesHeadline.teer.delta7d < 0 ? 'text-emerald-500' : 'text-neutral-400'">
+                {{ indicesHeadline.teer.delta7d > 0 ? '+' : '' }}{{ indicesHeadline.teer.delta7d.toFixed(2) }} 7d
+              </span>
+              <span :class="indicesHeadline.teer.delta30d > 0 ? 'text-red-500' : indicesHeadline.teer.delta30d < 0 ? 'text-emerald-500' : 'text-neutral-400'">
+                {{ indicesHeadline.teer.delta30d > 0 ? '+' : '' }}{{ indicesHeadline.teer.delta30d.toFixed(2) }} 30d
+              </span>
+            </div>
+          </template>
+          <div class="pointer-events-none absolute -right-2 -top-2 h-16 w-16 rounded-full bg-blue-500/5" />
+        </div>
+
+        <!-- RCI -->
+        <div :class="[cardSurface, 'relative overflow-hidden p-4']">
+          <div
+            v-if="loadingIndices"
+            class="space-y-2"
+          >
+            <div class="h-3 w-16 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+            <div class="h-7 w-24 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+          </div>
+          <template v-else-if="indicesHeadline">
+            <div class="mb-1 flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-emerald-500" />
+              <span class="text-label font-semibold" :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'">RCI</span>
+            </div>
+            <p class="text-h3 font-bold tabular-nums" :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'">
+              {{ indicesHeadline.rci.value.toFixed(1) }}
+            </p>
+            <div class="mt-1 flex items-center gap-3 text-body-sm">
+              <span :class="indicesHeadline.rci.delta7d > 0 ? 'text-emerald-500' : indicesHeadline.rci.delta7d < 0 ? 'text-red-500' : 'text-neutral-400'" class="tabular-nums">
+                {{ indicesHeadline.rci.delta7d > 0 ? '+' : '' }}{{ indicesHeadline.rci.delta7d.toFixed(1) }} 7d
+              </span>
+              <span :class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'" class="text-xs">
+                {{ indicesHeadline.rci.value >= 90 ? 'highly competitive' : indicesHeadline.rci.value >= 70 ? 'competitive' : 'limited competition' }}
+              </span>
+            </div>
+          </template>
+          <div class="pointer-events-none absolute -right-2 -top-2 h-16 w-16 rounded-full bg-emerald-500/5" />
+        </div>
+
+        <!-- RVI -->
+        <div :class="[cardSurface, 'relative overflow-hidden p-4']">
+          <div
+            v-if="loadingIndices"
+            class="space-y-2"
+          >
+            <div class="h-3 w-16 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+            <div class="h-7 w-24 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+          </div>
+          <template v-else-if="indicesHeadline">
+            <div class="mb-1 flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-amber-500" />
+              <span class="text-label font-semibold" :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'">RVI</span>
+              <span
+                class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase"
+                :class="indicesHeadline.rvi.value < 20
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : indicesHeadline.rvi.value < 50
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-red-100 text-red-700'"
+              >{{ indicesHeadline.rvi.value < 20 ? 'LOW' : indicesHeadline.rvi.value < 50 ? 'MODERATE' : 'HIGH' }}</span>
+            </div>
+            <p class="text-h3 font-bold tabular-nums" :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'">
+              {{ Math.round(indicesHeadline.rvi.value) }} <span class="text-body-sm font-normal" :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'">bps</span>
+            </p>
+            <div class="mt-1 flex gap-3 text-body-sm tabular-nums">
+              <span :class="indicesHeadline.rvi.delta7d > 0 ? 'text-red-500' : indicesHeadline.rvi.delta7d < 0 ? 'text-emerald-500' : 'text-neutral-400'">
+                {{ indicesHeadline.rvi.delta7d > 0 ? '+' : '' }}{{ Math.round(indicesHeadline.rvi.delta7d) }} 7d
+              </span>
+              <span :class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'" class="text-xs">
+                {{ indicesHeadline.rvi.value < 20 ? 'stable market' : indicesHeadline.rvi.value < 50 ? 'moderate movement' : 'volatile market' }}
+              </span>
+            </div>
+          </template>
+          <div class="pointer-events-none absolute -right-2 -top-2 h-16 w-16 rounded-full bg-amber-500/5" />
+        </div>
+      </div>
+
       <!-- ROW 1: 5 KPI tiles with sparklines -->
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <RsStatCard
-          label="Best Rate"
+          label="Best Recipient Gets"
           :value="kpiBestRate.value"
           :delta="kpiBestRate.delta"
           :delta-type="kpiBestRate.deltaType"
           delta-label="vs 7d"
           size="sm"
           :sparkline="sparklines.bestRate"
-          sparkline-color="#10B981"
+          sparkline-color="#2563EB"
           :variant="variant"
           :loading="loadingSnapshot"
         />
@@ -268,7 +391,7 @@
           delta-label="vs 7d"
           size="sm"
           :sparkline="sparklines.totalCost"
-          sparkline-color="#EF4444"
+          sparkline-color="#0B1F59"
           :variant="variant"
           :loading="loadingSnapshot"
         />
@@ -288,7 +411,7 @@
           delta-type="neutral"
           size="sm"
           :sparkline="sparklines.volatility"
-          sparkline-color="#F59E0B"
+          sparkline-color="#8CB8FF"
           :variant="variant"
           :loading="loadingSnapshot"
         />
@@ -299,7 +422,7 @@
           delta-type="neutral"
           size="sm"
           :sparkline="sparklines.confidence"
-          sparkline-color="#6366F1"
+          sparkline-color="#5A6F9E"
           :variant="variant"
           :loading="loadingSnapshot"
         />
@@ -311,8 +434,8 @@
         <div class="col-span-12 lg:col-span-8">
           <ChartCard
             :variant="variant"
-            title="All-in Cost + FX Markup"
-            subtitle="Dual-overlay: total cost (%) and FX markup (bps) over time"
+            title="Benchmark Cost vs FX Markup"
+            subtitle="Cost (%) on the left axis and FX markup (bps) on the right"
             :loading="loadingCharts"
             :error="errorCharts ? { message: errorCharts } : null"
             :data-available="isChartAvailable(allInCostChart) || isChartAvailable(fxMarkupChart)"
@@ -329,83 +452,48 @@
         </div>
 
         <!-- Market metrics sidebar -->
-        <div class="col-span-12 flex flex-col gap-3 lg:col-span-4">
+        <div class="col-span-12 grid auto-rows-fr gap-3 lg:col-span-4">
           <RsStatCard
-            label="Market Spread"
+            label="Spread Range"
             :value="marketMetrics.spread"
             delta-label="bps range"
             delta-type="neutral"
-            size="sm"
+            size="lg"
+            class="h-full"
             :variant="variant"
             :loading="loadingSnapshot"
             tooltip="Spread between best and worst provider in basis points"
           />
           <RsStatCard
-            label="Best Price"
+            label="Best Recipient Gets"
             :value="marketMetrics.bestPrice"
             delta-type="positive"
-            size="sm"
+            size="lg"
+            class="h-full"
             :variant="variant"
             :loading="loadingSnapshot"
             tooltip="Highest recipient amount across all providers"
           />
           <RsStatCard
-            label="Worst Price"
+            label="Lowest Recipient Gets"
             :value="marketMetrics.worstPrice"
             delta-type="negative"
-            size="sm"
+            size="lg"
+            class="h-full"
             :variant="variant"
             :loading="loadingSnapshot"
             tooltip="Lowest recipient amount across all providers"
           />
           <RsStatCard
-            label="Median"
+            label="Median Recipient Gets"
             :value="marketMetrics.median"
             delta-type="neutral"
-            size="sm"
+            size="lg"
+            class="h-full"
             :variant="variant"
             :loading="loadingSnapshot"
             tooltip="Median recipient amount across providers"
           />
-        </div>
-      </div>
-
-      <!-- ROW 3: Executive narrative -->
-      <div :class="cardSurface">
-        <div class="border-b p-5" :class="variant === 'terminal' ? 'border-neutral-700' : 'border-neutral-200'">
-          <RsSectionHeader
-            title="Executive Summary"
-            icon="📋"
-            :variant="variant"
-          />
-        </div>
-        <div class="p-5">
-          <RsLoadingSkeleton
-            v-if="loadingNarrative"
-            shape="text-block"
-            :variant="variant"
-          />
-          <EmptyState
-            v-else-if="!narrativeData || !narrativeData.dataAvailable"
-            :variant="variant"
-            mode="inline"
-            reason="no-data"
-          />
-          <template v-else>
-            <p
-              class="text-body-sm leading-relaxed"
-              :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-700'"
-            >
-              {{ narrativeData.summary }}
-            </p>
-            <div
-              class="mt-4 flex flex-wrap items-center gap-4 text-xs"
-              :class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'"
-            >
-              <span v-if="narrativeData.source">Source: {{ narrativeData.source }}</span>
-              <span v-if="narrativeData.updatedAt">Updated {{ formatRelative(narrativeData.updatedAt) }}</span>
-            </div>
-          </template>
         </div>
       </div>
 
@@ -443,6 +531,14 @@ import type { EChartsOption } from 'echarts'
 import type { PulseDensity, PulseFilters, PulseProviderBenchmarkRow, CorridorOption } from '~/types/pulse'
 import type { PulseCorridor } from '~/stores/pulse'
 import type { DataTableSort } from '~/ui/DataTable/types'
+import RsPulseTable from '~/ui/DataTable/RsPulseTable.vue'
+import RsBadge from '~/ui/badges/RsBadge.vue'
+import RsStatCard from '~/ui/cards/RsStatCard.vue'
+import ChartCard from '~/ui/charts/ChartCard.vue'
+import RsChart from '~/ui/charts/RsChart.vue'
+import RsSectionHeader from '~/ui/layout/RsSectionHeader.vue'
+import EmptyState from '~/ui/states/EmptyState.vue'
+import RsLoadingSkeleton from '~/ui/states/RsLoadingSkeleton.vue'
 import {
   getPulseSnapshotSummary,
   getSmartSendData,
@@ -450,15 +546,17 @@ import {
   getChartsBatch,
   getMarketSnapshot,
   getProviderBenchmarkingData,
+  getIndicesHeadline,
 } from '~/lib/pulseApi'
 import type {
   SmartSendData,
   PulseNarrativeData,
   MarketSnapshotData,
   PulseChartsBatchItem,
+  IndicesHeadlineData,
 } from '~/lib/pulseApi'
 import type { PulseSnapshotSummary } from '~/types/pulse'
-import { buildGaugeOption, buildLineOption } from '~/lib/pulseChartBuilders'
+import { buildCostMarkupDualAxisOption, buildGaugeOption, buildLineOption } from '~/lib/pulseChartBuilders'
 import { getProviderLogoPath } from '~/composables/useProviderLogo'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -503,6 +601,8 @@ const allInCostChart = ref<PulseChartsBatchItem | null>(null)
 const fxMarkupChart = ref<PulseChartsBatchItem | null>(null)
 const marketSnapshotData = ref<MarketSnapshotData | null>(null)
 const benchmarkData = ref<PulseProviderBenchmarkRow[]>([])
+const indicesHeadline = ref<IndicesHeadlineData | null>(null)
+const loadingIndices = ref(false)
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -528,10 +628,11 @@ async function fetchAll() {
   await Promise.all([
     fetchSnapshot(pulseCorridor, timeframe, amount),
     fetchSmartSend(pulseCorridor, timeframe, amount),
-    fetchNarrative(pulseCorridor, timeframe, amount),
+    props.density === 'light' ? fetchNarrative(pulseCorridor, timeframe, amount) : Promise.resolve(),
     fetchCharts(),
     fetchMarketSnapshot(pulseCorridor, amount),
     props.density === 'enterprise' ? fetchBenchmarks(pulseCorridor, timeframe, amount) : Promise.resolve(),
+    props.density === 'enterprise' ? fetchIndicesHeadline(pulseCorridor, amount) : Promise.resolve(),
   ])
 }
 
@@ -619,6 +720,19 @@ async function fetchBenchmarks(corridor: PulseCorridor, timeframe: '30D', amount
   }
   finally {
     loadingBenchmarks.value = false
+  }
+}
+
+async function fetchIndicesHeadline(corridor: PulseCorridor, amount: number) {
+  loadingIndices.value = true
+  try {
+    indicesHeadline.value = await getIndicesHeadline(corridor, amount)
+  }
+  catch {
+    indicesHeadline.value = null
+  }
+  finally {
+    loadingIndices.value = false
   }
 }
 
@@ -779,14 +893,8 @@ const allInCostOption = computed<EChartsOption>(() => {
 const enterpriseOverlayOption = computed<EChartsOption>(() => {
   const costSeries = allInCostChart.value?.chart?.series ?? []
   const fxSeries = fxMarkupChart.value?.chart?.series ?? []
-
-  const combined = [
-    ...costSeries.map(s => ({ ...s, label: `Cost % — ${s.label}` })),
-    ...fxSeries.map(s => ({ ...s, label: `FX Markup bps — ${s.label}` })),
-  ]
-
-  if (!combined.length) return {}
-  return buildLineOption(combined, { showArea: false })
+  if (!costSeries.length && !fxSeries.length) return {}
+  return buildCostMarkupDualAxisOption(costSeries, fxSeries)
 })
 
 // ── Benchmark table ───────────────────────────────────────────────────────────

@@ -1,15 +1,11 @@
 import { computed } from 'vue'
 
 export function usePulseTheme() {
-  const { pulseLevel, isEnterprise } = useEntitlements()
+  const { isEnterprise } = useEntitlements()
 
-  const variant = computed<'terminal' | 'consumer'>(() =>
-    pulseLevel.value === 'full' ? 'terminal' : 'consumer'
-  )
+  const variant = computed<'terminal' | 'consumer'>(() => 'consumer')
 
-  const echartsTheme = computed(() =>
-    pulseLevel.value === 'full' ? 'remitScout' : 'remitScoutConsumer'
-  )
+  const echartsTheme = computed(() => 'remitScoutConsumer')
 
   const gridCols = computed(() =>
     isEnterprise.value
@@ -24,13 +20,11 @@ export function usePulseTheme() {
   const tableDense = computed(() => isEnterprise.value)
 
   const pageBg = computed(() =>
-    isEnterprise.value ? 'bg-neutral-900' : 'bg-neutral-50'
+    'bg-[#F6FAFF]'
   )
 
   const cardSurface = computed(() =>
-    isEnterprise.value
-      ? 'bg-neutral-800/50 border border-neutral-700/50 rounded-xl'
-      : 'bg-white border border-neutral-200 rounded-xl shadow-sm'
+    'rounded-3xl border border-[#D8E5F8] bg-white shadow-[0_12px_32px_rgba(37,99,235,0.06)]'
   )
 
   return { variant, echartsTheme, gridCols, cardSize, tableDense, pageBg, cardSurface }

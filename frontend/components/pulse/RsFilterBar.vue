@@ -1,35 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import CountrySelect from '~/components/shared/CountrySelect.vue'
 import { isTimeframeAvailable } from '~/composables/usePulseTimeframes'
 import type { PulseTimeframe } from '~/stores/pulse'
-
-interface CorridorOption {
-  slug: string
-  label: string
-  fromFlag?: string
-  toFlag?: string
-  sufficient?: boolean
-  daysAvailable?: number
-  isUsdOrigin?: boolean
-  unsuppressedPoints?: number
-}
+import type { CorridorOption } from '~/types/pulse'
+import { getCountryByCode } from '~/utils/countries-currencies'
 
 interface Props {
   corridors: CorridorOption[]
   selectedCorridor: CorridorOption | null
-  amounts: number[]
+  amounts: readonly number[]
   selectedAmount: number
-  timeframes: string[]
+  timeframes: readonly string[]
   selectedTimeframe: string
   daysAvailable?: number
   variant?: 'terminal' | 'consumer'
   sticky?: boolean
   lastUpdated?: string | null
-  showMethodFilters?: boolean
-  fundingMethods?: string[]
-  selectedFundingMethod?: string
-  payoutMethods?: string[]
-  selectedPayoutMethod?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -37,289 +24,244 @@ const props = withDefaults(defineProps<Props>(), {
   sticky: true,
   daysAvailable: undefined,
   lastUpdated: null,
-  showMethodFilters: false,
-  fundingMethods: () => ['bank', 'card', 'cash'],
-  selectedFundingMethod: 'bank',
-  payoutMethods: () => ['bank', 'cash', 'wallet'],
-  selectedPayoutMethod: 'bank',
 })
 
 const emit = defineEmits<{
   'update:corridor': [corridor: CorridorOption | null]
   'update:amount': [amount: number]
   'update:timeframe': [timeframe: string]
-  'update:fundingMethod': [method: string]
-  'update:payoutMethod': [method: string]
 }>()
 
 const isTerminal = computed(() => props.variant === 'terminal')
 
 const barClass = computed(() => {
-  const base = props.sticky ? 'sticky top-0 z-40' : ''
+  if (!props.sticky) return ''
+
+  const base = 'sticky top-0 z-40'
   const theme = isTerminal.value
-    ? 'bg-neutral-900 border-b border-neutral-700/50'
-    : 'bg-white border-b border-neutral-200 shadow-sm'
+    ? 'border-b border-neutral-700/50 bg-neutral-900'
+    : 'border-b border-neutral-200 bg-neutral-50/95 backdrop-blur'
   return [base, theme].filter(Boolean).join(' ')
 })
 
-const selectedCorridorSlug = computed(() => props.selectedCorridor?.slug ?? '')
+const selectedFromCountry = computed(() => props.selectedCorridor?.sourceCountry ?? '')
+const selectedToCountry = computed(() => props.selectedCorridor?.destCountry ?? '')
 
-function onCorridorChange(event: Event) {
-  const slug = (event.target as HTMLSelectElement).value
-  if (!slug) {
-    emit('update:corridor', null)
-    return
-  }
-  const found = props.corridors.find(c => c.slug === slug) ?? null
-  emit('update:corridor', found)
-}
+const fixedProfileLabel = computed(() => {
+  const amount = props.selectedAmount || props.amounts[0] || 500
+  return `$${amount} USD sent · bank deposit`
+})
 
-function corridorDotClass(corridor: CorridorOption): string {
-  if (corridor.sufficient === false) {
-    return 'w-2 h-2 rounded-full bg-neutral-500 flex-shrink-0'
-  }
-  const days = corridor.daysAvailable ?? 0
-  if (corridor.sufficient === true && days >= 7) {
-    return 'w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0'
-  }
-  return 'w-2 h-2 rounded-full bg-amber-400 flex-shrink-0'
-}
+const countryName = (countryCode: string) => getCountryByCode(countryCode)?.name ?? countryCode
 
-function corridorDotTitle(corridor: CorridorOption): string | undefined {
-  if (corridor.sufficient === false) return 'Insufficient data'
-  const days = corridor.daysAvailable ?? 0
-  if (corridor.sufficient === true && days < 7) return 'Warming up'
-  return undefined
-}
+const sortCountryCodes = (codes: string[]) =>
+  [...new Set(codes.filter(Boolean))]
+    .sort((left, right) => countryName(left).localeCompare(countryName(right)))
 
-function formatAmount(amount: number): string {
-  if (amount >= 1000) return `${amount / 1000}K`
-  return String(amount)
-}
+const sourceCountryCodes = computed(() =>
+  sortCountryCodes(
+    props.corridors
+      .map(corridor => corridor.sourceCountry ?? '')
+      .filter(Boolean),
+  ),
+)
 
-function amountButtonClass(amount: number): string {
-  const base = 'px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors'
-  if (amount === props.selectedAmount) {
-    return `${base} bg-brand-600 text-white`
-  }
-  if (isTerminal.value) {
-    return `${base} bg-neutral-800 text-neutral-400 hover:bg-neutral-700`
-  }
-  return `${base} bg-neutral-100 text-neutral-600 hover:bg-neutral-200`
-}
+const destinationCountryCodesForSource = (sourceCountry: string) =>
+  sortCountryCodes(
+    props.corridors
+      .filter(corridor => corridor.sourceCountry === sourceCountry)
+      .map(corridor => corridor.destCountry ?? '')
+      .filter(Boolean),
+  )
 
-function timeframeButtonClass(tf: string): string {
+const destinationCountryCodes = computed(() => {
+  if (!selectedFromCountry.value) return []
+  return destinationCountryCodesForSource(selectedFromCountry.value)
+})
+
+const timeframeButtonClass = (timeframe: string) => {
   const available = props.daysAvailable !== undefined
-    ? isTimeframeAvailable(props.daysAvailable, tf as PulseTimeframe)
+    ? isTimeframeAvailable(props.daysAvailable, timeframe as PulseTimeframe)
     : true
 
-  const base = 'px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors'
+  const base = 'rounded-full px-3 py-1.5 text-body-sm font-medium transition-colors'
 
   if (!available) {
     return isTerminal.value
-      ? `${base} bg-neutral-800 text-neutral-600 cursor-not-allowed opacity-40`
-      : `${base} bg-neutral-100 text-neutral-400 cursor-not-allowed opacity-40`
+      ? `${base} cursor-not-allowed bg-neutral-800 text-neutral-600 opacity-40`
+      : `${base} cursor-not-allowed bg-white/10 text-white/35 opacity-70`
   }
 
-  if (tf === props.selectedTimeframe) {
+  if (timeframe === props.selectedTimeframe) {
     return `${base} bg-brand-600 text-white`
   }
 
   if (isTerminal.value) {
-    return `${base} bg-neutral-800 text-neutral-400 hover:bg-neutral-700`
+    return `${base} bg-neutral-800 text-neutral-300 hover:bg-neutral-700`
   }
-  return `${base} bg-neutral-100 text-neutral-600 hover:bg-neutral-200`
-}
 
-function isTimeframeDisabled(tf: string): boolean {
-  if (props.daysAvailable === undefined) return false
-  return !isTimeframeAvailable(props.daysAvailable, tf as PulseTimeframe)
+  return `${base} bg-white/10 text-white/75 hover:bg-white/20`
 }
-
-function onTimeframeClick(tf: string) {
-  if (!isTimeframeDisabled(tf)) {
-    emit('update:timeframe', tf)
-  }
-}
-
-const selectClass = computed(() => {
-  if (isTerminal.value) {
-    return 'h-9 rounded-lg border border-neutral-600 bg-neutral-800 pl-3 pr-8 text-body-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer'
-  }
-  return 'h-9 rounded-lg border border-neutral-300 bg-white pl-3 pr-8 text-body-sm text-neutral-700 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer'
-})
 
 const lastUpdatedText = computed(() => {
   if (!props.lastUpdated) return null
+
   const now = Date.now()
   const then = new Date(props.lastUpdated).getTime()
   const diffMs = now - then
   if (Number.isNaN(diffMs) || diffMs < 0) return 'Updated just now'
+
   const diffSeconds = Math.floor(diffMs / 1000)
   if (diffSeconds < 60) return 'Updated just now'
+
   const diffMinutes = Math.floor(diffSeconds / 60)
   if (diffMinutes < 60) return `Updated ${diffMinutes}m ago`
+
   const diffHours = Math.floor(diffMinutes / 60)
   if (diffHours < 24) return `Updated ${diffHours}h ago`
+
   const diffDays = Math.floor(diffHours / 24)
   return `Updated ${diffDays}d ago`
 })
 
-function formatMethodLabel(method: string, prefix: string): string {
-  return `${prefix}: ${method.charAt(0).toUpperCase()}${method.slice(1)}`
+const findCorridor = (sourceCountry: string, destCountry: string) =>
+  props.corridors.find(corridor =>
+    corridor.sourceCountry === sourceCountry && corridor.destCountry === destCountry,
+  ) ?? null
+
+function handleFromCountryChange(sourceCountry: string) {
+  if (!sourceCountry) {
+    emit('update:corridor', null)
+    return
+  }
+
+  const allowedDestinations = destinationCountryCodesForSource(sourceCountry)
+  const preferredDestination = selectedToCountry.value && allowedDestinations.includes(selectedToCountry.value)
+    ? selectedToCountry.value
+    : allowedDestinations[0] ?? ''
+
+  emit('update:corridor', findCorridor(sourceCountry, preferredDestination))
+}
+
+function handleToCountryChange(destCountry: string) {
+  if (!selectedFromCountry.value || !destCountry) {
+    emit('update:corridor', null)
+    return
+  }
+
+  emit('update:corridor', findCorridor(selectedFromCountry.value, destCountry))
+}
+
+function isTimeframeDisabled(timeframe: string): boolean {
+  if (props.daysAvailable === undefined) return false
+  return !isTimeframeAvailable(props.daysAvailable, timeframe as PulseTimeframe)
+}
+
+function onTimeframeClick(timeframe: string) {
+  if (!isTimeframeDisabled(timeframe)) {
+    emit('update:timeframe', timeframe)
+  }
 }
 </script>
 
 <template>
   <div :class="barClass">
-    <div class="flex items-center gap-3 px-4 py-3 flex-wrap">
-      <!-- Corridor selector (left) -->
-      <div class="relative flex-shrink-0">
-        <label class="sr-only">Corridor</label>
-        <select
-          :value="selectedCorridorSlug"
-          :class="[selectClass, 'min-w-[200px]']"
-          @change="onCorridorChange"
-        >
-          <option value="">
-            All Corridors
-          </option>
-          <option
-            v-for="corridor in corridors"
-            :key="corridor.slug"
-            :value="corridor.slug"
-            :class="isTerminal ? 'bg-neutral-800' : 'bg-white'"
+    <div class="mx-auto max-w-page px-page-x py-4 lg:py-5">
+      <div class="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_280px] lg:items-stretch">
+        <div class="rounded-2xl bg-neutral-900 px-6 py-6 text-white shadow-lg shadow-brand-950/15">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+            Supported bank corridors
+          </p>
+          <h2 class="mt-3 text-h3 font-bold text-white">
+            Choose a corridor we track
+          </h2>
+          <p class="mt-3 max-w-2xl text-body leading-relaxed text-white/78">
+            Pick where you send from and where the money should arrive. Pulse focuses on published bank-transfer corridors, so every view reflects routes we actively track and update.
+          </p>
+        </div>
+
+        <div class="rounded-2xl bg-neutral-900 px-5 py-5 text-white shadow-lg shadow-brand-950/15">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+            Benchmark profile
+          </p>
+          <p class="mt-2 text-body font-semibold text-white">
+            {{ fixedProfileLabel }}
+          </p>
+          <p class="mt-2 text-body-sm leading-relaxed text-white/70">
+            Compare every corridor using the same transfer setup, so price and coverage trends stay like-for-like.
+          </p>
+
+          <div class="mt-4 flex flex-wrap items-center gap-2">
+            <div
+              v-if="timeframes.length > 0"
+              class="flex items-center gap-1"
+              role="group"
+              aria-label="Timeframe"
+            >
+              <button
+                v-for="timeframe in timeframes"
+                :key="timeframe"
+                type="button"
+                :class="timeframeButtonClass(timeframe)"
+                :disabled="isTimeframeDisabled(timeframe)"
+                :aria-pressed="timeframe === selectedTimeframe"
+                @click="onTimeframeClick(timeframe)"
+              >
+                {{ timeframe }}
+              </button>
+            </div>
+
+            <span
+              v-if="lastUpdatedText"
+              class="text-xs font-medium text-white/60"
+              aria-live="polite"
+            >
+              {{ lastUpdatedText }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:items-end">
+        <div>
+          <label
+            for="pulse-from-country"
+            class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-white/80"
           >
-            {{ corridor.fromFlag ? `${corridor.fromFlag} ` : '' }}{{ corridor.toFlag ? `→ ${corridor.toFlag} ` : '' }}{{ corridor.label }}
-          </option>
-        </select>
-        <!-- Corridor data quality dots (shown alongside selected corridor) -->
-        <div
-          v-if="selectedCorridor"
-          class="pointer-events-none absolute inset-y-0 left-2 flex items-center"
-        >
-          <span
-            :class="corridorDotClass(selectedCorridor)"
-            :title="corridorDotTitle(selectedCorridor)"
-            aria-hidden="true"
+            Sending from
+          </label>
+          <CountrySelect
+            id="pulse-from-country"
+            :model-value="selectedFromCountry"
+            label="Sending from"
+            placeholder="Select country"
+            :exclude-country="selectedToCountry"
+            :allowed-codes="sourceCountryCodes"
+            select-class="border-white/20 bg-white text-neutral-900 focus:border-white focus:ring-white/60"
+            @update:model-value="handleFromCountryChange"
+          />
+        </div>
+
+        <div>
+          <label
+            for="pulse-to-country"
+            class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-white/80"
+          >
+            Receiving in
+          </label>
+          <CountrySelect
+            id="pulse-to-country"
+            :model-value="selectedToCountry"
+            label="Receiving in"
+            placeholder="Select country"
+            :exclude-country="selectedFromCountry"
+            :allowed-codes="destinationCountryCodes"
+            :disabled="!selectedFromCountry"
+            select-class="border-white/20 bg-white text-neutral-900 focus:border-white focus:ring-white/60 disabled:border-white/10 disabled:bg-white/70"
+            @update:model-value="handleToCountryChange"
           />
         </div>
       </div>
-
-      <!-- Divider -->
-      <div
-        class="h-6 w-px flex-shrink-0"
-        :class="isTerminal ? 'bg-neutral-700' : 'bg-neutral-200'"
-        aria-hidden="true"
-      />
-
-      <!-- Amount buttons (center) -->
-      <div
-        class="flex items-center gap-1"
-        role="group"
-        aria-label="Transfer amount"
-      >
-        <button
-          v-for="amount in amounts"
-          :key="amount"
-          type="button"
-          :class="amountButtonClass(amount)"
-          :aria-pressed="amount === selectedAmount"
-          @click="emit('update:amount', amount)"
-        >
-          {{ formatAmount(amount) }}
-        </button>
-      </div>
-
-      <!-- Timeframe buttons (center-right) — hidden when showMethodFilters is false -->
-      <template v-if="showMethodFilters !== false || timeframes.length > 0">
-        <div
-          v-if="showMethodFilters || timeframes.length > 0"
-          class="h-6 w-px flex-shrink-0"
-          :class="isTerminal ? 'bg-neutral-700' : 'bg-neutral-200'"
-          aria-hidden="true"
-        />
-
-        <div
-          v-if="showMethodFilters"
-          class="flex items-center gap-1"
-          role="group"
-          aria-label="Timeframe"
-        >
-          <button
-            v-for="tf in timeframes"
-            :key="tf"
-            type="button"
-            :class="timeframeButtonClass(tf)"
-            :disabled="isTimeframeDisabled(tf)"
-            :aria-pressed="tf === selectedTimeframe"
-            @click="onTimeframeClick(tf)"
-          >
-            {{ tf }}
-          </button>
-        </div>
-      </template>
-
-      <!-- Method selectors (right, Enterprise only) -->
-      <template v-if="showMethodFilters">
-        <div
-          class="h-6 w-px flex-shrink-0"
-          :class="isTerminal ? 'bg-neutral-700' : 'bg-neutral-200'"
-          aria-hidden="true"
-        />
-
-        <div class="flex items-center gap-2">
-          <!-- Fund via -->
-          <div class="relative flex-shrink-0">
-            <label class="sr-only">Funding method</label>
-            <select
-              :value="selectedFundingMethod"
-              :class="selectClass"
-              @change="emit('update:fundingMethod', ($event.target as HTMLSelectElement).value)"
-            >
-              <option
-                v-for="method in fundingMethods"
-                :key="method"
-                :value="method"
-                :class="isTerminal ? 'bg-neutral-800' : 'bg-white'"
-              >
-                {{ formatMethodLabel(method, 'Fund') }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Pay out -->
-          <div class="relative flex-shrink-0">
-            <label class="sr-only">Payout method</label>
-            <select
-              :value="selectedPayoutMethod"
-              :class="selectClass"
-              @change="emit('update:payoutMethod', ($event.target as HTMLSelectElement).value)"
-            >
-              <option
-                v-for="method in payoutMethods"
-                :key="method"
-                :value="method"
-                :class="isTerminal ? 'bg-neutral-800' : 'bg-white'"
-              >
-                {{ formatMethodLabel(method, 'Pay') }}
-              </option>
-            </select>
-          </div>
-        </div>
-      </template>
-
-      <!-- Spacer pushes last-updated to far right -->
-      <div class="flex-1" />
-
-      <!-- Last updated (far right) -->
-      <span
-        v-if="lastUpdatedText"
-        class="text-xs text-neutral-500 flex-shrink-0"
-        aria-live="polite"
-      >
-        {{ lastUpdatedText }}
-      </span>
     </div>
   </div>
 </template>

@@ -1,5 +1,5 @@
 export type PulseTab = 'snapshot' | 'dispersion' | 'competition' | 'bank-gap' |
-                       'coverage' | 'reliability' | 'indices' | 'risk' | 'exports'
+                       'coverage' | 'indices'
 
 export type PulseLevel = 'none' | 'lite' | 'full'
 
@@ -14,7 +14,7 @@ export interface PulseTabDef {
 
 export const PULSE_TABS: PulseTabDef[] = [
   {
-    id: 'snapshot', label: 'Snapshot', icon: 'Activity', minLevel: 'lite',
+    id: 'snapshot', label: 'Market Overview', icon: 'Activity', minLevel: 'lite',
     chartIds: ['all-in-cost', 'fx-markup'],
     apiEndpoints: ['overview', 'market-snapshot', 'smart-send', 'narrative'],
   },
@@ -34,29 +34,14 @@ export const PULSE_TABS: PulseTabDef[] = [
     apiEndpoints: ['bank-comparison', 'true-cost'],
   },
   {
+    id: 'indices', label: 'Indices', icon: 'TrendingUp', minLevel: 'full',
+    chartIds: ['teer-series', 'rci-series', 'rvi-series'],
+    apiEndpoints: ['indices/series', 'indices/methodology'],
+  },
+  {
     id: 'coverage', label: 'Coverage', icon: 'Shield', minLevel: 'lite',
     chartIds: ['quote-success', 'provider-availability', 'data-freshness', 'corridor-liquidity'],
     apiEndpoints: ['coverage-summary', 'method-coverage', 'coverage-by-currency'],
-  },
-  {
-    id: 'reliability', label: 'Reliability', icon: 'CheckCircle', minLevel: 'full',
-    chartIds: ['quote-success', 'provider-availability', 'data-freshness'],
-    apiEndpoints: ['coverage-summary', 'method-coverage'],
-  },
-  {
-    id: 'indices', label: 'Indices', icon: 'TrendingUp', minLevel: 'full',
-    chartIds: ['indices-confidence', 'indices-provider-count', 'indices-suppression'],
-    apiEndpoints: ['charts'],
-  },
-  {
-    id: 'risk', label: 'Risk', icon: 'AlertTriangle', minLevel: 'full',
-    chartIds: ['volatility-pulse', 'quote-anomalies', 'spread-volatility'],
-    apiEndpoints: ['events', 'arbitrage', 'charts'],
-  },
-  {
-    id: 'exports', label: 'Exports', icon: 'Download', minLevel: 'lite',
-    chartIds: [],
-    apiEndpoints: ['table'],
   },
 ]
 

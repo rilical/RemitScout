@@ -4,6 +4,7 @@
     <RsSectionHeader
       title="Coverage"
       description="Data coverage and provider availability"
+      icon-name="shield-check"
       :variant="variant"
     />
 
@@ -51,13 +52,13 @@
         <div class="mb-4 flex items-center justify-between">
           <div>
             <p
-              class="text-sm font-semibold"
+              class="text-body-sm font-semibold"
               :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
             >
               Active Providers
             </p>
             <p
-              class="mt-0.5 text-xs"
+              class="mt-0.5 text-body-sm"
               :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
             >
               {{ activeProviderCount }} provider{{ activeProviderCount !== 1 ? 's' : '' }} with recent data
@@ -99,7 +100,7 @@
 
         <p
           v-else
-          class="text-sm"
+          class="text-body-sm"
           :class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'"
         >
           No provider data available for this corridor.
@@ -207,23 +208,23 @@
         </ChartCard>
       </div>
 
-      <!-- ROW 3: Method Coverage Matrix -->
+      <!-- ROW 3: Published bank coverage -->
       <div>
         <RsSectionHeader
-          title="Method Coverage Matrix"
-          description="Supported transfer methods per provider"
+          title="Published Bank Coverage"
+          description="Bank-deposit support and typical transfer speed by provider"
           :variant="variant"
           class="mb-4"
         />
         <RsPulseTable
           :variant="variant"
-          caption="Method Coverage Matrix"
+          caption="Published Bank Coverage"
           :columns="methodColumns"
           :rows="methodTableRows"
           :row-key="(row, i) => String((row as any).provider ?? i)"
           :loading="loadingMethod"
           :error="errorMethod ? { message: errorMethod } : null"
-          :empty="methodTableRows.length === 0 && !loadingMethod ? { title: 'No method data', message: 'Method coverage data is not available for this corridor.' } : null"
+          :empty="methodTableRows.length === 0 && !loadingMethod ? { title: 'No bank coverage data', message: 'Published bank coverage is not available for this corridor.' } : null"
           provider-column="provider"
           :dense="true"
           :sticky-header="true"
@@ -265,10 +266,10 @@
           v-else-if="currencyRows.length > 0"
           :class="[cardSurface, 'overflow-hidden']"
         >
-          <table class="w-full text-sm">
+          <table class="w-full text-body-sm">
             <thead>
               <tr
-                class="border-b text-xs font-semibold uppercase tracking-wider"
+                class="border-b text-label"
                 :class="variant === 'terminal'
                   ? 'border-neutral-700 text-neutral-400'
                   : 'border-neutral-200 text-neutral-500'"
@@ -606,15 +607,9 @@ const corridorLiquidityOption = computed<EChartsOption>(() => {
 
 // ── Method coverage table ──────────────────────────────────────────────────────
 
-const METHOD_METHODS = ['bank', 'cash', 'wallet', 'card', 'airtime'] as const
-
 const methodColumns = [
   { key: 'provider', label: 'Provider', align: 'left' as const, sortable: false },
-  { key: 'bank', label: 'Bank', align: 'center' as const, sortable: false },
-  { key: 'cash', label: 'Cash', align: 'center' as const, sortable: false },
-  { key: 'wallet', label: 'Wallet', align: 'center' as const, sortable: false },
-  { key: 'card', label: 'Card', align: 'center' as const, sortable: false },
-  { key: 'airtime', label: 'Airtime', align: 'center' as const, sortable: false },
+  { key: 'bank', label: 'Bank deposit', align: 'center' as const, sortable: false },
   { key: 'speed', label: 'Speed', align: 'left' as const, sortable: false },
 ]
 
@@ -622,10 +617,6 @@ const methodTableRows = computed(() =>
   methodRows.value.map(row => ({
     provider: row.provider,
     bank: row.bank ? 'check' : 'cross',
-    cash: row.cash ? 'check' : 'cross',
-    wallet: row.wallet ? 'check' : 'cross',
-    card: row.card ? 'check' : 'cross',
-    airtime: (row as any).airtime ? 'check' : 'cross',
     speed: row.speed ?? '—',
   })),
 )

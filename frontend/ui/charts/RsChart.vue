@@ -45,11 +45,15 @@ const HEIGHT_MAP: Record<HeightVariant, string> = {
 
 const heightClass = computed(() => HEIGHT_MAP[props.height])
 
-const loadingOptions = {
+const isConsumerTheme = computed(() => props.theme === 'remitScoutConsumer')
+
+const loadingOptions = computed(() => ({
   text: '',
   color: '#2563EB',
-  maskColor: 'rgba(15, 23, 42, 0.6)',
-}
+  maskColor: isConsumerTheme.value
+    ? 'rgba(255, 255, 255, 0.82)'
+    : 'rgba(15, 23, 42, 0.6)',
+}))
 
 function onChartReady() {
   emit('chart-ready')
@@ -97,8 +101,8 @@ function onClick(params: unknown) {
 
     <template #fallback>
       <div
-        class="animate-pulse rounded-lg bg-neutral-800"
-        :class="heightClass"
+        class="animate-pulse rounded-lg"
+        :class="[heightClass, isConsumerTheme ? 'bg-neutral-200' : 'bg-neutral-800']"
         role="status"
         aria-label="Loading chart"
       >

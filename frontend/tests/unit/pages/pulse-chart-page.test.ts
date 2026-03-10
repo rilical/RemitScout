@@ -5,11 +5,7 @@ import { defineComponent, ref } from 'vue'
 const pulseEnabledState = vi.hoisted(() => ({ value: true }))
 const pulseLevelState = vi.hoisted(() => ({ value: 'none' as 'none' | 'lite' | 'full' }))
 const pulseEmbedsEnabledState = vi.hoisted(() => ({ value: false }))
-const indicesExportsEnabledState = vi.hoisted(() => ({ value: false }))
 const mockGetPulseOverview = vi.hoisted(() => vi.fn())
-const mockCreateExport = vi.hoisted(() => vi.fn())
-const mockGetExportStatus = vi.hoisted(() => vi.fn())
-const mockGetExportDownloadUrl = vi.hoisted(() => vi.fn())
 const mockAddBreadcrumbSchema = vi.hoisted(() => vi.fn())
 const routeState = vi.hoisted(() => ({
   params: { chartId: 'all-in-cost' },
@@ -43,18 +39,9 @@ vi.mock('~/composables/useEntitlements', async () => {
     useEntitlements: () => ({
       pulseLevel: computed(() => pulseLevelState.value),
       pulseEmbedsEnabled: computed(() => pulseEmbedsEnabledState.value),
-      indicesExportsEnabled: computed(() => indicesExportsEnabledState.value),
     }),
   }
 })
-
-vi.mock('~/composables/useExports', () => ({
-  useExports: () => ({
-    createExport: mockCreateExport,
-    getExportStatus: mockGetExportStatus,
-    getExportDownloadUrl: mockGetExportDownloadUrl,
-  }),
-}))
 
 vi.mock('~/lib/pulseApi', async () => {
   const actual = await vi.importActual<typeof import('~/lib/pulseApi')>('~/lib/pulseApi')
@@ -88,14 +75,10 @@ describe('pulse chart page', () => {
     pulseEnabledState.value = true
     pulseLevelState.value = 'none'
     pulseEmbedsEnabledState.value = false
-    indicesExportsEnabledState.value = false
     store.viewMode = 'analyst'
     store.timeframe = '30D'
     store.corridor = { corridorId: 'US-PH-USD-PHP' }
     mockGetPulseOverview.mockResolvedValue({ lastUpdated: '2026-03-05T12:00:00.000Z' })
-    mockCreateExport.mockResolvedValue({ job: { id: 'job_1' } })
-    mockGetExportStatus.mockResolvedValue({ job: { status: 'done' } })
-    mockGetExportDownloadUrl.mockResolvedValue({ url: '/download' })
     mockAddBreadcrumbSchema.mockReset()
     routeState.params = { chartId: 'all-in-cost' }
     routeState.query = {
@@ -172,25 +155,23 @@ describe('pulse chart page', () => {
   it('replaces export and embed controls with enterprise lock copy when capabilities are absent', async () => {
     const wrapper = await mountPage()
 
-    expect(wrapper.text()).toContain('Pulse chart exports are available on Enterprise only.')
+    expect(wrapper.text()).toContain('Pulse exports are out of the current shipment scope.')
     expect(wrapper.text()).toContain('Pulse chart access and static public embeds are available on Enterprise.')
     expect(wrapper.html()).toContain('/send-money/united-states-to-philippines')
     expect(wrapper.html()).not.toContain('/send-money/usd-to-undefined')
-    expect(wrapper.text()).not.toContain('Export CSV')
-    expect(wrapper.text()).not.toContain('Compliance PDF')
     expect(wrapper.text()).not.toContain('Embed Snapshot')
   })
 
-  it('shows export and embed controls when enterprise capabilities are enabled', async () => {
+  it('shows embed controls without restoring export actions when enterprise capabilities are enabled', async () => {
     pulseLevelState.value = 'full'
     pulseEmbedsEnabledState.value = true
-    indicesExportsEnabledState.value = true
 
     const wrapper = await mountPage()
 
-    expect(wrapper.text()).toContain('Export CSV')
-    expect(wrapper.text()).toContain('Compliance PDF')
     expect(wrapper.text()).toContain('Embed Snapshot')
+    expect(wrapper.text()).toContain('Pulse exports are out of the current shipment scope.')
+    expect(wrapper.text()).not.toContain('Export CSV')
+    expect(wrapper.text()).not.toContain('Compliance PDF')
   })
 
   it('shows live provenance metadata instead of fabricated compliance placeholders', async () => {
@@ -208,7 +189,6 @@ describe('pulse chart page', () => {
   it('keeps the active chart range in the page state and embed modal', async () => {
     pulseLevelState.value = 'full'
     pulseEmbedsEnabledState.value = true
-    indicesExportsEnabledState.value = true
 
     const wrapper = await mountPage()
 

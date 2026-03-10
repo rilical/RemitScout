@@ -40,24 +40,24 @@ const hasActions = computed(() => Boolean(slots.actions))
 const styles = computed(() => {
   if (props.variant === 'consumer') {
     return {
-      outer: 'overflow-hidden rounded-xl border border-rs-border bg-surface',
-      header: 'flex items-start justify-between gap-6 border-b border-rs-border px-6 py-4',
+      outer: 'flex h-full flex-col overflow-hidden rounded-3xl border border-[#D8E5F8] bg-white shadow-[0_14px_36px_rgba(37,99,235,0.06)]',
+      header: 'flex items-start justify-between gap-6 border-b border-[#E3ECFA] px-6 py-4',
       title: 'text-h4 text-rs-fg',
       subtitle: 'mt-1 text-body-sm text-rs-muted',
-      rangePill: 'rounded-full border border-rs-border bg-neutral-50 px-2.5 py-1 text-body-sm font-semibold text-neutral-700',
-      body: 'px-6 py-5',
-      footer: 'border-t border-rs-border bg-neutral-50/60 px-6 py-2.5 text-neutral-500',
+      rangePill: 'rounded-full border border-[#D8E5F8] bg-[#F3F8FF] px-2.5 py-1 text-body-sm font-semibold text-neutral-700',
+      body: 'flex-1 px-6 py-5',
+      footer: 'border-t border-[#E3ECFA] bg-[#F8FBFF] px-6 py-2.5 text-neutral-500',
       stateVariant: 'consumer' as const,
     }
   }
 
   return {
-    outer: 'card-surface overflow-hidden',
+    outer: 'card-surface flex h-full flex-col overflow-hidden',
     header: 'flex items-start justify-between gap-6 border-b border-neutral-700 px-6 py-4',
     title: 'text-h4 text-white',
     subtitle: 'mt-1 text-body-sm text-neutral-400',
     rangePill: 'rounded-full border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-body-sm font-semibold text-neutral-300',
-    body: 'px-6 py-5',
+    body: 'flex-1 px-6 py-5',
     footer: 'border-t border-neutral-700 bg-neutral-900/50 px-6 py-2.5 text-neutral-500',
     stateVariant: 'terminal' as const,
   }

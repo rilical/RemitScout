@@ -7,7 +7,7 @@ type IconClass = string | Record<string, boolean> | Array<string | Record<string
 const props = withDefaults(
   defineProps<{
     name: IconName
-    size?: 16 | 20 | 24
+    size?: 10 | 14 | 16 | 20 | 24
     variant?: IconVariant
     title?: string
     decorative?: boolean
@@ -24,6 +24,10 @@ const props = withDefaults(
 
 const sizeClass = computed(() => {
   switch (props.size) {
+    case 10:
+      return 'h-2.5 w-2.5'
+    case 14:
+      return 'h-3.5 w-3.5'
     case 16:
       return 'h-4 w-4'
     case 24:

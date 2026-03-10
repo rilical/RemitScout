@@ -18,18 +18,24 @@ const sections = [
   { id: 'support', label: 'Support' },
 ] as const
 
-const activeSection = ref(sections[0].id)
+type EnterpriseDocSectionId = (typeof sections)[number]['id']
 
-function scrollTo(id: string) {
+const isEnterpriseDocSectionId = (value: string): value is EnterpriseDocSectionId =>
+  sections.some(section => section.id === value)
+
+const activeSection = ref<EnterpriseDocSectionId>(sections[0].id)
+let sectionObserver: IntersectionObserver | null = null
+
+function scrollTo(id: EnterpriseDocSectionId) {
   activeSection.value = id
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 onMounted(() => {
-  const observer = new IntersectionObserver(
+  sectionObserver = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && isEnterpriseDocSectionId(entry.target.id)) {
           activeSection.value = entry.target.id
         }
       }
@@ -38,10 +44,11 @@ onMounted(() => {
   )
   for (const s of sections) {
     const el = document.getElementById(s.id)
-    if (el) observer.observe(el)
+    if (el) sectionObserver.observe(el)
   }
-  onBeforeUnmount(() => observer.disconnect())
 })
+
+onBeforeUnmount(() => sectionObserver?.disconnect())
 </script>
 
 <template>
