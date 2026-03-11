@@ -35,17 +35,5 @@
   "normalizationWorkerDesiredCount": 1,
   "planeBQueueWorkerDesiredCount": 1,
   "planeBQueueWorkerMaxCount": 6,
-  "opsResumeRuleAllowlist": [
-    "b2c-retry-failed",
-    "alert-evaluation-worker",
-    "alert-evaluation-scheduler",
-    "gold-fx-rates",
-    "gold-reconciliation",
-    "data-health-slo",
-    "telemetry-analytics",
-    "session-cleanup",
-    "audit-log-cleanup",
-    "smart-alerts",
-    "alert-corridor-refresh"
-  ]
+  "opsResumeRuleAllowlist": []
 }

@@ -867,6 +867,7 @@ export const createEcsTasks = (
   }
 
   const planeBIngestEnv = { ...sharedEnv }
+  planeBIngestEnv.SERVICE_NAME = `rs-${options.envName}-plane-b-ingest`
   planeBIngestEnv.DB_APPLICATION_NAME = `rs-${options.envName}:plane-b-ingest`
   if (!planeBIngestEnv.PLANE_B_INGEST_LOOP) {
     planeBIngestEnv.PLANE_B_INGEST_LOOP = '1'
@@ -946,6 +947,7 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      SERVICE_NAME: `rs-${options.envName}-b2b-sweep-scheduler`,
       DB_APPLICATION_NAME: `rs-${options.envName}:b2b-sweep-scheduler`,
       B2B_SWEEP_SCHEDULER_LOOP: '0',
       ...(isDev ? { B2B_SWEEP_SCHEDULER_STALE_RUN_MAX_AGE_MS: '21600000' } : {}),
@@ -1038,6 +1040,7 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      SERVICE_NAME: `rs-${options.envName}-b2c-refresh`,
       B2C_REFRESH_LIMIT: b2cRefreshLimit,
       B2C_REFRESH_CONCURRENCY: b2cRefreshConcurrency,
       B2C_REFRESH_LOOP_JITTER_MS:
@@ -1105,6 +1108,7 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      SERVICE_NAME: `rs-${options.envName}-fx-rate-refresh`,
       ...(fxRateRefreshLoopEnabled ? { FX_RATE_REFRESH_LOOP: '1' } : {}),
       ...(fxRateRefreshQueueUrl ? { FX_RATE_REFRESH_QUEUE_URL: fxRateRefreshQueueUrl } : {}),
     },
@@ -1145,6 +1149,7 @@ export const createEcsTasks = (
 
   const buildIngestFanoutEnv = (queueUrl: string, tierLabel: string) => {
     const ingestFanoutEnv = { ...sharedEnv }
+    ingestFanoutEnv.SERVICE_NAME = `rs-${options.envName}-ingest-fanout-${tierLabel === 'tier1' ? 't1' : 't2'}`
     ingestFanoutEnv.DB_APPLICATION_NAME = `rs-${options.envName}:ingest-fanout-${tierLabel}`
     ingestFanoutEnv.PLANE_B_INGEST_FANOUT_QUEUE_URL = queueUrl
     ingestFanoutEnv.PLANE_B_INGEST_FANOUT_QUEUE_TIER = tierLabel
@@ -1290,6 +1295,7 @@ export const createEcsTasks = (
   })
 
   const goldLiveEnv: Record<string, string> = { ...sharedEnv }
+  goldLiveEnv.SERVICE_NAME = `rs-${options.envName}-gold-live`
   goldLiveEnv.GOLD_LIVE_QUEUE_LOOP_JITTER_MS =
     process.env.GOLD_LIVE_QUEUE_LOOP_JITTER_MS || defaultLoopJitterMs
   goldLiveEnv.GOLD_LIVE_QUEUE_MESSAGE_JITTER_MS =
@@ -1369,6 +1375,7 @@ export const createEcsTasks = (
   })
   const notificationsEnv: Record<string, string> = {
     ...sharedEnv,
+    SERVICE_NAME: `rs-${options.envName}-notifications`,
     NOTIFICATIONS_QUEUE_LOOP_JITTER_MS:
       process.env.NOTIFICATIONS_QUEUE_LOOP_JITTER_MS || defaultLoopJitterMs,
     NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS:
@@ -1463,6 +1470,7 @@ export const createEcsTasks = (
   })
   const opsAlertsEnv: Record<string, string> = {
     ...sharedEnv,
+    SERVICE_NAME: `rs-${options.envName}-ops-alerts`,
     OPS_ALERTS_QUEUE_LOOP_JITTER_MS:
       process.env.OPS_ALERTS_QUEUE_LOOP_JITTER_MS || defaultLoopJitterMs,
     OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS:
@@ -1629,6 +1637,7 @@ export const createEcsTasks = (
   })
   const alertEvaluationEnv: Record<string, string> = {
     ...planeAWorkerEnv,
+    SERVICE_NAME: `rs-${options.envName}-alert-evaluation`,
     ALERT_EVALUATION_ENABLED: '1',
   }
   if (options.alertEvaluationQueueUrl) {
@@ -1705,6 +1714,7 @@ export const createEcsTasks = (
   })
   const exportWorkerEnv: Record<string, string> = {
     ...planeAWorkerEnv,
+    SERVICE_NAME: `rs-${options.envName}-export-worker`,
   }
   if (options.exportJobQueueUrl) {
     exportWorkerEnv.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
@@ -1789,6 +1799,7 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      SERVICE_NAME: `rs-${options.envName}-agent-orchestrator`,
       AGENT_ENABLED: 'true',
       AGENT_ORCHESTRATOR_ENABLED: 'true',
       HEALTH_PORT: '8080',
@@ -1828,6 +1839,7 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      SERVICE_NAME: `rs-${options.envName}-stress-responder`,
       HEALTH_PORT: '8080',
     },
     ...secretsConfig,
@@ -1901,6 +1913,7 @@ export const createEcsTasks = (
   const planeAApiEnv: Record<string, string> = {
     ...sharedEnv,
     ...planeAWorkerEnv,
+    SERVICE_NAME: `rs-${options.envName}-plane-a`,
     PLANE_A_PORT: '4000',
     HEALTH_PORT: '4000',
   }
@@ -1953,6 +1966,7 @@ export const createEcsTasks = (
   })
   const planeCApiEnv: Record<string, string> = {
     ...sharedEnv,
+    SERVICE_NAME: `rs-${options.envName}-plane-c`,
     PLANE_C_PORT: '4100',
     HEALTH_PORT: '4100',
   }
