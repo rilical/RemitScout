@@ -20,6 +20,7 @@
 
 import { createPool, query } from '../../shared/db'
 import { config } from '../../shared/config'
+import { resolveDbConnectionStringForIpv4 } from '../../shared/db-ipv4'
 import { createLogger } from '../../shared/logger'
 import { initTracing } from '../../shared/tracing'
 import { resolveProviderSupport } from '../../plane-b/src/services/provider-capability'
@@ -72,7 +73,7 @@ export const runProviderCapabilityProbeEvidence = async () => {
   const env = resolveCaseEnv(process.env.ENVIRONMENT)
   const caseId = String(process.env.CASE_ID || `case-capability-probe-${Date.now()}`).trim()
 
-  const pool = createPool(config.db.planeBUrl)
+  const pool = createPool(await resolveDbConnectionStringForIpv4(config.db.planeBUrl, logger))
   try {
     const tierCorridors = await loadTierCorridors(pool)
     if (!tierCorridors.length) {
@@ -262,4 +263,3 @@ if (require.main === module) {
     process.exit(1)
   })
 }
-

@@ -80,18 +80,21 @@ export const recordQueryFromSql = (
     value: durationSeconds,
     unit: 'Seconds',
     dimensions: { operation, table, environment: environmentDimension },
+    mirrorToNewRelic: false,
   })
   recordCloudWatchMetric({
     name: 'db_query_duration_seconds_env',
     value: durationSeconds,
     unit: 'Seconds',
     dimensions: { environment: environmentDimension },
+    mirrorToNewRelic: false,
   })
   recordCloudWatchMetric({
     name: 'db_queries_total',
     value: 1,
     unit: 'Count',
     dimensions: { operation, table, status, environment: environmentDimension },
+    mirrorToNewRelic: false,
   })
 }
 

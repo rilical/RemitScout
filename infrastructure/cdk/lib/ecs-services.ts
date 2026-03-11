@@ -3,6 +3,7 @@ import { DeploymentCircuitBreaker, FargateService } from 'aws-cdk-lib/aws-ecs'
 import { SubnetType, type SecurityGroup } from 'aws-cdk-lib/aws-ec2'
 import type { Cluster, FargateTaskDefinition } from 'aws-cdk-lib/aws-ecs'
 import type { Construct } from 'constructs'
+import { ensureEcsScalableTargetActive } from './ecs-autoscaling-guard'
 import type { QueueResources } from './queues'
 
 export type EcsServiceResources = {
@@ -21,6 +22,7 @@ export type EcsServiceResources = {
   agentOrchestratorService?: FargateService
   stressResponderService?: FargateService
   normalizationWorkerService?: FargateService
+  queueWorkerScalableTargetResourceIds: string[]
 }
 
 export type EcsServiceOptions = {
@@ -174,6 +176,7 @@ export const createEcsServices = (
   const enableExecuteCommand = !isProd
   const usePublicSubnets = isDev
   const subnetType = usePublicSubnets ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
+  const queueWorkerScalableTargetResourceIds: string[] = []
   // Non-prod accounts often have tighter Fargate vCPU quotas.
   // Keep updates effectively in-place while satisfying ECS AZ rebalancing
   // requirement that maximumPercent must be > 100.
@@ -190,6 +193,21 @@ export const createEcsServices = (
   const tagManaged = (service: FargateService): void => {
     Tags.of(service).add('managed-by', 'ops-pause')
     Tags.of(service).add('environment', options.envName)
+  }
+  const registerQueueWorkerScalableTarget = (
+    id: string,
+    service: FargateService | undefined,
+    bounds: { min: number; max: number },
+  ): void => {
+    if (isDev || !service) return
+    const resourceId = ensureEcsScalableTargetActive(scope, id, {
+      clusterName: options.cluster.clusterName,
+      serviceName: service.serviceName,
+      minCapacity: bounds.min,
+      maxCapacity: bounds.max,
+      deploymentFingerprint: service.taskDefinition.taskDefinitionArn,
+    })
+    queueWorkerScalableTargetResourceIds.push(resourceId)
   }
 
   if (minimalMode) {
@@ -258,6 +276,7 @@ export const createEcsServices = (
       planeBIngestService: minimalPlaneBIngestService,
       b2cRefreshService: minimalB2cRefreshService,
       ingestFanoutTier2Service: minimalIngestFanoutTier2Service,
+      queueWorkerScalableTargetResourceIds,
     }
   }
 
@@ -582,6 +601,7 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('B2cRefreshScalableTargetGuard', b2cRefreshService, b2cBounds)
   }
 
   if (!isPaused && options.fxRateRefreshMode === 'queue' && fxRateRefreshServiceEnabled) {
@@ -602,6 +622,7 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('FxRateRefreshScalableTargetGuard', fxRateRefreshService, fxBounds)
   }
 
   if (!isPaused && options.ingestFanoutMode === 'queue') {
@@ -623,6 +644,7 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('IngestFanoutTier1ScalableTargetGuard', ingestFanoutTier1Service, tier1Bounds)
 
     const tier2Bounds = resolveScaleBounds(ingestFanoutTier2Desired)
     const tier2Scaling = ingestFanoutTier2Service.autoScaleTaskCount({
@@ -641,6 +663,7 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('IngestFanoutTier2ScalableTargetGuard', ingestFanoutTier2Service, tier2Bounds)
   }
 
   if (!isPaused && options.goldLiveMode === 'queue') {
@@ -661,6 +684,7 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('GoldLiveScalableTargetGuard', goldLiveService, bounds)
   }
 
   if (!isPaused && options.notificationsMode === 'queue') {
@@ -681,6 +705,7 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('NotificationsScalableTargetGuard', notificationsQueueService, bounds)
   }
 
   if (!isPaused && options.opsAlertsMode === 'queue') {
@@ -701,6 +726,7 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('OpsAlertsScalableTargetGuard', opsAlertsQueueService, bounds)
   }
 
   if (!isPaused && alertEvaluationServiceEnabled && options.alertEvaluationMode === 'queue') {
@@ -721,6 +747,7 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('AlertEvaluationScalableTargetGuard', alertEvaluationService, bounds)
   }
 
   if (!isPaused && exportServiceEnabled && options.exportJobMode === 'queue') {
@@ -741,13 +768,15 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('ExportWorkerScalableTargetGuard', exportWorkerService, bounds)
   }
 
   if (!isPaused && agentOrchestratorServiceEnabled && agentOrchestratorQueueActive && agentOrchestratorService) {
     const bounds = resolveScaleBounds(agentOrchestratorDesired)
+    const maxCapacity = Math.max(agentOrchestratorDesired, 3)
     const scaling = agentOrchestratorService.autoScaleTaskCount({
       minCapacity: bounds.min,
-      maxCapacity: Math.max(agentOrchestratorDesired, 3),
+      maxCapacity,
     })
     scaling.scaleToTrackCustomMetric('AgentFailureQueueDepth', {
       metric: options.queues.agentFailureQueue.metricApproximateNumberOfMessagesVisible(),
@@ -755,13 +784,18 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('AgentOrchestratorScalableTargetGuard', agentOrchestratorService, {
+      min: bounds.min,
+      max: maxCapacity,
+    })
   }
 
   if (!isPaused && stressResponderServiceEnabled && stressResponderQueueActive && stressResponderService) {
     const bounds = resolveScaleBounds(stressResponderDesired)
+    const maxCapacity = Math.max(stressResponderDesired, 3)
     const scaling = stressResponderService.autoScaleTaskCount({
       minCapacity: bounds.min,
-      maxCapacity: Math.max(stressResponderDesired, 3),
+      maxCapacity,
     })
     scaling.scaleToTrackCustomMetric('AgentStressQueueDepth', {
       metric: options.queues.agentStressQueue.metricApproximateNumberOfMessagesVisible(),
@@ -769,13 +803,18 @@ export const createEcsServices = (
       scaleInCooldown,
       scaleOutCooldown,
     })
+    registerQueueWorkerScalableTarget('StressResponderScalableTargetGuard', stressResponderService, {
+      min: bounds.min,
+      max: maxCapacity,
+    })
   }
 
   if (!isPaused && normalizationServiceEnabled && normalizationQueueActive && normalizationWorkerService) {
     const bounds = resolveScaleBounds(normalizationWorkerDesired)
+    const maxCapacity = Math.max(normalizationWorkerDesired, scaleMax)
     const scaling = normalizationWorkerService.autoScaleTaskCount({
       minCapacity: bounds.min,
-      maxCapacity: Math.max(normalizationWorkerDesired, scaleMax),
+      maxCapacity,
     })
     scaling.scaleToTrackCustomMetric('NormalizationQueueDepth', {
       metric: options.queues.normalizationQueue.metricApproximateNumberOfMessagesVisible(),
@@ -788,6 +827,10 @@ export const createEcsServices = (
       targetValue: defaultQueueAgeTargetSeconds,
       scaleInCooldown,
       scaleOutCooldown,
+    })
+    registerQueueWorkerScalableTarget('NormalizationScalableTargetGuard', normalizationWorkerService, {
+      min: bounds.min,
+      max: maxCapacity,
     })
   }
 
@@ -807,5 +850,6 @@ export const createEcsServices = (
     agentOrchestratorService,
     stressResponderService,
     normalizationWorkerService,
+    queueWorkerScalableTargetResourceIds,
   }
 }

@@ -810,6 +810,79 @@ const formatTransferTime = (minMinutes: number | null, maxMinutes: number | null
   return { min: minHrs, max: maxHrs, label }
 }
 
+const isPositiveNumber = (value: number | null): value is number => value !== null && Number.isFinite(value) && value > 0
+
+const ratesRoughlyEqual = (left: number | null, right: number | null) => {
+  if (!isPositiveNumber(left) || !isPositiveNumber(right)) return false
+  const tolerance = Math.max(1e-6, Math.max(Math.abs(left), Math.abs(right)) * 0.002)
+  return Math.abs(left - right) <= tolerance
+}
+
+const scaleReceiveAmountByRate = (
+  receiveAmount: number,
+  fromRate: number | null,
+  toRate: number | null,
+) => {
+  if (!isPositiveNumber(receiveAmount) || !isPositiveNumber(fromRate) || !isPositiveNumber(toRate)) {
+    return null
+  }
+  return Math.max(0, receiveAmount * (toRate / fromRate))
+}
+
+const resolveStandardQuoteDisplay = (quote: LatestQuoteByCorridorRecord) => {
+  const receiveAmount = toNumberOrZero(quote.receive_amount)
+  const impliedRate = toNumberOrNull(quote.implied_fx_rate)
+  const baseRate = toNumberOrNull(quote.base_rate)
+  const standardRate = isPositiveNumber(baseRate)
+    ? baseRate
+    : isPositiveNumber(impliedRate)
+      ? impliedRate
+      : 0
+
+  if (
+    isPositiveNumber(baseRate)
+    && isPositiveNumber(impliedRate)
+    && receiveAmount > 0
+    && !ratesRoughlyEqual(baseRate, impliedRate)
+  ) {
+    return {
+      rate: standardRate,
+      receivedAmount: scaleReceiveAmountByRate(receiveAmount, impliedRate, baseRate) ?? receiveAmount,
+    }
+  }
+
+  return {
+    rate: standardRate,
+    receivedAmount: receiveAmount,
+  }
+}
+
+const resolvePromoQuoteDisplay = (
+  quote: LatestQuoteByCorridorRecord,
+  standardRate: number,
+  standardReceiveAmount: number,
+) => {
+  const promoRate = toNumberOrNull(quote.promotional_rate)
+  if (!isPositiveNumber(promoRate)) return null
+
+  const impliedRate = toNumberOrNull(quote.implied_fx_rate)
+  const receiveAmount = toNumberOrZero(quote.receive_amount)
+  if (isPositiveNumber(impliedRate) && receiveAmount > 0 && ratesRoughlyEqual(promoRate, impliedRate)) {
+    return {
+      rate: promoRate,
+      receivedAmount: receiveAmount,
+    }
+  }
+
+  return {
+    rate: promoRate,
+    receivedAmount:
+      scaleReceiveAmountByRate(standardReceiveAmount, standardRate, promoRate)
+      ?? scaleReceiveAmountByRate(receiveAmount, impliedRate, promoRate)
+      ?? receiveAmount,
+  }
+}
+
 const transformQuote = (quote: LatestQuoteByCorridorRecord): TransformedQuote => {
   const payin = mapPayinMethod(quote.payin)
   const payout = mapPayoutMethod(quote.payout)
@@ -818,10 +891,8 @@ const transformQuote = (quote: LatestQuoteByCorridorRecord): TransformedQuote =>
     toNumberOrNull(quote.delivery_time_max_minutes),
   )
 
-  const sendAmount = toNumberOrZero(quote.send_amount)
   const feeAmount = toNumberOrZero(quote.fee_amount)
-  const receiveAmount = toNumberOrZero(quote.receive_amount)
-  const rate = toNumberOrZero(quote.implied_fx_rate)
+  const { rate, receivedAmount: receiveAmount } = resolveStandardQuoteDisplay(quote)
 
   const fee = {
     transfer: feeAmount,
@@ -834,10 +905,10 @@ const transformQuote = (quote: LatestQuoteByCorridorRecord): TransformedQuote =>
 
   const promos: ProviderQuoteResponse['quotes'][0]['promos'] = []
   if (quote.promotional_rate || quote.promotional_fee_amount) {
-    const promoRateRaw = toNumberOrNull(quote.promotional_rate)
-    const promoRate = promoRateRaw && promoRateRaw > 0 ? promoRateRaw : rate
+    const promoDisplay = resolvePromoQuoteDisplay(quote, rate, receiveAmount)
+    const promoRate = promoDisplay?.rate ?? rate
     const promoFee = toNumberOrZero(quote.promotional_fee_amount)
-    const promoReceiveAmount = sendAmount * promoRate - promoFee
+    const promoReceiveAmount = promoDisplay?.receivedAmount ?? receiveAmount
 
     // Classify promo type dynamically instead of hardcoding
     const hasFeeWaiver = promoFee < feeAmount
@@ -901,6 +972,11 @@ const transformQuote = (quote: LatestQuoteByCorridorRecord): TransformedQuote =>
 type TransformedQuote = ProviderQuoteResponse['quotes'][0] & { 
   deliveryLabel: string
   originalQuote: LatestQuoteByCorridorRecord 
+}
+
+export const __providersListTestables = {
+  resolveStandardQuoteDisplay,
+  resolvePromoQuoteDisplay,
 }
 
 const groupQuotesByProvider = (
@@ -1752,7 +1828,8 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           const candidateMethod = toAvailableMethod(candidate.originalQuote.payout)
           return candidateMethod === requestedMethod
         })
-        const quote = selectBestQuote(requestedMethodQuotes.length ? requestedMethodQuotes : pq.quotes)
+        if (!requestedMethodQuotes.length) return []
+        const quote = selectBestQuote(requestedMethodQuotes)
         if (!quote) return []
         const feeTotal = quote.fee.total
         const fxRate = quote.rate
@@ -1813,6 +1890,11 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           headline: quote.promos[0].headline,
           details: quote.promos[0].details,
           newCustomersOnly: quote.promos[0].newCustomersOnly,
+          promoType: quote.promos[0].promoType,
+          standardFee: quote.promos[0].standardFee,
+          standardRate: quote.promos[0].standardRate,
+          promoFee: quote.promos[0].promoFee,
+          promoRate: quote.promos[0].promoRate,
         } : null
 
         return [{

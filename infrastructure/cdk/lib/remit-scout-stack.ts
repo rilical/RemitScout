@@ -1879,6 +1879,7 @@ export class RemitScoutStack extends Stack {
       opsPauseOptions: {
         ecsServiceNames: managedEcsServiceNames,
         ecsBaselineDesired: managedEcsBaselines,
+        queueWorkerScalableTargetResourceIds: ecsServices.queueWorkerScalableTargetResourceIds,
         eventRulePrefix: `remit-scout-${envName}-`,
         eventRuleAllowlist: opsPauseAllowlist,
         eventRuleResumeAllowlist: resolvedOpsResumeAllowlist,

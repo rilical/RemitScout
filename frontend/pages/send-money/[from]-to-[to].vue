@@ -687,8 +687,8 @@ class="scroll-mt-20 bg-surface"
             :to-country="toCountryCode"
             :available-to-currencies="availableToCurrencies"
             :available-from-currencies="availableFromCurrencies"
-            :available-methods="availableMethods"
-            :methods-loading="isRefreshQueued && !availableMethods.length"
+            :available-methods="methodSelectorMethods"
+            :methods-loading="isRefreshQueued && !methodSelectorMethods.length"
             :loading="shouldBlockResults"
             :has-results="hasApiQuotes"
             :watchlist-active="isCorridorSaved"
@@ -1469,97 +1469,32 @@ class="text-body-sm mb-6 text-rs-muted"
 
           <div class="rounded-xl border border-rs-border bg-surface p-5">
             <div class="mb-4 flex items-center justify-between">
-              <h3 class="text-body font-semibold text-rs-fg">Payout Methods Available</h3>
+              <h3 class="text-body font-semibold text-rs-fg">Supported Payout Methods</h3>
             </div>
             <div class="space-y-3">
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Bank Transfer</span>
-                <span class="font-semibold text-brand-600">{{
-                    currentRows.filter(r => {
-                      const methods = r.methods || []
-                      const payOut = (r.payOut || '').toLowerCase()
-                      return (
-                        methods.includes('bank')
-                        || methods.includes('bank_deposit')
-                        || payOut.includes('bank')
-                        || payOut.includes('account')
-                      )
-                    }).length
-                  }}
-                  providers</span>
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.bank }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Cash Pickup</span>
-                <span class="font-semibold text-brand-600">{{
-                    currentRows.filter(r => {
-                      const methods = r.methods || []
-                      const payOut = (r.payOut || '').toLowerCase()
-                      return (
-                        methods.includes('cash')
-                        || methods.includes('cash_pickup')
-                        || payOut.includes('cash')
-                      )
-                    }).length
-                  }}
-                  providers</span>
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.cash }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Mobile Wallet</span>
-                <span class="font-semibold text-brand-600">{{
-                    currentRows.filter(r => {
-                      const methods = r.methods || []
-                      const payOut = (r.payOut || '').toLowerCase()
-                      return (
-                        methods.includes('wallet')
-                        || methods.includes('mobile_wallet')
-                        || payOut.includes('wallet')
-                        || payOut.includes('mobile')
-                      )
-                    }).length
-                  }}
-                  providers</span>
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.wallet }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Airtime</span>
-                <span class="font-semibold text-brand-600">{{
-                    currentRows.filter(r => {
-                      const methods = r.methods || []
-                      const payOut = (r.payOut || '').toLowerCase()
-                      return methods.includes('airtime') || payOut.includes('airtime')
-                    }).length
-                  }}
-                  providers</span>
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.airtime }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Home Delivery</span>
-                <span class="font-semibold text-brand-600">{{
-                    currentRows.filter(r => {
-                      const methods = r.methods || []
-                      const payOut = (r.payOut || '').toLowerCase()
-                      return (
-                        methods.includes('home')
-                        || methods.includes('home_delivery')
-                        || payOut.includes('home')
-                      )
-                    }).length
-                  }}
-                  providers</span>
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.home }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Card Delivery</span>
-                <span class="font-semibold text-brand-600">{{
-                    currentRows.filter(r => {
-                      const methods = r.methods || []
-                      const payOut = (r.payOut || '').toLowerCase()
-                      return (
-                        methods.includes('card')
-                        || methods.includes('debit_card')
-                        || methods.includes('card_delivery')
-                        || payOut.includes('card')
-                      )
-                    }).length
-                  }}
-                  providers</span>
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.card }} providers</span>
               </div>
             </div>
           </div>
@@ -2200,13 +2135,16 @@ import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
 import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic.vue'
 import FaqSection from '~/components/shared/FaqSection.vue'
+import { formatExchangeRateValue } from '~/lib/exchangeRateFormat'
 import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
+import { resolveComparableProviderPricing } from '~/lib/providerPricing'
+import { buildRateHistoryChartPoints } from '~/lib/rateHistoryChart'
 import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound'
 import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
-import { BASE_CURRENCIES, COUNTRIES } from '~/utils/countries-currencies'
+import { COUNTRIES, getAvailableCurrencies } from '~/utils/countries-currencies'
 import {
   getCorridorUrl,
   getCanonicalSlug,
@@ -2408,11 +2346,7 @@ const normalizeCurrencyParam = (value: string | string[] | null | undefined) => 
 
 const isAllowedCurrency = (slug: string, currency: string) => {
   const country = getCountryFromSlug(slug)
-  const allowed = new Set(
-    [...BASE_CURRENCIES, country?.currency]
-      .filter((code): code is string => Boolean(code))
-      .map(code => code.toUpperCase()),
-  )
+  const allowed = new Set(getAvailableCurrencies(country?.code || '').map(code => code.toUpperCase()))
   return allowed.has(currency)
 }
 
@@ -3136,12 +3070,60 @@ const supportedMethods = computed<Method[]>(() => {
   return orderProviderMethods([...responseMethods, ...availableMethods.value])
 })
 
+const methodSelectorMethods = computed<Method[]>(() =>
+  supportedMethods.value.length ? supportedMethods.value : availableMethods.value,
+)
+
 const availableMethodsByProvider = computed<Record<string, Method[]>>(() =>
   normalizeMethodMap(
     (quotesData.value as { availableMethodsByProvider?: Record<string, string[]> } | null)
       ?.availableMethodsByProvider,
   ),
 )
+
+const supportedMethodsByProvider = computed<Record<string, Method[]>>(() =>
+  normalizeMethodMap(
+    (quotesData.value as { supportedMethodsByProvider?: Record<string, string[]> } | null)
+      ?.supportedMethodsByProvider,
+  ),
+)
+
+const corridorMethodCounts = computed<Record<string, number>>(() => {
+  const counts = {
+    bank: 0,
+    cash: 0,
+    wallet: 0,
+    airtime: 0,
+    home: 0,
+    card: 0,
+  }
+
+  const providerMethods = Object.values(supportedMethodsByProvider.value)
+  const source = providerMethods.length
+    ? providerMethods
+    : currentRows.value.map(row => (Array.isArray(row.methods) ? row.methods : []))
+
+  for (const rawMethods of source) {
+    const normalized = new Set(
+      rawMethods
+        .map(method => normalizeMethod(method) ?? method)
+        .filter(Boolean),
+    )
+
+    if (normalized.has('bank') || normalized.has('bank_deposit')) counts.bank += 1
+    if (normalized.has('cash') || normalized.has('cash_pickup')) counts.cash += 1
+    if (normalized.has('wallet') || normalized.has('mobile_wallet')) counts.wallet += 1
+    if (normalized.has('airtime')) counts.airtime += 1
+    if (normalized.has('home') || normalized.has('home_delivery')) counts.home += 1
+    if (
+      normalized.has('card')
+      || normalized.has('debit_card')
+      || normalized.has('card_delivery')
+    ) counts.card += 1
+  }
+
+  return counts
+})
 
 const providerQuotes = computed(() => {
   if (refreshGateActive.value) {
@@ -3223,7 +3205,7 @@ const quoteRefreshKey = computed(
   () => `${corridorId.value}:${displayAmount.value}:${payoutMethod.value}`,
 )
 
-watch(availableMethods, (methods) => {
+watch(methodSelectorMethods, (methods) => {
   if (quotesPending.value) return
   payoutMethod.value = resolvePayoutMethodSelection(payoutMethod.value, methods)
 })
@@ -3237,7 +3219,7 @@ watch(
 )
 
 useAbortableWatch(
-  [availableMethods, payoutMethod, corridorId, displayAmount],
+  [methodSelectorMethods, payoutMethod, corridorId, displayAmount],
   async ([available, selectedMethod]: [string[], string, unknown, unknown], signal) => {
     if (!import.meta.client) return
     if (!available.length) return
@@ -3500,12 +3482,12 @@ const midMarketUpdatedAt = computed(
 )
 const midMarketLabel = computed(() => {
   if (isSameCurrency.value) {
-    return `1 ${fromCurrencyCode.value} = 1.00 ${toCurrencyCode.value}`
+    return `1 ${fromCurrencyCode.value} = 1.000 ${toCurrencyCode.value}`
   }
   if (!midMarketRate.value) {
     return `1 ${fromCurrencyCode.value} = -- ${toCurrencyCode.value}`
   }
-  return `1 ${fromCurrencyCode.value} = ${midMarketRate.value.toFixed(2)} ${toCurrencyCode.value}`
+  return `1 ${fromCurrencyCode.value} = ${formatExchangeRateValue(midMarketRate.value)} ${toCurrencyCode.value}`
 })
 const midMarketAsOf = computed(() => {
   if (!midMarketUpdatedAt.value) return ''
@@ -3541,39 +3523,15 @@ const chartTopPadding = 15
 const chartBottomPadding = 25
 
 const chartPoints = computed(() => {
-  if (isSameCurrency.value) {
-    const points = Array.from({ length: 30 }, (_, idx) => {
-      const x = chartLeftPadding + (idx / 29) * (chartWidth - chartLeftPadding - chartPadding)
-      const y = chartTopPadding + 0.5 * (chartHeight - chartTopPadding - chartBottomPadding)
-      return {
-        x,
-        y,
-        rate: 1.0,
-        date: new Date(Date.now() - (29 - idx) * 24 * 60 * 60 * 1000).toISOString(),
-      }
-    })
-    return points
-  }
-
-  const history = rateHistory.value
-  if (!history.length) return []
-  const rates = history.map(point => point.rate)
-  const minRate = Math.min(...rates)
-  const maxRate = Math.max(...rates)
-  const range = maxRate - minRate
-  const span = history.length > 1 ? history.length - 1 : 1
-
-  return history.map((point, idx) => {
-    const normalized = range > 0 ? (point.rate - minRate) / range : 0.5
-    const x = chartLeftPadding + (idx / span) * (chartWidth - chartLeftPadding - chartPadding)
-    const y
-      = chartTopPadding + (1 - normalized) * (chartHeight - chartTopPadding - chartBottomPadding)
-    return {
-      x,
-      y,
-      rate: point.rate,
-      date: point.date,
-    }
+  return buildRateHistoryChartPoints({
+    history: rateHistory.value,
+    isSameCurrency: isSameCurrency.value,
+    chartWidth,
+    chartHeight,
+    chartPadding,
+    chartLeftPadding,
+    chartTopPadding,
+    chartBottomPadding,
   })
 })
 
@@ -3928,7 +3886,10 @@ const apiRows = computed<TableRow[]>(() => {
       : null
 
     const methodsArray = orderProviderMethods(
-      availableMethodsByProvider.value[normalizeProviderSlug(quote.id)] || quote.methods || [],
+      supportedMethodsByProvider.value[normalizeProviderSlug(quote.id)]
+      || availableMethodsByProvider.value[normalizeProviderSlug(quote.id)]
+      || quote.methods
+      || [],
     )
     const methodsLabel = formatMethodLabels(methodsArray)
 
@@ -4230,7 +4191,7 @@ const bestRateLabel = computed(() => {
   if (!bestQuote.value) return ''
   const fxRate = Number(bestQuote.value.fxRate)
   if (!Number.isFinite(fxRate)) return ''
-  return `1 ${fromCurrencyCode.value} = ${fxRate.toFixed(4)} ${toCurrencyCode.value}`
+  return `1 ${fromCurrencyCode.value} = ${formatExchangeRateValue(fxRate)} ${toCurrencyCode.value}`
 })
 const structuredDataUpdatedAt = computed(
   () => apiUpdatedAt.value || midMarketUpdatedAt.value || null,
@@ -4691,21 +4652,12 @@ const bestTotalCost = computed(() => {
   if (!midMarket) return 0
   const costs = content.value.table.rows
     .map((row) => {
-      // Use promo fee/rate if available, otherwise use regular fee/rate (same logic as getProviderTrueCost)
-      const promo = row.promoInfo ?? null
-      const hasPromo = Boolean(row.hasPromo && promo)
-      const providerRate
-        = hasPromo && Number.isFinite(promo?.rate)
-          ? Number(promo?.rate)
-          : Number.isFinite(row.fxRate ?? Number.NaN)
-            ? Number(row.fxRate)
-            : 0
-      const upfrontFee
-        = hasPromo && Number.isFinite(promo?.fee)
-          ? Number(promo?.fee)
-          : Number.isFinite(row.feeAmount ?? Number.NaN)
-            ? Number(row.feeAmount)
-            : 0
+      const { providerRate, upfrontFee } = resolveComparableProviderPricing({
+        feeAmount: row.feeAmount,
+        fxRate: row.fxRate,
+        hasPromo: row.hasPromo,
+        promoInfo: row.promoInfo,
+      })
 
       if (!Number.isFinite(providerRate) || providerRate === 0) return null
 
@@ -4845,21 +4797,12 @@ const getTeerVsMidMarket = computed(() => {
 })
 
 function getProviderTrueCost(row: TableRow, _index: number): TrueCostBreakdown {
-  // Use promo fee/rate if available, otherwise use regular fee/rate
-  const promo = row.promoInfo ?? null
-  const hasPromo = Boolean(row.hasPromo && promo)
-  const providerRate
-    = hasPromo && Number.isFinite(promo?.rate)
-      ? Number(promo?.rate)
-      : Number.isFinite(row.fxRate ?? Number.NaN)
-        ? Number(row.fxRate)
-        : 0
-  const upfrontFee
-    = hasPromo && Number.isFinite(promo?.fee)
-      ? Number(promo?.fee)
-      : Number.isFinite(row.feeAmount ?? Number.NaN)
-        ? Number(row.feeAmount)
-        : 0
+  const { providerRate, upfrontFee } = resolveComparableProviderPricing({
+    feeAmount: row.feeAmount,
+    fxRate: row.fxRate,
+    hasPromo: row.hasPromo,
+    promoInfo: row.promoInfo,
+  })
 
   return buildTrueCostBreakdown(
     displayAmount.value,

@@ -35,6 +35,10 @@ import {
   GetParameterCommand,
   PutParameterCommand,
 } from '@aws-sdk/client-ssm'
+import {
+  ApplicationAutoScalingClient,
+  DescribeScalableTargetsCommand,
+} from '@aws-sdk/client-application-auto-scaling'
 
 import { recordCloudWatchMetric } from '../../shared/cloudwatch-metrics'
 import { createLogger } from '../../shared/logger'
@@ -184,6 +188,33 @@ const listClusterServiceNames = async (
     nextToken = response.nextToken
   } while (nextToken)
   return [...names]
+}
+
+const listScalableTargetsByResourceIds = async (
+  client: ApplicationAutoScalingClient,
+  resourceIds: string[],
+): Promise<Map<string, { inSuspended: boolean; outSuspended: boolean; scheduledSuspended: boolean }>> => {
+  const targets = new Map<string, { inSuspended: boolean; outSuspended: boolean; scheduledSuspended: boolean }>()
+  for (const chunk of chunkArray(resourceIds, 10)) {
+    if (chunk.length === 0) continue
+    const response = await client.send(
+      new DescribeScalableTargetsCommand({
+        ServiceNamespace: 'ecs',
+        ScalableDimension: 'ecs:service:DesiredCount',
+        ResourceIds: chunk,
+      }),
+    )
+    for (const target of response.ScalableTargets ?? []) {
+      const resourceId = target.ResourceId
+      if (!resourceId) continue
+      targets.set(resourceId, {
+        inSuspended: target.SuspendedState?.DynamicScalingInSuspended === true,
+        outSuspended: target.SuspendedState?.DynamicScalingOutSuspended === true,
+        scheduledSuspended: target.SuspendedState?.ScheduledScalingSuspended === true,
+      })
+    }
+  }
+  return targets
 }
 
 const stopEventRuleStartedTasks = async (
@@ -359,12 +390,15 @@ const purgeQueues = async (
 const validatePauseState = async (
   events: EventBridgeClient,
   ecs: ECSClient,
+  applicationAutoScaling: ApplicationAutoScalingClient,
   options: {
     rulePrefix: string
     clusterName: string
     ecsServiceNames: string[]
     expectedEnabledRules: Set<string>
     expectedDesiredMap: Record<string, number>
+    queueWorkerScalableTargetResourceIds: string[]
+    expectQueueWorkerScalableTargetsActive: boolean
   },
 ): Promise<{ valid: boolean; drift: string[] }> => {
   const drift: string[] = []
@@ -408,6 +442,27 @@ const validatePauseState = async (
       }
     } catch (error) {
       drift.push(`services_validation_failed:${String(error)}`)
+    }
+  }
+
+  if (options.expectQueueWorkerScalableTargetsActive && options.queueWorkerScalableTargetResourceIds.length > 0) {
+    try {
+      const targets = await listScalableTargetsByResourceIds(
+        applicationAutoScaling,
+        options.queueWorkerScalableTargetResourceIds,
+      )
+      for (const resourceId of options.queueWorkerScalableTargetResourceIds) {
+        const target = targets.get(resourceId)
+        if (!target) {
+          drift.push(`scalable_target:${resourceId}:actual=missing:expected=active`)
+          continue
+        }
+        if (target.inSuspended || target.outSuspended || target.scheduledSuspended) {
+          drift.push(`scalable_target:${resourceId}:actual=suspended:expected=active`)
+        }
+      }
+    } catch (error) {
+      drift.push(`scalable_targets_validation_failed:${String(error)}`)
     }
   }
 
@@ -588,6 +643,12 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const ecsServiceNamesFromEnv = parseJson<string[]>(process.env.ECS_SERVICES_JSON, [])
   const ecsBaselineFromEnv = parseJson<Record<string, number>>(process.env.ECS_BASELINE_JSON, {})
   const rulePrefix = process.env.EVENT_RULE_PREFIX ?? `remit-scout-${envName}-`
+  const queueWorkerScalableTargetResourceIds = parseJson<string[]>(
+    process.env.QUEUE_WORKER_SCALABLE_TARGETS_JSON,
+    [],
+  )
+    .map((resourceId) => resourceId.trim())
+    .filter(Boolean)
   const resumeAllowlistRaw = parseJson<string[]>(
     process.env.EVENT_RULE_RESUME_ALLOWLIST ?? process.env.EVENT_RULE_ALLOWLIST,
     [],
@@ -648,6 +709,7 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
     })
   }
   const events = new EventBridgeClient({})
+  const applicationAutoScaling = new ApplicationAutoScalingClient({})
   const rds = new RDSClient({})
   const elasticache = new ElastiCacheClient({})
   const sqs = new SQSClient({})
@@ -861,12 +923,14 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   }
 
   try {
-    const validation = await validatePauseState(events, ecs, {
+    const validation = await validatePauseState(events, ecs, applicationAutoScaling, {
       rulePrefix,
       clusterName: ecsClusterName,
       ecsServiceNames,
       expectedEnabledRules,
       expectedDesiredMap,
+      queueWorkerScalableTargetResourceIds,
+      expectQueueWorkerScalableTargetsActive: !shouldPause,
     })
     emitOpsPauseMetric('ops_pause_drift_detected', validation.drift.length, envName)
     if (validation.valid) {
@@ -881,14 +945,23 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
         shouldPause,
         drift: validation.drift,
       })
+      const shouldFailResume = !shouldPause && envName !== 'dev'
+      const hasScalableTargetDrift = validation.drift.some((entry) => entry.startsWith('scalable_target:'))
+      if (shouldFailResume && hasScalableTargetDrift) {
+        throw new Error('Queue worker scalable targets remain suspended outside pause mode')
+      }
     }
   } catch (error) {
     emitOpsPauseMetric('ops_pause_drift_detected', 1, envName)
     logger.warn('pause_state_validation_failed', {
+      rulePrefix,
       envName,
       shouldPause,
       error: String(error),
     })
+    if (!shouldPause && envName !== 'dev') {
+      throw error
+    }
   }
 
   return { paused: shouldPause }

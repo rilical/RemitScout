@@ -224,7 +224,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const tracingExporter = tracingEnv.TRACING_EXPORTER ?? 'xray'
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
   const newRelicLogsEnabled =
-    process.env.NEW_RELIC_LOGS_ENABLED ?? (isStaging || isProd ? '1' : '0')
+    process.env.NEW_RELIC_LOGS_ENABLED ?? (isProd ? '1' : '0')
   const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
   const lambdaArchitecture = options.lambdaArchitecture
 

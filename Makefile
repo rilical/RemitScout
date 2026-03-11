@@ -24,7 +24,7 @@ DEV_NIGHTLY_PAUSE_ENABLED ?= $(shell jq -r '.nightlyAutoPause.enabled // false' 
 DEV_NIGHTLY_PAUSE_TIMEZONE ?= $(shell jq -r '.nightlyAutoPause.timezone // "America/New_York"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "America/New_York")
 DEV_NIGHTLY_PAUSE_CRON ?= $(shell jq -r '.nightlyAutoPause.cron // "cron(0 0 * * ? *)"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "cron(0 0 * * ? *)")
 
-.PHONY: pause-dev resume-dev resume-dev-minimal status-dev status-staging status-env status-% ops-pause-dev ops-resume-dev ops-pause-staging ops-resume-staging ops-pause-env ops-resume-env ops-pause-% ops-resume-% dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-% rights-recovery-global rights-recovery-global-apply rights-validate-activation rights-recovery-macro rights-recovery-macro-apply
+.PHONY: pause-dev resume-dev resume-dev-full resume-dev-minimal status-dev status-staging status-env status-% ops-pause-dev ops-resume-dev ops-pause-staging ops-resume-staging ops-pause-env ops-resume-env ops-pause-% ops-resume-% dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-% rights-recovery-global rights-recovery-global-apply rights-validate-activation rights-recovery-macro rights-recovery-macro-apply
 .PHONY: status-ops-permissions hotfix-ops-pause-status hotfix-ops-pause-status-% hotfix-ops-pause-cleanup hotfix-ops-pause-cleanup-% db-migrate-staging-dry-run db-migrate-staging-local
 
 pause-dev:
@@ -44,11 +44,27 @@ pause-dev:
 	@$(MAKE) ops-pause-dev
 
 resume-dev:
-	@echo "Resuming dev (CDK deploy with devPaused=false)"
+	@echo "Resuming dev in minimal infra mode (default low-cost baseline)"
 	@cd infrastructure/cdk && \
 			export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)" SHARED_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
 			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
-			npx cdk deploy -c env=dev -c devPaused=false \
+			npx cdk deploy -c env=dev -c devPaused=false -c devMinimalInfra=true \
+				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c opsResumeRuleAllowlist="$(OPS_RESUME_RULE_ALLOWLIST)" \
+				-c purgeQueuesOnResume="$(PURGE_QUEUES_ON_RESUME)" \
+				-c purgeQueueAllowlist="$(PURGE_QUEUE_ALLOWLIST)" \
+				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
+				-c devNightlyPauseTimezone="$(DEV_NIGHTLY_PAUSE_TIMEZONE)" \
+				-c devNightlyPauseCron="$(DEV_NIGHTLY_PAUSE_CRON)" \
+				--require-approval never
+	@$(MAKE) ops-resume-dev
+
+resume-dev-full:
+	@echo "Resuming dev with full infra footprint"
+	@cd infrastructure/cdk && \
+			export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)" SHARED_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
+			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
+			npx cdk deploy -c env=dev -c devPaused=false -c devMinimalInfra=false \
 				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
 				-c opsResumeRuleAllowlist="$(OPS_RESUME_RULE_ALLOWLIST)" \
 				-c purgeQueuesOnResume="$(PURGE_QUEUES_ON_RESUME)" \

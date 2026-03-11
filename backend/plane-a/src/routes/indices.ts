@@ -1250,7 +1250,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       return response
     } catch (error) {
       logger.error('indices_latest_failed', {
-        corridor_id: corridorId,
+        corridor_id: normalizedCorridorId,
         error: error instanceof Error ? error.message : String(error),
       })
       reply.code(500)

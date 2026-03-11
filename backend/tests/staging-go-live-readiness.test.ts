@@ -34,6 +34,11 @@ const buildBaseEnv = (): NodeJS.ProcessEnv => ({
   NEW_RELIC_ACCOUNT_ID: '7756888',
   NEW_RELIC_REGION: 'US',
   NEW_RELIC_INGEST_KEY: 'nr_ingest_staging_key',
+  NEW_RELIC_STAGING_AWS_MODE: 'push_only',
+  NEW_RELIC_PROD_AWS_MODE: 'otlp_only',
+  NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '1',
+  NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: 'AWS/SQS,AWS/ECS,AWS/Lambda,AWS/Events',
+  NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0',
   NEW_RELIC_STAGING_AWS_ACCOUNT_ID: '123456789012',
   NEW_RELIC_PROD_AWS_ACCOUNT_ID: '210987654321',
   NEW_RELIC_STAGING_AWS_ROLE_ARN: 'arn:aws:iam::123456789012:role/new-relic-staging',
@@ -50,7 +55,7 @@ const buildBaseEnv = (): NodeJS.ProcessEnv => ({
   TRACING_EXPORTER: 'otlp',
   OTEL_EXPORTER_OTLP_ENDPOINT: 'https://otlp.nr-data.net',
   OTEL_EXPORTER_OTLP_HEADERS: 'api-key=nr_ingest_staging_key',
-  NEW_RELIC_LOGS_ENABLED: '1',
+  NEW_RELIC_LOGS_ENABLED: '0',
   ADMIN_IP_ALLOWLIST: '203.0.113.10/32',
   READ_ONLY_MODE: '0',
   ADMIN_MFA_REQUIRED: '1',
@@ -117,6 +122,29 @@ describe('staging go-live readiness policy', () => {
 
     expect(evaluation.policyViolations).toContain(
       'PLANE_A_DOMAIN_NAME and PLANE_A_CERT_ARN must be configured together',
+    )
+  })
+
+  it('blocks drifted New Relic cost-control settings', () => {
+    const evaluation = evaluateStagingGoLiveReadiness({
+      ...buildBaseEnv(),
+      NEW_RELIC_STAGING_AWS_MODE: 'push_pull',
+      NEW_RELIC_LOGS_ENABLED: '1',
+      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '1',
+      NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: 'AWS/SQS,AWS/ECS',
+    })
+
+    expect(evaluation.policyViolations).toContain(
+      'NEW_RELIC_STAGING_AWS_MODE must be "push_only" in staging',
+    )
+    expect(evaluation.policyViolations).toContain(
+      'NEW_RELIC_LOGS_ENABLED must be "0" in staging to keep CloudWatch as source of truth',
+    )
+    expect(evaluation.policyViolations).toContain(
+      'NEW_RELIC_AWS_LOG_FORWARDING_ENABLED must be "0" in staging',
+    )
+    expect(evaluation.policyViolations).toContain(
+      'NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES must be exactly AWS/SQS, AWS/ECS, AWS/Lambda, AWS/Events',
     )
   })
 })

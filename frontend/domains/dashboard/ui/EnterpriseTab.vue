@@ -825,7 +825,7 @@ function scrollToSection(id: string) {
         </div>
         <div class="px-8 py-5">
           <div class="text-2xl font-semibold tabular-nums text-white">{{ corridorCatalogCount }}</div>
-          <div class="mt-1 text-xs text-white/70">Corridors</div>
+          <div class="mt-1 text-xs text-white/70">Corridor Catalog</div>
         </div>
         <div class="px-8 py-5">
           <div class="text-2xl font-semibold tabular-nums text-white">{{ delayedExportJobs.length }}</div>
@@ -1173,7 +1173,7 @@ function scrollToSection(id: string) {
                       {{ selectedEmbedCorridor ? corridorTitle(selectedEmbedCorridor) : manualEmbedCorridorId }}
                     </div>
                     <div class="mt-0.5 text-xs text-rs-muted">
-                      {{ selectedEmbedCorridor ? `${selectedEmbedCorridor.corridorId} · ${corridorSubtitle(selectedEmbedCorridor)}` : 'Manual ID' }}
+                      {{ selectedEmbedCorridor ? corridorSubtitle(selectedEmbedCorridor) : 'Manual ID' }}
                     </div>
                   </div>
                   <button
@@ -1322,7 +1322,7 @@ function scrollToSection(id: string) {
             >
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="text-sm font-medium text-rs-fg">{{ embed.title }}</div>
+                  <div class="text-sm font-medium text-rs-fg">{{ formatPublishedEmbedTitle(embed.title) }}</div>
                   <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-rs-muted">
                     <span class="rounded bg-neutral-100 px-1.5 py-0.5 font-medium">{{ embed.surfaceKind === 'pulse' ? 'Pulse' : 'Indices' }}</span>
                     <span>{{ formatDate(embed.publishedAt) }}</span>
@@ -1537,7 +1537,7 @@ function scrollToSection(id: string) {
                 >
                   <div>
                     <div class="text-sm font-medium text-rs-fg">{{ corridorTitle(corridor) }}</div>
-                    <div class="mt-0.5 text-xs text-rs-muted">{{ corridor.corridorId }} · {{ corridor.sourceCurrency }}/{{ corridor.destCurrency }}</div>
+                    <div class="mt-0.5 text-xs text-rs-muted">{{ corridor.sourceCurrency }}/{{ corridor.destCurrency }} · {{ corridorSubtitle(corridor) }}</div>
                   </div>
                   <button
                     type="button"

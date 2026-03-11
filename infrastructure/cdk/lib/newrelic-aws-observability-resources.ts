@@ -28,16 +28,28 @@ export type NewRelicAwsObservabilityResources = {
 const completeSecretArnPattern =
   /^arn:aws[a-zA-Z-]*:secretsmanager:[^:]+:\d{12}:secret:[^:]+-[A-Za-z0-9]{6}$/
 
-const metricNamespaces = [
-  'AWS/ApiGateway',
-  'AWS/SQS',
-  'AWS/RDS',
-  'AWS/ECS',
-  'AWS/ApplicationELB',
-  'AWS/Lambda',
-  'AWS/Events',
-  'AWS/ElastiCache',
-] as const
+const DEFAULT_METRIC_NAMESPACES: Record<string, readonly string[]> = {
+  staging: ['AWS/SQS', 'AWS/ECS', 'AWS/Lambda', 'AWS/Events'],
+  prod: ['AWS/SQS', 'AWS/ECS', 'AWS/Lambda', 'AWS/Events'],
+}
+
+const resolveMetricNamespaces = (envName: string): string[] => {
+  const raw = (process.env.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '').trim()
+  if (raw) {
+    const namespaces = raw
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    if (namespaces.length === 0) {
+      throw new Error('NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES must contain at least one namespace when set.')
+    }
+    return namespaces
+  }
+
+  const defaults = DEFAULT_METRIC_NAMESPACES[envName]
+  if (defaults) return [...defaults]
+  return ['AWS/SQS', 'AWS/ECS', 'AWS/Lambda', 'AWS/Events']
+}
 
 const normalizeNewRelicRegion = (value?: string): 'US' | 'EU' => (
   value?.trim().toUpperCase() === 'EU' ? 'EU' : 'US'
@@ -202,6 +214,7 @@ export const createNewRelicAwsObservabilityResources = (
 
   const isProd = options.envName === 'prod'
   const newRelicRegion = normalizeNewRelicRegion(process.env.NEW_RELIC_REGION)
+  const metricNamespaces = resolveMetricNamespaces(options.envName)
   const metricsEndpoint = newRelicRegion === 'EU'
     ? 'https://aws-api.eu01.nr-data.net/cloudwatch-metrics/v1'
     : 'https://aws-api.newrelic.com/cloudwatch-metrics/v1'

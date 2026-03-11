@@ -26,8 +26,13 @@ describe('DashboardSignedIn alerts tab', () => {
   })
 
   const openAlertModal = vi.fn()
+  const requestMock = vi.fn()
+  const ensureAdminSessionMock = vi.fn()
+  const exchangeAdminSessionMock = vi.fn()
   const isPlusRef = ref(false)
   const isEnterpriseRef = ref(false)
+  const authIsAdminRef = ref(false)
+  const authUserRef = ref({ name: 'Omar', email: 'omar@example.com', isAdmin: false })
   const storedPlanCodeRef = ref<'free' | 'plus' | 'enterprise'>('free')
   const planStatusRef = ref('active')
   const planLifecycleStateRef = ref('active')
@@ -44,8 +49,16 @@ describe('DashboardSignedIn alerts tab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     route.query.tab = 'alerts'
+    requestMock.mockReset()
+    requestMock.mockResolvedValue({})
+    ensureAdminSessionMock.mockReset()
+    ensureAdminSessionMock.mockResolvedValue(true)
+    exchangeAdminSessionMock.mockReset()
+    exchangeAdminSessionMock.mockResolvedValue('admin_token')
     isPlusRef.value = false
     isEnterpriseRef.value = false
+    authIsAdminRef.value = false
+    authUserRef.value = { name: 'Omar', email: 'omar@example.com', isAdmin: false }
     storedPlanCodeRef.value = 'free'
     planStatusRef.value = 'active'
     planLifecycleStateRef.value = 'active'
@@ -82,11 +95,15 @@ describe('DashboardSignedIn alerts tab', () => {
     })
 
     ;(globalThis as any).useAuth = () => ({
-      user: ref({ name: 'Omar', email: 'omar@example.com', isAdmin: false }),
+      user: authUserRef,
       isAuthenticated: ref(true),
-      isAdmin: ref(false),
+      isAdmin: authIsAdminRef,
       updatePasswordWithCurrent: vi.fn().mockResolvedValue({ ok: true }),
       listMfaFactors: vi.fn().mockResolvedValue([]),
+    })
+    ;(globalThis as any).useAdminSession = () => ({
+      ensureAdminSession: ensureAdminSessionMock,
+      exchangeAdminSession: exchangeAdminSessionMock,
     })
     ;(globalThis as any).useProviderVisits = () => ({
       pendingVisits: ref([]),
@@ -148,7 +165,7 @@ describe('DashboardSignedIn alerts tab', () => {
       error: vi.fn(),
     })
     ;(globalThis as any).useApi = () => ({
-      request: vi.fn().mockResolvedValue({}),
+      request: requestMock,
     })
     ;(globalThis as any).useRecentSearches = () => ({
       data: ref({ data: [] }),
@@ -230,6 +247,7 @@ describe('DashboardSignedIn alerts tab', () => {
     delete (globalThis as any).useSessions
     delete (globalThis as any).useMe
     delete (globalThis as any).useEntitlements
+    delete (globalThis as any).useAdminSession
     delete (globalThis as any).useBilling
     delete (globalThis as any).useExports
     delete (globalThis as any).useDataExport

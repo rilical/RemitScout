@@ -208,8 +208,10 @@ export const parseRemitlyPayload = (
     parse_flags.push(qualityFlags.parse_error)
   }
 
-  const promotionalFeeAmount = Number.isFinite(feeDiscountAmount) && feeDiscountAmount > 0
-    ? feeDiscountAmount
+  const promotionalFeeAmount = Number.isFinite(feeAmount)
+    && Number.isFinite(feeDiscountAmount)
+    && feeDiscountAmount > 0
+    ? Math.max(feeAmount - feeDiscountAmount, 0)
     : null
 
   // Determine delivery time based on payment method heuristic

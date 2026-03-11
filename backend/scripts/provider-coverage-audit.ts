@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto'
 
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
+import { resolveDbConnectionStringForIpv4 } from '../shared/db-ipv4'
 import { createLogger } from '../shared/logger'
 import { initTracing } from '../shared/tracing'
 import { initErrorTracking } from '../shared/error-tracker'
@@ -338,7 +339,7 @@ export const runProviderCoverageAudit = async (
   ensureDir(certificationDir)
   ensureDir(applyDir)
 
-  const pool = createPool(config.db.planeBUrl)
+  const pool = createPool(await resolveDbConnectionStringForIpv4(config.db.planeBUrl, logger))
   const correlationId = options.runId
   const applyProviderSet = new Set(options.applyProviders.map(normalizeLower))
   const discoveryResults = new Map<string, DiscoveryResult>()

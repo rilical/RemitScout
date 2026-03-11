@@ -3,6 +3,7 @@ import { computed, isRef, unref } from 'vue'
 import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
 import type { paths } from '~/shared/lib/api/types'
 import { getProviderScore } from '~/lib/providerScores'
+import { formatExchangeRateLabel } from '~/lib/exchangeRateFormat'
 import { useApi } from '~/composables/useApi'
 import { getCountryByCode } from '~/utils/countries-currencies'
 import { shouldCacheProviderSuccess } from '~/utils/providerMethodSemantics'
@@ -426,7 +427,7 @@ export const useRemittanceApi = () => {
   }
 
   const formatRate = (rate: number, from = 'USD', to = 'PHP') => {
-    return `1 ${from} -> ${rate.toFixed(2)} ${to}`
+    return formatExchangeRateLabel(rate, from, to)
   }
 
   const getRelativeTime = (date: string) => {

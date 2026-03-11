@@ -17,6 +17,7 @@ export type CloudWatchMetricInput = {
   namespace?: string
   dimensions?: Record<string, string>
   highCardinality?: boolean
+  mirrorToNewRelic?: boolean
 }
 
 const logger = createLogger('shared.cloudwatch-metrics')
@@ -133,6 +134,7 @@ const mirrorMetricToNewRelic = (
   metric: CloudWatchMetricInput,
   resolvedNamespace: string,
 ): void => {
+  if (metric.mirrorToNewRelic === false) return
   if (!shouldMirrorToNewRelic(resolvedNamespace) || !isNewRelicMetricExportEnabled()) return
 
   enqueueNewRelicMetric({

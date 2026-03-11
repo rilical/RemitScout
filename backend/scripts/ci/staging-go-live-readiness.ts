@@ -40,6 +40,9 @@ const REQUIRED_KEYS: Requirement[] = [
   { key: 'NEW_RELIC_ACCOUNT_ID', description: 'New Relic account ID' },
   { key: 'NEW_RELIC_REGION', description: 'New Relic region (US/EU)' },
   { key: 'NEW_RELIC_INGEST_KEY', description: 'New Relic ingest key for logs/spans' },
+  { key: 'NEW_RELIC_STAGING_AWS_MODE', description: 'Required staging AWS cloud-link mode (push_only)' },
+  { key: 'NEW_RELIC_PROD_AWS_MODE', description: 'Required prod AWS cloud-link mode (otlp_only)' },
+  { key: 'NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES', description: 'Explicit staging New Relic AWS metric namespace allowlist' },
   { key: 'NEW_RELIC_STAGING_AWS_ACCOUNT_ID', description: 'Staging AWS account ID pinned for verify-signals' },
   { key: 'NEW_RELIC_PROD_AWS_ACCOUNT_ID', description: 'Prod AWS account ID pinned for verify-signals parity' },
   { key: 'NEW_RELIC_STAGING_AWS_ROLE_ARN', description: 'Staging AWS role ARN for New Relic cloud-link sync' },
@@ -92,11 +95,11 @@ const isMissing = (value: string) => value.length === 0
 
 export const normalizeNewRelicAwsMode = (value: string) => {
   const normalized = value.trim().toLowerCase()
-  if (!normalized) return 'push_pull'
+  if (!normalized) return ''
   if (['push_pull', 'push+pull', 'all'].includes(normalized)) return 'push_pull'
   if (['push_only', 'push'].includes(normalized)) return 'push_only'
   if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
-  return 'push_pull'
+  return ''
 }
 
 const looksLikeSlackWebhookPlaceholder = (value: string) =>
@@ -373,9 +376,39 @@ export const evaluateStagingGoLiveReadiness = (
     policyViolations.push('TRACING_EXPORTER must include otlp in staging for New Relic span export')
   }
 
+  if (stagingNewRelicAwsMode !== 'push_only') {
+    policyViolations.push('NEW_RELIC_STAGING_AWS_MODE must be "push_only" in staging')
+  }
+  if (prodNewRelicAwsMode !== 'otlp_only') {
+    policyViolations.push('NEW_RELIC_PROD_AWS_MODE must be "otlp_only" in staging readiness')
+  }
+
   const logsEnabled = readEnvValue(env, 'NEW_RELIC_LOGS_ENABLED').toLowerCase()
-  if (logsEnabled && FALSE_VALUES.has(logsEnabled)) {
-    policyViolations.push('NEW_RELIC_LOGS_ENABLED must not disable New Relic logs in staging')
+  if (!logsEnabled || !FALSE_VALUES.has(logsEnabled)) {
+    policyViolations.push('NEW_RELIC_LOGS_ENABLED must be "0" in staging to keep CloudWatch as source of truth')
+  }
+
+  const metricStreamEnabled = readEnvValue(env, 'NEW_RELIC_AWS_METRIC_STREAM_ENABLED').toLowerCase()
+  if (FALSE_VALUES.has(metricStreamEnabled)) {
+    policyViolations.push('NEW_RELIC_AWS_METRIC_STREAM_ENABLED must stay enabled in staging')
+  }
+
+  const logForwardingEnabled = readEnvValue(env, 'NEW_RELIC_AWS_LOG_FORWARDING_ENABLED').toLowerCase()
+  if (!logForwardingEnabled || !FALSE_VALUES.has(logForwardingEnabled)) {
+    policyViolations.push('NEW_RELIC_AWS_LOG_FORWARDING_ENABLED must be "0" in staging')
+  }
+
+  const metricNamespaces = new Set(
+    splitCsv(readEnvValue(env, 'NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES')),
+  )
+  const requiredMetricNamespaces = ['AWS/SQS', 'AWS/ECS', 'AWS/Lambda', 'AWS/Events']
+  if (
+    metricNamespaces.size !== requiredMetricNamespaces.length
+    || requiredMetricNamespaces.some(namespace => !metricNamespaces.has(namespace))
+  ) {
+    policyViolations.push(
+      `NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES must be exactly ${requiredMetricNamespaces.join(', ')}`,
+    )
   }
 
   if (triangulationEnabled) {

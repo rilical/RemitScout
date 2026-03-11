@@ -17,9 +17,6 @@
  *   pnpm tsx backend/scripts/e2e-agent-health-check.ts --lookback-hours=2
  */
 
-import dns from 'node:dns'
-import { lookup } from 'node:dns/promises'
-import net from 'node:net'
 import {
   CloudWatchClient,
   GetMetricDataCommand,
@@ -27,6 +24,10 @@ import {
 } from '@aws-sdk/client-cloudwatch'
 
 import { createPool } from '../shared/db'
+import {
+  resolveDbConnectionStringForIpv4,
+  rewriteDbConnectionStringForIpv4,
+} from '../shared/db-ipv4'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 
@@ -42,22 +43,6 @@ const LOOKBACK_HOURS = Number(process.env.AGENT_HEALTH_LOOKBACK_HOURS) ||
   Number(process.argv.find((a) => a.startsWith('--lookback-hours='))?.split('=')[1]) || 1
 const AGENT_METRIC_NAMESPACE = 'RemitScout/Agents'
 const DETECTION_CYCLE_METRIC = 'detection_cycle_count'
-const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on'])
-
-type ConnectionHostSource = 'host' | 'hostname' | 'hostaddr'
-type ConnectionHostCandidate = {
-  source: ConnectionHostSource
-  value: string
-}
-type Ipv4RewriteResult = {
-  connectionString: string
-  originalHost: string
-  resolvedHost: string
-  source: ConnectionHostSource
-}
-type ResolveIpv4Address = (hostname: string) => Promise<string | null>
-const HOSTLESS_SENTINEL = '__remit_scout_hostless__'
-
 const resolveEnvironmentName = () => {
   const value = (config.envName || config.env || process.env.ENVIRONMENT || process.env.NODE_ENV || '').trim()
   if (!value) return 'dev'
@@ -67,142 +52,15 @@ const resolveEnvironmentName = () => {
   return normalized
 }
 
-const shouldForceIpv4DbConnection = () => {
-  const explicitFlag = (process.env.DB_FORCE_IPV4 || '').trim().toLowerCase()
-  if (explicitFlag) {
-    return TRUE_VALUES.has(explicitFlag)
-  }
-  return process.env.GITHUB_ACTIONS === 'true'
-}
-
-const normalizeHostCandidate = (value: string | null | undefined) =>
-  (value || '').trim().replace(/^\[|\]$/g, '')
-
-const collectConnectionHostCandidates = (parsed: URL): ConnectionHostCandidate[] => {
-  const candidates: ConnectionHostCandidate[] = [
-    { source: 'host', value: normalizeHostCandidate(parsed.searchParams.get('host')) },
-    { source: 'hostname', value: normalizeHostCandidate(parsed.hostname) },
-    { source: 'hostaddr', value: normalizeHostCandidate(parsed.searchParams.get('hostaddr')) },
-  ]
-  const seen = new Set<string>()
-
-  return candidates.filter((candidate) => {
-    if (!candidate.value || candidate.value === HOSTLESS_SENTINEL) return false
-    const dedupeKey = `${candidate.source}:${candidate.value.toLowerCase()}`
-    if (seen.has(dedupeKey)) return false
-    seen.add(dedupeKey)
-    return true
-  })
-}
-
-const parseConnectionString = (connectionString: string) => {
-  try {
-    return new URL(connectionString)
-  } catch {
-    if (!connectionString.includes('@/')) {
-      throw new TypeError('Invalid URL')
-    }
-    return new URL(connectionString.replace('@/', `@${HOSTLESS_SENTINEL}/`))
-  }
-}
-
-const applyResolvedHost = (parsed: URL, resolvedHost: string) => {
-  if (parsed.searchParams.has('host')) {
-    parsed.searchParams.set('host', resolvedHost)
-  }
-  if (parsed.searchParams.has('hostaddr')) {
-    parsed.searchParams.set('hostaddr', resolvedHost)
-  }
-  if (parsed.hostname) {
-    parsed.hostname = resolvedHost
-  }
-  return parsed.toString()
-}
-
-const defaultResolveIpv4Address: ResolveIpv4Address = async (hostname) => {
-  const resolved = await lookup(hostname, { family: 4 })
-  return resolved.address || null
-}
-
-export const rewriteDbConnectionStringForIpv4 = async (
-  connectionString: string,
-  resolveIpv4Address: ResolveIpv4Address = defaultResolveIpv4Address,
-): Promise<Ipv4RewriteResult | null> => {
-  if (!connectionString) {
-    return null
-  }
-
-  const parsed = parseConnectionString(connectionString)
-  const candidates = collectConnectionHostCandidates(parsed)
-
-  for (const candidate of candidates) {
-    if (candidate.value === 'localhost') {
-      return null
-    }
-
-    if (net.isIP(candidate.value) === 4) {
-      const rewritten = applyResolvedHost(parsed, candidate.value)
-      if (rewritten === connectionString) {
-        return null
-      }
-      return {
-        connectionString: rewritten,
-        originalHost: candidate.value,
-        resolvedHost: candidate.value,
-        source: candidate.source,
-      }
-    }
-
-    if (net.isIP(candidate.value) === 6) {
-      continue
-    }
-
-    const resolvedHost = await resolveIpv4Address(candidate.value)
-    if (!resolvedHost) {
-      continue
-    }
-
-    return {
-      connectionString: applyResolvedHost(parsed, resolvedHost),
-      originalHost: candidate.value,
-      resolvedHost,
-      source: candidate.source,
-    }
-  }
-
-  return null
-}
-
 const resolvePlaneBDbConnectionString = async () => {
-  const connectionString = config.db.planeBUrl
-  if (!connectionString || !shouldForceIpv4DbConnection()) {
-    return connectionString
-  }
-
-  try {
-    dns.setDefaultResultOrder('ipv4first')
-  } catch {
-    // Ignore on runtimes that do not support result-order overrides.
-  }
-
-  try {
-    const rewritten = await rewriteDbConnectionStringForIpv4(connectionString)
-    if (!rewritten) {
-      return connectionString
-    }
-
-    logger.info('agent_health_db_ipv4_resolved', {
-      originalHost: rewritten.originalHost,
-      resolvedHost: rewritten.resolvedHost,
-      source: rewritten.source,
-    })
-    return rewritten.connectionString
-  } catch (error) {
-    logger.warn('agent_health_db_ipv4_resolution_failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-    return connectionString
-  }
+  return resolveDbConnectionStringForIpv4(config.db.planeBUrl, {
+    info(event, payload) {
+      logger.info(`agent_health_${event}`, payload)
+    },
+    warn(event, payload) {
+      logger.warn(`agent_health_${event}`, payload)
+    },
+  })
 }
 
 const loadDetectionCycleMetricCount = async (): Promise<number> => {

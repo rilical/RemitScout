@@ -9,8 +9,8 @@ class="relative"
         ref="inputRef"
         v-model="searchQuery"
         type="text"
-        class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
-        :class="selectClass"
+        class="h-12 w-full rounded-lg border border-neutral-300 bg-surface pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
+        :class="[selectClass, selectedFlagVisible ? 'pl-11' : 'pl-4']"
         :placeholder="placeholder"
         :aria-label="ariaLabel"
         role="combobox"
@@ -28,6 +28,13 @@ class="relative"
         @click="handleClick"
         @keydown="handleKeydown"
       >
+      <div
+        v-if="selectedFlagVisible"
+        class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4"
+        aria-hidden="true"
+      >
+        <span class="text-lg leading-none">{{ selectedCountry?.flag }}</span>
+      </div>
       <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
         <svg
           :class="[
@@ -220,7 +227,15 @@ const activeDescendant = computed(() => {
 
 const getOptionId = (value: string) => `${resolvedId.value}-option-${value.toLowerCase()}`
 
-const getSelectedCountry = () => allCountries.value.find(country => country.value === props.modelValue)
+const selectedCountry = computed(() =>
+  allCountries.value.find(country => country.value === props.modelValue) ?? null,
+)
+
+const getSelectedCountry = () => selectedCountry.value
+
+const selectedFlagVisible = computed(() =>
+  props.showFlags && !isOpen.value && selectedCountry.value !== null,
+)
 
 const getAvailableCountries = () => {
   if (!props.excludeCountry) return allCountries.value

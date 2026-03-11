@@ -1262,7 +1262,8 @@ class="text-current"
             </div>
             <button
               type="submit"
-              class="text-body-sm inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-brand-700"
+              class="text-body-sm inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="newWatchlistInvalid"
             >
               <Icon
 name="plus"
@@ -1331,13 +1332,14 @@ class="text-neutral-300"
                 </div>
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center rounded-lg border border-rs-border p-2 text-neutral-400 opacity-0 hover:border-danger-600 hover:bg-danger-600 hover:text-danger-600 group-hover:opacity-100 motion-safe:transition-opacity"
+                  class="inline-flex items-center justify-center rounded-lg border border-transparent bg-neutral-100 p-2 text-neutral-500 transition-colors hover:border-danger-200 hover:bg-danger-50 hover:text-danger-700"
                   :aria-label="`Remove ${item.target.from} to ${item.target.to} from watchlist`"
                   @click="openDeleteWatchlistModal(item)"
                 >
                   <Icon
 name="trash"
 :size="16"
+variant="solid"
 class="text-current"
 />
                 </button>
@@ -1609,12 +1611,13 @@ aria-live="polite"
               </button>
               <button
                 type="button"
-                class="text-body-sm inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-surface px-4 py-2.5 font-semibold text-neutral-700 transition-colors hover:border-neutral-400 hover:bg-neutral-50"
+                class="text-body-sm inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-4 py-2.5 font-semibold text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100"
                 @click="openAlert(item)"
               >
                 <Icon
 name="bell-alert"
 :size="16"
+variant="solid"
 class="text-current"
 />
                 Set Alert
@@ -2800,11 +2803,11 @@ class="text-current"
 
       <!-- Ops Tab -->
       <div v-else-if="activeTab === 'ops'">
-        <div class="mb-6 flex flex-col gap-4">
-          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h2 class="text-body-lg font-semibold text-rs-fg">Ops Health</h2>
-              <p class="text-body-sm text-rs-muted">
+      <div class="mb-6 flex flex-col gap-4">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h2 class="text-body-lg font-semibold text-rs-fg">Ops Health</h2>
+            <p class="text-body-sm text-rs-muted">
                 Admin-only health probes for provider pipelines.
               </p>
             </div>
@@ -2817,6 +2820,12 @@ class="text-current"
               {{ opsRefreshing ? 'Refreshing...' : 'Refresh All' }}
             </button>
           </div>
+          <p
+            v-if="opsAdminSessionError"
+            class="text-body-sm rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-warning-700"
+          >
+            {{ opsAdminSessionError }}
+          </p>
         </div>
 
         <!-- Provider Health List -->
@@ -4831,6 +4840,7 @@ import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { mapPlanStateFailureMessage } from '~/composables/usePlanStateError'
 import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
 import EnterpriseTab from '~/domains/dashboard/ui/EnterpriseTab.vue'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 type DashboardTab
   = | 'overview'
@@ -4986,6 +4996,7 @@ const accountDeleting = computed(() => accountApi.deleting.value)
 const modal = useSaveAlertModal()
 const toast = useToast()
 const { request } = useApi()
+const { ensureAdminSession, exchangeAdminSession } = useAdminSession()
 const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, {
   watch: [],
 })
@@ -5755,6 +5766,7 @@ const opsAuditLoading = ref(false)
 const opsAuditError = ref<string | null>(null)
 const opsAuditLogs = ref<OpsAuditLog[]>([])
 const opsAuditHasLoaded = ref(false)
+const opsAdminSessionError = ref<string | null>(null)
 
 const opsRefreshing = computed(() => opsProviders.some(provider => opsLoading.value[provider.id]))
 
@@ -5957,6 +5969,49 @@ const attemptStatusClass = (success: boolean | null) => {
   return 'text-neutral-400'
 }
 
+const applyOpsSurfaceError = (message: string) => {
+  opsErrors.value = buildOpsRecord(() => message)
+  telemetryError.value = message
+  opsAnalyticsError.value = message
+  opsAuditError.value = message
+}
+
+const ensureOpsConsoleSession = async () => {
+  if (!hasAdminAccess.value) {
+    return false
+  }
+
+  opsAdminSessionError.value = null
+
+  try {
+    const ready = await ensureAdminSession()
+    if (ready) {
+      return true
+    }
+  }
+  catch {
+    // Fall through to an explicit exchange so the UI can surface the real denial reason.
+  }
+
+  try {
+    const exchanged = await exchangeAdminSession()
+    if (exchanged) {
+      return true
+    }
+  }
+  catch (error) {
+    const message = getAdminApiErrorMessage(error, 'Admin session is required to view ops data.')
+    opsAdminSessionError.value = message
+    applyOpsSurfaceError(message)
+    return false
+  }
+
+  const fallback = 'Admin session is required to view ops data.'
+  opsAdminSessionError.value = fallback
+  applyOpsSurfaceError(fallback)
+  return false
+}
+
 const toOpsErrorMessage = (error: unknown) => {
   const candidate = error as {
     statusCode?: number
@@ -5966,10 +6021,13 @@ const toOpsErrorMessage = (error: unknown) => {
   }
   const status = candidate?.statusCode ?? candidate?.status
   if (status === 401 || status === 403) {
-    return 'Admin access required to view ops data.'
+    return getAdminApiErrorMessage(error, 'Admin access required to view ops data.')
   }
   if (status === 404) {
     return 'Endpoint not found — check BFF proxy allowlist and backend route registration.'
+  }
+  if ((status ?? 0) >= 500) {
+    return getAdminApiErrorMessage(error, 'Service temporarily unavailable.')
   }
   const detail = candidate?.data?.message ?? candidate?.data?.error
   if (detail) return detail
@@ -6077,10 +6135,11 @@ const opsPrivacyThresholdSummary = computed(() => {
   return `k>=${opsAnalyticsPrivacy.value?.minUniqueUsers ?? 5}, ${meta.minDatapoints24h} datapoints/24h, ${meta.minProviderQuotesPerCorridor} quotes/corridor, ${meta.minTrendLookbackDays}d trends`
 })
 
-const loadOpsHealth = async (providerId: OpsProviderId) => {
+const loadOpsHealth = async (providerId: OpsProviderId, options: { skipSessionBootstrap?: boolean } = {}) => {
   const provider = opsProviders.find(item => item.id === providerId)
   if (!provider) return
   if (opsLoading.value[providerId]) return
+  if (!options.skipSessionBootstrap && !(await ensureOpsConsoleSession())) return
   opsLoading.value[providerId] = true
   opsErrors.value[providerId] = null
   try {
@@ -6097,7 +6156,8 @@ const loadOpsHealth = async (providerId: OpsProviderId) => {
 
 const refreshAllOps = async () => {
   opsHasLoaded.value = true
-  await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id)))
+  if (!(await ensureOpsConsoleSession())) return
+  await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id, { skipSessionBootstrap: true })))
   opsLastRefreshedAt.value = new Date().toISOString()
 }
 
@@ -6111,6 +6171,10 @@ const handleAdminPlanGrant = async () => {
   adminPlanError.value = null
   adminPlanSuccess.value = null
   try {
+    if (!(await ensureOpsConsoleSession())) {
+      adminPlanError.value = opsAdminSessionError.value || 'Admin session is required to manage plans.'
+      return
+    }
     await request('/admin/plans/grant', {
       method: 'POST',
       body: {
@@ -6139,6 +6203,7 @@ const buildOpsDateRange = (days: number) => {
 
 const loadTelemetryAnalytics = async (signal?: AbortSignal) => {
   if (telemetryLoading.value) return
+  if (!(await ensureOpsConsoleSession())) return
   telemetryHasLoaded.value = true
   telemetryLoading.value = true
   telemetryError.value = null
@@ -6164,6 +6229,7 @@ const loadTelemetryAnalytics = async (signal?: AbortSignal) => {
 
 const loadOpsAnalytics = async () => {
   if (opsAnalyticsLoading.value) return
+  if (!(await ensureOpsConsoleSession())) return
   opsAnalyticsHasLoaded.value = true
   opsAnalyticsLoading.value = true
   opsAnalyticsError.value = null
@@ -6246,6 +6312,7 @@ const loadOpsAnalytics = async () => {
 
 const loadOpsAudit = async () => {
   if (opsAuditLoading.value) return
+  if (!(await ensureOpsConsoleSession())) return
   opsAuditHasLoaded.value = true
   opsAuditLoading.value = true
   opsAuditError.value = null
@@ -6286,6 +6353,7 @@ watch(
       void loadOpsAudit()
     }
   },
+  { immediate: true },
 )
 
 useAbortableWatch([() => telemetryMetric.value, () => telemetryHours.value], async (_, signal) => {
@@ -6330,6 +6398,11 @@ useAbortableWatch(
 type CorridorSelection = { from: string, to: string }
 
 const newWatchlist = ref<CorridorSelection>({ from: '', to: '' })
+const newWatchlistInvalid = computed(() => {
+  const from = (newWatchlist.value.from || '').trim().toUpperCase()
+  const to = (newWatchlist.value.to || '').trim().toUpperCase()
+  return !from || !to || from === to
+})
 const graphTimeframe = ref('7d')
 
 // Rate Checker state
@@ -7814,6 +7887,10 @@ async function handleAddWatchlist() {
   const from = (newWatchlist.value.from || '').trim().toUpperCase()
   const to = (newWatchlist.value.to || '').trim().toUpperCase()
   if (!from || !to) return
+  if (from === to) {
+    toast.error('Choose two different countries for a watchlist corridor.')
+    return
+  }
 
   const target: WatchTarget = {
     type: 'corridor',

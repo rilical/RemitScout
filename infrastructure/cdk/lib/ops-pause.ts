@@ -1,6 +1,6 @@
 import path from 'path'
 
-import { Duration, Tags } from 'aws-cdk-lib'
+import { Duration, Stack, Tags } from 'aws-cdk-lib'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
@@ -19,6 +19,7 @@ export type OpsPauseOptions = {
   clusterName: string
   ecsServiceNames: string[]
   ecsBaselineDesired: Record<string, number>
+  queueWorkerScalableTargetResourceIds?: string[]
   eventRulePrefix: string
   eventRuleAllowlist?: string[]
   eventRuleResumeAllowlist?: string[]
@@ -92,6 +93,9 @@ export const createOpsPause = (
       ECS_CLUSTER_NAME: options.clusterName,
       ECS_SERVICES_PARAM_NAME: ecsServicesParam.parameterName,
       ECS_BASELINE_PARAM_NAME: ecsBaselineParam.parameterName,
+      QUEUE_WORKER_SCALABLE_TARGETS_JSON: Stack.of(scope).toJsonString(
+        options.queueWorkerScalableTargetResourceIds ?? [],
+      ),
       EVENT_RULE_PREFIX: options.eventRulePrefix,
       EVENT_RULE_ALLOWLIST: JSON.stringify(options.eventRuleAllowlist ?? []),
       EVENT_RULE_RESUME_ALLOWLIST: JSON.stringify(

@@ -621,9 +621,12 @@ jobs:
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
       NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '1' }}
-      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '1' }}
-      NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+      NEW_RELIC_STAGING_AWS_MODE: push_only
+      NEW_RELIC_PROD_AWS_MODE: otlp_only
+      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '1'
+      NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: AWS/SQS,AWS/ECS,AWS/Lambda,AWS/Events
+      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
+      NEW_RELIC_LOGS_ENABLED: '0'
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
       NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -881,12 +884,19 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && \
+             [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && \
+             [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-}" != "otlp_only" ] && \
+             { [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; }; then
+            echo "Missing NEW_RELIC_PROD_AWS_ACCOUNT_ID / NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
           if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
@@ -894,8 +904,9 @@ jobs:
             echo "Missing NEW_RELIC_INGEST_KEY_SECRET_ARN for New Relic AWS metric/log streaming."
             exit 1
           fi
-          if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
-            echo "NEW_RELIC_LOGS_ENABLED must not be 0 in staging/prod deploys."
+          if [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] && \
+             [ -z "${NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES:-}" ]; then
+            echo "Missing NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES for explicit staging metric stream allowlisting."
             exit 1
           fi
           if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ] && \
@@ -921,9 +932,15 @@ jobs:
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_LOGS_ENABLED: '0'
+          NEW_RELIC_STAGING_AWS_MODE: push_only
+          NEW_RELIC_PROD_AWS_MODE: otlp_only
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '1'
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: AWS/SQS,AWS/ECS,AWS/Lambda,AWS/Events
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
+          NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: |
           set -euo pipefail
@@ -1831,7 +1848,12 @@ jobs:
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_LOGS_ENABLED: '0'
+          NEW_RELIC_STAGING_AWS_MODE: push_only
+          NEW_RELIC_PROD_AWS_MODE: otlp_only
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '1'
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: AWS/SQS,AWS/ECS,AWS/Lambda,AWS/Events
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -1842,12 +1864,12 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
             exit 1
           fi
           set +e
@@ -1859,10 +1881,10 @@ jobs:
           cloud_links_ec=$?
           NEW_RELIC_TARGET_ENV=staging \
           REQUIRE_ACCOUNT_PINNING=1 \
-          REQUIRE_LOGS=1 \
+          REQUIRE_LOGS=0 \
           REQUIRE_SPANS=1 \
           REQUIRE_CUSTOM_METRICS=0 \
-          REQUIRE_API_GW_METRICS=1 \
+          REQUIRE_API_GW_METRICS=0 \
           REQUIRE_SQS_METRICS=1 \
           node ops/newrelic/verify-signals.mjs
           verify_ec=$?
@@ -1896,6 +1918,14 @@ jobs:
             fi
             exit 1
           fi
+
+      - name: Verify ECS task images (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          pnpm -C backend exec tsx scripts/ci/verify-ecs-task-images.ts
 
       - name: Record Last-known-good Image (staging)
         shell: bash
@@ -1980,9 +2010,11 @@ jobs:
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
       NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '1' }}
-      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '1' }}
-      NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+      NEW_RELIC_STAGING_AWS_MODE: push_only
+      NEW_RELIC_PROD_AWS_MODE: otlp_only
+      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '0'
+      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
+      NEW_RELIC_LOGS_ENABLED: '1'
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
       NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -2315,12 +2347,19 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && \
+             { [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; }; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID / NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-}" != "otlp_only" ] && \
+             [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_PROD_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-}" != "otlp_only" ] && \
+             [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
           if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
@@ -2329,7 +2368,7 @@ jobs:
             exit 1
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
-            echo "NEW_RELIC_LOGS_ENABLED must not be 0 in staging/prod deploys."
+            echo "NEW_RELIC_LOGS_ENABLED must not be 0 in prod deploys."
             exit 1
           fi
           if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ] && \
@@ -2355,8 +2394,13 @@ jobs:
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_LOGS_ENABLED: '1'
+          NEW_RELIC_STAGING_AWS_MODE: push_only
+          NEW_RELIC_PROD_AWS_MODE: otlp_only
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '0'
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
+          NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: pnpm -C backend ci:observability
@@ -2945,7 +2989,11 @@ jobs:
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_LOGS_ENABLED: '1'
+          NEW_RELIC_STAGING_AWS_MODE: push_only
+          NEW_RELIC_PROD_AWS_MODE: otlp_only
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '0'
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -2963,8 +3011,8 @@ jobs:
           REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
-          REQUIRE_API_GW_METRICS=1 \
-          REQUIRE_SQS_METRICS=1 \
+          REQUIRE_API_GW_METRICS=0 \
+          REQUIRE_SQS_METRICS=0 \
           node ops/newrelic/verify-signals.mjs
           verify_ec=$?
           set -e
@@ -2998,6 +3046,14 @@ jobs:
             fi
             exit 1
           fi
+
+      - name: Verify ECS task images (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          pnpm -C backend exec tsx scripts/ci/verify-ecs-task-images.ts
 
       - name: Record Last-known-good Image (prod)
         shell: bash

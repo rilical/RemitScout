@@ -158,4 +158,25 @@ describe('cloudwatch metrics', () => {
     }))
     expect(sendMock).not.toHaveBeenCalled()
   })
+
+  it('keeps opted-out metrics out of New Relic while preserving CloudWatch publish', async () => {
+    isNewRelicMetricExportEnabledMock.mockReturnValue(true)
+
+    recordCloudWatchMetric({
+      name: 'db_query_duration_seconds',
+      value: 0.25,
+      unit: 'Seconds',
+      namespace: 'RemitScout',
+      dimensions: {
+        environment: 'staging',
+        operation: 'SELECT',
+      },
+      mirrorToNewRelic: false,
+    })
+
+    await flushCloudWatchMetrics()
+
+    expect(enqueueNewRelicMetricMock).not.toHaveBeenCalled()
+    expect(sendMock).toHaveBeenCalledTimes(1)
+  })
 })

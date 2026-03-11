@@ -483,4 +483,50 @@ describe('providers indices gating', () => {
     })
     expect(result.data[0]?.methods).toEqual(['bank'])
   })
+
+  it('does not fall back to bank quotes when the request asks for cash', async () => {
+    mockListActiveB2cProvidersByCountry.mockResolvedValue([{ provider_id: 'westernunion' }])
+    mockListByCorridor.mockResolvedValue([
+      {
+        provider_id: 'westernunion',
+        corridor_id: 'US-AL-USD-ALL',
+        payout_methods: ['bank_deposit', 'cash_pickup'],
+        is_supported: true,
+      },
+    ])
+    mockListLatestByCorridorAllMethods.mockResolvedValue([
+      buildQuote({
+        provider_id: 'westernunion',
+        payout: 'BANK',
+        payout_method: 'bank_deposit',
+      }),
+    ])
+
+    const handler = (vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
+
+    const mockRequest: Partial<FastifyRequest> = {
+      query: {
+        corridor_id: 'US-AL-USD-ALL',
+        amount_bucket: 500,
+        method: 'cash',
+        live: true,
+      },
+    }
+
+    const result = await handler(mockRequest, mockReply)
+
+    expect(result.supportedMethods).toEqual(['bank', 'cash'])
+    expect(result.availableMethodsByProvider).toEqual({
+      westernunion: ['bank'],
+    })
+    expect(result.data).toEqual([])
+    expect(result.excludedProviders).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ provider: 'westernunion', reason: 'method_mismatch' }),
+      ]),
+    )
+  })
 })

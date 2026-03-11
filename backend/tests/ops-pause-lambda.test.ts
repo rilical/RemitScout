@@ -6,6 +6,7 @@ const mockSqsSend = vi.fn()
 const mockSsmSend = vi.fn()
 const mockRdsSend = vi.fn()
 const mockElastiCacheSend = vi.fn()
+const mockAutoScalingSend = vi.fn()
 const mockRecordCloudWatchMetric = vi.fn()
 const mockLogger = {
   info: vi.fn(),
@@ -51,6 +52,11 @@ vi.mock('@aws-sdk/client-elasticache', () => ({
   DescribeReplicationGroupsCommand: vi.fn().mockImplementation((input) => ({ __name: 'DescribeReplicationGroupsCommand', input })),
 }))
 
+vi.mock('@aws-sdk/client-application-auto-scaling', () => ({
+  ApplicationAutoScalingClient: vi.fn().mockImplementation(() => ({ send: mockAutoScalingSend })),
+  DescribeScalableTargetsCommand: vi.fn().mockImplementation((input) => ({ __name: 'DescribeScalableTargetsCommand', input })),
+}))
+
 vi.mock('@aws-sdk/client-ssm', () => ({
   SSMClient: vi.fn().mockImplementation(() => ({ send: mockSsmSend })),
   GetParameterCommand: vi.fn().mockImplementation((input) => ({ __name: 'GetParameterCommand', input })),
@@ -72,6 +78,7 @@ type RuntimeMocksOptions = {
   initialDesiredCounts?: Record<string, number>
   mutableDesiredCounts?: boolean
   purgeFailures?: Record<string, Error>
+  scalableTargetStates?: Record<string, { inSuspended?: boolean; outSuspended?: boolean; scheduledSuspended?: boolean }>
 }
 
 const RULE_NAME = 'remit-scout-dev-b2b-sweep-scheduler'
@@ -91,6 +98,7 @@ const setBaseEnv = (overrides: Record<string, string | undefined> = {}): void =>
     ECS_CLUSTER_NAME: 'remit-scout-dev',
     ECS_SERVICES_JSON: JSON.stringify([SERVICE_NAME]),
     ECS_BASELINE_JSON: JSON.stringify({ [SERVICE_NAME]: 2 }),
+    QUEUE_WORKER_SCALABLE_TARGETS_JSON: '[]',
     EVENT_RULE_PREFIX: 'remit-scout-dev-',
     EVENT_RULE_ALLOWLIST: JSON.stringify(['b2b-sweep-scheduler']),
     PURGE_QUEUES_ON_RESUME: '1',
@@ -112,6 +120,7 @@ const setupRuntimeMocks = (options: RuntimeMocksOptions = {}): void => {
     initialDesiredCounts = { [SERVICE_NAME]: 0 },
     mutableDesiredCounts = true,
     purgeFailures = {},
+    scalableTargetStates = {},
   } = options
   const ruleStates = { ...initialRuleStates }
   const desiredCounts = { ...initialDesiredCounts }
@@ -120,6 +129,24 @@ const setupRuntimeMocks = (options: RuntimeMocksOptions = {}): void => {
   mockSsmSend.mockImplementation(async () => ({}))
   mockRdsSend.mockImplementation(async () => ({}))
   mockElastiCacheSend.mockImplementation(async () => ({}))
+  mockAutoScalingSend.mockImplementation(async (command: { __name: string; input: { ResourceIds?: string[] } }) => {
+    if (command.__name === 'DescribeScalableTargetsCommand') {
+      return {
+        ScalableTargets: (command.input.ResourceIds ?? []).map((resourceId) => {
+          const state = scalableTargetStates[resourceId] ?? {}
+          return {
+            ResourceId: resourceId,
+            SuspendedState: {
+              DynamicScalingInSuspended: state.inSuspended ?? false,
+              DynamicScalingOutSuspended: state.outSuspended ?? false,
+              ScheduledScalingSuspended: state.scheduledSuspended ?? false,
+            },
+          }
+        }),
+      }
+    }
+    return {}
+  })
 
   mockEventsSend.mockImplementation(async (command: { __name: string; input: Record<string, string> }) => {
     if (command.__name === 'ListRulesCommand') {
@@ -327,5 +354,28 @@ describe('ops-pause-lambda', () => {
       name: 'ops_pause_drift_detected',
       value: expect.any(Number),
     }))
+  })
+
+  it('fails staging resume when queue worker scalable targets remain suspended', async () => {
+    process.env = {
+      ...process.env,
+      ENVIRONMENT: 'staging',
+      QUEUE_WORKER_SCALABLE_TARGETS_JSON: JSON.stringify([
+        'service/remit-scout-staging/IngestFanoutTier2WorkerService',
+      ]),
+    }
+    setupRuntimeMocks({
+      scalableTargetStates: {
+        'service/remit-scout-staging/IngestFanoutTier2WorkerService': {
+          inSuspended: true,
+        },
+      },
+    })
+
+    const handler = await loadHandler()
+
+    await expect(handler({ paused: false })).rejects.toThrow(
+      'Queue worker scalable targets remain suspended outside pause mode',
+    )
   })
 })

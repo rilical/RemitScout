@@ -71,6 +71,9 @@ jobs:
       - name: Generate evidence.json
         env:
           ENVIRONMENT: ${{ inputs.env }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          DB_FORCE_IPV4: '1'
+          SUPABASE_SESSION_POOLER_HOST: aws-0-us-west-2.pooler.supabase.com
           CASE_ID: ${{ inputs.case_id }}
           DISPATCH_ID: ${{ inputs.dispatch_id }}
           CAPABILITY_PROBE_TIERS: ${{ inputs.tiers }}

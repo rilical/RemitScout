@@ -1,6 +1,6 @@
 import { computed, isReadonly, ref, watch, type Ref } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { getCountryByCode, BASE_CURRENCIES } from '~/utils/countries-currencies'
+import { getCountryByCode, getCountryCurrencies } from '~/utils/countries-currencies'
 
 type CorridorCurrencyPair = {
   fromCurrency: string
@@ -18,6 +18,13 @@ type CorridorCurrencyResponse = {
 const normalize = (value?: string) => (value || '').trim().toUpperCase()
 
 const unique = (values: string[]) => Array.from(new Set(values))
+const sortCurrencies = (values: string[], fallback: string) =>
+  unique(values.filter(Boolean).map(normalize)).sort((a, b) => {
+    if (a === fallback) return -1
+    if (b === fallback) return 1
+    return a.localeCompare(b)
+  })
+
 const setCurrencyValue = (target: Ref<string> | undefined, value: string) => {
   if (!target || isReadonly(target)) return
   target.value = value
@@ -39,16 +46,18 @@ export const useCorridorCurrencies = (
     const country = getCountryByCode(normalize(fromCountry.value))
     return country?.currency ? country.currency.toUpperCase() : ''
   })
+  const fromCountryCurrencies = computed(() => getCountryCurrencies(normalize(fromCountry.value)))
 
   const toFallback = computed(() => {
     const country = getCountryByCode(normalize(toCountry.value))
     return country?.currency ? country.currency.toUpperCase() : ''
   })
+  const toCountryCurrencies = computed(() => getCountryCurrencies(normalize(toCountry.value)))
 
   const resetWithFallback = () => {
     pairs.value = []
-    fromCurrencies.value = fromFallback.value ? [fromFallback.value] : []
-    toCurrencies.value = toFallback.value ? [toFallback.value] : []
+    fromCurrencies.value = fromCountryCurrencies.value
+    toCurrencies.value = toCountryCurrencies.value
   }
 
   const load = async () => {
@@ -73,8 +82,8 @@ export const useCorridorCurrencies = (
         retries: 0,
       })
       pairs.value = Array.isArray(data.pairs) ? data.pairs : []
-      fromCurrencies.value = Array.isArray(data.fromCurrencies) ? data.fromCurrencies : []
-      toCurrencies.value = Array.isArray(data.toCurrencies) ? data.toCurrencies : []
+      fromCurrencies.value = Array.isArray(data.fromCurrencies) ? data.fromCurrencies.map(normalize) : []
+      toCurrencies.value = Array.isArray(data.toCurrencies) ? data.toCurrencies.map(normalize) : []
     }
     catch {
       resetWithFallback()
@@ -108,24 +117,9 @@ export const useCorridorCurrencies = (
       result.push(...fromCurrencies.value)
     }
 
-    // Always include major currencies
-    result.push(...BASE_CURRENCIES)
+    result.push(...fromCountryCurrencies.value)
 
-    // Add fallback currency if available
-    if (fromFallback.value) {
-      result.push(fromFallback.value)
-    }
-
-    // Get unique list
-    const uniqueList = unique(result)
-
-    // Sort: fallback first, then alphabetically
-    const sorted = uniqueList.sort((a, b) => {
-      if (a === fromFallback.value) return -1
-      if (b === fromFallback.value) return 1
-      return a.localeCompare(b)
-    })
-
+    const sorted = sortCurrencies(result, fromFallback.value)
     return sorted.length ? sorted : (fromFallback.value ? [fromFallback.value] : [])
   })
 
@@ -149,24 +143,9 @@ export const useCorridorCurrencies = (
       result.push(...toCurrencies.value)
     }
 
-    // Always include major currencies
-    result.push(...BASE_CURRENCIES)
+    result.push(...toCountryCurrencies.value)
 
-    // Add fallback currency if available
-    if (toFallback.value) {
-      result.push(toFallback.value)
-    }
-
-    // Get unique list
-    const uniqueList = unique(result)
-
-    // Sort: fallback first, then alphabetically
-    const sorted = uniqueList.sort((a, b) => {
-      if (a === toFallback.value) return -1
-      if (b === toFallback.value) return 1
-      return a.localeCompare(b)
-    })
-
+    const sorted = sortCurrencies(result, toFallback.value)
     return sorted.length ? sorted : (toFallback.value ? [toFallback.value] : [])
   })
 

@@ -34,7 +34,7 @@
   "stressResponderDesiredCount": 1,
   "normalizationWorkerDesiredCount": 1,
   "planeBQueueWorkerDesiredCount": 1,
-  "planeBQueueWorkerMaxCount": 3,
+  "planeBQueueWorkerMaxCount": 6,
   "opsResumeRuleAllowlist": [
     "b2c-retry-failed",
     "alert-evaluation-worker",

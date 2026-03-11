@@ -175,9 +175,12 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
           NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_LOGS_ENABLED: '0'
+          NEW_RELIC_STAGING_AWS_MODE: push_only
+          NEW_RELIC_PROD_AWS_MODE: otlp_only
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '1'
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: AWS/SQS,AWS/ECS,AWS/Lambda,AWS/Events
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -216,9 +219,12 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
           NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_LOGS_ENABLED: '0'
+          NEW_RELIC_STAGING_AWS_MODE: push_only
+          NEW_RELIC_PROD_AWS_MODE: otlp_only
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '1'
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: AWS/SQS,AWS/ECS,AWS/Lambda,AWS/Events
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
         run: pnpm -C backend ci:observability
 
@@ -231,13 +237,16 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
           NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_STAGING_AWS_MODE: push_only
+          NEW_RELIC_PROD_AWS_MODE: otlp_only
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_LOGS_ENABLED: '0'
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '1'
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: AWS/SQS,AWS/ECS,AWS/Lambda,AWS/Events
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
         run: |
           set -euo pipefail
           node ops/newrelic/bootstrap-dashboards.mjs
@@ -245,9 +254,9 @@ jobs:
           node ops/newrelic/sync-cloud-links.mjs
           NEW_RELIC_TARGET_ENV=staging \
           REQUIRE_ACCOUNT_PINNING=1 \
-          REQUIRE_LOGS=1 \
+          REQUIRE_LOGS=0 \
           REQUIRE_SPANS=1 \
-          REQUIRE_API_GW_METRICS=1 \
+          REQUIRE_API_GW_METRICS=0 \
           REQUIRE_SQS_METRICS=1 \
           node ops/newrelic/verify-signals.mjs
 
@@ -709,8 +718,8 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_STAGING_AWS_MODE: push_only
+          NEW_RELIC_PROD_AWS_MODE: otlp_only
           OBS_GATE_WINDOW_MINUTES: '1440'
         run: |
           set -euo pipefail

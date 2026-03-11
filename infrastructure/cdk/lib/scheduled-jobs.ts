@@ -369,7 +369,7 @@ export const createScheduledJobs = (
   const tracingExporter = resolvedTracingEnv.TRACING_EXPORTER ?? 'xray'
   const newRelicLogsEnabled =
     process.env.NEW_RELIC_LOGS_ENABLED ??
-    (options.envName === 'staging' || options.envName === 'prod' ? '1' : '0')
+    (options.envName === 'prod' ? '1' : '0')
   const tracingEnv: Record<string, string> = {
     ...resolvedTracingEnv,
     TRACING_EXPORTER: tracingExporter,
@@ -2607,7 +2607,7 @@ const createPlaneBLambdaJob = ({
     tracingEnv.TRACING_EXPORTER ?? (isDev ? 'none' : 'xray')
   const newRelicLogsEnabled =
     process.env.NEW_RELIC_LOGS_ENABLED ??
-    (options.envName === 'staging' || options.envName === 'prod' ? '1' : '0')
+    (options.envName === 'prod' ? '1' : '0')
   const tracingMode =
     tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
   const environment: Record<string, string> = {
@@ -2728,7 +2728,7 @@ const createPlaneCLambdaJob = ({
     tracingEnv.TRACING_EXPORTER ?? (isDev ? 'none' : 'xray')
   const newRelicLogsEnabled =
     process.env.NEW_RELIC_LOGS_ENABLED ??
-    (options.envName === 'staging' || options.envName === 'prod' ? '1' : '0')
+    (options.envName === 'prod' ? '1' : '0')
   const tracingMode =
     tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
   const environment: Record<string, string> = {

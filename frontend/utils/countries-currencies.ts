@@ -215,14 +215,35 @@ export function getCurrencyInfo(code: string): Currency | undefined {
   return CURRENCIES[code]
 }
 
-// Helper to get available currencies for a country
-// Always includes USD, GBP, EUR plus the country's native currency
-export function getAvailableCurrencies(countryCode: string): string[] {
-  const country = getCountryByCode(countryCode)
-  if (!country) return BASE_CURRENCIES
+export function getCountryCurrencies(countryCode: string): string[] {
+  const normalizedCountryCode = countryCode.trim().toUpperCase()
+  const country = getCountryByCode(normalizedCountryCode)
+  if (!country) return []
 
-  const currencies = new Set([...BASE_CURRENCIES, country.currency])
-  return Array.from(currencies)
+  const currencies = new Set<string>()
+
+  Object.values(CURRENCIES).forEach((currency) => {
+    if (currency.countries.includes(normalizedCountryCode)) {
+      currencies.add(currency.code.toUpperCase())
+    }
+  })
+
+  if (country.currency) {
+    currencies.add(country.currency.toUpperCase())
+  }
+
+  return Array.from(currencies).sort((a, b) => {
+    if (a === country.currency) return -1
+    if (b === country.currency) return 1
+    return a.localeCompare(b)
+  })
+}
+
+// Helper to get available currencies for a country.
+// When a country is selected, keep the list strict to currencies mapped to that country.
+export function getAvailableCurrencies(countryCode: string): string[] {
+  const countryCurrencies = getCountryCurrencies(countryCode)
+  return countryCurrencies.length > 0 ? countryCurrencies : BASE_CURRENCIES
 }
 
 // Get currency display name

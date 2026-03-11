@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { rewriteDbConnectionStringForIpv4 } from '../scripts/e2e-agent-health-check'
+import { rewriteDbConnectionStringForIpv4 } from '../shared/db-ipv4'
 
 describe('rewriteDbConnectionStringForIpv4', () => {
   it('rewrites an authority hostname to a resolved ipv4 address', async () => {
@@ -49,5 +49,52 @@ describe('rewriteDbConnectionStringForIpv4', () => {
     )
 
     expect(result).toBeNull()
+  })
+
+  it('falls back to the Supabase session pooler when the direct host is ipv6-only', async () => {
+    process.env.AWS_REGION = 'us-east-1'
+
+    const result = await rewriteDbConnectionStringForIpv4(
+      'postgres://postgres:pass@db.eztsaeuskuaqczgutdew.supabase.co:5432/postgres?sslmode=require',
+      vi.fn().mockRejectedValue(new Error('getaddrinfo ENOTFOUND db.eztsaeuskuaqczgutdew.supabase.co')),
+    )
+
+    expect(result).not.toBeNull()
+    expect(result?.originalHost).toBe('db.eztsaeuskuaqczgutdew.supabase.co')
+    expect(result?.resolvedHost).toBe('aws-0-us-east-1.pooler.supabase.com')
+    expect(result?.connectionString).toContain('@aws-0-us-east-1.pooler.supabase.com:5432/postgres')
+    expect(result?.connectionString).toContain('postgres.eztsaeuskuaqczgutdew')
+
+    delete process.env.AWS_REGION
+  })
+
+  it('respects an explicit Supabase session pooler host override', async () => {
+    process.env.SUPABASE_SESSION_POOLER_HOST = 'aws-0-us-west-2.pooler.supabase.com'
+
+    const result = await rewriteDbConnectionStringForIpv4(
+      'postgres://postgres:pass@db.eztsaeuskuaqczgutdew.supabase.co:5432/postgres',
+      vi.fn().mockRejectedValue(new Error('getaddrinfo ENOTFOUND db.eztsaeuskuaqczgutdew.supabase.co')),
+    )
+
+    expect(result?.resolvedHost).toBe('aws-0-us-west-2.pooler.supabase.com')
+    expect(result?.connectionString).toContain('@aws-0-us-west-2.pooler.supabase.com:5432/postgres')
+
+    delete process.env.SUPABASE_SESSION_POOLER_HOST
+  })
+
+  it('rewrites query-param usernames for Supabase session pooler connections', async () => {
+    process.env.SUPABASE_SESSION_POOLER_HOST = 'aws-0-us-west-2.pooler.supabase.com'
+
+    const result = await rewriteDbConnectionStringForIpv4(
+      'postgres://:@db.eztsaeuskuaqczgutdew.supabase.co:5432/postgres?user=postgres&password=pass&sslmode=require',
+      vi.fn().mockRejectedValue(new Error('getaddrinfo ENOTFOUND db.eztsaeuskuaqczgutdew.supabase.co')),
+    )
+
+    expect(result).not.toBeNull()
+    const parsed = new URL(result!.connectionString)
+    expect(parsed.searchParams.get('user')).toBe('postgres.eztsaeuskuaqczgutdew')
+    expect(parsed.hostname).toBe('aws-0-us-west-2.pooler.supabase.com')
+
+    delete process.env.SUPABASE_SESSION_POOLER_HOST
   })
 })

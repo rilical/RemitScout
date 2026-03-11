@@ -12,8 +12,8 @@
  * - NEW_RELIC_WINDOW_MINUTES (default 60)
  * - NEW_RELIC_STAGING_AWS_ACCOUNT_ID (optional AWS account scoping)
  * - NEW_RELIC_PROD_AWS_ACCOUNT_ID (optional AWS account scoping)
- * - NEW_RELIC_STAGING_AWS_MODE (push_pull|push_only|otlp_only, default push_pull)
- * - NEW_RELIC_PROD_AWS_MODE (push_pull|push_only|otlp_only, default push_pull)
+ * - NEW_RELIC_STAGING_AWS_MODE (push_pull|push_only|otlp_only, default push_only)
+ * - NEW_RELIC_PROD_AWS_MODE (push_pull|push_only|otlp_only, default otlp_only)
  * - REQUIRE_ACCOUNT_PINNING (0|1, default 1)
  * - REQUIRE_LOGS (0|1, default 1)
  * - REQUIRE_SPANS (0|1, default 1)
@@ -45,8 +45,8 @@ const normalizeNewRelicAwsMode = (value, fallback = 'push_pull') => {
   if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
   throw new Error(`Unsupported New Relic AWS mode: ${value}`)
 }
-const NEW_RELIC_STAGING_AWS_MODE = normalizeNewRelicAwsMode(process.env.NEW_RELIC_STAGING_AWS_MODE, 'push_pull')
-const NEW_RELIC_PROD_AWS_MODE = normalizeNewRelicAwsMode(process.env.NEW_RELIC_PROD_AWS_MODE, 'push_pull')
+const NEW_RELIC_STAGING_AWS_MODE = normalizeNewRelicAwsMode(process.env.NEW_RELIC_STAGING_AWS_MODE, 'push_only')
+const NEW_RELIC_PROD_AWS_MODE = normalizeNewRelicAwsMode(process.env.NEW_RELIC_PROD_AWS_MODE, 'otlp_only')
 
 const requireAccountPinning = process.env.REQUIRE_ACCOUNT_PINNING !== '0'
 const requireLogs = process.env.REQUIRE_LOGS !== '0'

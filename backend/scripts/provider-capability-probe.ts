@@ -1,5 +1,6 @@
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
+import { resolveDbConnectionStringForIpv4 } from '../shared/db-ipv4'
 import { createLogger } from '../shared/logger'
 import { initTracing } from '../shared/tracing'
 import { resolveProviderSupport } from '../plane-b/src/services/provider-capability'
@@ -120,7 +121,7 @@ export const runProviderCapabilityProbe = async (
   options: ProviderCapabilityProbeOptions = {},
 ): Promise<CapabilityProbeProviderReport[]> => {
   const probeConfig = readConfig(options)
-  const pool = options.pool ?? createPool(config.db.planeBUrl)
+  const pool = options.pool ?? createPool(await resolveDbConnectionStringForIpv4(config.db.planeBUrl, logger))
   const ownsPool = !options.pool
   try {
     const tierCorridors = await loadTierCorridors(pool, probeConfig.targetTiers)

@@ -191,7 +191,7 @@ export const createEcsTasks = (
   }
   const tracingExporter = tracingEnv.TRACING_EXPORTER ?? 'xray'
   const newRelicLogsEnabled =
-    process.env.NEW_RELIC_LOGS_ENABLED ?? (isStaging || isProd ? '1' : '0')
+    process.env.NEW_RELIC_LOGS_ENABLED ?? (isProd ? '1' : '0')
   const enableTelemetry = process.env.ENABLE_TELEMETRY === '1'
   const image = ContainerImage.fromEcrRepository(options.backendRepository, options.imageTag)
   const useTsxRuntime = options.envName === 'dev' && process.env.ECS_USE_TSX_RUNTIME === '1'

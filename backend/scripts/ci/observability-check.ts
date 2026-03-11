@@ -29,22 +29,50 @@ const boolFromEnv = (value: string | undefined, fallback: boolean): boolean => {
   return normalized !== '0' && normalized !== 'false' && normalized !== 'off' && normalized !== 'no'
 }
 
-const normalizeNewRelicAwsMode = (value: string | undefined, fallback: 'push_pull' | 'push_only' | 'otlp_only') => {
+const normalizeNewRelicAwsMode = (
+  value: string | undefined,
+  name: string,
+): 'push_pull' | 'push_only' | 'otlp_only' | null => {
   const normalized = (value || '').trim().toLowerCase()
-  if (!normalized) return fallback
+  if (!normalized) {
+    missing.push(`${name} (required in strict env)`)
+    return null
+  }
   if (['push_pull', 'push+pull', 'all'].includes(normalized)) return 'push_pull'
   if (['push_only', 'push'].includes(normalized)) return 'push_only'
   if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
-  missing.push(`Unsupported New Relic AWS mode: ${value}`)
-  return fallback
+  missing.push(`${name} (unsupported New Relic AWS mode: ${value})`)
+  return null
+}
+
+const normalizeNamespaces = (value: string | undefined): string[] =>
+  String(value || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
+
+const REQUIRED_STAGING_METRIC_STREAM_NAMESPACES = [
+  'AWS/SQS',
+  'AWS/ECS',
+  'AWS/Lambda',
+  'AWS/Events',
+]
+
+const haveSameNamespaceSet = (actual: string[], expected: string[]): boolean => {
+  if (actual.length !== expected.length) return false
+  const actualSet = new Set(actual)
+  return expected.every(namespace => actualSet.has(namespace))
 }
 
 if (isStrictEnv) {
-  const newRelicAwsMode = runtimeEnv === 'staging'
-    ? normalizeNewRelicAwsMode(process.env.NEW_RELIC_STAGING_AWS_MODE, 'push_pull')
-    : runtimeEnv === 'prod'
-      ? normalizeNewRelicAwsMode(process.env.NEW_RELIC_PROD_AWS_MODE, 'push_pull')
-      : 'push_pull'
+  const stagingNewRelicAwsMode = normalizeNewRelicAwsMode(
+    process.env.NEW_RELIC_STAGING_AWS_MODE,
+    'NEW_RELIC_STAGING_AWS_MODE',
+  )
+  const prodNewRelicAwsMode = normalizeNewRelicAwsMode(
+    process.env.NEW_RELIC_PROD_AWS_MODE,
+    'NEW_RELIC_PROD_AWS_MODE',
+  )
 
   requireValue(process.env.SENTRY_DSN, 'SENTRY_DSN')
   requireValue(process.env.NEW_RELIC_ACCOUNT_ID, 'NEW_RELIC_ACCOUNT_ID')
@@ -52,15 +80,31 @@ if (isStrictEnv) {
   requireValue(process.env.NEW_RELIC_INGEST_KEY, 'NEW_RELIC_INGEST_KEY')
   requireValue(process.env.NEW_RELIC_USER_API_KEY, 'NEW_RELIC_USER_API_KEY (required for verify-signals hard gate)')
 
-  if (runtimeEnv === 'staging' && newRelicAwsMode !== 'otlp_only') {
+  if (stagingNewRelicAwsMode !== 'push_only') {
+    missing.push('NEW_RELIC_STAGING_AWS_MODE (must be push_only in strict env)')
+  }
+  if (prodNewRelicAwsMode !== 'otlp_only') {
+    missing.push('NEW_RELIC_PROD_AWS_MODE (must be otlp_only in strict env)')
+  }
+
+  if (stagingNewRelicAwsMode && stagingNewRelicAwsMode !== 'otlp_only') {
     requireValue(
       process.env.NEW_RELIC_STAGING_AWS_ACCOUNT_ID,
       'NEW_RELIC_STAGING_AWS_ACCOUNT_ID',
     )
-  } else if (runtimeEnv === 'prod' && newRelicAwsMode !== 'otlp_only') {
+    requireValue(
+      process.env.NEW_RELIC_STAGING_AWS_ROLE_ARN,
+      'NEW_RELIC_STAGING_AWS_ROLE_ARN',
+    )
+  }
+  if (prodNewRelicAwsMode && prodNewRelicAwsMode !== 'otlp_only') {
     requireValue(
       process.env.NEW_RELIC_PROD_AWS_ACCOUNT_ID,
       'NEW_RELIC_PROD_AWS_ACCOUNT_ID',
+    )
+    requireValue(
+      process.env.NEW_RELIC_PROD_AWS_ROLE_ARN,
+      'NEW_RELIC_PROD_AWS_ROLE_ARN',
     )
   }
 
@@ -84,10 +128,45 @@ if (isStrictEnv) {
     missing.push('OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY (required for New Relic OTLP)')
   }
 
-  const logsEnabledDefault = runtimeEnv === 'staging' || runtimeEnv === 'prod'
+  const logsEnabledDefault = runtimeEnv === 'prod'
   const logsEnabled = boolFromEnv(process.env.NEW_RELIC_LOGS_ENABLED, logsEnabledDefault)
-  if (!logsEnabled) {
-    missing.push('NEW_RELIC_LOGS_ENABLED (must not be disabled in strict env)')
+  const awsMetricStreamEnabled = boolFromEnv(
+    process.env.NEW_RELIC_AWS_METRIC_STREAM_ENABLED,
+    runtimeEnv === 'staging',
+  )
+  const awsLogForwardingEnabled = boolFromEnv(
+    process.env.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED,
+    false,
+  )
+
+  if (runtimeEnv === 'staging') {
+    if (logsEnabled) {
+      missing.push('NEW_RELIC_LOGS_ENABLED (must be 0 in staging)')
+    }
+    if (!awsMetricStreamEnabled) {
+      missing.push('NEW_RELIC_AWS_METRIC_STREAM_ENABLED (must be 1 in staging)')
+    }
+    if (awsLogForwardingEnabled) {
+      missing.push('NEW_RELIC_AWS_LOG_FORWARDING_ENABLED (must be 0 in staging)')
+    }
+    const namespaces = normalizeNamespaces(process.env.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES)
+    if (!haveSameNamespaceSet(namespaces, REQUIRED_STAGING_METRIC_STREAM_NAMESPACES)) {
+      missing.push(
+        `NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES (must be exactly ${REQUIRED_STAGING_METRIC_STREAM_NAMESPACES.join(',')})`,
+      )
+    }
+  }
+
+  if (runtimeEnv === 'prod') {
+    if (!logsEnabled) {
+      missing.push('NEW_RELIC_LOGS_ENABLED (must be enabled in prod)')
+    }
+    if (awsMetricStreamEnabled) {
+      missing.push('NEW_RELIC_AWS_METRIC_STREAM_ENABLED (must be 0 in prod)')
+    }
+    if (awsLogForwardingEnabled) {
+      missing.push('NEW_RELIC_AWS_LOG_FORWARDING_ENABLED (must be 0 in prod)')
+    }
   }
 
   if (process.env.CLOUDWATCH_METRICS_ENABLED === '0') {

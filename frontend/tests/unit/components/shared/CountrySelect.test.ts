@@ -179,4 +179,22 @@ describe('CountrySelect', () => {
 
     wrapper.unmount()
   })
+
+  it('renders the selected country flag inside the closed input state', async () => {
+    const wrapper = mount(CountrySelect, {
+      attachTo: document.body,
+      props: {
+        id: 'country-select-selected-flag',
+        modelValue: 'DZ',
+        label: 'Receiving in',
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('🇩🇿')
+    expect((wrapper.get('input').element as HTMLInputElement).value).toBe('Algeria')
+
+    wrapper.unmount()
+  })
 })

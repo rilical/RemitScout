@@ -10,7 +10,8 @@
     "watch": "tsc -w",
     "synth": "cdk synth",
     "diff": "cdk diff",
-    "deploy": "cdk deploy"
+    "deploy": "cdk deploy",
+    "test": "node --require ts-node/register --test tests/**/*.test.ts"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.240.0",

@@ -13,50 +13,23 @@
  * Optional env:
  * - NEW_RELIC_REGION (US|EU, default US)
  * - NEW_RELIC_UNLINK_ACCOUNT_IDS (comma-separated linked account IDs)
- * - NEW_RELIC_STAGING_AWS_MODE (push_pull|push_only|otlp_only, default push_pull)
- * - NEW_RELIC_PROD_AWS_MODE (push_pull|push_only|otlp_only, default push_pull)
+ * - NEW_RELIC_STAGING_AWS_MODE (push_pull|push_only|otlp_only, required)
+ * - NEW_RELIC_PROD_AWS_MODE (push_pull|push_only|otlp_only, required)
  */
 
-const NEW_RELIC_USER_API_KEY = process.env.NEW_RELIC_USER_API_KEY || ''
-const NEW_RELIC_ACCOUNT_ID = Number.parseInt(process.env.NEW_RELIC_ACCOUNT_ID || '', 10)
-const NEW_RELIC_REGION = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
-const NEW_RELIC_STAGING_AWS_ROLE_ARN = (process.env.NEW_RELIC_STAGING_AWS_ROLE_ARN || '').trim()
-const NEW_RELIC_PROD_AWS_ROLE_ARN = (process.env.NEW_RELIC_PROD_AWS_ROLE_ARN || '').trim()
-const normalizeAwsMode = (value, fallback = 'push_pull') => {
-  const normalized = String(value || '').trim().toLowerCase()
-  if (!normalized) return fallback
-  if (['push_pull', 'push+pull', 'all'].includes(normalized)) return 'push_pull'
-  if (['push_only', 'push'].includes(normalized)) return 'push_only'
-  if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
-  throw new Error(`Unsupported New Relic AWS mode: ${value}`)
-}
-const NEW_RELIC_STAGING_AWS_MODE = normalizeAwsMode(process.env.NEW_RELIC_STAGING_AWS_MODE, 'push_pull')
-const NEW_RELIC_PROD_AWS_MODE = normalizeAwsMode(process.env.NEW_RELIC_PROD_AWS_MODE, 'push_pull')
-const NEW_RELIC_UNLINK_ACCOUNT_IDS = (process.env.NEW_RELIC_UNLINK_ACCOUNT_IDS || '')
-  .split(',')
-  .map((value) => Number.parseInt(value.trim(), 10))
-  .filter((value) => Number.isFinite(value))
-const NEW_RELIC_REPAIR_DRIFTED_LINKS = process.env.NEW_RELIC_REPAIR_DRIFTED_LINKS === '1'
+import { readCloudLinkConfig } from './cloud-link-config.mjs'
 
-if (!NEW_RELIC_USER_API_KEY) {
-  console.error('Missing NEW_RELIC_USER_API_KEY')
-  process.exit(1)
-}
-
-if (!Number.isFinite(NEW_RELIC_ACCOUNT_ID)) {
-  console.error('Missing/invalid NEW_RELIC_ACCOUNT_ID')
-  process.exit(1)
-}
-
-if (NEW_RELIC_STAGING_AWS_MODE !== 'otlp_only' && !NEW_RELIC_STAGING_AWS_ROLE_ARN) {
-  console.error('Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging AWS-linked New Relic mode')
-  process.exit(1)
-}
-
-if (NEW_RELIC_PROD_AWS_MODE !== 'otlp_only' && !NEW_RELIC_PROD_AWS_ROLE_ARN) {
-  console.error('Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod AWS-linked New Relic mode')
-  process.exit(1)
-}
+const {
+  newRelicUserApiKey: NEW_RELIC_USER_API_KEY,
+  newRelicAccountId: NEW_RELIC_ACCOUNT_ID,
+  newRelicRegion: NEW_RELIC_REGION,
+  stagingAwsRoleArn: NEW_RELIC_STAGING_AWS_ROLE_ARN,
+  prodAwsRoleArn: NEW_RELIC_PROD_AWS_ROLE_ARN,
+  stagingAwsMode: NEW_RELIC_STAGING_AWS_MODE,
+  prodAwsMode: NEW_RELIC_PROD_AWS_MODE,
+  unlinkAccountIds: NEW_RELIC_UNLINK_ACCOUNT_IDS,
+  repairDriftedLinks: NEW_RELIC_REPAIR_DRIFTED_LINKS,
+} = readCloudLinkConfig(process.env)
 
 const ENDPOINT =
   NEW_RELIC_REGION === 'EU'

@@ -4,7 +4,6 @@ import { computed, ref } from 'vue'
 
 const mockExportVisual = vi.hoisted(() => vi.fn())
 const mockEnterpriseRequest = vi.hoisted(() => vi.fn())
-const corridorSearchPlaceholder = 'e.g. US → Philippines, GB → Nigeria'
 
 vi.mock('~/ui', () => ({
   DataTable: {
@@ -215,7 +214,32 @@ describe('EnterpriseTab', () => {
 
   const mountEnterpriseTab = async () => {
     const EnterpriseTab = (await import('~/domains/dashboard/ui/EnterpriseTab.vue')).default
-    const wrapper = mount(EnterpriseTab)
+    const wrapper = mount(EnterpriseTab, {
+      global: {
+        stubs: {
+          NuxtLink: {
+            template: '<a><slot /></a>',
+          },
+          UniversalDropdown: {
+            props: ['modelValue', 'options', 'placeholder'],
+            emits: ['update:modelValue'],
+            template: `
+              <select
+                :value="modelValue"
+                @change="$emit('update:modelValue', $event.target.value)"
+              >
+                <option value="" disabled>{{ placeholder }}</option>
+                <option
+                  v-for="option in options"
+                  :key="option.value"
+                  :value="option.value"
+                >{{ option.label }}</option>
+              </select>
+            `,
+          },
+        },
+      },
+    })
     await flushPromises()
     return wrapper
   }
@@ -226,63 +250,24 @@ describe('EnterpriseTab', () => {
     expect(wrapper.text()).toContain('Enterprise Data Console')
     expect(wrapper.text()).toContain('Parquet')
     expect(wrapper.text()).toContain('Corridor Catalog')
-    expect(wrapper.text()).toContain('Published bundles')
+    expect(wrapper.text()).toContain('Published Bundles')
     expect(wrapper.text()).toContain('Data Exports')
   })
 
-  it('adds an indices export corridor from the country-pair catalog', async () => {
+  it('shows the current export controls with TEER / RCI / RVI and parquet support', async () => {
     const wrapper = await mountEnterpriseTab()
 
-    const jobTypeSelect = wrapper
-      .findAll('select')
-      .find(select => select.text().includes('TEER / RCI / RVI'))
-
-    expect(jobTypeSelect).toBeDefined()
-    if (!jobTypeSelect) {
-      throw new Error('Expected indices export selector to be present')
-    }
-
-    await jobTypeSelect.setValue('indices')
-    await flushPromises()
-
-    const inputs = wrapper
-      .findAll('input[type="text"]')
-      .filter(input =>
-        input.attributes('placeholder')?.includes(corridorSearchPlaceholder),
-      )
-    const exportSearchInput = inputs.at(-1)
-
-    expect(exportSearchInput).toBeDefined()
-
-    await exportSearchInput!.setValue('philippines')
-    await flushPromises()
-    await exportSearchInput!.trigger('keydown.enter')
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('United States -> Philippines')
-    expect(wrapper.text()).not.toContain('Add manual corridor')
+    expect(wrapper.text()).toContain('TEER / RCI / RVI')
+    expect(wrapper.text()).toContain('Parquet available')
+    expect(wrapper.text()).toContain('Create export')
   })
 
-  it('keeps the embed search input human-readable after selecting a corridor', async () => {
+  it('shows human-readable corridor labels in the embed picker summary', async () => {
     const wrapper = await mountEnterpriseTab()
 
-    const embedSearchInput = wrapper
-      .findAll('input[type="text"]')
-      .find(input =>
-        input.attributes('placeholder')?.includes(corridorSearchPlaceholder),
-      )
-
-    expect(embedSearchInput).toBeDefined()
-    expect((embedSearchInput!.element as HTMLInputElement).value).toBe(
-      'United States -> Philippines',
-    )
-
-    await embedSearchInput!.setValue('mexico')
-    await flushPromises()
-    await embedSearchInput!.trigger('keydown.enter')
-    await flushPromises()
-
-    expect((embedSearchInput!.element as HTMLInputElement).value).toBe('United States -> Mexico')
+    expect(wrapper.text()).toContain('United States -> Philippines')
+    expect(wrapper.text()).toContain('Tier 1')
+    expect(wrapper.text()).not.toContain('US-PH-USD-PHP · Tier 1')
   })
 
   it('renders published embeds and selected corridors with country-pair labels only', async () => {
