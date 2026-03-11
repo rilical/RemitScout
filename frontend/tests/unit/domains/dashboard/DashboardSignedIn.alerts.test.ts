@@ -167,6 +167,14 @@ describe('DashboardSignedIn alerts tab', () => {
     ;(globalThis as any).useApi = () => ({
       request: requestMock,
     })
+    ;(globalThis as any).useAdminSession = () => ({
+      ensureAdminSession: vi.fn().mockResolvedValue(true),
+      exchangeAdminSession: vi.fn().mockResolvedValue(true),
+      refreshAdminSession: vi.fn().mockResolvedValue(true),
+      mfaRequired: ref(false),
+      allowlistRequired: ref(false),
+      busy: ref(false),
+    })
     ;(globalThis as any).useRecentSearches = () => ({
       data: ref({ data: [] }),
       pending: ref(false),
@@ -255,6 +263,7 @@ describe('DashboardSignedIn alerts tab', () => {
     delete (globalThis as any).useSaveAlertModal
     delete (globalThis as any).useToast
     delete (globalThis as any).useApi
+    delete (globalThis as any).useAdminSession
     delete (globalThis as any).useRecentSearches
     delete (globalThis as any).useWatchlist
     delete (globalThis as any).useAlerts
