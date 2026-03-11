@@ -3,8 +3,46 @@ import type { Pool } from 'pg'
 
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
-import { VolatilityService } from '../plane-b/src/services/volatility-service'
+import {
+  VolatilityService as SharedVolatilityService,
+  buildCacheTtlResult,
+  type CacheTtlResult,
+} from '../shared/volatility-service'
+import { CorridorVolatilityRepository } from '../plane-b/src/repositories/implementations/corridor-volatility-repository.ts'
 import { describeDbIntegration, withTestTransaction } from './helpers/test-db'
+
+class VolatilityService {
+  private readonly repo: CorridorVolatilityRepository
+  private readonly service: SharedVolatilityService
+
+  constructor(pool: Pool) {
+    this.repo = new CorridorVolatilityRepository(pool)
+    this.service = new SharedVolatilityService(this.repo)
+  }
+
+  getCacheTtlForCorridor(corridorId: string): Promise<CacheTtlResult> {
+    return this.service.getCacheTtlForCorridor(corridorId)
+  }
+
+  async getCacheTtlForCorridors(
+    corridorIds: string[],
+  ): Promise<Map<string, CacheTtlResult>> {
+    const volatilityMap = await this.repo.getVolatilityScores(corridorIds)
+    const resultMap = new Map<string, CacheTtlResult>()
+
+    for (const corridorId of corridorIds) {
+      const record = volatilityMap.get(corridorId)
+      resultMap.set(
+        corridorId,
+        record
+          ? buildCacheTtlResult(record.volatility_score, true)
+          : buildCacheTtlResult(null, false),
+      )
+    }
+
+    return resultMap
+  }
+}
 
 describeDbIntegration('VolatilityService', () => {
   let pool: Pool

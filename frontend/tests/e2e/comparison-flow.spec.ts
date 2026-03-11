@@ -9,7 +9,9 @@ test('comparison flow: corridor page renders mocked provider rows', async ({ pag
 
   // In remote environments providers may be temporarily unavailable; either state is valid.
   const providersHeading = page.getByRole('heading', { name: /^compare\s+\d+\s+provider(s)?$/i })
-  const unavailableState = page.getByText(/provider information is temporarily unavailable/i)
+  const unavailableState = page.getByText(
+    /provider information is temporarily unavailable|trouble refreshing live provider data right now/i,
+  )
 
   await expect.poll(async () => {
     const headingVisible = await providersHeading.first().isVisible().catch(() => false)

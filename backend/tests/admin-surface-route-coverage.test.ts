@@ -17,6 +17,7 @@ const mockEvaluateAlert = vi.hoisted(() => vi.fn())
 const mockEvaluateAlertsForFrequency = vi.hoisted(() => vi.fn())
 const mockLogAuditEvent = vi.hoisted(() => vi.fn())
 const mockGetRequestContext = vi.hoisted(() => vi.fn().mockReturnValue({}))
+const mockGetDiscoveryScanById = vi.hoisted(() => vi.fn())
 
 vi.mock('../shared/config', () => ({
   config: {
@@ -89,6 +90,13 @@ vi.mock('../plane-a/src/services/audit-log', () => ({
 
 vi.mock('../plane-a/src/services/provider-metadata', () => ({
   getProviderMetadata: () => ({ slug: 'provider', name: 'Provider' }),
+}))
+
+vi.mock('../plane-b/src/discovery/discovery-review', () => ({
+  getDiscoveryScanById: (...args: unknown[]) => mockGetDiscoveryScanById(...args),
+  approveDiscoveryScan: vi.fn(),
+  applyDiscoveryScan: vi.fn(),
+  dismissDiscoveryScan: vi.fn(),
 }))
 
 vi.mock(
@@ -213,11 +221,10 @@ describe('admin surface route coverage', () => {
       release: mockClientRelease,
     })
     mockClientQuery.mockResolvedValue(undefined)
+    mockGetDiscoveryScanById.mockResolvedValue(null)
   })
 
   it('returns not_found for missing discovery scan detail', async () => {
-    mockPoolQuery.mockResolvedValueOnce({ rows: [] })
-
     const app = makeApp()
     const { adminDiscoveryRoutes } =
       await import('../plane-a/src/routes/admin-discovery')

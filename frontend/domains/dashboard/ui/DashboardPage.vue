@@ -1,27 +1,11 @@
 <script setup lang="ts">
 import DashboardSignedIn from './DashboardSignedIn.vue'
 
-const { ensureAuthenticated, isAuthenticated: _isAuthenticated } = useAuth()
-// DEV OVERRIDE – skip auth for local preview (remove before deploy)
-const isReadyForDashboard = true
-const isAuthenticated = computed(() => true)
+const { ensureAuthenticated, isAuthenticated } = useAuth()
 
-// Force Enterprise entitlements for local preview
-useState('entitlements:plan', () => 'enterprise')
-useState('entitlements:stored-plan', () => 'enterprise')
-useState('entitlements:plan-status', () => 'active')
-useState('entitlements:plan-lifecycle', () => 'active')
-useState('entitlements:limits', () => ({
-  watchlistItems: 500,
-  alerts: 100,
-  exports: true,
-  embedSlots: 25,
-  pulse: 'full' as const,
-  apiAccess: true,
-  apiTier: 'enterprise' as const,
-}))
+await ensureAuthenticated()
 
-if (import.meta.client && !isReadyForDashboard) {
+if (import.meta.client && !isAuthenticated.value) {
   await navigateTo({
     path: '/sign-in',
     query: { redirect: '/dashboard' },

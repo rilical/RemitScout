@@ -64,10 +64,7 @@ test.describe('Corridor query polish', () => {
     await expect(page).toHaveURL(/\/send-money\/united-states-to-mexico/)
     const refreshGate = page.getByTestId('corridor-refresh-gate')
     await expect(refreshGate).toBeVisible({ timeout: 10000 })
-    await expect(refreshGate).toContainText(/live sweep status/i)
-    await expect(refreshGate).toContainText(/queued/i)
-    await expect(refreshGate).toContainText(/in flight/i)
-    await expect(refreshGate).toContainText(/ready/i)
+    await expect(refreshGate).toContainText(/checking live provider quotes/i)
     await expect(
       page.getByRole('heading', { name: /^compare\s+\d+\s+provider(s)?$/i }),
     ).toBeVisible({ timeout: 20000 })

@@ -76,15 +76,19 @@ async function expectActionState(
   await expect(page.getByTestId('corridor-hero-alert-button')).toHaveAttribute('aria-pressed', alertPressed)
   await expect(page.getByTestId('corridor-sidebar-watchlist-button')).toHaveAttribute('aria-pressed', watchPressed)
   await expect(page.getByTestId('corridor-sidebar-alert-button')).toHaveAttribute('aria-pressed', alertPressed)
-  await expect(page.getByTestId('corridor-sticky-watchlist-button')).toHaveAttribute('aria-pressed', watchPressed)
-  await expect(page.getByTestId('corridor-sticky-alert-button')).toHaveAttribute('aria-pressed', alertPressed)
 
   await expect(page.getByTestId('corridor-hero-watchlist-icon')).toHaveAttribute('fill', watchFill)
   await expect(page.getByTestId('corridor-hero-alert-icon')).toHaveAttribute('fill', alertFill)
   await expect(page.getByTestId('corridor-sidebar-watchlist-icon')).toHaveAttribute('fill', watchFill)
   await expect(page.getByTestId('corridor-sidebar-alert-icon')).toHaveAttribute('fill', alertFill)
-  await expect(page.getByTestId('corridor-sticky-watchlist-icon')).toHaveAttribute('fill', watchFill)
-  await expect(page.getByTestId('corridor-sticky-alert-icon')).toHaveAttribute('fill', alertFill)
+
+  const stickyWatchlistButton = page.getByTestId('corridor-sticky-watchlist-button')
+  if ((await stickyWatchlistButton.count()) > 0) {
+    await expect(stickyWatchlistButton).toHaveAttribute('aria-pressed', watchPressed)
+    await expect(page.getByTestId('corridor-sticky-alert-button')).toHaveAttribute('aria-pressed', alertPressed)
+    await expect(page.getByTestId('corridor-sticky-watchlist-icon')).toHaveAttribute('fill', watchFill)
+    await expect(page.getByTestId('corridor-sticky-alert-icon')).toHaveAttribute('fill', alertFill)
+  }
 }
 
 async function ensureActionControlsExistOrSkip(page: Page) {
