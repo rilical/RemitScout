@@ -56,6 +56,10 @@ const logger = createLogger('plane-b.http-client')
 const MAX_LOGGED_PROXY_USAGE = 1000
 const loggedProxyUsage = new Set<string>()
 
+// Cache ProxyAgent instances by proxy URL to avoid socket leaks (H22).
+// Each unique proxy URL gets a single long-lived ProxyAgent.
+const proxyAgentCache = new Map<string, ProxyAgent>()
+
 const hashProxyUrl = (proxyUrl: string) =>
   createHash('sha256').update(proxyUrl).digest('hex').slice(0, 12)
 
@@ -145,7 +149,16 @@ export const httpRequest = async (options: HttpClientOptions): Promise<HttpRespo
       })
     }
   }
-  const dispatcher = resolvedProxyUrl ? new ProxyAgent(resolvedProxyUrl) : undefined
+  let dispatcher: ProxyAgent | undefined
+  if (resolvedProxyUrl) {
+    let cached = proxyAgentCache.get(resolvedProxyUrl)
+    if (!cached) {
+      cached = new ProxyAgent(resolvedProxyUrl)
+      proxyAgentCache.set(resolvedProxyUrl, cached)
+      logger.debug('proxy_agent_created', { proxy_url_hash: hashProxyUrl(resolvedProxyUrl) })
+    }
+    dispatcher = cached
+  }
 
   const executeRequest = async (): Promise<HttpResponse> => {
     const timeoutSignal = AbortSignal.timeout(timeoutMs)

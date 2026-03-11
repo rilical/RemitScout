@@ -2,16 +2,20 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
 import { createLogger } from '../../../shared/logger'
+import {
+  getDiscoveryScanById,
+  approveDiscoveryScan,
+  dismissDiscoveryScan,
+  applyDiscoveryScan,
+} from '../../../shared/discovery/discovery-review'
 import { requireAdmin } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 
 const logger = createLogger('plane-a.admin-discovery')
 
-const loadDiscoveryReviewModule = async () => {
-  const modulePath = '../../../plane-b/src/discovery/' + 'discovery-review'
-  return await import(modulePath)
-}
-
+// NOTE: This dynamically imports from scripts/lib/ which is outside plane-a.
+// Scripts are allowed to be imported by planes per architecture rules (they
+// run as ECS tasks within a specific plane's context).
 const loadProviderCertificationModule = async () => {
   const modulePath = '../../../scripts/lib/' + 'provider-certification'
   return await import(modulePath)
@@ -114,7 +118,6 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
       })
     }
 
-    const { getDiscoveryScanById } = await loadDiscoveryReviewModule()
     const scan = await getDiscoveryScanById(pool, paramsParsed.data.scanId)
     if (!scan) {
       throw new NotFoundError('Discovery scan not found', {
@@ -170,7 +173,6 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
     }
 
     const actorId = getActorId(request)
-    const { approveDiscoveryScan } = await loadDiscoveryReviewModule()
     const scan = await approveDiscoveryScan(pool, paramsParsed.data.scanId, {
       approvedBy: actorId,
       mode: bodyParsed.data.mode ?? 'operator',
@@ -219,7 +221,6 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
     }
 
     const actorId = getActorId(request)
-    const { applyDiscoveryScan } = await loadDiscoveryReviewModule()
     const outcome = await applyDiscoveryScan(pool, paramsParsed.data.scanId, {
       appliedBy: actorId,
     })
@@ -261,7 +262,6 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
     }
 
     const actorId = getActorId(request)
-    const { dismissDiscoveryScan } = await loadDiscoveryReviewModule()
     const scan = await dismissDiscoveryScan(pool, paramsParsed.data.scanId)
 
     await logAuditEvent(pool, {

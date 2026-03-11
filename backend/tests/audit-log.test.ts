@@ -40,6 +40,7 @@ describe('audit-log', () => {
       ip: '54.239.1.10',
     } as RequestContextInput)
 
+    // CloudFront places the real viewer IP first in XFF; last entry is the edge
     expect(context).toEqual({
       ipAddress: '203.0.113.10',
       userAgent: 'test-agent',

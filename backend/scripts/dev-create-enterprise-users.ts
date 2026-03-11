@@ -274,7 +274,7 @@ const main = async () => {
       await upsertUserAccount(pool, userId, email)
       await promoteUser(pool, userId)
 
-      logger.info('enterprise_user_created', { user_id: userId, email })
+      logger.info('enterprise_user_created', { user_id: userId, email: email.replace(/(.{2}).*@/, '$1***@') })
 
       let token: string | null = null
       if (args.createKey) {

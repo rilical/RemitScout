@@ -883,6 +883,10 @@ export const runRiaCollector = async (options: RiaCollectorOptions = {}) => {
           parse_flags: parsed.parse_flags,
         })
         normalizeDurationMs = Date.now() - normalizeStartedAt
+        if (!normalized) {
+          logger.warn('quote_normalize_rejected', { trace_id: traceId, corridor_id: corridorId, amount_bucket: amountBucket })
+          continue
+        }
         logger.debug('quote_normalize_ok', {
           trace_id: traceId,
           corridor_id: corridorId,

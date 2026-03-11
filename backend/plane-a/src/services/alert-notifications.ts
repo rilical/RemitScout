@@ -655,7 +655,8 @@ export async function sendAlertEmail(
     logger.info('alert_email_sent', {
       user_id: userId,
       alert_id: alertId,
-      email,
+      email_hash: hashEmail(email),
+      email_domain: email.replace(/^.*@/, '***@'),
     })
 
     return true

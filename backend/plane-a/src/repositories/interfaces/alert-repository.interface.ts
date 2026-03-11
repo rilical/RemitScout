@@ -65,6 +65,10 @@ export type AlertEventRow = {
   provider_safe: boolean
 }
 
+export type AlertQuotaCheckResult =
+  | { status: 'created'; alert: AlertRuleRow }
+  | { status: 'quota_exceeded'; count: number }
+
 export interface IAlertRepository {
   listByUserId(userId: string): Promise<AlertWithStateRow[]>
   findById(id: string, userId: string): Promise<AlertRuleRow | null>
@@ -76,6 +80,16 @@ export interface IAlertRepository {
     currency?: string | null,
   ): Promise<AlertRuleRow | null>
   create(input: AlertRuleInput): Promise<AlertRuleRow>
+  /**
+   * Atomically check alert quota and create the alert within a single
+   * serialized transaction.  Locks the user's watchlist rows with
+   * FOR UPDATE to prevent concurrent requests from bypassing the quota.
+   */
+  createWithQuotaCheck(
+    input: AlertRuleInput,
+    userId: string,
+    quotaLimit: number,
+  ): Promise<AlertQuotaCheckResult>
   update(
     id: string,
     userId: string,

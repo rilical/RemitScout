@@ -5,6 +5,7 @@ export type UserPlanRecord = {
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
   current_period_end: string | null
+  version: number
 }
 
 export type UserPlanUpdate = {
@@ -14,6 +15,7 @@ export type UserPlanUpdate = {
   stripe_customer_id?: string | null
   stripe_subscription_id?: string | null
   current_period_end?: string | null
+  expected_version?: number
 }
 
 export interface IUserPlanRepository {

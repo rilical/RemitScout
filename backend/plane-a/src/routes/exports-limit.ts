@@ -2,13 +2,16 @@
  * Distributed export job limit using Redis.
  *
  * With multiple Plane A instances behind auto-scaling, a per-process count
- * is insufficient. This module uses a Redis INCR/DECR counter keyed by
- * user ID so the limit is enforced cluster-wide.
+ * is insufficient. This module uses a Redis counter keyed by user ID so the
+ * limit is enforced cluster-wide.
  *
  * Design:
- * - `checkAndIncrementExportLimit` atomically increments and checks in one
- *   round-trip (INCR then compare). If the new value exceeds the cap the
- *   counter is immediately decremented so it stays accurate.
+ * - `checkAndIncrementExportLimit` uses an atomic Lua script to INCR-and-
+ *   check in a single Redis round-trip. The script only increments when the
+ *   new value would not exceed the cap, eliminating the race window that
+ *   existed with the previous INCR-then-DECR approach (where concurrent
+ *   requests could see an inflated counter, and a failed DECR could leave
+ *   the counter permanently stuck).
  * - `decrementExportCounter` is called by the export worker when a job
  *   finishes (success or failure) to release the slot.
  * - A TTL (default 24 h) is set on every key as a safety net against
@@ -27,6 +30,34 @@ const REDIS_KEY_PREFIX = 'export:active'
 
 const buildKey = (userId: string): string => `${REDIS_KEY_PREFIX}:${userId}`
 
+/**
+ * Lua script that atomically checks and increments the export counter.
+ *
+ * KEYS[1] — the counter key
+ * ARGV[1] — max allowed value (the cap)
+ * ARGV[2] — TTL in seconds for the safety-net expiry
+ *
+ * Returns:
+ *   1  — slot acquired (counter was incremented)
+ *   0  — rejected (counter already at or above the cap)
+ *  -N  — rejected; the negative value is the current count (for diagnostics)
+ */
+const ATOMIC_INCREMENT_SCRIPT = `
+local key = KEYS[1]
+local max = tonumber(ARGV[1])
+local ttl = tonumber(ARGV[2])
+local current = redis.call('INCR', key)
+if current == 1 then
+  redis.call('EXPIRE', key, ttl)
+end
+if current > max then
+  redis.call('DECR', key)
+  return -(current - 1)
+end
+redis.call('EXPIRE', key, ttl)
+return 1
+`
+
 export type ExportLimitResult =
   | { limited: false; redisAvailable: true }
   | { limited: true; redisAvailable: true; currentCount: number }
@@ -34,8 +65,9 @@ export type ExportLimitResult =
 
 /**
  * Atomically increment the user's active-export counter and check against
- * the configured maximum. If the user is over the limit the counter is
- * immediately rolled back so it stays accurate.
+ * the configured maximum using a Lua script. The entire INCR-check-DECR
+ * sequence runs inside Redis as a single atomic operation, preventing the
+ * race condition where concurrent requests could see an inflated counter.
  *
  * Returns whether the request should be rate-limited and whether Redis was
  * available (so the caller can decide whether to fall back to the DB check).
@@ -55,20 +87,21 @@ export const checkAndIncrementExportLimit = async (
 
     const key = buildKey(userId)
 
-    // Atomic increment — returns the new value after incrementing.
-    const newCount = await redis.incr(key)
+    const result = await redis.eval(ATOMIC_INCREMENT_SCRIPT, {
+      keys: [key],
+      arguments: [String(maxActive), String(ttl)],
+    })
 
-    // Always refresh the TTL so the safety-net window slides forward while
-    // the user has active exports.
-    await redis.expire(key, ttl)
+    const code = Number(result)
 
-    if (newCount > maxActive) {
-      // Over the limit: roll back the increment we just performed.
-      await redis.decr(key)
-      return { limited: true, redisAvailable: true, currentCount: newCount - 1 }
+    if (code === 1) {
+      // Slot acquired — counter was incremented within the cap.
+      return { limited: false, redisAvailable: true }
     }
 
-    return { limited: false, redisAvailable: true }
+    // code <= 0 means rejected; the absolute value is the current count.
+    const currentCount = code === 0 ? maxActive : Math.abs(code)
+    return { limited: true, redisAvailable: true, currentCount }
   } catch (error) {
     logger.warn('export_limit_check_failed', {
       user_id: userId,

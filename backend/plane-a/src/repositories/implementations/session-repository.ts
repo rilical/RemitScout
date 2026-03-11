@@ -67,7 +67,11 @@ export class SessionRepository implements ISessionRepository {
       this.pool,
     )
 
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT/upsert into user_session returned no rows')
+    }
+    return row
   }
 
   async getSession(sessionId: string): Promise<SessionRecord | null> {

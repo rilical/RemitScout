@@ -44,7 +44,11 @@ export class ApiKeyRepository implements IApiKeyRepository {
       ],
       this.pool,
     )
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT into api_key returned no rows')
+    }
+    return row
   }
 
   async listKeys(userId: string): Promise<ApiKeyRecord[]> {

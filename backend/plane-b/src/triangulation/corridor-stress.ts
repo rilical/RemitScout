@@ -113,7 +113,11 @@ export class CorridorStressCalculator {
     const contributions: MultiSignalStressResult['contributingSignals'] = []
 
     let weightedSum = 0
-    let totalWeight = 0
+
+    // Use the sum of ALL configured signal weights for normalization, not just
+    // active ones.  This prevents a single low-weight signal from inflating the
+    // composite score to 1.0 when it is the only active signal.  (H26 fix)
+    const totalWeight = Object.values(this.signalTypeWeights).reduce((s, w) => s + w, 0)
 
     for (const signal of signals) {
       // TTL is a hard ceiling: signals past their TTL are fully removed regardless
@@ -130,7 +134,6 @@ export class CorridorStressCalculator {
 
       const weightedContribution = decayedIntensity * weight
       weightedSum += weightedContribution
-      totalWeight += weight
 
       contributions.push({
         signalType: signal.signalType,
@@ -140,7 +143,7 @@ export class CorridorStressCalculator {
       })
     }
 
-    // Normalize to [0, 1]
+    // Normalize to [0, 1] using the total of all configured weights
     const compositeScore = totalWeight > 0 ? Math.min(weightedSum / totalWeight, 1) : 0
 
     // Apply hysteresis to determine final stress level

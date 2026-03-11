@@ -25,7 +25,11 @@ export class ComparisonHistoryRepository implements IComparisonHistoryRepository
       ],
       this.pool,
     )
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT into comparison_history returned no rows')
+    }
+    return row
   }
 
   async listByUserId(

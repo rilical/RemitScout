@@ -53,7 +53,7 @@ describe('admin IP allowlist', () => {
     expect(allowed.statusCode).toBe(200)
   })
 
-  it('uses the original viewer IP when the request is coming through CloudFront', async () => {
+  it('uses the leftmost (viewer) IP from x-forwarded-for for CloudFront requests', async () => {
     const app = await createApp(['203.0.113.10/32'])
 
     const allowed = await app.inject({
@@ -66,6 +66,23 @@ describe('admin IP allowlist', () => {
       },
     })
 
+    // CloudFront places the real viewer IP first in XFF; the last entry is the edge
+    expect(allowed.statusCode).toBe(200)
+  })
+
+  it('uses remoteAddress directly for non-CloudFront requests (ignores XFF)', async () => {
+    const app = await createApp(['10.0.0.1/32'])
+
+    const allowed = await app.inject({
+      method: 'GET',
+      url: '/api/v1/admin/test',
+      remoteAddress: '10.0.0.1',
+      headers: {
+        'x-forwarded-for': '203.0.113.10, 198.51.100.50',
+      },
+    })
+
+    // Non-CloudFront: remoteAddress (from Fastify trust proxy) is used directly
     expect(allowed.statusCode).toBe(200)
   })
 

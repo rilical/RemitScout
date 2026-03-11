@@ -13,13 +13,15 @@ const mockConfig = vi.hoisted(() => ({
 }))
 
 vi.mock('../shared/config', () => ({ config: mockConfig }))
+vi.mock('../shared/cloudwatch-metrics', () => ({ recordCloudWatchMetric: vi.fn() }))
 import { verifySupabaseJwt } from '../plane-a/src/auth/verify-supabase-jwt'
 import { fetchJwks } from '../plane-a/src/auth/jwks-fetch'
 import { getCachedJwks } from '../plane-a/src/auth/jwks-cache'
 import { verifyWithJwks } from '../plane-a/src/auth/jwks-verify'
 import { remoteVerify } from '../plane-a/src/auth/remote-verify'
+import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
 vi.mock('../plane-a/src/auth/jwks-fetch', () => ({ fetchJwks: vi.fn() }))
-vi.mock('../plane-a/src/auth/jwks-cache', () => ({ getCachedJwks: vi.fn(), setCachedJwks: vi.fn() }))
+vi.mock('../plane-a/src/auth/jwks-cache', () => ({ getCachedJwks: vi.fn(), setCachedJwks: vi.fn(), invalidateCachedJwks: vi.fn().mockReturnValue(false) }))
 vi.mock('../plane-a/src/auth/jwks-verify', () => ({ verifyWithJwks: vi.fn() }))
 vi.mock('../plane-a/src/auth/remote-verify', () => ({ remoteVerify: vi.fn() }))
 
@@ -57,7 +59,7 @@ describe('verifySupabaseJwt', () => {
     mockConfig.auth.supabase.verifyMode = 'auto'
     vi.mocked(getCachedJwks).mockReturnValue(null)
     vi.mocked(fetchJwks).mockResolvedValue([])
-    vi.mocked(remoteVerify).mockResolvedValue({ user_id: 'u2', claims: {} })
+    vi.mocked(remoteVerify).mockResolvedValue({ status: 'success', user: { user_id: 'u2', claims: {} } })
 
     const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
     expect('user_id' in result && result.user_id).toBe('u2')
@@ -67,7 +69,7 @@ describe('verifySupabaseJwt', () => {
     mockConfig.auth.supabase.verifyMode = 'auto'
     vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
     vi.mocked(verifyWithJwks).mockResolvedValue(null)
-    vi.mocked(remoteVerify).mockResolvedValue({ user_id: 'u2', claims: {} })
+    vi.mocked(remoteVerify).mockResolvedValue({ status: 'success', user: { user_id: 'u2', claims: {} } })
 
     const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
     expect('user_id' in result && result.user_id).toBe('u2')
@@ -80,8 +82,11 @@ describe('verifySupabaseJwt', () => {
     vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
     vi.mocked(verifyWithJwks).mockResolvedValue({ user_id: 'u1', claims: { sub: 'u1' } })
     vi.mocked(remoteVerify).mockResolvedValue({
-      user_id: 'u1',
-      claims: { id: 'u1', email_confirmed_at: '2026-03-06T10:00:00.000Z' },
+      status: 'success',
+      user: {
+        user_id: 'u1',
+        claims: { id: 'u1', email_confirmed_at: '2026-03-06T10:00:00.000Z' },
+      },
     })
 
     const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
@@ -93,8 +98,11 @@ describe('verifySupabaseJwt', () => {
     mockConfig.auth.supabase.verifyMode = 'remote'
     mockConfig.planeA.requireEmailConfirmation = true
     vi.mocked(remoteVerify).mockResolvedValue({
-      user_id: 'u3',
-      claims: { id: 'u3' },
+      status: 'success',
+      user: {
+        user_id: 'u3',
+        claims: { id: 'u3' },
+      },
     })
 
     const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
@@ -111,11 +119,57 @@ describe('verifySupabaseJwt', () => {
     expect(remoteVerify).not.toHaveBeenCalled()
   })
 
-  it('returns verification_failed when remote fails', async () => {
+  it('returns verification_failed when remote returns auth_rejected', async () => {
     mockConfig.auth.supabase.verifyMode = 'remote'
-    vi.mocked(remoteVerify).mockResolvedValue(null)
+    vi.mocked(remoteVerify).mockResolvedValue({ status: 'auth_rejected', httpStatus: 401 })
 
     const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
     expect('code' in result && result.code).toBe('verification_failed')
+  })
+
+  it('returns verification_failed when remote returns config_missing', async () => {
+    mockConfig.auth.supabase.verifyMode = 'remote'
+    vi.mocked(remoteVerify).mockResolvedValue({ status: 'config_missing' })
+
+    const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
+    expect('code' in result && result.code).toBe('verification_failed')
+  })
+
+  it('emits CloudWatch metric when remote returns service_unavailable', async () => {
+    mockConfig.auth.supabase.verifyMode = 'remote'
+    vi.mocked(remoteVerify).mockResolvedValue({
+      status: 'service_unavailable',
+      error: 'ECONNREFUSED',
+    })
+
+    const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
+    expect('code' in result && result.code).toBe('verification_failed')
+    expect(recordCloudWatchMetric).toHaveBeenCalledWith({
+      name: 'supabase_remote_verify_unavailable',
+      value: 1,
+      unit: 'Count',
+      namespace: 'RemitScout',
+      dimensions: { error_type: 'service_unavailable' },
+    })
+  })
+
+  it('emits CloudWatch metric when email confirmation remote check hits service_unavailable', async () => {
+    mockConfig.auth.supabase.verifyMode = 'auto'
+    mockConfig.planeA.requireEmailConfirmation = true
+    vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
+    vi.mocked(verifyWithJwks).mockResolvedValue({ user_id: 'u1', claims: { sub: 'u1' } })
+    vi.mocked(remoteVerify).mockResolvedValue({
+      status: 'service_unavailable',
+      error: 'Supabase returned HTTP 503',
+    })
+
+    const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
+    expect('code' in result && result.code).toBe('verification_failed')
+    expect(recordCloudWatchMetric).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'supabase_remote_verify_unavailable',
+        dimensions: { error_type: 'service_unavailable' },
+      }),
+    )
   })
 })

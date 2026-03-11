@@ -3,12 +3,7 @@
  */
 
 import type { ExtractionContext, ExtractionResult, FactorExtractor } from '../types'
-
-const parseRate = (value: unknown): number | null => {
-  if (value === null || value === undefined) return null
-  const num = typeof value === 'number' ? value : Number(String(value).replace(/[^0-9.+-]/g, ''))
-  return Number.isFinite(num) && num > 0 ? num : null
-}
+import { parseRate } from '../parse-utils'
 
 export class RateExtractor implements FactorExtractor {
   readonly id = 'rate-extractor'

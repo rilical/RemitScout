@@ -1,11 +1,12 @@
 import { config } from '../../../shared/config'
 import { decodeJwt } from 'jose'
 import { fetchJwks } from './jwks-fetch'
-import { getCachedJwks, setCachedJwks } from './jwks-cache'
+import { getCachedJwks, setCachedJwks, invalidateCachedJwks } from './jwks-cache'
 import { verifyWithJwks } from './jwks-verify'
 import { remoteVerify } from './remote-verify'
 import { createLogger } from '../../../shared/logger'
-import type { AuthResult } from './types'
+import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
+import type { AuthResult, RemoteVerifyResult } from './types'
 import { AuthError } from './types'
 
 const logger = createLogger('plane-a.verify-supabase-jwt')
@@ -117,10 +118,23 @@ const resolveEmailConfirmation = async (
     return { userClaims, error: directError }
   }
 
-  const remoteUser = await remoteVerify(token)
-  if (!remoteUser) {
+  const remoteResult = await remoteVerify(token)
+  if (remoteResult.status === 'service_unavailable') {
+    emitRemoteVerifyMetric(remoteResult)
     logger.warn('supabase_email_confirmation_remote_check_failed', {
       mode,
+      error_type: remoteResult.status,
+      error: remoteResult.error,
+    })
+    return {
+      userClaims,
+      error: makeError('verification_failed', 'JWT verification failed'),
+    }
+  }
+  if (remoteResult.status !== 'success') {
+    logger.warn('supabase_email_confirmation_remote_check_failed', {
+      mode,
+      error_type: remoteResult.status,
     })
     return {
       userClaims,
@@ -128,14 +142,26 @@ const resolveEmailConfirmation = async (
     }
   }
 
-  const remoteError = enforceEmailConfirmation(asRecord(remoteUser.claims))
+  const remoteError = enforceEmailConfirmation(asRecord(remoteResult.user.claims))
   if (remoteError) {
-    return { userClaims: asRecord(remoteUser.claims), error: remoteError }
+    return { userClaims: asRecord(remoteResult.user.claims), error: remoteError }
   }
 
   return {
-    userClaims: asRecord(remoteUser.claims),
+    userClaims: asRecord(remoteResult.user.claims),
     error: null,
+  }
+}
+
+const emitRemoteVerifyMetric = (result: RemoteVerifyResult): void => {
+  if (result.status === 'service_unavailable') {
+    recordCloudWatchMetric({
+      name: 'supabase_remote_verify_unavailable',
+      value: 1,
+      unit: 'Count',
+      namespace: 'RemitScout',
+      dimensions: { error_type: 'service_unavailable' },
+    })
   }
 }
 
@@ -151,6 +177,7 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
 
   if (allowJwks) {
     let keys = getCachedJwks()
+    let usedCachedKeys = !!keys
     if (!keys) {
       keys = await fetchJwks()
       if (keys.length > 0) {
@@ -173,6 +200,35 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
         return user
       }
 
+      // H7: If verification failed with cached keys, force-refresh the JWKS
+      // cache once and retry. This handles key rotation where stale cached keys
+      // would otherwise cause 0-120s of auth failures.
+      if (usedCachedKeys) {
+        const didInvalidate = invalidateCachedJwks()
+        if (didInvalidate) {
+          logger.info('jwks_cache_invalidated_for_retry', { mode })
+          const freshKeys = await fetchJwks()
+          if (freshKeys.length > 0) {
+            setCachedJwks(freshKeys, config.auth.supabase.remoteVerifyCacheTtlSeconds)
+            const retryUser = await verifyWithJwks(token, freshKeys)
+            if (retryUser) {
+              const ageError = enforceMaxTokenAge(token)
+              if (ageError) return ageError
+              const { error: emailError } = await resolveEmailConfirmation(
+                token,
+                mode,
+                allowRemote,
+                asRecord(retryUser.claims),
+              )
+              if (emailError) return emailError
+              return retryUser
+            }
+          }
+        } else {
+          logger.debug('jwks_cache_invalidation_cooldown_active', { mode })
+        }
+      }
+
       logger.warn('supabase_jwt_signature_verification_failed', {
         mode,
       })
@@ -187,13 +243,20 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
   }
 
   if (allowRemote) {
-    const user = await remoteVerify(token)
-    if (user) {
+    const remoteResult = await remoteVerify(token)
+    if (remoteResult.status === 'service_unavailable') {
+      emitRemoteVerifyMetric(remoteResult)
+      logger.warn('supabase_remote_verify_service_unavailable', {
+        error_type: remoteResult.status,
+        error: remoteResult.error,
+      })
+    }
+    if (remoteResult.status === 'success') {
       const ageError = enforceMaxTokenAge(token)
       if (ageError) return ageError
-      const emailError = enforceEmailConfirmation(asRecord(user.claims))
+      const emailError = enforceEmailConfirmation(asRecord(remoteResult.user.claims))
       if (emailError) return emailError
-      return user
+      return remoteResult.user
     }
   }
 

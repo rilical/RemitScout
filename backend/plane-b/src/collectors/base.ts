@@ -680,6 +680,52 @@ export const runAnomalyDetection = async (input: AnomalyDetectionInput) => {
   }
 }
 
+/** Default cooldown when none is specified, to prevent permanent stale blocks */
+const DEFAULT_CIRCUIT_COOLDOWN_MS = 3600000 // 1 hour
+
+/**
+ * Opens a corridor-level circuit breaker without pausing the entire provider.
+ * Use this for isolated corridor blocks so other corridors can continue collecting.
+ */
+export const openCorridorCircuitBreaker = async (
+  pool: Pool,
+  providerId: string,
+  corridorId: string,
+  reason: string,
+  cooldownMs: number,
+) => {
+  if (!providerId || typeof providerId !== 'string' || providerId.trim().length === 0) {
+    logger.warn('open_corridor_circuit_invalid_id', { provider_id: providerId })
+    return
+  }
+
+  try {
+    // Always set a cooldown to prevent permanent stale blocks (H32 fix)
+    const effectiveCooldownMs = cooldownMs > 0 ? cooldownMs : DEFAULT_CIRCUIT_COOLDOWN_MS
+    const cooldownUntil = new Date(Date.now() + effectiveCooldownMs).toISOString()
+    const circuitRepo = new CircuitBreakerRepository(pool)
+
+    await circuitRepo.openCircuit(providerId, corridorId, reason, cooldownUntil)
+    logger.debug('corridor_circuit_opened', {
+      provider_id: providerId,
+      corridor_id: corridorId,
+      reason,
+      cooldown_ms: cooldownMs,
+    })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    logger.error('open_corridor_circuit_failed', {
+      provider_id: providerId,
+      corridor_id: corridorId,
+      reason,
+      error: errorMessage,
+      stack: errorStack,
+    })
+    // Don't throw - allow collector to continue
+  }
+}
+
 export const pauseProviderForBlock = async (
   pool: Pool,
   providerId: string,
@@ -693,7 +739,9 @@ export const pauseProviderForBlock = async (
   }
 
   try {
-    const cooldownUntil = cooldownMs > 0 ? new Date(Date.now() + cooldownMs).toISOString() : null
+    // Always set a cooldown to prevent permanent stale blocks (H32 fix)
+    const effectiveCooldownMs = cooldownMs > 0 ? cooldownMs : DEFAULT_CIRCUIT_COOLDOWN_MS
+    const cooldownUntil = new Date(Date.now() + effectiveCooldownMs).toISOString()
     const rightsRepo = new RightsMatrixRepository(pool)
     const circuitRepo = new CircuitBreakerRepository(pool)
 
@@ -743,18 +791,29 @@ export const resumeProviderIfCooldownExpired = async (
 
     const openRows = await circuitRepo.loadOpenCircuits(providerId)
 
+    // Always close expired circuit breakers first, even if some are still active.
+    // This prevents stale expired circuits from accumulating.
+    await circuitRepo.closeExpiredOpenCircuits(providerId)
+
     const now = Date.now()
-    const hasActiveCooldown = openRows.some((row) => {
-      if (!row.cooldown_until) return true
+    const activeCircuits = openRows.filter((row) => {
+      // Treat null cooldown_until as expired — a missing cooldown should not
+      // block the provider indefinitely (H32 fix: stale block state).
+      if (!row.cooldown_until) {
+        logger.warn('circuit_breaker_missing_cooldown', {
+          provider_id: providerId,
+          corridor_id: row.corridor_id,
+        })
+        return false
+      }
       return new Date(row.cooldown_until).getTime() > now
     })
 
-    if (hasActiveCooldown) {
+    if (activeCircuits.length > 0) {
       return { canCollect: false, reason: 'cooldown_active' }
     }
 
     await rightsRepo.setProviderActive(providerId)
-    await circuitRepo.closeExpiredOpenCircuits(providerId)
 
     logger.debug('provider_resumed', { provider_id: providerId })
     return { canCollect: true, reason: 'auto_resume' }

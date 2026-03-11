@@ -167,3 +167,18 @@ export const isAuthError = (value: unknown): value is AuthError => {
 export const isAuthResult = (value: unknown): value is AuthResult => {
   return isAuthUser(value) || isAuthError(value)
 }
+
+/**
+ * Discriminated union for remote verification outcomes.
+ *
+ * Allows callers to distinguish between:
+ * - `success`: Supabase confirmed the token; user is attached
+ * - `config_missing`: Supabase URL/key not configured (cannot verify)
+ * - `auth_rejected`: Supabase returned 401/403 (invalid or expired token)
+ * - `service_unavailable`: Network error or Supabase 5xx (transient failure)
+ */
+export type RemoteVerifyResult =
+  | { status: 'success'; user: AuthUser }
+  | { status: 'config_missing' }
+  | { status: 'auth_rejected'; httpStatus: number }
+  | { status: 'service_unavailable'; error: string }

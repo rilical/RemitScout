@@ -203,17 +203,17 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
   const payinMethod = options.payinMethod ?? 'bank_transfer'
   const payoutMethod = options.payoutMethod ?? 'bank_deposit'
   const locale = options.locale ?? 'en-US'
-  const delayMs = options.delayMs ?? config.planeB.remitly.delayMs
-  const jitterMs = options.jitterMs ?? config.planeB.remitly.jitterMs
-  const rateLimitBackoffMs = options.rateLimitBackoffMs ?? config.planeB.remitly.rateLimitBackoffMs
-  const rateLimitJitterMs = options.rateLimitJitterMs ?? config.planeB.remitly.rateLimitJitterMs
-  const rateLimitMaxRetries = options.rateLimitMaxRetries ?? config.planeB.remitly.rateLimitMaxRetries
-  const corridorDelayMs = options.corridorDelayMs ?? config.planeB.remitly.corridorDelayMs
-  const corridorJitterMs = options.corridorJitterMs ?? config.planeB.remitly.corridorJitterMs
+  const delayMs = options.delayMs ?? config.planeB.westernunion.delayMs
+  const jitterMs = options.jitterMs ?? config.planeB.westernunion.jitterMs
+  const rateLimitBackoffMs = options.rateLimitBackoffMs ?? config.planeB.westernunion.rateLimitBackoffMs
+  const rateLimitJitterMs = options.rateLimitJitterMs ?? config.planeB.westernunion.rateLimitJitterMs
+  const rateLimitMaxRetries = options.rateLimitMaxRetries ?? config.planeB.westernunion.rateLimitMaxRetries
+  const corridorDelayMs = options.corridorDelayMs ?? config.planeB.westernunion.corridorDelayMs
+  const corridorJitterMs = options.corridorJitterMs ?? config.planeB.westernunion.corridorJitterMs
   const collectorType = options.collectorType ?? 'collector'
-  const freshnessSloMinutes = options.freshnessSloMinutes ?? config.planeB.remitly.freshnessSloMinutes
-  const freshnessSloEnabled = options.freshnessSloEnabled ?? config.planeB.remitly.freshnessSloEnabled
-  const blockCooldownMs = config.planeB.remitly.blockCooldownMs
+  const freshnessSloMinutes = options.freshnessSloMinutes ?? config.planeB.westernunion.freshnessSloMinutes
+  const freshnessSloEnabled = options.freshnessSloEnabled ?? config.planeB.westernunion.freshnessSloEnabled
+  const blockCooldownMs = config.planeB.westernunion.blockCooldownMs
   const startedAt = new Date()
   const capabilityUpdated = new Set<string>()
   let freshnessChecked = 0
@@ -853,6 +853,10 @@ export const runWesternUnionCollector = async (options: WesternUnionCollectorOpt
           parse_flags: parsed.parse_flags,
         })
         normalizeDurationMs = Date.now() - normalizeStartedAt
+        if (!normalized) {
+          logger.warn('quote_normalize_rejected', { trace_id: traceId, corridor_id: corridorId, amount_bucket: amountBucket })
+          continue
+        }
         logger.debug('quote_normalize_ok', {
           trace_id: traceId,
           corridor_id: corridorId,

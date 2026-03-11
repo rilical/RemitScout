@@ -489,7 +489,7 @@ export const platformOpsRoutes = (app: FastifyInstance) => {
 
   app.post(
     '/ops/stress/pause-probing',
-    { preHandler: requireAdmin() },
+    { preHandler: requireSuperAdmin() },
     async (request, reply) => {
       try {
         const body = request.body as { paused?: boolean } | undefined
@@ -515,7 +515,7 @@ export const platformOpsRoutes = (app: FastifyInstance) => {
 
   app.post(
     '/ops/stress/override',
-    { preHandler: requireAdmin() },
+    { preHandler: requireSuperAdmin() },
     async (request, reply) => {
       try {
         const body = request.body as
@@ -583,7 +583,7 @@ export const platformOpsRoutes = (app: FastifyInstance) => {
 
   app.post(
     '/ops/stress/kill-switch',
-    { preHandler: requireAdmin() },
+    { preHandler: requireSuperAdmin() },
     async (_request, reply) => {
       try {
         await query(

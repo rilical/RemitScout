@@ -120,9 +120,18 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
           publiclyAccessible: false,
         }),
         serverlessV2MinCapacity: isDev ? 0 : 0.5,
-        serverlessV2MaxCapacity: isDev ? 1 : 8,
-        ...(isDev ? { serverlessV2AutoPauseDuration: Duration.minutes(10) } : {}),
+        serverlessV2MaxCapacity: isDev ? 1 : (isStaging ? 4 : 8),
+        ...(!isProd ? { serverlessV2AutoPauseDuration: Duration.minutes(isDev ? 10 : 30) } : {}),
       })
+
+  if (isProtectedEnv) {
+    cluster.addRotationSingleUser({
+      automaticallyAfter: Duration.days(30),
+      excludeCharacters: '/@"\\\'',
+      vpcSubnets: { subnetType: dbSubnetType },
+      securityGroup: options.dbSecurityGroup,
+    })
+  }
 
   const proxy = enableProxy
     ? new DatabaseProxy(scope, 'RemitScoutDbProxy', {

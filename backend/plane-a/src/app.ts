@@ -495,7 +495,16 @@ export const buildApp = async (options?: {
     }
   })
 
-  app.get('/healthz', async () => ({ status: 'ok' }))
+  app.get('/healthz', async (_request, reply) => {
+    try {
+      const pool = getPlaneAPool()
+      await pool.query('SELECT 1')
+      return { status: 'ok' }
+    } catch {
+      reply.code(503)
+      return { status: 'degraded', db: 'unreachable' }
+    }
+  })
 
   app.get('/readyz', async (_request, reply) => {
     try {

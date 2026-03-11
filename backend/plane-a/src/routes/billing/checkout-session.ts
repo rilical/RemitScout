@@ -1,14 +1,16 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { z } from 'zod'
-import { getPool } from '../../../../shared/db'
+import { getPool, query } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
+import { createLogger } from '../../../../shared/logger'
 import { AppError, ConflictError, ValidationError } from '../../../../shared/errors'
 import { recordBusinessMetric } from '../../../../shared/business-metrics'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getStripeClient, isStripeConfigured } from '../../services/stripe-client'
-import { ensureUserPlan, getUserPlan, updatePlanFromStripe } from '../../services/user-plan'
+import { ensureUserPlan, getUserPlan } from '../../services/user-plan'
 import { getErrorMessage, isStripeError } from '../../types/errors'
 
+const logger = createLogger('plane-a.billing.checkout-session')
 const planeAPool = getPool(config.db.planeAUrl)
 
 const checkoutSessionSchema = z.object({
@@ -65,14 +67,48 @@ const createCheckoutHandler = async (request: FastifyRequest, _reply: FastifyRep
           metadata: { user_id: user.user_id },
         })
         customerId = customer.id
-        
-        await updatePlanFromStripe(planeAPool, {
-          user_id: user.user_id,
-          stripe_customer_id: customerId,
-        })
+
+        // Atomic compare-and-set: only write if no other request has set it yet.
+        const result = await query(
+          `UPDATE silver.user_plan
+           SET stripe_customer_id = $1, updated_at = NOW()
+           WHERE user_id = $2 AND stripe_customer_id IS NULL
+           RETURNING stripe_customer_id`,
+          [customerId, user.user_id],
+          planeAPool,
+        )
+
+        if (result.rowCount === 0) {
+          // Another request already set the customer ID — clean up the orphan.
+          logger.warn('stripe_customer_race_detected', {
+            user_id: user.user_id,
+            orphaned_customer_id: customerId,
+          })
+
+          try {
+            await stripe.customers.del(customerId)
+          } catch (delError: unknown) {
+            logger.error('stripe_orphan_cleanup_failed', {
+              user_id: user.user_id,
+              orphaned_customer_id: customerId,
+              error: isStripeError(delError) ? delError.message : getErrorMessage(delError),
+            })
+          }
+
+          // Re-read to get the winning customer ID.
+          const updatedPlan = await getUserPlan(planeAPool, user.user_id)
+          if (!updatedPlan?.stripe_customer_id) {
+            throw new AppError('Stripe customer ID missing after race resolution', {
+              statusCode: 500,
+              code: 'stripe_customer_race_unresolved',
+            })
+          }
+          customerId = updatedPlan.stripe_customer_id
+        }
       } catch (error: unknown) {
-        const errorMessage = isStripeError(error) 
-          ? error.message 
+        if (error instanceof AppError) throw error
+        const errorMessage = isStripeError(error)
+          ? error.message
           : getErrorMessage(error)
         throw new AppError('Failed to create Stripe customer', {
           statusCode: 500,

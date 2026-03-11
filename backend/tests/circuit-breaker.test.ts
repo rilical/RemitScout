@@ -249,18 +249,18 @@ describe('CircuitBreaker', () => {
       expect(cb.canAttempt()).toBe(false)
     })
 
-    it('returns true (once) in HALF_OPEN state — allows a probe', () => {
+    it('returns true (once) in HALF_OPEN state — allows a single probe', () => {
       const cb = new CircuitBreaker({ name: 'probe-cb' })
 
       for (let i = 0; i < 5; i++) cb.onFailure(new Error(`f${i}`))
       vi.advanceTimersByTime(60_001)
 
-      // First call transitions to HALF_OPEN and returns true
+      // First call transitions to HALF_OPEN and returns true (probe allowed)
       expect(cb.canAttempt()).toBe(true)
 
-      // Subsequent calls also return true because HALF_OPEN allows attempts
-      // (the circuit breaker doesn't limit to one probe — HALF_OPEN stays until success/failure)
-      expect(cb.canAttempt()).toBe(true)
+      // Subsequent calls return false while the probe is in-flight
+      // to prevent multiple probes leaking through
+      expect(cb.canAttempt()).toBe(false)
     })
   })
 

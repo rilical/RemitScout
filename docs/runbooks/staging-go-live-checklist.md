@@ -96,11 +96,11 @@ Source template:
 - [ ] Socket Mode enabled.
 - [ ] Scopes set: `chat:write`, `commands`.
 - [ ] Bot invited to ops channel.
-- [ ] `.env.frontdesk` created from `.env.frontdesk.example`.
+- [ ] `.env.frontdesk` created from `backend/.env.example`.
 - [ ] Front desk process starts cleanly (`pnpm -C backend frontdesk:slack`).
 
 ## 7) Brain setup
-- [ ] `.env.brain` created from `.env.brain.example`.
+- [ ] `.env.brain` created from `backend/.env.example`.
 - [ ] `GITHUB_REPOSITORY` and `GITHUB_TOKEN` set with required permissions.
 - [ ] Brain loop starts cleanly (`pnpm -C backend brain:loop`).
 - [ ] Brain dispatch + ingestion flags enabled for staging.

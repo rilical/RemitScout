@@ -87,8 +87,8 @@ const isIpInCidr = (ip: string, cidr: string): boolean => {
   }
 }
 
-const assertIpAllowlisted = (request: any, envVarName: string) => {
-  const allowlist = splitCsv(process.env[envVarName])
+const assertIpAllowlisted = (request: any, allowlistCsv: string | undefined) => {
+  const allowlist = splitCsv(allowlistCsv)
   if (allowlist.length === 0) return { ok: true as const }
   const ip = resolveClientIp(request)
   if (!ip) {
@@ -247,6 +247,7 @@ export const processStripeEvent = async (params: {
       plan_code: 'plus',
       status: 'active',
       stripe_subscription_id: subscriptionId,
+      expected_version: existingPlan?.version,
     })
 
     if (!wasPlus) {
@@ -272,6 +273,7 @@ export const processStripeEvent = async (params: {
       status: 'canceled',
       stripe_subscription_id: null,
       current_period_end: null,
+      expected_version: existingPlan?.version,
     })
 
     await sendCancellationEmail(planeAPool, userId, { planName: 'Remit-Scout Plus' })
@@ -312,6 +314,7 @@ export const processStripeEvent = async (params: {
       status: status,
       stripe_subscription_id: subscription?.id || null,
       current_period_end: currentPeriodEnd,
+      expected_version: existingPlan?.version,
     })
 
     if (
@@ -339,6 +342,7 @@ export const processStripeEvent = async (params: {
     await userPlanRepo.updatePlan({
       user_id: userId,
       status: 'past_due',
+      expected_version: existingPlan?.version,
     })
 
     await sendPaymentFailedEmail(planeAPool, userId, { planName: 'Remit-Scout Plus' })
@@ -372,7 +376,7 @@ export const webhookRoutes = async (app: FastifyInstance) => {
 
       // Optional IP allowlist hardening (recommended in staging/prod).
       // When unset/empty, rely on signature verification only.
-      const ipAllow = assertIpAllowlisted(request, 'STRIPE_WEBHOOK_IP_ALLOWLIST')
+      const ipAllow = assertIpAllowlisted(request, config.billing.stripe.webhookIpAllowlist)
       if (!ipAllow.ok) {
         metricStatus = ipAllow.reason
         reply.code(403)

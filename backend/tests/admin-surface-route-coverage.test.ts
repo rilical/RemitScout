@@ -92,7 +92,7 @@ vi.mock('../plane-a/src/services/provider-metadata', () => ({
   getProviderMetadata: () => ({ slug: 'provider', name: 'Provider' }),
 }))
 
-vi.mock('../plane-b/src/discovery/discovery-review', () => ({
+vi.mock('../shared/discovery/discovery-review', () => ({
   getDiscoveryScanById: (...args: unknown[]) => mockGetDiscoveryScanById(...args),
   approveDiscoveryScan: vi.fn(),
   applyDiscoveryScan: vi.fn(),

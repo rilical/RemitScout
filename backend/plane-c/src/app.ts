@@ -44,7 +44,15 @@ export const buildApp = (): PlaneCApp => {
     return payload
   })
 
-  app.get('/healthz', async () => ({ status: 'ok' }))
+  app.get('/healthz', async (_request, reply) => {
+    try {
+      await pool.query('SELECT 1')
+      return { status: 'ok' }
+    } catch {
+      reply.code(503)
+      return { status: 'degraded', db: 'unreachable' }
+    }
+  })
 
   app.get('/readyz', async (_request, reply) => {
     const checks: Record<string, 'ok' | 'fail'> = { db: 'fail', redis: 'fail' }

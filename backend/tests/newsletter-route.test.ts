@@ -146,6 +146,19 @@ describe('newsletter route', () => {
   })
 
   it('returns pending on successful subscribe', async () => {
+    mockCreatePending.mockResolvedValue({
+      id: 'sub-1',
+      email: 'a@test.com',
+      status: 'pending',
+      verify_token_hash: 'hash',
+      unsubscribe_token_hash: 'hash',
+      source: 'Landing',
+      created_at: new Date(),
+      verified_at: null,
+      unsubscribed_at: null,
+      verify_token_expires_at: new Date(),
+    })
+
     const app = makeApp()
     const { newsletterRoutes } = await import('../plane-a/src/routes/newsletter')
     await newsletterRoutes(app)
@@ -159,14 +172,54 @@ describe('newsletter route', () => {
     expect(response).toMatchObject({ success: true, status: 'pending' })
   })
 
-  it('returns 400 for invalid status query', async () => {
+  it('returns active without sending email when subscriber is already active', async () => {
+    mockCreatePending.mockResolvedValue({
+      id: 'sub-2',
+      email: 'active@test.com',
+      status: 'active',
+      verify_token_hash: 'hash',
+      unsubscribe_token_hash: 'hash',
+      source: 'Landing',
+      created_at: new Date(),
+      verified_at: new Date(),
+      unsubscribed_at: null,
+      verify_token_expires_at: new Date(),
+    })
+
+    const app = makeApp()
+    const { newsletterRoutes } = await import('../plane-a/src/routes/newsletter')
+    await newsletterRoutes(app)
+
+    const handler = getHandler(app, 'post', '/newsletter/subscribe')
+    const reply = makeReply()
+    const response = await handler({ body: { email: 'active@test.com' } }, reply)
+
+    expect(mockCreatePending).toHaveBeenCalled()
+    expect(mockSendConfirmationEmail).not.toHaveBeenCalled()
+    expect(response).toMatchObject({ success: true, status: 'active' })
+  })
+
+  it('returns 401 for unauthenticated status query', async () => {
     const app = makeApp()
     const { newsletterRoutes } = await import('../plane-a/src/routes/newsletter')
     await newsletterRoutes(app)
 
     const handler = getHandler(app, 'get', '/newsletter/status')
     const reply = makeReply()
-    await expect(handler({ query: {} }, reply)).rejects.toMatchObject({
+    await expect(handler({ query: {}, user: null }, reply)).rejects.toMatchObject({
+      code: 'authentication_error',
+      statusCode: 401,
+    })
+  })
+
+  it('returns 400 for invalid status query when authenticated', async () => {
+    const app = makeApp()
+    const { newsletterRoutes } = await import('../plane-a/src/routes/newsletter')
+    await newsletterRoutes(app)
+
+    const handler = getHandler(app, 'get', '/newsletter/status')
+    const reply = makeReply()
+    await expect(handler({ query: {}, user: { user_id: 'test-user' } }, reply)).rejects.toMatchObject({
       code: 'validation_error',
       statusCode: 400,
     })

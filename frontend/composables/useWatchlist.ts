@@ -251,6 +251,7 @@ export const useWatchlist = () => {
 
   const hydrated = useState<boolean>('watchlist:api:hydrated', () => false)
   const syncing = useState<boolean>('watchlist:syncing', () => false)
+  const pendingRemoveTargets = new Set<string>()
 
   const count = computed(() => items.value.length)
 
@@ -382,7 +383,10 @@ export const useWatchlist = () => {
     })
 
     if (response.success && response.item) {
-      upsertItem(response.item)
+      const key = targetKey(normalizeTarget(response.item.target))
+      if (!pendingRemoveTargets.has(key)) {
+        upsertItem(response.item)
+      }
       return { status: response.status ?? 'saved', item: response.item }
     }
 
@@ -542,11 +546,14 @@ export const useWatchlist = () => {
     if (index === -1) return true
 
     const removed = items.value[index]
+    const removeKey = targetKey(normalizeTarget(removed.target))
     items.value = items.value.filter(i => i.id !== id)
+    pendingRemoveTargets.add(removeKey)
 
     if (isLoggedIn.value) {
       const ok = await syncToBackend('delete', {} as WatchTarget, id)
       if (!ok) {
+        pendingRemoveTargets.delete(removeKey)
         // Roll back local removal if backend deletion fails.
         items.value = [removed, ...items.value].sort(sortByUpdatedDesc)
         toast.error('Unable to remove item right now. Please try again.')
@@ -554,6 +561,7 @@ export const useWatchlist = () => {
       }
     }
 
+    pendingRemoveTargets.delete(removeKey)
     return true
   }
 

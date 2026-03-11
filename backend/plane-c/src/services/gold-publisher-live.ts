@@ -10,7 +10,7 @@
  * - USD-normalized amount bucket conversion
  */
 
-import type { Pool } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { query } from '../../../shared/db'
 import { evaluatePublisherGates } from './publisher-gates'
 import { createLogger } from '../../../shared/logger'
@@ -140,44 +140,63 @@ export class GoldPublisherLive {
   }
 
   async publishToGoldExport(data: AggregatedData): Promise<void> {
-    await query(
-      `INSERT INTO gold_export.corridor_rates (
-         corridor_id,
-         timestamp_bucket,
-         provider_count,
-         avg_rate,
-         min_rate,
-         max_rate,
-         top_provider_share,
-         top_two_share,
-         contributor_count,
-         metadata
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       ON CONFLICT (corridor_id, timestamp_bucket)
-       DO UPDATE SET
-         provider_count = EXCLUDED.provider_count,
-         avg_rate = EXCLUDED.avg_rate,
-         min_rate = EXCLUDED.min_rate,
-         max_rate = EXCLUDED.max_rate,
-         top_provider_share = EXCLUDED.top_provider_share,
-         top_two_share = EXCLUDED.top_two_share,
-         contributor_count = EXCLUDED.contributor_count,
-         metadata = EXCLUDED.metadata,
-         created_at = NOW()`,
-      [
-        data.corridorId,
-        data.timestampBucket,
-        data.providerCount,
-        data.avgRate,
-        data.minRate,
-        data.maxRate,
-        data.topProviderShare > 0 ? data.topProviderShare : null,
-        data.topTwoShare > 0 ? data.topTwoShare : null,
-        data.contributorCount,
-        data.metadata ? JSON.stringify(data.metadata) : null,
-      ],
-      this.goldPool,
-    )
+    const client: PoolClient = await this.goldPool.connect()
+    try {
+      await client.query('BEGIN')
+
+      await query(
+        `INSERT INTO gold_export.corridor_rates (
+           corridor_id,
+           timestamp_bucket,
+           provider_count,
+           avg_rate,
+           min_rate,
+           max_rate,
+           top_provider_share,
+           top_two_share,
+           contributor_count,
+           metadata
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT (corridor_id, timestamp_bucket)
+         DO UPDATE SET
+           provider_count = EXCLUDED.provider_count,
+           avg_rate = EXCLUDED.avg_rate,
+           min_rate = EXCLUDED.min_rate,
+           max_rate = EXCLUDED.max_rate,
+           top_provider_share = EXCLUDED.top_provider_share,
+           top_two_share = EXCLUDED.top_two_share,
+           contributor_count = EXCLUDED.contributor_count,
+           metadata = EXCLUDED.metadata,
+           created_at = NOW()`,
+        [
+          data.corridorId,
+          data.timestampBucket,
+          data.providerCount,
+          data.avgRate,
+          data.minRate,
+          data.maxRate,
+          data.topProviderShare > 0 ? data.topProviderShare : null,
+          data.topTwoShare > 0 ? data.topTwoShare : null,
+          data.contributorCount,
+          data.metadata ? JSON.stringify(data.metadata) : null,
+        ],
+        client,
+      )
+
+      await client.query('COMMIT')
+    } catch (error) {
+      try {
+        await client.query('ROLLBACK')
+      } catch (rollbackError) {
+        logger.warn('gold_export_live_rollback_failed', {
+          corridor_id: data.corridorId,
+          error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+        })
+      }
+      throw error
+    } finally {
+      client.release()
+    }
   }
 
   async processCorridors(corridors: string[]): Promise<PublisherResult> {
@@ -197,6 +216,8 @@ export class GoldPublisherLive {
       errors: 0,
     }
 
+    const failedCorridors: string[] = []
+
     const batchSize = 10
     for (let i = 0; i < corridors.length; i += batchSize) {
       const batch = corridors.slice(i, i + batchSize)
@@ -206,7 +227,7 @@ export class GoldPublisherLive {
             const aggregatedData = await this.aggregateCorridorData(corridorId)
 
             if (!aggregatedData) {
-              return { published: false, withheld: false }
+              return { published: false, withheld: false, corridorId }
             }
 
             const gateResult = this.applyPublisherGates(aggregatedData)
@@ -217,25 +238,27 @@ export class GoldPublisherLive {
                 corridor_id: corridorId,
                 provider_count: aggregatedData.providerCount,
               })
-              return { published: true, withheld: false }
+              return { published: true, withheld: false, corridorId }
             } else {
               logger.debug('corridor_withheld_live', {
                 corridor_id: corridorId,
                 reasons: gateResult.reasons,
               })
-              return { published: false, withheld: true }
+              return { published: false, withheld: true, corridorId }
             }
           } catch (error) {
             logger.error('corridor_processing_error_live', {
               corridor_id: corridorId,
               error: error instanceof Error ? error.message : String(error),
+              stack: error instanceof Error ? error.stack : undefined,
             })
             throw error
           }
         }),
       )
 
-      for (const batchResult of batchResults) {
+      for (let j = 0; j < batchResults.length; j++) {
+        const batchResult = batchResults[j]
         if (batchResult.status === 'fulfilled') {
           if (batchResult.value.published) {
             result.published++
@@ -244,8 +267,18 @@ export class GoldPublisherLive {
           }
         } else {
           result.errors++
+          failedCorridors.push(batch[j])
         }
       }
+    }
+
+    if (failedCorridors.length > 0) {
+      logger.warn('live_publish_partial_failure', {
+        total_corridors: corridors.length,
+        failed_count: failedCorridors.length,
+        published_count: result.published,
+        failed_corridors: failedCorridors.slice(0, 20),
+      })
     }
 
     return result

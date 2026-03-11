@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { createHash } from 'crypto'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { AppError, RateLimitError, ValidationError } from '../../../shared/errors'
+import { AppError, RateLimitError, ValidationError, AuthenticationError } from '../../../shared/errors'
 import { DEFAULT_FALLBACK_TTL_SECONDS } from '../../../shared/constants'
 import { generateToken, hashToken } from '../utils/token-generator'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
@@ -80,11 +80,6 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
     const source = parsed.data.source ?? 'NewsletterSignup'
 
     try {
-      const existing = await newsletterRepository.findByEmail(email)
-      if (existing?.status === 'active') {
-        return { success: true, status: 'active' }
-      }
-
       const rateKey = buildRateLimitKey('newsletter:rate', email)
       if (await checkRateLimit({ logger, key: rateKey, limit: 3, ttlSeconds: DEFAULT_FALLBACK_TTL_SECONDS, component: 'newsletter' })) {
         throw new RateLimitError('Please wait before requesting another confirmation email.')
@@ -102,21 +97,21 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
         Date.now() + config.newsletter.tokenExpiryHours * 60 * 60 * 1000,
       )
 
-      if (existing) {
-        await newsletterRepository.updatePendingTokens(existing.id, {
-          verify_token_hash: verifyTokenHash,
-          unsubscribe_token_hash: unsubscribeTokenHash,
-          source,
-          verify_token_expires_at: expiresAt,
-        })
-      } else {
-        await newsletterRepository.createPending({
-          email,
-          verify_token_hash: verifyTokenHash,
-          unsubscribe_token_hash: unsubscribeTokenHash,
-          source,
-          verify_token_expires_at: expiresAt,
-        })
+      // Atomic upsert: INSERT ... ON CONFLICT handles both new and
+      // existing-pending/unsubscribed rows, eliminating the TOCTOU race
+      // between findByEmail and createPending/updatePendingTokens.
+      const row = await newsletterRepository.createPending({
+        email,
+        verify_token_hash: verifyTokenHash,
+        unsubscribe_token_hash: unsubscribeTokenHash,
+        source,
+        verify_token_expires_at: expiresAt,
+      })
+
+      // If the subscriber is already active, the ON CONFLICT preserves
+      // that status — skip sending another confirmation email.
+      if (row.status === 'active') {
+        return { success: true, status: 'active' }
       }
 
       await sendConfirmationEmail(email, verifyToken, unsubscribeToken)
@@ -270,13 +265,27 @@ export const newsletterRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/newsletter/status', async (request, _reply) => {
+    // H8: Require authentication to prevent email enumeration.
+    // Without auth, an attacker could probe arbitrary emails to discover subscribers.
+    if (!request.user?.user_id) {
+      throw new AuthenticationError('Authentication required to check newsletter status')
+    }
+
     const parsed = statusSchema.safeParse(request.query)
     if (!parsed.success) {
       throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
+    const email = normalizeEmail(parsed.data.email)
+
+    // Rate-limit status checks to further mitigate enumeration attempts
+    const rateKey = buildRateLimitKey('newsletter:status', request.user.user_id)
+    if (await checkRateLimit({ logger, key: rateKey, limit: 10, ttlSeconds: 60, component: 'newsletter-status' })) {
+      throw new RateLimitError('Too many status checks. Please wait before trying again.')
+    }
+
     try {
-      const record = await newsletterRepository.findByEmail(normalizeEmail(parsed.data.email))
+      const record = await newsletterRepository.findByEmail(email)
       return { status: record?.status ?? 'none' }
     } catch (error) {
       logger.error('newsletter_status_failed', {

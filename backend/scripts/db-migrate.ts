@@ -3,22 +3,79 @@ import path from 'path'
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { initTracing } from '../shared/tracing'
+import { createLogger } from '../shared/logger'
 
 initTracing('db-migrate')
 
+const logger = createLogger('db-migrate')
+
 const migrationsDir = path.resolve(__dirname, '..', 'db', 'migrations')
+
+// ---------------------------------------------------------------------------
+// Migration file parsing — `-- @rollback` convention
+// ---------------------------------------------------------------------------
+// Existing migrations 001–112 predate this convention and are treated as
+// non-reversible (no `-- @rollback` marker).  New migrations should include a
+// `-- @rollback` section or explicitly declare `-- @rollback impossible`.
+
+export interface ParsedMigration {
+  forwardSql: string
+  rollbackSql: string | null
+  isReversible: boolean
+}
+
+/**
+ * Parse a migration file into forward SQL and optional rollback SQL.
+ *
+ * Convention:
+ *  - `-- @rollback` separates forward SQL from rollback SQL
+ *  - `-- @rollback impossible` marks the migration as non-reversible
+ *  - No marker at all = non-reversible (backward compatible)
+ */
+export function parseMigrationFile(_filename: string, content: string): ParsedMigration {
+  const impossibleMarker = '-- @rollback impossible'
+  const marker = '-- @rollback'
+
+  if (content.includes(impossibleMarker)) {
+    const forwardSql = content.substring(0, content.indexOf(impossibleMarker)).trim()
+    return { forwardSql, rollbackSql: null, isReversible: false }
+  }
+
+  const markerIndex = content.indexOf(marker)
+  if (markerIndex === -1) {
+    return { forwardSql: content.trim(), rollbackSql: null, isReversible: false }
+  }
+
+  const forwardSql = content.substring(0, markerIndex).trim()
+  const rollbackSql = content.substring(markerIndex + marker.length).trim()
+  return { forwardSql, rollbackSql, isReversible: true }
+}
+
+/**
+ * Extract the numeric version prefix from a migration filename.
+ * e.g. "042_add_users.sql" -> 42
+ */
+export function extractVersion(filename: string): number {
+  const match = filename.match(/^(\d+)_/)
+  if (!match) throw new Error(`Invalid migration filename: ${filename}`)
+  return parseInt(match[1], 10)
+}
+
+// ---------------------------------------------------------------------------
+// Connection helpers (unchanged)
+// ---------------------------------------------------------------------------
 
 const getConnectionErrorHelp = (error: unknown): string => {
   const errorMessage = error instanceof Error ? error.message : String(error)
   const errorString = String(error)
-  
-  if (errorMessage.includes('ECONNREFUSED') || errorString.includes('ECONNREFUSED') || 
+
+  if (errorMessage.includes('ECONNREFUSED') || errorString.includes('ECONNREFUSED') ||
       errorMessage.includes('connect') || errorString.includes('connect')) {
     const dbUrl = config.db.planeBUrl || 'not configured'
     const isLocalhost = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')
-    
-    let help = '\n❌ Database connection failed\n\n'
-    
+
+    let help = '\n Database connection failed\n\n'
+
     if (isLocalhost) {
       help += 'The migration script is trying to connect to a local PostgreSQL database, but it\'s not running.\n\n'
       help += 'Options:\n'
@@ -37,18 +94,18 @@ const getConnectionErrorHelp = (error: unknown): string => {
       help += '3. Connection string is correct (check DATABASE_URL_PLANE_B)\n'
       help += '4. SSL settings are correct (check DB_SSL_MODE)\n\n'
     }
-    
+
     help += `Current connection string: ${dbUrl.replace(/:[^:@]+@/, ':****@')}\n`
     help += '\nFor more information, see: README.md (or the internal runbook).\n'
-    
+
     return help
   }
-  
+
   return ''
 }
 
 type MigrationTarget = { label: string; dbUrl: string }
-type MigrationRunOptions = { dryRun?: boolean }
+type MigrationRunOptions = { dryRun?: boolean; targetVersion?: number }
 
 const resolveMigratorUrl = (baseUrl?: string): string | undefined => {
   // CI/CD + ops best practice: migrations run with a privileged DB user, application runtime uses a restricted user.
@@ -68,6 +125,151 @@ const resolveMigratorUrl = (baseUrl?: string): string | undefined => {
   return baseUrl
 }
 
+// ---------------------------------------------------------------------------
+// CLI argument parsing
+// ---------------------------------------------------------------------------
+
+function parseCliArgs(): { dryRun: boolean; list: boolean; targetVersion: number | undefined; confirmRollback: boolean } {
+  const args = process.argv
+  const dryRun = args.includes('--dry-run')
+  const list = args.includes('--list')
+  const confirmRollback = args.includes('--confirm-rollback')
+
+  let targetVersion: number | undefined
+  const tvIndex = args.indexOf('--target-version')
+  if (tvIndex !== -1 && tvIndex + 1 < args.length) {
+    const parsed = parseInt(args[tvIndex + 1], 10)
+    if (Number.isNaN(parsed) || parsed < 0) {
+      logger.error({ value: args[tvIndex + 1] }, 'Invalid --target-version value; must be a non-negative integer')
+      process.exit(1)
+    }
+    targetVersion = parsed
+  }
+
+  return { dryRun, list, targetVersion, confirmRollback }
+}
+
+// ---------------------------------------------------------------------------
+// List migrations
+// ---------------------------------------------------------------------------
+
+export const listMigrations = async (target: MigrationTarget): Promise<void> => {
+  const db = createPool(target.dbUrl)
+  try {
+    await db.query(
+      `CREATE TABLE IF NOT EXISTS public.schema_migrations (
+        id TEXT PRIMARY KEY,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
+    )
+
+    const appliedResult = await db.query('SELECT id FROM public.schema_migrations')
+    const applied = new Set(appliedResult.rows.map((row: { id: string }) => row.id))
+
+    const files = (await readdir(migrationsDir))
+      .filter((file) => file.endsWith('.sql') && file !== 'TEMPLATE.sql')
+      .sort()
+
+    logger.info({ target: target.label, total: files.length, applied: applied.size }, 'Migration status')
+
+    const header = `${'Version'.padEnd(8)} ${'Filename'.padEnd(55)} ${'Applied'.padEnd(9)} Reversible`
+    const separator = '-'.repeat(header.length)
+    logger.info(header)
+    logger.info(separator)
+
+    for (const file of files) {
+      const version = extractVersion(file)
+      const isApplied = applied.has(file)
+
+      let reversibleLabel = 'n/a'
+      if (isApplied) {
+        // Read file to determine reversibility
+        const content = await readFile(path.join(migrationsDir, file), 'utf8')
+        const parsed = parseMigrationFile(file, content)
+        reversibleLabel = parsed.isReversible ? 'yes' : 'no'
+      }
+
+      const line = `${String(version).padEnd(8)} ${file.padEnd(55)} ${(isApplied ? 'yes' : 'no').padEnd(9)} ${reversibleLabel}`
+      logger.info(line)
+    }
+  } finally {
+    await db.end()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rollback migrations
+// ---------------------------------------------------------------------------
+
+export const rollbackMigrations = async (
+  target: MigrationTarget,
+  targetVersion: number,
+  confirmRollback: boolean,
+): Promise<number> => {
+  const db = createPool(target.dbUrl)
+  try {
+    const appliedResult = await db.query('SELECT id FROM public.schema_migrations ORDER BY id DESC')
+    const appliedFiles: string[] = appliedResult.rows.map((row: { id: string }) => row.id)
+
+    // Filter to migrations with version > targetVersion, already sorted descending
+    const toRollback = appliedFiles.filter((file) => extractVersion(file) > targetVersion)
+
+    if (toRollback.length === 0) {
+      logger.info({ target: target.label, targetVersion }, 'No migrations to roll back — already at or below target version')
+      return 0
+    }
+
+    // Dry-run / confirmation gate
+    if (!confirmRollback) {
+      logger.warn({ target: target.label, targetVersion, count: toRollback.length }, 'Rollback preview (no changes applied)')
+      for (const file of toRollback) {
+        const content = await readFile(path.join(migrationsDir, file), 'utf8')
+        const parsed = parseMigrationFile(file, content)
+        const status = parsed.isReversible ? 'reversible' : 'NON-REVERSIBLE'
+        logger.warn({ file, status }, 'Would roll back')
+      }
+      logger.warn('To proceed, re-run with --confirm-rollback')
+      return 0
+    }
+
+    // Execute rollbacks
+    let rolledBack = 0
+    for (const file of toRollback) {
+      const content = await readFile(path.join(migrationsDir, file), 'utf8')
+      const parsed = parseMigrationFile(file, content)
+
+      if (!parsed.isReversible) {
+        logger.error(
+          { file },
+          'Cannot roll back non-reversible migration. Aborting rollback. No further migrations will be rolled back.',
+        )
+        throw new Error(`Migration ${file} is not reversible. Rollback aborted.`)
+      }
+
+      await db.query('BEGIN')
+      try {
+        await db.query(parsed.rollbackSql!)
+        await db.query('DELETE FROM public.schema_migrations WHERE id = $1', [file])
+        await db.query('COMMIT')
+        logger.info({ target: target.label, file }, 'Rolled back migration')
+        rolledBack++
+      } catch (error) {
+        await db.query('ROLLBACK')
+        throw error
+      }
+    }
+
+    logger.info({ target: target.label, rolledBack, targetVersion }, 'Rollback complete')
+    return rolledBack
+  } finally {
+    await db.end()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Forward migrations (original logic, now supports --target-version cap)
+// ---------------------------------------------------------------------------
+
 export const applyMigrations = async (
   target: MigrationTarget,
   options: MigrationRunOptions = {},
@@ -82,20 +284,26 @@ export const applyMigrations = async (
     )
 
     const appliedResult = await db.query('SELECT id FROM public.schema_migrations')
-    const applied = new Set(appliedResult.rows.map((row) => row.id))
+    const applied = new Set(appliedResult.rows.map((row: { id: string }) => row.id))
 
-    const files = (await readdir(migrationsDir))
-      .filter((file) => file.endsWith('.sql'))
+    let files = (await readdir(migrationsDir))
+      .filter((file) => file.endsWith('.sql') && file !== 'TEMPLATE.sql')
       .sort()
+
+    // If --target-version is set, only consider migrations up to that version
+    if (options.targetVersion !== undefined) {
+      files = files.filter((file) => extractVersion(file) <= options.targetVersion!)
+    }
+
     const pending = files.filter((file) => !applied.has(file))
 
     if (options.dryRun) {
       if (pending.length === 0) {
-        console.log(`[${target.label}] ✅ Dry run: no pending migrations`)
+        logger.info({ target: target.label }, 'Dry run: no pending migrations')
       } else {
-        console.log(`[${target.label}] 🔎 Dry run: ${pending.length} pending migration(s):`)
+        logger.info({ target: target.label, count: pending.length }, 'Dry run: pending migrations')
         for (const file of pending) {
-          console.log(`[${target.label}] - ${file}`)
+          logger.info({ target: target.label, file }, 'Pending')
         }
       }
       return pending.length
@@ -103,13 +311,14 @@ export const applyMigrations = async (
 
     let appliedCount = 0
     for (const file of pending) {
-      const sql = await readFile(path.join(migrationsDir, file), 'utf8')
+      const content = await readFile(path.join(migrationsDir, file), 'utf8')
+      const parsed = parseMigrationFile(file, content)
       await db.query('BEGIN')
       try {
-        await db.query(sql)
+        await db.query(parsed.forwardSql)
         await db.query('INSERT INTO public.schema_migrations (id) VALUES ($1)', [file])
         await db.query('COMMIT')
-        console.log(`[${target.label}] ✅ Applied migration: ${file}`)
+        logger.info({ target: target.label, file }, 'Applied migration')
         appliedCount++
       } catch (error) {
         await db.query('ROLLBACK')
@@ -118,9 +327,9 @@ export const applyMigrations = async (
     }
 
     if (appliedCount === 0) {
-      console.log(`[${target.label}] ✅ All migrations are already applied`)
+      logger.info({ target: target.label }, 'All migrations are already applied')
     } else {
-      console.log(`\n[${target.label}] ✅ Successfully applied ${appliedCount} migration(s)`)
+      logger.info({ target: target.label, count: appliedCount }, 'Successfully applied migrations')
     }
     return appliedCount
   } finally {
@@ -128,17 +337,17 @@ export const applyMigrations = async (
   }
 }
 
+// ---------------------------------------------------------------------------
+// Main entry point
+// ---------------------------------------------------------------------------
+
 export const runMigrations = async (): Promise<void> => {
-  const dryRun = process.argv.includes('--dry-run')
+  const { dryRun, list, targetVersion, confirmRollback } = parseCliArgs()
+
   const planeBUrl = resolveMigratorUrl(config.db.planeBUrl)
   if (!planeBUrl) {
-    console.error('\n❌ Database connection string is not configured\n')
-    console.error('Please set one of the following environment variables:')
-    console.error('  - DATABASE_URL_PLANE_B (recommended)')
-    console.error('  - DATABASE_URL_PLANE_B_MIGRATOR (preferred for CI/CD migrations)')
-    console.error('  - DATABASE_URL (fallback)')
-    console.error('\nExample:')
-    console.error('  export DATABASE_URL_PLANE_B="postgres://user:pass@localhost:5432/dbname"\n')
+    logger.error('Database connection string is not configured')
+    logger.error('Please set one of: DATABASE_URL_PLANE_B, DATABASE_URL_PLANE_B_MIGRATOR, or DATABASE_URL')
     process.exit(1)
   }
 
@@ -148,6 +357,47 @@ export const runMigrations = async (): Promise<void> => {
     targets.push({ label: 'plane-c', dbUrl: planeCUrl })
   }
 
+  // --list: show migration table and exit
+  if (list) {
+    for (const target of targets) {
+      await listMigrations(target)
+    }
+    return
+  }
+
+  // --target-version N: migrate forward or roll back to version N
+  if (targetVersion !== undefined) {
+    for (const target of targets) {
+      // Determine current max applied version
+      const db = createPool(target.dbUrl)
+      let currentMax = 0
+      try {
+        await db.query(
+          `CREATE TABLE IF NOT EXISTS public.schema_migrations (
+            id TEXT PRIMARY KEY,
+            applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          )`,
+        )
+        const appliedResult = await db.query('SELECT id FROM public.schema_migrations ORDER BY id DESC LIMIT 1')
+        if (appliedResult.rows.length > 0) {
+          currentMax = extractVersion(appliedResult.rows[0].id)
+        }
+      } finally {
+        await db.end()
+      }
+
+      if (targetVersion >= currentMax) {
+        // Forward migration up to targetVersion
+        await applyMigrations(target, { dryRun, targetVersion })
+      } else {
+        // Rollback to targetVersion
+        await rollbackMigrations(target, targetVersion, confirmRollback)
+      }
+    }
+    return
+  }
+
+  // Default: run all pending migrations forward
   for (const target of targets) {
     await applyMigrations(target, { dryRun })
   }
@@ -157,7 +407,7 @@ const handleError = (error: unknown) => {
   // Handle AggregateError (common with pg-pool connection errors)
   let errorMessage = ''
   let errorString = ''
-  
+
   if (error instanceof AggregateError) {
     errorMessage = error.message || ''
     errorString = JSON.stringify(error, null, 2)
@@ -176,24 +426,20 @@ const handleError = (error: unknown) => {
     errorMessage = String(error)
     errorString = String(error)
   }
-  
-  console.error('Migration failed:', errorMessage || 'Unknown error')
+
+  logger.error({ error: errorMessage }, 'Migration failed')
   if (errorMessage.toLowerCase().includes('permission denied for schema')) {
-    console.error('\n❌ Permission denied while applying migrations.')
-    console.error(
-      'This usually means your DATABASE_URL_PLANE_B user is a restricted runtime user.\n' +
-        'Fix: run migrations with a privileged migrator connection string.\n',
+    logger.error(
+      'Permission denied while applying migrations. ' +
+      'This usually means your DATABASE_URL_PLANE_B user is a restricted runtime user. ' +
+      'Fix: set DATABASE_URL_PLANE_B_MIGRATOR to a superuser/migrator URL.',
     )
-    console.error('Options:')
-    console.error('  - Set DATABASE_URL_PLANE_B_MIGRATOR to a superuser/migrator URL (recommended).')
-    console.error('  - Or grant schema privileges to the runtime user (less preferred).')
-    console.error('')
   }
   const help = getConnectionErrorHelp({ message: errorMessage, toString: () => errorString })
   if (help) {
-    console.error(help)
+    logger.error(help)
   } else {
-    console.error('\nFor more information, see: README.md (or the internal runbook).\n')
+    logger.error('For more information, see: README.md (or the internal runbook).')
   }
   process.exit(1)
 }

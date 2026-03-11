@@ -568,21 +568,17 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       }
 
       const requestedAmount = amountInput ?? amountBucketInput ?? bucketSelection.bucket_used
-      const isAdmin =
-        request.user?.role === 'admin' ||
-        request.user?.role === 'super_admin' ||
-        (request.user?.email &&
-          config.planeA.adminEmails.includes(request.user.email.toLowerCase()))
       // Derive availableMethods from actual payout methods in quote rows, not provider IDs
       const methodSet = new Set<string>()
       for (const row of result.rows) {
         if (row.payout) methodSet.add(row.payout)
       }
       const availableMethods = Array.from(methodSet).sort()
+      // H11: Do not expose is_admin in the public quotes response — it leaks
+      // internal role information to unauthenticated callers.
       const quotesWithAffiliate = result.rows.map((row) => ({
         ...row,
         ...buildAffiliateInfo(row.provider_id),
-        is_admin: Boolean(isAdmin),
       }))
 
       const responsePayload = {

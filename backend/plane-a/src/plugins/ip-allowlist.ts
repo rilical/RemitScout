@@ -55,9 +55,14 @@ export const resolveClientIp = (request: FastifyRequest): string | null => {
   }
   const forwarded = headers['x-forwarded-for']
   const forwardedIps = parseForwardedIps(forwarded)
-  const firstForwardedIp = forwardedIps[0] || null
-  if (firstForwardedIp) {
-    return firstForwardedIp
+  if (forwardedIps.length > 0) {
+    // CloudFront places the real viewer IP first and appends its edge IP last.
+    // Non-CloudFront proxies (ALB): the rightmost entry is the most trusted,
+    // set by the closest proxy and not spoofable by the client.
+    if (isCloudFrontForwardedRequest(request)) {
+      return forwardedIps[0]
+    }
+    return forwardedIps[forwardedIps.length - 1]
   }
 
   return remoteIp

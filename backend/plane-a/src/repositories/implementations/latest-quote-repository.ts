@@ -194,7 +194,10 @@ export class LatestQuoteRepository implements ILatestQuoteRepository {
     quoteCurrency: string,
     maxAgeHours: number = 24,
   ): Promise<LatestQuoteByCurrencyPairRecord[]> {
-    const interval = `${Math.max(1, Math.floor(maxAgeHours))} hours`
+    const safeMaxAgeHours = parseInt(String(Math.max(1, Math.floor(maxAgeHours))), 10)
+    if (!Number.isFinite(safeMaxAgeHours)) {
+      throw new Error(`Invalid maxAgeHours value: ${String(maxAgeHours)}`)
+    }
     const result = await query<LatestQuoteByCurrencyPairRecord>(
       `SELECT DISTINCT ON (lqp.provider_id)
          lqp.provider_id,
@@ -210,9 +213,9 @@ export class LatestQuoteRepository implements ILatestQuoteRepository {
        WHERE lqp.status = 'ok'
          AND UPPER(c.source_currency) = UPPER($1)
          AND UPPER(c.dest_currency) = UPPER($2)
-         AND lqp.collected_at >= NOW() - $3::interval
+         AND lqp.collected_at >= NOW() - ($3 * INTERVAL '1 hour')
        ORDER BY lqp.provider_id, lqp.collected_at DESC`,
-      [baseCurrency, quoteCurrency, interval],
+      [baseCurrency, quoteCurrency, safeMaxAgeHours],
       this.pool,
     )
     return result.rows

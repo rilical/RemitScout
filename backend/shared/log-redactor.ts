@@ -14,6 +14,12 @@ const DEFAULT_SENSITIVE_KEYS = new Set([
   'authorization',
   'cookie',
   'set-cookie',
+  'email',
+  'phone',
+  'phone_number',
+  'to',
+  'recipients',
+  'ip_address',
 ])
 
 const REDACTED = '[REDACTED]'

@@ -9,6 +9,10 @@
  * map `incident.status` to trigger resolve when "resolved".
  */
 
+import { createLogger } from '../../shared/logger'
+
+const logger = createLogger('script.betteruptime-sns-relay-lambda')
+
 const WEBHOOK_URL = process.env.BETTERUPTIME_WEBHOOK_URL
 const ENV_NAME = process.env.ENV_NAME || process.env.APP_ENV || process.env.NODE_ENV || 'unknown'
 
@@ -187,7 +191,7 @@ const postToWebhook = async (payload: unknown) => {
 export const handler = async (event: SnsEvent): Promise<{ ok: boolean; sent: number }> => {
   const records = Array.isArray(event?.Records) ? event.Records : []
   if (records.length === 0) {
-    console.warn(JSON.stringify({ scope: 'betteruptime_relay', msg: 'no_records' }))
+    logger.warn('no_records', { scope: 'betteruptime_relay' })
     return { ok: true, sent: 0 }
   }
 
@@ -203,7 +207,7 @@ export const handler = async (event: SnsEvent): Promise<{ ok: boolean; sent: num
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       errors.push(message)
-      console.error(JSON.stringify({ scope: 'betteruptime_relay', error: message }))
+      logger.error('betteruptime_relay_record_failed', { error: message })
     }
   }
 

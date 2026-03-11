@@ -15,7 +15,6 @@ import {
   checkCorridorSignalData,
   computeQuoteCoverage,
   createAlertSchema,
-  getAlertCount,
   getSupportedAlertMetricsForTargetType,
   isMetricSupportedForTarget,
   isValidSendScore,
@@ -341,11 +340,29 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      // Check quota
+      // Check quota and create alert atomically to prevent concurrent requests
+      // from bypassing quota limits (race condition fix H8)
       const limit = resolveAlertLimitForEntitlements(effective.entitlements)
+      const resolvedFrequency = body.rule.metric === 'sendScore' ? 'weekly' : body.frequency
+      const alertInput = {
+        watchlist_item_id: body.watchlistItemId,
+        metric: body.rule.metric,
+        comparator: body.rule.comparator,
+        threshold: body.rule.value,
+        currency: body.rule.currency || null,
+        frequency: resolvedFrequency,
+        enabled: body.enabled,
+        cooldown_minutes: resolveCooldownMinutes(resolvedFrequency),
+      }
+
+      let row
       if (limit !== 'unlimited') {
-        const count = await getAlertCount(alertRepository, user.user_id)
-        if (count >= limit) {
+        const result = await alertRepository.createWithQuotaCheck(
+          alertInput,
+          user.user_id,
+          limit,
+        )
+        if (result.status === 'quota_exceeded') {
           const planLabel = resolvePlanLabel(effective.effectivePlanCode)
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('POST', '/alerts', 403, durationSeconds)
@@ -358,20 +375,10 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
             limit,
           }
         }
+        row = result.alert
+      } else {
+        row = await alertRepository.create(alertInput)
       }
-
-      // Create alert
-      const resolvedFrequency = body.rule.metric === 'sendScore' ? 'weekly' : body.frequency
-      const row = await alertRepository.create({
-        watchlist_item_id: body.watchlistItemId,
-        metric: body.rule.metric,
-        comparator: body.rule.comparator,
-        threshold: body.rule.value,
-        currency: body.rule.currency || null,
-        frequency: resolvedFrequency,
-        enabled: body.enabled,
-        cooldown_minutes: resolveCooldownMinutes(resolvedFrequency),
-      })
 
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('POST', '/alerts', 200, durationSeconds)

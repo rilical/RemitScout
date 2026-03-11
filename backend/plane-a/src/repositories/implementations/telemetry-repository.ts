@@ -122,7 +122,11 @@ export class TelemetryRepository implements ITelemetryRepository {
       this.pool,
     )
 
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT/upsert into telemetry_session returned no rows')
+    }
+    return row
   }
 
   async getSessionById(sessionId: string): Promise<TelemetrySessionRow | null> {

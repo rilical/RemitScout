@@ -135,6 +135,11 @@ describe('index corrections routes', () => {
   })
 
   it('approves index corrections with the authenticated admin identity and ignores caller-supplied approved_by', async () => {
+    // First query: SELECT to check self-approval (H10 fix)
+    vi.mocked(query).mockResolvedValueOnce({
+      rows: [{ corrected_by: 'creator@remit-scout.com', approved_by: null }],
+    } as MockQueryResult)
+    // Second query: UPDATE
     vi.mocked(query).mockResolvedValueOnce({
       rows: [{
         correction_id: 'corr-1',

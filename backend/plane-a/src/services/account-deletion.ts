@@ -148,6 +148,37 @@ export const deleteUserAccount = async (
       [userId],
     )
 
+    // Explicit child-table cleanup: breaks the CASCADE chain so the FK
+    // constraints can later be changed from CASCADE to RESTRICT.
+    // Order matters: alert_event/alert_state depend on alert_rule,
+    // which depends on watchlist_item, which depends on user_account.
+    await client.query(
+      `DELETE FROM silver.alert_event WHERE alert_id IN (
+         SELECT ar.id FROM silver.alert_rule ar
+         JOIN silver.watchlist_item wi ON ar.watchlist_item_id = wi.id
+         WHERE wi.user_id = $1)`,
+      [userId],
+    )
+
+    await client.query(
+      `DELETE FROM silver.alert_state WHERE alert_id IN (
+         SELECT ar.id FROM silver.alert_rule ar
+         JOIN silver.watchlist_item wi ON ar.watchlist_item_id = wi.id
+         WHERE wi.user_id = $1)`,
+      [userId],
+    )
+
+    await client.query(
+      `DELETE FROM silver.alert_rule WHERE watchlist_item_id IN (
+         SELECT id FROM silver.watchlist_item WHERE user_id = $1)`,
+      [userId],
+    )
+
+    await client.query(
+      `DELETE FROM silver.watchlist_item WHERE user_id = $1`,
+      [userId],
+    )
+
     const deletionResult = await client.query<{ user_id: string }>(
       `DELETE FROM silver.user_account
        WHERE user_id = $1

@@ -33,7 +33,11 @@ export class RecentSearchRepository implements IRecentSearchRepository {
       ],
       this.pool,
     )
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT into recent_searches returned no rows')
+    }
+    return row
   }
 
   async upsertRecent(input: RecentSearchInput, dedupeMinutes: number): Promise<RecentSearchRow> {
@@ -84,7 +88,11 @@ export class RecentSearchRepository implements IRecentSearchRepository {
       ],
       this.pool,
     )
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('Upsert into recent_searches returned no rows')
+    }
+    return row
   }
 
   async getByUser(userId: string): Promise<RecentSearchRow[]> {
@@ -93,7 +101,8 @@ export class RecentSearchRepository implements IRecentSearchRepository {
               best_provider_name, best_provider_recipient, created_at
        FROM silver.recent_searches
        WHERE user_id = $1
-       ORDER BY created_at DESC`,
+       ORDER BY created_at DESC
+       LIMIT 100`,
       [userId],
       this.pool,
     )

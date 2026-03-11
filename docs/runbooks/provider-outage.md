@@ -10,7 +10,7 @@
    - CloudWatch metrics: `RemitScout/Probes:probe_run_total`
    - If missing for >15m, check EventBridge rule for the provider probe.
 2) **Check ops provider health**
-   - `GET /api/v1/ops/{provider}/health` (admin)
+   - `GET /api/v1/ops/provider-health` (admin) — returns health for all providers
    - Look for stale corridors, last attempt errors, and quote ages.
 3) **Check latest quotes**
    - `SELECT corridor_id, MAX(collected_at) FROM silver.quote_record WHERE provider_id = $1 GROUP BY corridor_id;`

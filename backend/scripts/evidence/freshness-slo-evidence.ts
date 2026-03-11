@@ -14,8 +14,8 @@ import {
   type EvidenceResult,
 } from '../lib/evidence'
 
-const TIER_1_FILTER = "('tier_1','tier_1_alpha')"
-const TIER_2_FILTER = "('tier_2')"
+const TIER_1_FILTER = ['tier_1', 'tier_1_alpha']
+const TIER_2_FILTER = ['tier_2']
 
 const toNumber = (value: unknown): number | null => {
   if (value === null || value === undefined) return null
@@ -39,7 +39,7 @@ const querySingle = async <T extends Record<string, unknown>>(
   return toNumber(result.rows[0]?.[field])
 }
 
-const fetchFreshnessP95 = async (pool: Pool, filter: string, sinceIso: string): Promise<number | null> => {
+const fetchFreshnessP95 = async (pool: Pool, filter: string[], sinceIso: string): Promise<number | null> => {
   return querySingle<{ p95_seconds: number | null }>(
     pool,
     `SELECT percentile_cont(0.95) WITHIN GROUP (
@@ -49,13 +49,13 @@ const fetchFreshnessP95 = async (pool: Pool, filter: string, sinceIso: string): 
      JOIN silver.corridor_priority cp ON cp.corridor_id = lqp.corridor_id
      WHERE lqp.status = 'ok'
        AND lqp.collected_at >= $1::timestamptz
-       AND cp.priority_tier IN ${filter}`,
-    [sinceIso],
+       AND cp.priority_tier = ANY($2::text[])`,
+    [sinceIso, filter],
     'p95_seconds',
   )
 }
 
-const fetchMissingCorridorCount = async (pool: Pool, filter: string, sinceIso: string): Promise<number> => {
+const fetchMissingCorridorCount = async (pool: Pool, filter: string[], sinceIso: string): Promise<number> => {
   const res = await query<{ missing_count: number | null }>(
     `WITH last_ok AS (
        SELECT corridor_id, MAX(collected_at) AS last_collected_at
@@ -66,15 +66,15 @@ const fetchMissingCorridorCount = async (pool: Pool, filter: string, sinceIso: s
      SELECT COUNT(*)::int AS missing_count
      FROM silver.corridor_priority cp
      LEFT JOIN last_ok l ON l.corridor_id = cp.corridor_id
-     WHERE cp.priority_tier IN ${filter}
-       AND (l.last_collected_at IS NULL OR l.last_collected_at < $1::timestamptz)`,
-    [sinceIso],
+     WHERE cp.priority_tier = ANY($1::text[])
+       AND (l.last_collected_at IS NULL OR l.last_collected_at < $2::timestamptz)`,
+    [filter, sinceIso],
     pool,
   )
   return Number(res.rows[0]?.missing_count ?? 0)
 }
 
-const fetchMissingCorridorSample = async (pool: Pool, filter: string, sinceIso: string): Promise<string[]> => {
+const fetchMissingCorridorSample = async (pool: Pool, filter: string[], sinceIso: string): Promise<string[]> => {
   const res = await query<{ corridor_id: string }>(
     `WITH last_ok AS (
        SELECT corridor_id, MAX(collected_at) AS last_collected_at
@@ -85,11 +85,11 @@ const fetchMissingCorridorSample = async (pool: Pool, filter: string, sinceIso: 
      SELECT cp.corridor_id
      FROM silver.corridor_priority cp
      LEFT JOIN last_ok l ON l.corridor_id = cp.corridor_id
-     WHERE cp.priority_tier IN ${filter}
-       AND (l.last_collected_at IS NULL OR l.last_collected_at < $1::timestamptz)
+     WHERE cp.priority_tier = ANY($1::text[])
+       AND (l.last_collected_at IS NULL OR l.last_collected_at < $2::timestamptz)
      ORDER BY cp.corridor_id ASC
      LIMIT 10`,
-    [sinceIso],
+    [filter, sinceIso],
     pool,
   )
   return res.rows.map((r) => String(r.corridor_id).toUpperCase()).filter(Boolean)

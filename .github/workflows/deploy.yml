@@ -382,12 +382,14 @@ jobs:
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
                 # Every 60s, check if ECS services are stuck in failed deployment
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                  failing="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
                     | jq -r '.serviceArns[]' 2>/dev/null \
                     | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
                     | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")
-                  if [ "${failing:-0}" -gt 3 ]; then
+                    || echo "0")"
+                  failing="$(printf '%s\n' "${failing}" | tail -n 1 | tr -dc '0-9')"
+                  [ -n "${failing}" ] || failing=0
+                  if [ "${failing}" -gt 3 ]; then
                     echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
                     exit 1
@@ -1150,12 +1152,14 @@ jobs:
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
                 # Every 60s, check if ECS services are stuck in failed deployment
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                  failing="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
                     | jq -r '.serviceArns[]' 2>/dev/null \
                     | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
                     | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")
-                  if [ "${failing:-0}" -gt 3 ]; then
+                    || echo "0")"
+                  failing="$(printf '%s\n' "${failing}" | tail -n 1 | tr -dc '0-9')"
+                  [ -n "${failing}" ] || failing=0
+                  if [ "${failing}" -gt 3 ]; then
                     echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
                     exit 1
@@ -2613,12 +2617,14 @@ jobs:
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
                 # Every 60s, check if ECS services are stuck in failed deployment
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                  failing="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
                     | jq -r '.serviceArns[]' 2>/dev/null \
                     | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
                     | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")
-                  if [ "${failing:-0}" -gt 3 ]; then
+                    || echo "0")"
+                  failing="$(printf '%s\n' "${failing}" | tail -n 1 | tr -dc '0-9')"
+                  [ -n "${failing}" ] || failing=0
+                  if [ "${failing}" -gt 3 ]; then
                     echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
                     exit 1

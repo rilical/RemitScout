@@ -25,6 +25,7 @@ import {
 import { deriveMethodProfile, MethodProfile } from './method-profile'
 import { qualityFlags, QualityFlag } from './quality-flags'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
+import { parseNumeric } from '../normalization/parse-utils'
 
 const logger = createLogger('plane-b.normalize.quote-normalizer')
 
@@ -110,31 +111,8 @@ const isFiniteNumber = (value: unknown): value is number =>
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0
 
-const MAX_NUMERIC_VALUE = 1e12
-const STRICT_NUMERIC_PATTERN = /^[-+]?(?:\d+\.?\d*|\.\d+)$/
-
-const parseNumeric = (value: unknown): number | null => {
-  if (value === null || value === undefined) return null
-  let result: number | null = null
-  if (typeof value === 'number') {
-    result = Number.isFinite(value) ? value : null
-  } else if (typeof value === 'string') {
-    const cleaned = value
-      .trim()
-      .replace(/[\s,_]/g, '')
-      .replace(/[$€£¥]/g, '')
-    if (!cleaned || !STRICT_NUMERIC_PATTERN.test(cleaned)) return null
-    const parsed = Number(cleaned)
-    result = Number.isFinite(parsed) ? parsed : null
-  } else {
-    const parsed = Number(value)
-    result = Number.isFinite(parsed) ? parsed : null
-  }
-  if (result !== null && (result > MAX_NUMERIC_VALUE || result < -MAX_NUMERIC_VALUE)) {
-    return null
-  }
-  return result
-}
+// parseNumeric is imported from ../normalization/parse-utils to ensure consistent
+// parsing behavior between extractors and the normalizer (H28/H29 fix).
 
 /**
  * Normalizes and validates the collected_at timestamp.
@@ -242,7 +220,8 @@ const validateInput = (input: NormalizeQuoteInput, flags: Set<QualityFlag>): voi
  *
  * @param input - Provider-specific parsed quote
  * @param input.parse_flags - Quality flags from parser (optional, merged with normalization flags)
- * @returns Normalized quote in standard format
+ * @returns Normalized quote in standard format, or null if the quote is invalid
+ *   (e.g., zero or negative send_amount)
  *
  * @example
  * const normalized = normalizeQuote({
@@ -259,11 +238,24 @@ const validateInput = (input: NormalizeQuoteInput, flags: Set<QualityFlag>): voi
  *   parse_flags: ['partial_data'], // Merged with normalization flags
  * })
  */
-export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
+export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote | null => {
   const flags = new Set<QualityFlag>(input.parse_flags ?? [])
   validateInput(input, flags)
 
   const sendAmountParsed = parseNumeric(input.send_amount)
+
+  // Reject quotes with zero or negative send_amount to prevent division-by-zero
+  // downstream (e.g., rate = receive_amount / send_amount)
+  if (sendAmountParsed === null || sendAmountParsed <= 0) {
+    logger.warn('invalid_send_amount_rejected', {
+      provider_id: input.provider_id,
+      corridor_id: input.corridor_id,
+      send_amount: input.send_amount,
+      ingestion_run_id: input.ingestion_run_id,
+    })
+    return null
+  }
+
   let feeAmountParsed = parseNumeric(input.fee_amount)
   const receiveAmountParsed = parseNumeric(input.receive_amount)
   const totalDebitParsed = parseNumeric(input.total_debit_amount ?? null)
@@ -280,14 +272,14 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
     }
   }
 
-  if (sendAmountParsed === null || receiveAmountParsed === null) {
+  if (receiveAmountParsed === null) {
     flags.add(qualityFlags.parse_error)
   }
   if (feeAmountParsed === null && totalDebitParsed === null) {
     flags.add(qualityFlags.partial_data)
   }
 
-  const sendAmount = sendAmountParsed ?? 0
+  const sendAmount = sendAmountParsed
   const feeAmount = feeAmountParsed ?? 0
   const receiveAmount = receiveAmountParsed ?? 0
   let deliveryTimeMinMinutes = deliveryTimeMinParsed !== null ? Math.round(deliveryTimeMinParsed) : null

@@ -372,7 +372,20 @@ export class AgentOrchestrator {
       this.detectionCycleCount++
       this.lastDetectionCycleAt = new Date().toISOString()
 
-      // Emit detection cycle metric
+      // Low-cardinality alarm-backing metric: dimensions must match the
+      // CloudWatch alarm definition (environment + service only).
+      recordCloudWatchMetric({
+        name: 'detection_cycle_count',
+        value: 1,
+        unit: 'Count',
+        namespace: AGENT_METRIC_NAMESPACE,
+        dimensions: {
+          environment: process.env.ENVIRONMENT || process.env.NODE_ENV || 'development',
+          service: process.env.SERVICE_NAME || 'remit-scout',
+        },
+      })
+
+      // High-cardinality variant with run context for debugging dashboards
       recordCloudWatchMetric({
         name: 'detection_cycle_count',
         value: 1,
@@ -738,14 +751,14 @@ export class AgentOrchestrator {
    * Update dispatch item status.
    */
   private async markDispatchStatus(dispatchId: string, status: string, errorMessage?: string): Promise<void> {
-    const completedAt = status === 'completed' || status === 'failed' ? 'NOW()' : 'NULL'
+    const isTerminal = status === 'completed' || status === 'failed'
     await this.pool.query(
       `UPDATE silver.dispatch_queue
        SET status = $2, error_message = $3,
-           completed_at = ${completedAt},
+           completed_at = CASE WHEN $4::boolean THEN NOW() ELSE completed_at END,
            updated_at = NOW()
        WHERE dispatch_id = $1`,
-      [dispatchId, status, errorMessage ?? null],
+      [dispatchId, status, errorMessage ?? null, isTerminal],
     )
   }
 }

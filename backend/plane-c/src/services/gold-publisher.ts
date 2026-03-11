@@ -1,4 +1,4 @@
-import type { Pool } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { query } from '../../../shared/db'
 import { evaluatePublisherGates } from './publisher-gates'
 import { createLogger } from '../../../shared/logger'
@@ -125,44 +125,63 @@ export class GoldPublisher {
   }
 
   async publishToGoldExport(data: AggregatedData): Promise<void> {
-    await query(
-      `INSERT INTO gold_export.corridor_rates (
-         corridor_id,
-         timestamp_bucket,
-         provider_count,
-         avg_rate,
-         min_rate,
-         max_rate,
-         top_provider_share,
-         top_two_share,
-         contributor_count,
-         metadata
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       ON CONFLICT (corridor_id, timestamp_bucket)
-       DO UPDATE SET
-         provider_count = EXCLUDED.provider_count,
-         avg_rate = EXCLUDED.avg_rate,
-         min_rate = EXCLUDED.min_rate,
-         max_rate = EXCLUDED.max_rate,
-         top_provider_share = EXCLUDED.top_provider_share,
-         top_two_share = EXCLUDED.top_two_share,
-         contributor_count = EXCLUDED.contributor_count,
-         metadata = EXCLUDED.metadata,
-         created_at = NOW()`,
-      [
-        data.corridorId,
-        data.timestampBucket,
-        data.providerCount,
-        data.avgRate,
-        data.minRate,
-        data.maxRate,
-        data.topProviderShare > 0 ? data.topProviderShare : null,
-        data.topTwoShare > 0 ? data.topTwoShare : null,
-        data.contributorCount,
-        data.metadata ? JSON.stringify(data.metadata) : null,
-      ],
-      this.goldPool,
-    )
+    const client: PoolClient = await this.goldPool.connect()
+    try {
+      await client.query('BEGIN')
+
+      await query(
+        `INSERT INTO gold_export.corridor_rates (
+           corridor_id,
+           timestamp_bucket,
+           provider_count,
+           avg_rate,
+           min_rate,
+           max_rate,
+           top_provider_share,
+           top_two_share,
+           contributor_count,
+           metadata
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT (corridor_id, timestamp_bucket)
+         DO UPDATE SET
+           provider_count = EXCLUDED.provider_count,
+           avg_rate = EXCLUDED.avg_rate,
+           min_rate = EXCLUDED.min_rate,
+           max_rate = EXCLUDED.max_rate,
+           top_provider_share = EXCLUDED.top_provider_share,
+           top_two_share = EXCLUDED.top_two_share,
+           contributor_count = EXCLUDED.contributor_count,
+           metadata = EXCLUDED.metadata,
+           created_at = NOW()`,
+        [
+          data.corridorId,
+          data.timestampBucket,
+          data.providerCount,
+          data.avgRate,
+          data.minRate,
+          data.maxRate,
+          data.topProviderShare > 0 ? data.topProviderShare : null,
+          data.topTwoShare > 0 ? data.topTwoShare : null,
+          data.contributorCount,
+          data.metadata ? JSON.stringify(data.metadata) : null,
+        ],
+        client,
+      )
+
+      await client.query('COMMIT')
+    } catch (error) {
+      try {
+        await client.query('ROLLBACK')
+      } catch (rollbackError) {
+        logger.warn('gold_export_rollback_failed', {
+          corridor_id: data.corridorId,
+          error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+        })
+      }
+      throw error
+    } finally {
+      client.release()
+    }
   }
 
   async processAllCorridors(): Promise<PublisherResult> {
@@ -194,6 +213,8 @@ export class GoldPublisher {
       withheld: 0,
       errors: 0,
     }
+
+    const failedCorridors: string[] = []
 
     // Process corridors in parallel batches of 10
     const batchSize = 10
@@ -238,7 +259,8 @@ export class GoldPublisher {
       )
 
       // Aggregate batch results
-      for (const batchResult of batchResults) {
+      for (let j = 0; j < batchResults.length; j++) {
+        const batchResult = batchResults[j]
         if (batchResult.status === 'fulfilled') {
           if (batchResult.value.published) {
             result.published++
@@ -247,6 +269,7 @@ export class GoldPublisher {
           }
         } else {
           result.errors++
+          failedCorridors.push(batch[j])
         }
       }
 
@@ -259,6 +282,15 @@ export class GoldPublisher {
         }
         logger.debug('publisher_pool_stats', poolStats)
       }
+    }
+
+    if (failedCorridors.length > 0) {
+      logger.warn('batch_publish_partial_failure', {
+        total_corridors: corridors.length,
+        failed_count: failedCorridors.length,
+        published_count: result.published,
+        failed_corridors: failedCorridors.slice(0, 20),
+      })
     }
 
     return result

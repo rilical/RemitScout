@@ -4,6 +4,7 @@
  */
 
 import type { ExtractionContext, ExtractionResult, FactorExtractor } from '../types'
+import { parseNumeric } from '../parse-utils'
 
 /** Known delivery speed labels mapped to approximate minutes. */
 const SPEED_LABEL_MINUTES: Record<string, number> = {
@@ -20,7 +21,10 @@ const SPEED_LABEL_MINUTES: Record<string, number> = {
 
 const parseMinutes = (value: unknown): number | null => {
   if (value === null || value === undefined) return null
-  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) return value
+  if (typeof value === 'number') {
+    const num = parseNumeric(value)
+    return num !== null && num >= 0 ? num : null
+  }
   const str = String(value).trim().toLowerCase()
 
   // Check known labels
@@ -36,9 +40,9 @@ const parseMinutes = (value: unknown): number | null => {
   const daysMatch = str.match(/^(\d+(?:\.\d+)?)\s*(?:day|d)s?$/i)
   if (daysMatch) return Number(daysMatch[1]) * 1440
 
-  // Plain numeric (assume minutes)
-  const num = Number(str)
-  return Number.isFinite(num) && num >= 0 ? num : null
+  // Plain numeric (assume minutes) — use shared parseNumeric for consistency
+  const num = parseNumeric(str)
+  return num !== null && num >= 0 ? num : null
 }
 
 export class DeliveryTimeExtractor implements FactorExtractor {

@@ -89,14 +89,14 @@ export const sendEmailViaSes = async (
     await recordNotificationMetric('email', 'sent', recipients.length)
 
     logger.info('email_sent_ses', {
-      to: recipients,
+      recipient_count: recipients.length,
       subject,
     })
     return true
   } catch (error: unknown) {
     const { message } = formatError(error)
     logger.error('email_send_failed_ses', {
-      to: Array.isArray(to) ? to : [to],
+      recipient_count: Array.isArray(to) ? to.length : 1,
       error: message,
     })
     await recordNotificationMetric('email', 'failed', 1)
@@ -155,13 +155,13 @@ export const sendSmsViaSns = async (
     await recordNotificationMetric('sms', 'sent', phoneNumbers.length)
 
     logger.info('sms_sent_sns', {
-      phone_numbers: phoneNumbers,
+      recipient_count: phoneNumbers.length,
     })
     return true
   } catch (error: unknown) {
     const { message } = formatError(error)
     logger.error('sms_send_failed_sns', {
-      phone_number: Array.isArray(phoneNumber) ? phoneNumber : [phoneNumber],
+      recipient_count: Array.isArray(phoneNumber) ? phoneNumber.length : 1,
       error: message,
     })
     await recordNotificationMetric('sms', 'failed', 1)

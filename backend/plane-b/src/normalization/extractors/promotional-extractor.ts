@@ -4,6 +4,7 @@
  */
 
 import type { ExtractionContext, ExtractionResult, FactorExtractor } from '../types'
+import { parseNumeric } from '../parse-utils'
 
 export class PromotionalExtractor implements FactorExtractor {
   readonly id = 'promotional-extractor'
@@ -47,15 +48,15 @@ export class PromotionalExtractor implements FactorExtractor {
     let normalizedDiscount: number | null = null
 
     if (discount !== null && discount !== undefined) {
-      const num = typeof discount === 'number' ? discount : Number(String(discount).replace(/[^0-9.+-]/g, ''))
-      if (Number.isFinite(num) && num >= 0) {
+      const num = parseNumeric(discount)
+      if (num !== null && num >= 0) {
         normalizedDiscount = num
       }
     }
 
     // If no explicit discount, check for zero-fee promotion
     if (normalizedDiscount === null && payload.fee !== undefined) {
-      const fee = typeof payload.fee === 'number' ? payload.fee : Number(payload.fee)
+      const fee = parseNumeric(payload.fee)
       if (fee === 0) {
         normalizedDiscount = 1 // 100% fee discount
       }

@@ -1,5 +1,6 @@
 import type { Pool } from 'pg'
 import { query } from '../../../../shared/db'
+import { ConflictError } from '../../../../shared/errors'
 import type {
   IUserPlanRepository,
   UserPlanRecord,
@@ -24,7 +25,7 @@ export class UserPlanRepository implements IUserPlanRepository {
   async getUserPlan(userId: string): Promise<UserPlanRecord | null> {
     const result = await query<UserPlanRecord>(
       `
-      SELECT user_id, plan_code, status, stripe_customer_id, stripe_subscription_id, current_period_end
+      SELECT user_id, plan_code, status, stripe_customer_id, stripe_subscription_id, current_period_end, version
       FROM silver.user_plan
       WHERE user_id = $1
       `,
@@ -37,7 +38,7 @@ export class UserPlanRepository implements IUserPlanRepository {
   async getUserPlanByCustomerId(customerId: string): Promise<UserPlanRecord | null> {
     const result = await query<UserPlanRecord>(
       `
-      SELECT user_id, plan_code, status, stripe_customer_id, stripe_subscription_id, current_period_end
+      SELECT user_id, plan_code, status, stripe_customer_id, stripe_subscription_id, current_period_end, version
       FROM silver.user_plan
       WHERE stripe_customer_id = $1
       `,
@@ -48,27 +49,41 @@ export class UserPlanRepository implements IUserPlanRepository {
   }
 
   async updatePlan(update: UserPlanUpdate): Promise<void> {
-    await query(
-      `
-      UPDATE silver.user_plan
-      SET plan_code = COALESCE($2, plan_code),
-          status = COALESCE($3, status),
-          stripe_customer_id = COALESCE($4, stripe_customer_id),
-          stripe_subscription_id = COALESCE($5, stripe_subscription_id),
-          current_period_end = COALESCE($6, current_period_end),
-          updated_at = NOW()
-      WHERE user_id = $1
-      `,
-      [
-        update.user_id,
-        update.plan_code || null,
-        update.status || null,
-        update.stripe_customer_id ?? null,
-        update.stripe_subscription_id ?? null,
-        update.current_period_end ?? null,
-      ],
+    const setClauses: string[] = []
+    const params: unknown[] = [update.user_id]
+    let paramIndex = 2
+
+    const fields = ['plan_code', 'status', 'stripe_customer_id',
+      'stripe_subscription_id', 'current_period_end'] as const
+    for (const field of fields) {
+      if (field in update) {
+        setClauses.push(`${field} = $${paramIndex}`)
+        params.push(update[field] ?? null)
+        paramIndex++
+      }
+    }
+    if (setClauses.length === 0) return
+    setClauses.push('updated_at = NOW()')
+    setClauses.push('version = version + 1')
+
+    let whereClause = 'WHERE user_id = $1'
+    if (update.expected_version !== undefined) {
+      whereClause += ` AND version = $${paramIndex}`
+      params.push(update.expected_version)
+      paramIndex++
+    }
+
+    const result = await query(
+      `UPDATE silver.user_plan SET ${setClauses.join(', ')} ${whereClause} RETURNING user_id`,
+      params,
       this.pool,
     )
+
+    if (update.expected_version !== undefined && result.rowCount === 0) {
+      throw new ConflictError('user_plan version mismatch — concurrent update detected', {
+        details: { user_id: update.user_id, expected_version: update.expected_version },
+      })
+    }
   }
 }
 

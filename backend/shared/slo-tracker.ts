@@ -180,14 +180,14 @@ export const calculateSLOCompliance = (
           : 'Count',
     dimensions,
   })
-  if (!compliant) {
-    recordCloudWatchMetric({
-      name: 'slo_breach_total',
-      value: 1,
-      unit: 'Count',
-      dimensions,
-    })
-  }
+  // Always emit slo_breach_total (0 when compliant) so CloudWatch alarms
+  // with treatMissingData=BREACHING always have datapoints.
+  recordCloudWatchMetric({
+    name: 'slo_breach_total',
+    value: compliant ? 0 : 1,
+    unit: 'Count',
+    dimensions,
+  })
 
   return complianceRatio
 }

@@ -202,13 +202,6 @@ async function getWatchlistLimit(
   return { limit, plan }
 }
 
-async function getWatchlistCount(
-  watchlistRepository: PlaneAContainer['repositories']['watchlist'],
-  userId: string,
-): Promise<number> {
-  return watchlistRepository.countByUserId(userId)
-}
-
 export const watchlistRoutes = async (app: FastifyInstance) => {
   const { pool, repositories } = app.container as PlaneAContainer
   const watchlistRepository = repositories.watchlist
@@ -355,11 +348,25 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      // Check quota
+      // Check quota and create item atomically to prevent concurrent requests
+      // from bypassing quota limits (race condition fix H9)
       const { limit, plan } = await getWatchlistLimit(pool, watchlistRepository, user.user_id)
+      const label = body.label || defaultLabel(target)
+      const watchlistInput = {
+        owner_type: 'user' as const,
+        user_id: user.user_id,
+        target_type: target.type,
+        target_payload: targetPayload,
+        label,
+      }
+
+      let row
       if (limit !== 'unlimited') {
-        const count = await getWatchlistCount(watchlistRepository, user.user_id)
-        if (count >= limit) {
+        const result = await watchlistRepository.createWithQuotaCheck(
+          watchlistInput,
+          limit,
+        )
+        if (result.status === 'quota_exceeded') {
           const effectivePlanCode = plan ? resolveEffectivePlanCode(plan.plan_code, plan.status) : 'free'
           const planLabel =
             effectivePlanCode === 'plus'
@@ -378,17 +385,10 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
             limit,
           }
         }
+        row = result.item
+      } else {
+        row = await watchlistRepository.create(watchlistInput)
       }
-
-      // Create new item
-      const label = body.label || defaultLabel(target)
-      const row = await watchlistRepository.create({
-        owner_type: 'user',
-        user_id: user.user_id,
-        target_type: target.type,
-        target_payload: targetPayload,
-        label,
-      })
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('POST', '/watchlist', 200, durationSeconds)
 

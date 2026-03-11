@@ -1,5 +1,5 @@
 import { type Construct } from 'constructs'
-import { Annotations } from 'aws-cdk-lib'
+import { Annotations, Stack } from 'aws-cdk-lib'
 import {
   ManagedPolicy,
   Role,
@@ -194,13 +194,18 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   // Keep ops-pause permissions scoped by remit-scout environment naming conventions.
   // These permissions are attached in Foundation so nested stacks do not need to mutate this role.
   const remitScoutClusterName = `remit-scout-${options.envName}`
+  const opsPauseAccountCondition = {
+    StringEquals: { 'aws:ResourceAccount': Stack.of(scope).account },
+  }
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['ssm:PutParameter'],
     resources: [`arn:aws:ssm:*:*:parameter/remit-scout/${options.envName}/ops/paused`],
+    conditions: opsPauseAccountCondition,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['ecs:ListServices'],
     resources: ['*'],
+    conditions: opsPauseAccountCondition,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['ecs:UpdateService', 'ecs:DescribeServices'],
@@ -208,6 +213,7 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
       `arn:aws:ecs:*:*:service/${remitScoutClusterName}/*`,
       `arn:aws:ecs:*:*:cluster/${remitScoutClusterName}`,
     ],
+    conditions: opsPauseAccountCondition,
   }))
   // ecs:ListTasks and ecs:DescribeTasks require Resource: '*' when using the
   // plain (non-ARN-filtered) API variants. ecs:StopTask accepts a task ARN but
@@ -217,6 +223,7 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['ecs:ListTasks', 'ecs:DescribeTasks'],
     resources: ['*'],
+    conditions: opsPauseAccountCondition,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['ecs:StopTask'],
@@ -224,6 +231,7 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
       `arn:aws:ecs:*:*:task/${remitScoutClusterName}/*`,
       `arn:aws:ecs:*:*:cluster/${remitScoutClusterName}`,
     ],
+    conditions: opsPauseAccountCondition,
   }))
   // EventBridge rule actions: scope to the remit-scout rule name prefix so
   // OpsPause cannot touch rules belonging to other services. If an explicit
@@ -235,14 +243,17 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['events:ListRules'],
     resources: ['*'],
+    conditions: opsPauseAccountCondition,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['events:DisableRule', 'events:EnableRule'],
     resources: eventRuleResources,
+    conditions: opsPauseAccountCondition,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['sqs:PurgeQueue', 'sqs:GetQueueAttributes'],
     resources: [`arn:aws:sqs:*:*:remit-scout-${options.envName}-*`],
+    conditions: opsPauseAccountCondition,
   }))
   // RDS cluster actions: scope to the specific cluster ARN when available.
   // DescribeDBClusters is a list API that AWS allows on '*'; StartDBCluster and
@@ -253,10 +264,12 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['rds:DescribeDBClusters'],
     resources: ['*'],
+    conditions: opsPauseAccountCondition,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['rds:StartDBCluster', 'rds:StopDBCluster'],
     resources: rdsResources,
+    conditions: opsPauseAccountCondition,
   }))
   // ElastiCache replication group actions: scope to the specific replication
   // group ARN when available. DescribeCacheSubnetGroups is a list API and
@@ -268,6 +281,7 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['elasticache:DescribeReplicationGroups'],
     resources: ['*'],
+    conditions: opsPauseAccountCondition,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: [
@@ -275,12 +289,14 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
       'elasticache:DeleteReplicationGroup',
     ],
     resources: elastiCacheReplicationGroupResources,
+    conditions: opsPauseAccountCondition,
   }))
   // DescribeCacheSubnetGroups is a list/read API that AWS requires Resource: '*'
   // for — there is no resource-level permission support for this action.
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['elasticache:DescribeCacheSubnetGroups'],
     resources: ['*'],
+    conditions: opsPauseAccountCondition,
   }))
 
   // Add SES and SNS permissions to Plane A Lambda (for contact form and alerts)

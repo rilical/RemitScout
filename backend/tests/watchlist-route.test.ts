@@ -8,6 +8,7 @@ const mockRepo = {
   countByUserId: vi.fn(),
   update: vi.fn(),
   create: vi.fn(),
+  createWithQuotaCheck: vi.fn(),
   findById: vi.fn(),
   softDelete: vi.fn(),
 }
@@ -145,7 +146,7 @@ describe('watchlist route', () => {
   })
 
   it('enforces max watchlist item limit', async () => {
-    mockRepo.countByUserId.mockResolvedValue(3)
+    mockRepo.createWithQuotaCheck.mockResolvedValue({ status: 'quota_exceeded', count: 3 })
 
     const app = makeApp()
     const { watchlistRoutes } = await import('../plane-a/src/routes/watchlist')

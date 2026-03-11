@@ -150,6 +150,49 @@ describe('account-deletion', () => {
     expect(mockS3Send).not.toHaveBeenCalled()
   })
 
+  it('executes explicit child-table DELETEs before user_account deletion', async () => {
+    const { deleteUserAccount } = await loadModule()
+
+    const queryCalls: string[] = []
+
+    mockQuery.mockImplementation(async (sql: string) => {
+      queryCalls.push(sql)
+      if (sql.includes('FROM silver.user_account')) {
+        return { rows: [{ email: 'user@example.com' }], rowCount: 1 }
+      }
+      if (sql.includes('FROM silver.export_job')) {
+        return { rows: [], rowCount: 0 }
+      }
+      if (sql.includes('DELETE FROM silver.user_account')) {
+        return { rows: [{ user_id: 'user-1' }], rowCount: 1 }
+      }
+      return { rows: [], rowCount: 0 }
+    })
+
+    const result = await deleteUserAccount(makePool(), 'user-1')
+
+    expect(result.deleted).toBe(true)
+
+    // Verify the 4 explicit cleanup DELETEs were issued
+    const alertEventDelete = queryCalls.findIndex((q) => q.includes('DELETE FROM silver.alert_event'))
+    const alertStateDelete = queryCalls.findIndex((q) => q.includes('DELETE FROM silver.alert_state'))
+    const alertRuleDelete = queryCalls.findIndex((q) => q.includes('DELETE FROM silver.alert_rule'))
+    const watchlistDelete = queryCalls.findIndex((q) => q.includes('DELETE FROM silver.watchlist_item'))
+    const userAccountDelete = queryCalls.findIndex((q) => q.includes('DELETE FROM silver.user_account'))
+
+    expect(alertEventDelete).toBeGreaterThan(-1)
+    expect(alertStateDelete).toBeGreaterThan(-1)
+    expect(alertRuleDelete).toBeGreaterThan(-1)
+    expect(watchlistDelete).toBeGreaterThan(-1)
+
+    // Verify correct ordering: alert_event/alert_state before alert_rule,
+    // alert_rule before watchlist_item, watchlist_item before user_account
+    expect(alertEventDelete).toBeLessThan(alertRuleDelete)
+    expect(alertStateDelete).toBeLessThan(alertRuleDelete)
+    expect(alertRuleDelete).toBeLessThan(watchlistDelete)
+    expect(watchlistDelete).toBeLessThan(userAccountDelete)
+  })
+
   it('calls external cleanups when configured', async () => {
     const { deleteUserAccount } = await loadModule({
       storage: {

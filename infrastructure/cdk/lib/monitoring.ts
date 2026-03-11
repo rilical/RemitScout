@@ -71,7 +71,7 @@ export const createMonitoring = (
   const isDev = options.envName === 'dev'
   const serviceDimension = 'remit-scout'
   const useExplicitAlarmNames = options.envName !== 'dev'
-  const dbRunbookRef = 'ops/brain/README.md#database-incidents'
+  const dbRunbookRef = 'docs/runbooks/db-health.md'
 
   const providerCatalog = loadProviderCatalog()
   const probeProviders = providerCatalog.providers
@@ -1232,6 +1232,19 @@ export const createMonitoring = (
   })
   apiErrorRateAlarm.addAlarmAction(warningAction)
 
+  // High Plane C Error Rate: mirrors Plane A alarm but for B2B institutional API
+  const planeCErrorRateThreshold = isProd ? 0.02 : (isStaging ? 0.05 : 0.1)
+  const planeCErrorRateAlarm = new Alarm(scope, 'HighPlaneCErrorRateAlarm', {
+    alarmName: `remit-scout-${options.envName}-plane-c-error-rate-high`,
+    metric: planeC5xxRate,
+    threshold: planeCErrorRateThreshold,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: `Plane C 5xx error rate exceeds ${planeCErrorRateThreshold * 100}% — impacts B2B institutional clients`,
+  })
+  planeCErrorRateAlarm.addAlarmAction(criticalAction)
+
   const api4xxRateAlarm = new Alarm(scope, 'HighAPI4xxRateAlarm', {
     alarmName: `remit-scout-${options.envName}-api-4xx-rate-high`,
     metric: planeA4xxRate,
@@ -1900,6 +1913,60 @@ export const createMonitoring = (
     treatMissingData: TreatMissingData.NOT_BREACHING,
   })
   stressEscalationAlarm.addAlarmAction(new SnsAction(options.criticalTopic))
+
+  // Agent spend warning: tool gateway flagged approaching spend cap
+  const agentSpendWarningAlarm = new Alarm(scope, 'AgentSpendWarningAlarm', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-agent-spend-warning` } : {}),
+    alarmDescription: 'Agent tool gateway spend approaching cap — review agent LLM usage',
+    metric: new Metric({
+      namespace: agentNamespace,
+      metricName: 'agent_spend_warning',
+      dimensionsMap: { environment: options.envName, service: serviceDimension },
+      statistic: 'Sum',
+      period: agentPeriod,
+    }),
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  })
+  agentSpendWarningAlarm.addAlarmAction(opsAction)
+
+  // Correlated failure escalation: >=10 simultaneous provider failures detected
+  const correlatedFailureEscalationAlarm = new Alarm(scope, 'CorrelatedFailureEscalationAlarm', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-correlated-failure-escalation` } : {}),
+    alarmDescription: 'Correlated failure escalation — widespread provider outage detected, platform-wide incident',
+    metric: new Metric({
+      namespace: agentNamespace,
+      metricName: 'correlated_failure_escalation',
+      dimensionsMap: { environment: options.envName, service: serviceDimension },
+      statistic: 'Sum',
+      period: agentPeriod,
+    }),
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  })
+  correlatedFailureEscalationAlarm.addAlarmAction(criticalAction)
+
+  // LLM circuit breaker state change: circuit tripped open or recovered
+  const llmCircuitBreakerAlarm = new Alarm(scope, 'LlmCircuitBreakerAlarm', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-llm-circuit-breaker-state-change` } : {}),
+    alarmDescription: 'LLM circuit breaker state changed — agent LLM calls may be degraded',
+    metric: new Metric({
+      namespace: agentNamespace,
+      metricName: 'circuit_breaker_state_change',
+      dimensionsMap: { environment: options.envName, service: serviceDimension },
+      statistic: 'Sum',
+      period: agentPeriod,
+    }),
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  })
+  llmCircuitBreakerAlarm.addAlarmAction(opsAction)
 
   // Agent DLQ depth: alarm if agent-failure DLQ has messages
   if (options.queues.agentFailureDlq) {

@@ -13,6 +13,7 @@
 
 import { createLogger } from '../../shared/logger'
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
+import { cleanupAllConnections } from '../../shared/connection-manager'
 import { formatError } from '../../shared/utils/error-handling'
 
 type ProbeInvocationResult = {
@@ -227,5 +228,7 @@ export const handler = async (): Promise<ProbeLambdaResponse> => {
     })
 
     return { success: false, error: message }
+  } finally {
+    await cleanupAllConnections()
   }
 }

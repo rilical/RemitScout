@@ -47,7 +47,11 @@ export class PublishedEmbedRepository implements IPublishedEmbedRepository {
       ],
       this.pool,
     )
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT into published_chart_embed returned no rows')
+    }
+    return row
   }
 
   async getById(id: string): Promise<PublishedEmbedRow | null> {

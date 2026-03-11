@@ -128,6 +128,7 @@ describe('billing webhook idempotency', () => {
       status: 'active',
       stripe_customer_id: 'cus_enterprise',
       stripe_subscription_id: 'sub_enterprise',
+      version: 2,
     })
 
     const result = await processStripeEvent({
@@ -160,6 +161,7 @@ describe('billing webhook idempotency', () => {
       status: 'canceled',
       stripe_subscription_id: null,
       current_period_end: null,
+      expected_version: 2,
     }))
   })
 
@@ -175,6 +177,7 @@ describe('billing webhook idempotency', () => {
       status: 'active',
       stripe_customer_id: 'cus_plus',
       stripe_subscription_id: 'sub_plus',
+      version: 4,
     })
 
     const result = await processStripeEvent({
@@ -209,6 +212,7 @@ describe('billing webhook idempotency', () => {
       status: 'unpaid',
       stripe_subscription_id: 'sub_plus',
       current_period_end: '2026-04-01T00:00:00.000Z',
+      expected_version: 4,
     }))
   })
 })

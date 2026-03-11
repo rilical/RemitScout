@@ -12,8 +12,8 @@ import { HEALTH_CORRIDORS } from '../shared/health-corridors'
 const logger = createLogger('script.data-health-slo-job')
 initTracing('data-health-slo-job')
 
-const TIER_1_FILTER = "('tier_1','tier_1_alpha')"
-const TIER_2_FILTER = "('tier_2')"
+const TIER_1_FILTER = ['tier_1', 'tier_1_alpha']
+const TIER_2_FILTER = ['tier_2']
 
 const healthCorridors = Array.from(
   new Set(
@@ -47,7 +47,7 @@ const querySingle = async <T extends Record<string, unknown>>(
   return toNumber(result.rows[0]?.[field])
 }
 
-const fetchFreshnessP95 = async (pool: Pool, filter: string): Promise<number | null> => {
+const fetchFreshnessP95 = async (pool: Pool, filter: string[]): Promise<number | null> => {
   return querySingle<{ p95_seconds: number | null }>(
     pool,
     `SELECT percentile_cont(0.95) WITHIN GROUP (
@@ -57,13 +57,13 @@ const fetchFreshnessP95 = async (pool: Pool, filter: string): Promise<number | n
      JOIN silver.corridor_priority cp ON cp.corridor_id = lqp.corridor_id
      WHERE lqp.status = 'ok'
        AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-       AND cp.priority_tier IN ${filter}`,
-    [],
+       AND cp.priority_tier = ANY($1::text[])`,
+    [filter],
     'p95_seconds',
   )
 }
 
-const fetchQuoteSuccessRate = async (pool: Pool, filter: string): Promise<number | null> => {
+const fetchQuoteSuccessRate = async (pool: Pool, filter: string[]): Promise<number | null> => {
   return querySingle<{ avg_success_rate: number | null }>(
     pool,
     `SELECT AVG(success_rate)::double precision AS avg_success_rate
@@ -73,15 +73,15 @@ const fetchQuoteSuccessRate = async (pool: Pool, filter: string): Promise<number
        FROM silver.quote_attempt qa
        JOIN silver.corridor_priority cp ON cp.corridor_id = qa.corridor_id
        WHERE qa.attempted_at >= NOW() - INTERVAL '1 hour'
-         AND cp.priority_tier IN ${filter}
+         AND cp.priority_tier = ANY($1::text[])
        GROUP BY qa.corridor_id, qa.provider_id
      ) AS rates`,
-    [],
+    [filter],
     'avg_success_rate',
   )
 }
 
-const fetchProviderCoverageMin = async (pool: Pool, filter: string): Promise<number | null> => {
+const fetchProviderCoverageMin = async (pool: Pool, filter: string[]): Promise<number | null> => {
   return querySingle<{ min_provider_count: number | null }>(
     pool,
     `SELECT MIN(provider_count)::double precision AS min_provider_count
@@ -94,10 +94,10 @@ const fetchProviderCoverageMin = async (pool: Pool, filter: string): Promise<num
        JOIN silver.corridor_priority cp ON cp.corridor_id = lqp.corridor_id
        WHERE lqp.status = 'ok'
          AND lqp.collected_at >= NOW() - INTERVAL '24 hours'
-         AND cp.priority_tier IN ${filter}
+         AND cp.priority_tier = ANY($1::text[])
        GROUP BY lqp.corridor_id, lqp.amount_bucket
      ) AS coverage`,
-    [],
+    [filter],
     'min_provider_count',
   )
 }
@@ -183,12 +183,19 @@ export const runDataHealthSloJob = async (): Promise<void> => {
     const coverageTier1 = await fetchProviderCoverageMin(silverPool, TIER_1_FILTER)
     const coverageTier2 = await fetchProviderCoverageMin(silverPool, TIER_2_FILTER)
 
-    if (freshnessTier1 !== null) recordSLOValue('freshness_p95', '1h', freshnessTier1)
-    if (freshnessTier2 !== null) recordSLOValue('freshness_p95_tier2', '1h', freshnessTier2)
-    if (successTier1 !== null) recordSLOValue('quote_success_rate', '1h', successTier1)
-    if (successTier2 !== null) recordSLOValue('quote_success_rate_tier2', '1h', successTier2)
-    if (coverageTier1 !== null) recordSLOValue('provider_coverage', '1h', coverageTier1)
-    if (coverageTier2 !== null) recordSLOValue('provider_coverage_tier2', '1h', coverageTier2)
+    // Always emit SLO values to keep CloudWatch alarm pipeline alive.
+    // When queries return null (no data in silver tables), use sentinel
+    // values that clearly breach the SLO — "no data" is a breach state.
+    const FRESHNESS_NO_DATA = 86400 // 24h — clearly breaching 15min/3h threshold
+    const RATE_NO_DATA = 0          // 0% success — clearly breaching 98%/95% threshold
+    const COVERAGE_NO_DATA = 0      // 0 providers — clearly breaching 3-provider threshold
+
+    recordSLOValue('freshness_p95', '1h', freshnessTier1 ?? FRESHNESS_NO_DATA)
+    recordSLOValue('freshness_p95_tier2', '1h', freshnessTier2 ?? FRESHNESS_NO_DATA)
+    recordSLOValue('quote_success_rate', '1h', successTier1 ?? RATE_NO_DATA)
+    recordSLOValue('quote_success_rate_tier2', '1h', successTier2 ?? RATE_NO_DATA)
+    recordSLOValue('provider_coverage', '1h', coverageTier1 ?? COVERAGE_NO_DATA)
+    recordSLOValue('provider_coverage_tier2', '1h', coverageTier2 ?? COVERAGE_NO_DATA)
 
     if (healthCorridors.length > 0) {
       let minAvailableRatio = 1

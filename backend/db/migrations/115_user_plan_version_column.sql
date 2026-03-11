@@ -1,0 +1,1 @@
+ALTER TABLE silver.user_plan ADD COLUMN version INTEGER NOT NULL DEFAULT 1;

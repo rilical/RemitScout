@@ -12,6 +12,37 @@ import { notifyAgent } from '../../../shared/agent-notifications'
 import { captureExceptionWithContext } from '../../../shared/error-tracker'
 import { getRedisClient } from '../../../shared/redis'
 
+/**
+ * Simple async mutex for protecting critical sections in concurrent code.
+ *
+ * Used by the tool gateway to serialize spend-cap check-and-increment
+ * operations, preventing the classic check-then-act race where multiple
+ * concurrent LLM calls each see the spend as under the cap and all proceed.
+ */
+class AsyncMutex {
+  private queue: Array<() => void> = []
+  private locked = false
+
+  async acquire(): Promise<void> {
+    if (!this.locked) {
+      this.locked = true
+      return
+    }
+    return new Promise<void>((resolve) => {
+      this.queue.push(resolve)
+    })
+  }
+
+  release(): void {
+    if (this.queue.length > 0) {
+      const next = this.queue.shift()!
+      next()
+    } else {
+      this.locked = false
+    }
+  }
+}
+
 const AGENT_METRIC_NAMESPACE = 'RemitScout/Agents'
 const agentMetricDimensions = (
   extra: Record<string, string | undefined> = {},
@@ -97,6 +128,16 @@ const AGENT_POLICY_OVERRIDES: Partial<Record<AgentId, AgentPolicyOverride>> = {
     rateLimitMaxRequests: 120,
     rateLimitWindowMs: 60_000,
   },
+  'parser-handler': {
+    allowedTools: ['db_query', 'file_read'],
+    rateLimitMaxRequests: 60,
+    rateLimitWindowMs: 60_000,
+  },
+  'contract-test-handler': {
+    allowedTools: ['db_query', 'file_read', 'http_fetch'],
+    rateLimitMaxRequests: 60,
+    rateLimitWindowMs: 60_000,
+  },
 }
 
 /**
@@ -127,6 +168,8 @@ export class ToolGateway {
   private agentSpend = new Map<string, number>()
   /** Maximum spend per agent before requests are blocked (USD) */
   private static readonly MAX_SPEND_PER_AGENT_USD = 50
+  /** Mutex protecting the spend check-and-increment to prevent race conditions */
+  private spendMutex = new AsyncMutex()
 
   /** Per-agent rate limit tracking */
   private agentRateLimits = new Map<string, RateLimitEntry>()
@@ -284,8 +327,44 @@ export class ToolGateway {
       return this.deny(requestId, request, startedAt, `Tool '${request.toolType}' rate limit exceeded for agent '${request.agentId}'${providerId ? ` (provider: ${providerId})` : ''}`)
     }
 
-    // Spend check: block if agent exceeds spend limit (applies to cost-bearing tools)
-    if (request.toolType === 'llm_inference' || request.toolType === 'http_fetch') {
+    // Spend check: atomically check-and-increment to prevent concurrent calls
+    // from exceeding the cap (classic check-then-act race fix).
+    const estimatedCost = 0.01 // conservative per-call estimate
+    let spendPreIncremented = false
+    if (request.toolType === 'llm_inference') {
+      await this.spendMutex.acquire()
+      try {
+        const currentSpend = this.agentSpend.get(request.agentId) ?? 0
+        if (currentSpend >= ToolGateway.MAX_SPEND_PER_AGENT_USD) {
+          return this.deny(requestId, request, startedAt, `Agent '${request.agentId}' spend limit exceeded ($${currentSpend.toFixed(2)}/$${ToolGateway.MAX_SPEND_PER_AGENT_USD})`)
+        }
+        // Pre-increment: reserve the cost before executing
+        const updatedSpend = currentSpend + estimatedCost
+        this.agentSpend.set(request.agentId, updatedSpend)
+        spendPreIncremented = true
+
+        // Warn at 80% of spend cap (fire once on first crossing)
+        const SPEND_WARNING_THRESHOLD = 0.8
+        const warningLimit = ToolGateway.MAX_SPEND_PER_AGENT_USD * SPEND_WARNING_THRESHOLD
+        if (updatedSpend >= warningLimit && currentSpend < warningLimit) {
+          recordCloudWatchMetric({
+            name: 'agent_spend_warning',
+            value: updatedSpend,
+            unit: 'None',
+            namespace: AGENT_METRIC_NAMESPACE,
+            dimensions: agentMetricDimensions({ agent_id: request.agentId }),
+          })
+          void notifyAgent({
+            type: 'spend_warning',
+            title: `Agent '${request.agentId}' reached ${Math.round((updatedSpend / ToolGateway.MAX_SPEND_PER_AGENT_USD) * 100)}% spend ($${updatedSpend.toFixed(2)}/$${ToolGateway.MAX_SPEND_PER_AGENT_USD}).`,
+            severity: 'warning',
+            details: { agentId: request.agentId, currentSpend: updatedSpend, limit: ToolGateway.MAX_SPEND_PER_AGENT_USD },
+          })
+        }
+      } finally {
+        this.spendMutex.release()
+      }
+    } else if (request.toolType === 'http_fetch') {
       const currentSpend = this.agentSpend.get(request.agentId) ?? 0
       if (currentSpend >= ToolGateway.MAX_SPEND_PER_AGENT_USD) {
         return this.deny(requestId, request, startedAt, `Agent '${request.agentId}' spend limit exceeded ($${currentSpend.toFixed(2)}/$${ToolGateway.MAX_SPEND_PER_AGENT_USD})`)
@@ -299,6 +378,11 @@ export class ToolGateway {
     await this.logRequest(requestId, request, submittedAt, needsApproval)
 
     if (needsApproval) {
+      // Roll back pre-incremented spend since the call is deferred for approval
+      if (spendPreIncremented) {
+        const current = this.agentSpend.get(request.agentId) ?? 0
+        this.agentSpend.set(request.agentId, Math.max(0, current - estimatedCost))
+      }
       logger.info('tool_request_pending_approval', { requestId, toolType: request.toolType, agentId: request.agentId })
       return {
         requestId,
@@ -316,33 +400,6 @@ export class ToolGateway {
     this.activeRequests++
     try {
       const result = await this.executeTool(request.toolType, request.params, request.ttlMs)
-
-      // Track estimated spend for cost-bearing tools
-      if (request.toolType === 'llm_inference') {
-        const estimatedCost = 0.01 // conservative per-call estimate
-        const current = this.agentSpend.get(request.agentId) ?? 0
-        const updatedSpend = current + estimatedCost
-        this.agentSpend.set(request.agentId, updatedSpend)
-
-        // Warn at 80% of spend cap (fire once on first crossing)
-        const SPEND_WARNING_THRESHOLD = 0.8
-        const warningLimit = ToolGateway.MAX_SPEND_PER_AGENT_USD * SPEND_WARNING_THRESHOLD
-        if (updatedSpend >= warningLimit && current < warningLimit) {
-          recordCloudWatchMetric({
-            name: 'agent_spend_warning',
-            value: updatedSpend,
-            unit: 'None',
-            namespace: AGENT_METRIC_NAMESPACE,
-            dimensions: agentMetricDimensions({ agent_id: request.agentId }),
-          })
-          void notifyAgent({
-            type: 'spend_warning',
-            title: `Agent '${request.agentId}' reached ${Math.round((updatedSpend / ToolGateway.MAX_SPEND_PER_AGENT_USD) * 100)}% spend ($${updatedSpend.toFixed(2)}/$${ToolGateway.MAX_SPEND_PER_AGENT_USD}).`,
-            severity: 'warning',
-            details: { agentId: request.agentId, currentSpend: updatedSpend, limit: ToolGateway.MAX_SPEND_PER_AGENT_USD },
-          })
-        }
-      }
 
       const toolResult: ToolResult = {
         requestId,
@@ -381,6 +438,13 @@ export class ToolGateway {
       await this.logResult(toolResult)
       return toolResult
     } catch (err) {
+      // Roll back pre-incremented spend on execution failure so that failed
+      // calls do not permanently consume the agent's budget.
+      if (spendPreIncremented) {
+        const current = this.agentSpend.get(request.agentId) ?? 0
+        this.agentSpend.set(request.agentId, Math.max(0, current - estimatedCost))
+      }
+
       const error = err instanceof Error ? err : new Error(String(err))
       captureExceptionWithContext(error, {
         component: 'tool-gateway.executeTool',
@@ -433,12 +497,16 @@ export class ToolGateway {
    * Check whether an agent is authorized to use a specific tool type.
    *
    * Returns null if authorized, or an error message string if denied.
+   *
+   * Default-deny: unregistered agent IDs (not in AGENT_POLICY_OVERRIDES) are
+   * explicitly rejected to prevent policy bypass. Every agent that needs tool
+   * access must have an entry in AGENT_POLICY_OVERRIDES.
    */
   private checkAgentAuthorization(agentId: string, toolType: ToolType): string | null {
     const override = AGENT_POLICY_OVERRIDES[agentId as AgentId]
     if (!override) {
-      // No override — fall through to gateway-level policy
-      return null
+      // Default-deny: unregistered agent IDs are not allowed
+      return `Agent '${agentId}' is not registered in the tool gateway policy map. Access denied.`
     }
 
     if (!override.allowedTools.includes(toolType)) {
@@ -568,6 +636,14 @@ export class ToolGateway {
     // Block stacked queries (semicolons) to prevent appended DML
     if (stripped.includes(';')) {
       throw new Error('Semicolons are not allowed in tool gateway queries')
+    }
+
+    // Block DML keywords inside CTE bodies to prevent bypass via
+    // `WITH deleted AS (DELETE FROM ...) SELECT * FROM deleted`
+    if (stripped.startsWith('WITH')) {
+      if (containsDmlInCte(stripped)) {
+        throw new Error('DML statements (INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE) are not allowed inside CTEs')
+      }
     }
 
     const values = (params.values as unknown[]) ?? []
@@ -959,12 +1035,15 @@ export class ToolGateway {
     requiresApproval: boolean,
   ): Promise<void> {
     try {
+      // Redact sensitive fields (tokens, credentials, etc.) before persisting
+      // to the audit table to prevent secret leakage via agent_tool_request rows.
+      const safeParams = redactSensitiveParams(request.params)
       await this.pool.query(
         `INSERT INTO silver.agent_tool_request
          (request_id, agent_id, module_id, tool_type, operation, params, requires_approval, ttl_ms, submitted_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [requestId, request.agentId, request.moduleId, request.toolType, request.operation,
-         JSON.stringify(request.params), requiresApproval, request.ttlMs, submittedAt],
+         JSON.stringify(safeParams), requiresApproval, request.ttlMs, submittedAt],
       )
     } catch (err) {
       logger.error('tool_request_log_error', { requestId, error: err instanceof Error ? err.message : String(err) })
@@ -984,6 +1063,69 @@ export class ToolGateway {
       logger.error('tool_result_log_error', { requestId: result.requestId, error: err instanceof Error ? err.message : String(err) })
     }
   }
+}
+
+/**
+ * Detect DML keywords inside CTE (Common Table Expression) bodies.
+ *
+ * Parses a WITH query to find CTE `AS (...)` blocks and checks each body
+ * for INSERT, UPDATE, DELETE, DROP, ALTER, or TRUNCATE keywords. This
+ * prevents bypass of the read-only check via queries like:
+ *   WITH deleted AS (DELETE FROM users RETURNING *) SELECT * FROM deleted
+ *
+ * @param upperSql - The SQL string, already uppercased and comment-stripped.
+ */
+const DML_KEYWORDS = /\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/
+
+function containsDmlInCte(upperSql: string): boolean {
+  // Extract each CTE body between AS (...) by tracking balanced parentheses.
+  // We search for `AS` followed by `(` and then capture everything until
+  // the matching closing `)`.
+  const asPattern = /\bAS\s*\(/g
+  let match: RegExpExecArray | null
+
+  while ((match = asPattern.exec(upperSql)) !== null) {
+    const startIdx = match.index + match[0].length
+    let depth = 1
+    let i = startIdx
+
+    while (i < upperSql.length && depth > 0) {
+      if (upperSql[i] === '(') depth++
+      else if (upperSql[i] === ')') depth--
+      i++
+    }
+
+    // The CTE body is between startIdx and i-1 (excluding the closing paren)
+    const cteBody = upperSql.slice(startIdx, i - 1)
+    if (DML_KEYWORDS.test(cteBody)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+/**
+ * Redact sensitive fields from a params object before audit logging.
+ *
+ * Replaces values of keys matching sensitive patterns (token, authorization,
+ * api_key, secret, password, credential) with `[REDACTED]`. Operates on a
+ * shallow copy — the original object is not modified.
+ */
+const SENSITIVE_KEY_PATTERN = /^(token|authorization|api_key|apikey|secret|password|credential|credentials|auth)$/i
+
+function redactSensitiveParams(params: Record<string, unknown>): Record<string, unknown> {
+  const redacted: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(params)) {
+    if (SENSITIVE_KEY_PATTERN.test(key)) {
+      redacted[key] = '[REDACTED]'
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      redacted[key] = redactSensitiveParams(value as Record<string, unknown>)
+    } else {
+      redacted[key] = value
+    }
+  }
+  return redacted
 }
 
 const isWriteTool = (toolType: ToolType): boolean =>

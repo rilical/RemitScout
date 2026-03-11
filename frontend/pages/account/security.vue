@@ -219,8 +219,13 @@ const factorLabel = (factor: MfaFactor) => {
 const loadFactors = async () => {
   loading.value = true
   errorMessage.value = null
-  factors.value = await listMfaFactors()
-  loading.value = false
+  try {
+    factors.value = await listMfaFactors()
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Unable to load MFA factors. Please try again.'
+  } finally {
+    loading.value = false
+  }
 }
 
 const startEnrollment = async () => {

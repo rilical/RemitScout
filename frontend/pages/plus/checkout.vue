@@ -367,6 +367,7 @@ onMounted(() => {
 })
 
 async function handleCheckout() {
+  if (processing.value) return
   if (!isAuthenticated.value) {
     await navigateTo(signInRedirectTarget)
     return

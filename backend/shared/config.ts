@@ -884,6 +884,21 @@ const rawConfig = {
       freshnessSloMinutes: toNumber(process.env.PLANE_B_MUKURU_FRESHNESS_SLO_MINUTES, 30),
       freshnessSloEnabled: toBoolean(process.env.PLANE_B_MUKURU_FRESHNESS_SLO_ENABLED),
     },
+    wellsfargo: {
+      delayMs: toNumber(process.env.PLANE_B_WELLSFARGO_DELAY_MS, 1500),
+      jitterMs: toNumber(process.env.PLANE_B_WELLSFARGO_JITTER_MS, 600),
+      rateLimitBackoffMs: toNumber(process.env.PLANE_B_WELLSFARGO_RATE_LIMIT_BACKOFF_MS, 5000),
+      rateLimitJitterMs: toNumber(process.env.PLANE_B_WELLSFARGO_RATE_LIMIT_JITTER_MS, 2000),
+      rateLimitMaxRetries: toNumber(process.env.PLANE_B_WELLSFARGO_RATE_LIMIT_MAX_RETRIES, 2),
+      corridorDelayMs: toNumber(process.env.PLANE_B_WELLSFARGO_CORRIDOR_DELAY_MS, 2000),
+      corridorJitterMs: toNumber(process.env.PLANE_B_WELLSFARGO_CORRIDOR_JITTER_MS, 1000),
+      b2bAmount: toNumber(process.env.PLANE_B_WELLSFARGO_B2B_AMOUNT, 500),
+      blockCooldownMs: toNumber(process.env.PLANE_B_WELLSFARGO_BLOCK_COOLDOWN_MS, 3600000),
+      sweepShardIndex: toNumber(process.env.PLANE_B_WELLSFARGO_SWEEP_SHARD_INDEX, 0),
+      sweepShardCount: toNumber(process.env.PLANE_B_WELLSFARGO_SWEEP_SHARD_COUNT, 1),
+      freshnessSloMinutes: toNumber(process.env.PLANE_B_WELLSFARGO_FRESHNESS_SLO_MINUTES, 30),
+      freshnessSloEnabled: toBoolean(process.env.PLANE_B_WELLSFARGO_FRESHNESS_SLO_ENABLED),
+    },
     b2cRefreshBatchLimit: toNumber(process.env.PLANE_B_B2C_REFRESH_BATCH_LIMIT, 50),
     b2cRefreshMaxRetries: toNumber(process.env.PLANE_B_B2C_REFRESH_MAX_RETRIES, 3),
     b2cRefreshConcurrency: toNumber(process.env.PLANE_B_B2C_REFRESH_CONCURRENCY, 5),
@@ -1402,6 +1417,9 @@ const rawConfig = {
         frontendFallbackUrl,
       // Policy: no free trial for Plus.
       trialDays: 0,
+      // Comma-separated CIDR allowlist for webhook IP validation.
+      // When empty, rely on signature verification only.
+      webhookIpAllowlist: process.env.STRIPE_WEBHOOK_IP_ALLOWLIST || '',
     },
   },
   newsletter: {

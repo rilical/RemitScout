@@ -121,7 +121,11 @@ export class SignalCombiner {
 
     const breakdown: CompositeStressResult['breakdown'] = []
     let weightedSum = 0
-    let totalWeight = 0
+
+    // Use the sum of ALL configured signal weights for normalization, not just
+    // active ones.  This prevents a single low-weight signal from inflating the
+    // composite score to 1.0 when it is the only active signal.  (H27 fix)
+    const totalWeight = Object.values(this.defaultStressWeights).reduce((s, w) => s + w, 0)
 
     for (const input of inputs) {
       const baseWeight = input.weight ?? this.defaultStressWeights[input.signalType] ?? 0.05
@@ -130,7 +134,6 @@ export class SignalCombiner {
       const contribution = Math.max(0, Math.min(1, input.intensity)) * effectiveWeight
 
       weightedSum += contribution
-      totalWeight += effectiveWeight
 
       breakdown.push({
         signalType: input.signalType,
@@ -140,7 +143,7 @@ export class SignalCombiner {
       })
     }
 
-    // Normalize: weighted average ensures the composite stays in [0, 1]
+    // Normalize: weighted average using total configured weights ensures the composite stays in [0, 1]
     const compositeScore = totalWeight > 0 ? Math.min(weightedSum / totalWeight, 1) : 0
 
     // Sort breakdown by contribution (highest first)

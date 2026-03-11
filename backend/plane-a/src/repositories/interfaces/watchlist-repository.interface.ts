@@ -20,6 +20,10 @@ export type WatchlistItemRow = {
   deleted_at: Date | null
 }
 
+export type WatchlistQuotaCheckResult =
+  | { status: 'created'; item: WatchlistItemRow }
+  | { status: 'quota_exceeded'; count: number }
+
 export interface IWatchlistRepository {
   listByUserId(userId: string): Promise<WatchlistItemRow[]>
   findById(id: string, userId: string): Promise<WatchlistItemRow | null>
@@ -29,6 +33,15 @@ export interface IWatchlistRepository {
     targetPayload: Record<string, unknown>,
   ): Promise<WatchlistItemRow | null>
   create(input: WatchlistItemInput): Promise<WatchlistItemRow>
+  /**
+   * Atomically check watchlist quota and create the item within a single
+   * serialized transaction.  Locks the user's existing watchlist rows with
+   * FOR UPDATE to prevent concurrent requests from bypassing the quota.
+   */
+  createWithQuotaCheck(
+    input: WatchlistItemInput,
+    quotaLimit: number,
+  ): Promise<WatchlistQuotaCheckResult>
   update(id: string, userId: string, updates: { label?: string | null }): Promise<WatchlistItemRow | null>
   softDelete(id: string, userId: string): Promise<boolean>
   countByUserId(userId: string): Promise<number>

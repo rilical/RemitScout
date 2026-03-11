@@ -8,6 +8,7 @@ import type {
   AlertWithStateRow,
   AlertStateRow,
   AlertEventRow,
+  AlertQuotaCheckResult,
 } from '../interfaces/alert-repository.interface'
 
 const logger = createLogger('plane-a.alert-repository')
@@ -83,39 +84,147 @@ export class AlertRepository implements IAlertRepository {
 
   async create(input: AlertRuleInput): Promise<AlertRuleRow> {
     const now = new Date()
-    const result = await query<AlertRuleRow>(
-      `INSERT INTO silver.alert_rule (
-         watchlist_item_id, metric, comparator, threshold, currency, 
-         frequency, enabled, cooldown_minutes, created_at, updated_at
-       )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
-       RETURNING id, watchlist_item_id, metric, comparator, threshold, currency, 
-                  frequency, enabled, cooldown_minutes, created_at, updated_at`,
-      [
-        input.watchlist_item_id,
-        input.metric,
-        input.comparator,
-        input.threshold,
-        input.currency || null,
-        input.frequency,
-        input.enabled,
-        input.cooldown_minutes ?? 360,
-        now,
-      ],
-      this.pool,
-    )
-    const alert = result.rows[0]
+    const client = await this.pool.connect()
+    try {
+      await client.query('BEGIN')
 
-    // Initialize alert state
-    await query(
-      `INSERT INTO silver.alert_state (alert_id, version)
-       VALUES ($1, 1)
-       ON CONFLICT (alert_id) DO NOTHING`,
-      [alert.id],
-      this.pool,
-    )
+      const result = await query<AlertRuleRow>(
+        `INSERT INTO silver.alert_rule (
+           watchlist_item_id, metric, comparator, threshold, currency,
+           frequency, enabled, cooldown_minutes, created_at, updated_at
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
+         RETURNING id, watchlist_item_id, metric, comparator, threshold, currency,
+                    frequency, enabled, cooldown_minutes, created_at, updated_at`,
+        [
+          input.watchlist_item_id,
+          input.metric,
+          input.comparator,
+          input.threshold,
+          input.currency || null,
+          input.frequency,
+          input.enabled,
+          input.cooldown_minutes ?? 360,
+          now,
+        ],
+        client,
+      )
+      const alert = result.rows[0]
+      if (!alert) {
+        throw new Error('INSERT into alert_rule returned no rows')
+      }
 
-    return alert
+      // Initialize alert state
+      await query(
+        `INSERT INTO silver.alert_state (alert_id, version)
+         VALUES ($1, 1)
+         ON CONFLICT (alert_id) DO NOTHING`,
+        [alert.id],
+        client,
+      )
+
+      await client.query('COMMIT')
+      return alert
+    } catch (error) {
+      await client.query('ROLLBACK').catch((rollbackError) => {
+        logger.error('create_alert_rollback_failed', {
+          watchlist_item_id: input.watchlist_item_id,
+          error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+        })
+      })
+      throw error
+    } finally {
+      client.release()
+    }
+  }
+
+  async createWithQuotaCheck(
+    input: AlertRuleInput,
+    userId: string,
+    quotaLimit: number,
+  ): Promise<AlertQuotaCheckResult> {
+    const now = new Date()
+    const client = await this.pool.connect()
+    try {
+      await client.query('BEGIN')
+
+      // Lock the user's watchlist rows to serialize concurrent alert-creation
+      // requests for the same user.  This prevents two requests from both
+      // reading the same count and both passing the quota check.
+      await query(
+        `SELECT id FROM silver.watchlist_item
+         WHERE user_id = $1 AND deleted_at IS NULL
+         FOR UPDATE`,
+        [userId],
+        client,
+      )
+
+      // Count existing enabled alerts inside the serialized transaction
+      const countResult = await query<{ count: string }>(
+        `SELECT COUNT(*) AS count
+         FROM silver.alert_rule ar
+         JOIN silver.watchlist_item wi ON ar.watchlist_item_id = wi.id
+         WHERE wi.user_id = $1 AND ar.enabled = TRUE`,
+        [userId],
+        client,
+      )
+      const currentCount = parseInt(countResult.rows[0]?.count || '0', 10)
+
+      if (currentCount >= quotaLimit) {
+        await client.query('ROLLBACK')
+        return { status: 'quota_exceeded', count: currentCount }
+      }
+
+      // Insert the alert rule
+      const result = await query<AlertRuleRow>(
+        `INSERT INTO silver.alert_rule (
+           watchlist_item_id, metric, comparator, threshold, currency,
+           frequency, enabled, cooldown_minutes, created_at, updated_at
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
+         RETURNING id, watchlist_item_id, metric, comparator, threshold, currency,
+                    frequency, enabled, cooldown_minutes, created_at, updated_at`,
+        [
+          input.watchlist_item_id,
+          input.metric,
+          input.comparator,
+          input.threshold,
+          input.currency || null,
+          input.frequency,
+          input.enabled,
+          input.cooldown_minutes ?? 360,
+          now,
+        ],
+        client,
+      )
+      const alert = result.rows[0]
+      if (!alert) {
+        throw new Error('INSERT into alert_rule returned no rows')
+      }
+
+      // Initialize alert state
+      await query(
+        `INSERT INTO silver.alert_state (alert_id, version)
+         VALUES ($1, 1)
+         ON CONFLICT (alert_id) DO NOTHING`,
+        [alert.id],
+        client,
+      )
+
+      await client.query('COMMIT')
+      return { status: 'created', alert }
+    } catch (error) {
+      await client.query('ROLLBACK').catch((rollbackError) => {
+        logger.error('create_alert_quota_check_rollback_failed', {
+          watchlist_item_id: input.watchlist_item_id,
+          user_id: userId,
+          error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+        })
+      })
+      throw error
+    } finally {
+      client.release()
+    }
   }
 
   async update(
@@ -365,7 +474,11 @@ export class AlertRepository implements IAlertRepository {
       [alertId, value, message, context ? JSON.stringify(context) : null],
       this.pool,
     )
-    return result.rows[0]
+    const event = result.rows[0]
+    if (!event) {
+      throw new Error('INSERT into alert_event returned no rows')
+    }
+    return event
   }
 
   async updateAlertEventStatus(eventId: string, status: 'queued' | 'sent' | 'failed'): Promise<void> {

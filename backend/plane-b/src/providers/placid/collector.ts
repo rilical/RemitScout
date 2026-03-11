@@ -642,6 +642,10 @@ export const runPlacidCollector = async (options: PlacidCollectorOptions = {}) =
           parser_version: parsed.parser_version,
           parse_flags: parsed.parse_flags,
         })
+        if (!normalizedQuote) {
+          logger.warn('quote_normalize_rejected', { trace_id: traceId, corridor_id: corridorId, amount_bucket: amount })
+          continue
+        }
         await persistNormalizedQuote(pool, normalizedQuote, collectorType)
         const anomaly = await runAnomalyDetection({
           pool,

@@ -3,12 +3,10 @@
  */
 
 import type { ExtractionContext, ExtractionResult, FactorExtractor } from '../types'
+import { parseAmount } from '../parse-utils'
+import { createLogger } from '../../../../shared/logger'
 
-const parseAmount = (value: unknown): number | null => {
-  if (value === null || value === undefined) return null
-  const num = typeof value === 'number' ? value : Number(String(value).replace(/[^0-9.+-]/g, ''))
-  return Number.isFinite(num) ? num : null
-}
+const logger = createLogger('plane-b.normalization.extractors.fee-extractor')
 
 export class FeeExtractor implements FactorExtractor {
   readonly id = 'fee-extractor'
@@ -36,6 +34,18 @@ export class FeeExtractor implements FactorExtractor {
 
     let normalizedFee = feeAmount
     let confidence: 'high' | 'medium' | 'low' | 'none' = feeAmount !== null ? 'high' : 'none'
+
+    // Reject negative direct fee values — they don't make business sense for remittance quotes
+    if (normalizedFee !== null && normalizedFee < 0) {
+      logger.warn('negative_fee_rejected', {
+        provider_id: context.providerId,
+        corridor_id: context.corridorId,
+        fee_amount: normalizedFee,
+      })
+      warnings.push(`Negative fee value rejected: ${normalizedFee}`)
+      normalizedFee = null
+      confidence = 'low'
+    }
 
     if (normalizedFee === null && totalDebit !== null && sendAmount !== null) {
       const derived = totalDebit - sendAmount

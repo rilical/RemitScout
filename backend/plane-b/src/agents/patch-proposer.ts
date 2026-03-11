@@ -59,6 +59,39 @@ const DEFAULT_PROMPT_VERSION = 'v1'
 const logger = createLogger('plane-b.agents.patch-proposer')
 
 /**
+ * Maximum character length for external data embedded in LLM prompts.
+ * Overly long payloads waste tokens and increase injection surface area.
+ */
+const MAX_PROMPT_EXTERNAL_DATA_LENGTH = 2000
+
+/**
+ * Patterns that could be used for prompt injection attacks.
+ * Matches delimiters, role markers, and template tags commonly used to
+ * hijack LLM system/user/assistant boundaries.
+ */
+const PROMPT_INJECTION_PATTERNS = /```|-{4,}|system\s*:|user\s*:|assistant\s*:|<\||\|>|<\/?(?:system|user|assistant|instruction|prompt|context|tool_call|function_call)\b[^>]*>/gi
+
+/**
+ * Sanitize external data before embedding it in LLM prompts.
+ *
+ * Defence-in-depth against prompt injection:
+ *  1. Strips prompt-injection-style delimiters and role markers
+ *  2. Escapes remaining XML-like tags so they render as literal text
+ *  3. Truncates to a safe maximum length
+ */
+const sanitizeForPrompt = (input: string): string => {
+  // Strip injection-style delimiters and role markers
+  let sanitized = input.replace(PROMPT_INJECTION_PATTERNS, '')
+  // Escape remaining XML-like tags so the LLM treats them as literal text
+  sanitized = sanitized.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  // Truncate to prevent token budget abuse
+  if (sanitized.length > MAX_PROMPT_EXTERNAL_DATA_LENGTH) {
+    sanitized = sanitized.slice(0, MAX_PROMPT_EXTERNAL_DATA_LENGTH) + '... [truncated]'
+  }
+  return sanitized
+}
+
+/**
  * Patch proposal — a structured description of a proposed code change.
  */
 export type PatchProposal = {
@@ -497,30 +530,30 @@ export class PatchProposer {
   private buildErrorPatternSummary(bundle: FailureBundle): string {
     const lines: string[] = []
 
-    lines.push(`Provider: ${bundle.providerId}`)
-    lines.push(`Module: ${bundle.moduleId}`)
-    lines.push(`Collector type: ${bundle.collectorType}`)
-    lines.push(`Fetcher source: ${bundle.fetcherSource}`)
-    lines.push(`Failure layer: ${bundle.failureLayer}`)
-    lines.push(`Category: ${bundle.category}`)
-    lines.push(`Severity: ${bundle.severity}`)
-    lines.push(`Error: ${bundle.errorType}: ${bundle.errorMessage}`)
+    lines.push(`Provider: ${sanitizeForPrompt(bundle.providerId)}`)
+    lines.push(`Module: ${sanitizeForPrompt(bundle.moduleId)}`)
+    lines.push(`Collector type: ${sanitizeForPrompt(bundle.collectorType)}`)
+    lines.push(`Fetcher source: ${sanitizeForPrompt(bundle.fetcherSource)}`)
+    lines.push(`Failure layer: ${sanitizeForPrompt(bundle.failureLayer)}`)
+    lines.push(`Category: ${sanitizeForPrompt(bundle.category)}`)
+    lines.push(`Severity: ${sanitizeForPrompt(bundle.severity)}`)
+    lines.push(`Error: ${sanitizeForPrompt(bundle.errorType)}: ${sanitizeForPrompt(bundle.errorMessage)}`)
     lines.push(`Consecutive failures: ${bundle.consecutiveFailures}`)
-    lines.push(`Affected corridors: ${bundle.affectedCorridors.length} (${bundle.affectedCorridors.slice(0, 5).join(', ')}${bundle.affectedCorridors.length > 5 ? '...' : ''})`)
+    lines.push(`Affected corridors: ${bundle.affectedCorridors.length} (${bundle.affectedCorridors.slice(0, 5).map((c) => sanitizeForPrompt(c)).join(', ')}${bundle.affectedCorridors.length > 5 ? '...' : ''})`)
 
     if (bundle.httpStatuses.length > 0) {
       lines.push(`HTTP statuses observed: ${bundle.httpStatuses.join(', ')}`)
     }
 
     if (bundle.domSignatureHash && bundle.previousDomSignatureHash) {
-      lines.push(`DOM signature changed: ${bundle.previousDomSignatureHash} -> ${bundle.domSignatureHash}`)
+      lines.push(`DOM signature changed: ${sanitizeForPrompt(bundle.previousDomSignatureHash)} -> ${sanitizeForPrompt(bundle.domSignatureHash)}`)
     }
 
     if (bundle.qualityFlags.length > 0) {
-      lines.push(`Quality flags: ${bundle.qualityFlags.join(', ')}`)
+      lines.push(`Quality flags: ${bundle.qualityFlags.map((f) => sanitizeForPrompt(f)).join(', ')}`)
     }
 
-    lines.push(`Time range: ${bundle.firstFailureAt} to ${bundle.lastFailureAt}`)
+    lines.push(`Time range: ${sanitizeForPrompt(String(bundle.firstFailureAt))} to ${sanitizeForPrompt(String(bundle.lastFailureAt))}`)
 
     return lines.join('\n')
   }
@@ -561,10 +594,10 @@ export class PatchProposer {
       if (context.knowledgeChunks.length > 0) {
         userPromptParts.push('## Relevant Knowledge')
         for (const chunk of context.knowledgeChunks.slice(0, 5)) {
-          userPromptParts.push(`### ${chunk.sourceType}: ${chunk.sourcePath}`)
-          // Limit each chunk to 50 lines
+          userPromptParts.push(`### ${sanitizeForPrompt(chunk.sourceType)}: ${sanitizeForPrompt(chunk.sourcePath)}`)
+          // Limit each chunk to 50 lines and sanitize content
           const truncated = chunk.content.split('\n').slice(0, 50).join('\n')
-          userPromptParts.push(truncated)
+          userPromptParts.push(sanitizeForPrompt(truncated))
           userPromptParts.push('')
         }
       }

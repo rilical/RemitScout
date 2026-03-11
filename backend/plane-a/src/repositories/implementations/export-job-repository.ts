@@ -23,7 +23,11 @@ export class ExportJobRepository implements IExportJobRepository {
       [input.user_id, input.job_type, JSON.stringify(input.params ?? null), input.status ?? null],
       this.pool,
     )
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT into export_job returned no rows')
+    }
+    return row
   }
 
   async getById(id: string): Promise<ExportJobRow | null> {

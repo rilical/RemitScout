@@ -20,6 +20,7 @@ import {
   runAnomalyDetection,
   resumeProviderIfCooldownExpired,
   loadUnsupportedCorridors,
+  openCorridorCircuitBreaker,
   pauseProviderForBlock,
   createIngestionRun,
   finishIngestionRun,
@@ -193,11 +194,11 @@ export abstract class BaseCollector {
       )
 
       // Main collection loop
-      let blocked = false
-      let blockReason: string | null = null
+      const blockedCorridors: string[] = []
+      const completedCorridors: string[] = checkpoint ? [...checkpoint.completedCorridors] : []
       const unsupportedCorridors = await loadUnsupportedCorridors(this.pool, this.providerId)
       for (const corridorId of this.corridors) {
-        if (checkpoint && checkpoint.completedCorridors.includes(corridorId)) {
+        if (completedCorridors.includes(corridorId)) {
           this.logger.debug('checkpoint_skip_corridor', { corridor_id: corridorId })
           continue
         }
@@ -221,8 +222,9 @@ export abstract class BaseCollector {
           continue
         }
 
+        let corridorBlocked = false
         for (const amountBucket of corridorBuckets) {
-          if (blocked) break
+          if (corridorBlocked) break
 
           // Freshness SLO check
           if (this.shouldApplyFreshnessSlo()) {
@@ -256,12 +258,20 @@ export abstract class BaseCollector {
           )
 
           if (!success) {
-            blocked = true
-            blockReason = 'collection_failed'
+            corridorBlocked = true
+            blockedCorridors.push(corridorId)
+            this.logger.warn('corridor_blocked_skipping', {
+              corridor_id: corridorId,
+              amount_bucket: amountBucket,
+              provider_id: this.providerId,
+            })
             break
           }
 
-          // Save checkpoint periodically (every 10 corridors)
+          // Save in-progress checkpoint periodically (every 10 attempts).
+          // The current corridor is NOT marked as complete — only previously
+          // finished corridors are listed, so a crash mid-corridor will
+          // correctly resume from the last bucket rather than skipping it.
           if (this.attemptCount % 10 === 0) {
             await saveCheckpoint(this.pool, {
               providerId: this.providerId,
@@ -269,7 +279,7 @@ export abstract class BaseCollector {
               ingestionRunId: this.ingestionRunId,
               lastCorridorId: corridorId,
               lastAmountBucket: amountBucket,
-              completedCorridors: this.corridors.slice(0, this.corridors.indexOf(corridorId) + 1),
+              completedCorridors,
               startedAt: this.startedAt,
               lastUpdatedAt: new Date(),
             })
@@ -278,21 +288,39 @@ export abstract class BaseCollector {
           // Corridor delay (cadence-aware)
           await this.sleepBetweenCorridors(corridorId)
         }
+
+        // Mark corridor as complete only after ALL its buckets have been
+        // successfully processed. If the corridor was blocked, it is NOT
+        // added so a subsequent resume will re-attempt it.
+        if (!corridorBlocked) {
+          completedCorridors.push(corridorId)
+        }
       }
 
       // Finish ingestion run
-      const finalStatus = blocked ? 'blocked' : 'success'
+      const hasBlocks = blockedCorridors.length > 0
+      const allBlocked = hasBlocks && blockedCorridors.length >= this.corridors.length
+      const finalStatus = allBlocked ? 'blocked' : hasBlocks ? 'partial' : 'success'
+      const blockReason = hasBlocks ? `blocked_corridors:${blockedCorridors.length}` : null
       await finishIngestionRun(this.pool, this.ingestionRunId, finalStatus, blockReason)
 
-      // Clear checkpoint on success
-      if (!blocked) {
+      // Clear checkpoint on success (partial success with some blocked corridors still clears)
+      if (!allBlocked) {
         await clearCheckpoint(this.pool, this.providerId, this.collectorType, this.ingestionRunId)
       }
 
       // Log summary
+      if (hasBlocks) {
+        this.logger.warn('collector_partial_block', {
+          provider_id: this.providerId,
+          blocked_corridor_count: blockedCorridors.length,
+          total_corridor_count: this.corridors.length,
+          blocked_corridors: blockedCorridors.slice(0, 20),
+        })
+      }
       this.logSummary()
 
-      return !blocked
+      return !allBlocked
     } catch (error: unknown) {
       const { message, stack } = formatError(error)
       this.logger.error('collector_failed', {
@@ -559,8 +587,16 @@ export abstract class BaseCollector {
     }
   }
 
+  /** Consecutive block count threshold before pausing the entire provider. */
+  protected static readonly PROVIDER_PAUSE_BLOCK_THRESHOLD = 3
+
   /**
    * Handles block detection.
+   *
+   * Rate-limit blocks (429) apply a rate penalty and open a corridor-level
+   * circuit breaker. The provider is only fully paused when the cumulative
+   * block count within a single run reaches PROVIDER_PAUSE_BLOCK_THRESHOLD,
+   * indicating a provider-wide problem rather than a single-corridor issue.
    */
   protected async handleBlock(
     corridorId: string,
@@ -602,13 +638,35 @@ export abstract class BaseCollector {
     })
 
     if (reason) {
-      await pauseProviderForBlock(
-        this.pool,
-        this.providerId,
-        corridorId,
-        reason,
-        this.blockCooldownMs,
-      )
+      // Only pause the entire provider when blocks are widespread (threshold reached).
+      // Otherwise, only open the corridor-level circuit breaker so other corridors
+      // can continue collecting.
+      const shouldPauseProvider = this.blockCount >= BaseCollector.PROVIDER_PAUSE_BLOCK_THRESHOLD
+      if (shouldPauseProvider) {
+        this.logger.warn('provider_pause_threshold_reached', {
+          provider_id: this.providerId,
+          block_count: this.blockCount,
+          threshold: BaseCollector.PROVIDER_PAUSE_BLOCK_THRESHOLD,
+          corridor_id: corridorId,
+          reason,
+        })
+        await pauseProviderForBlock(
+          this.pool,
+          this.providerId,
+          corridorId,
+          reason,
+          this.blockCooldownMs,
+        )
+      } else {
+        // Open circuit breaker for this corridor only — provider remains active
+        await openCorridorCircuitBreaker(
+          this.pool,
+          this.providerId,
+          corridorId,
+          reason,
+          this.blockCooldownMs,
+        )
+      }
     }
 
     await notifyBlockAlert(this.pool, String(bronzeId), { force: false })

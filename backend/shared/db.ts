@@ -486,6 +486,10 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
       1,
       Math.floor(timeoutMs ?? queryTimeoutDefault ?? dbPoolConfig.queryTimeoutMs),
     )
+    if (!Number.isFinite(queryTimeout)) {
+      throw new Error(`Invalid query timeout value: ${String(queryTimeout)}`)
+    }
+    const safeQueryTimeout = parseInt(String(queryTimeout), 10)
     const queryConfig: { text: string; values: unknown[]; query_timeout?: number } = {
       text,
       values: params,
@@ -507,7 +511,7 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
           && !isTransactionControlStatement(text)
 
         if (shouldSetSessionStatementTimeout) {
-          await client.query(`SET statement_timeout = ${queryTimeout}`)
+          await client.query(`SET statement_timeout = ${safeQueryTimeout}`)
         }
 
         let result: QueryResult<T>
@@ -516,7 +520,7 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
           try {
             await client.query('BEGIN')
             transactionOpened = true
-            await client.query(`SET LOCAL statement_timeout = ${queryTimeout}`)
+            await client.query(`SET LOCAL statement_timeout = ${safeQueryTimeout}`)
             result = await client.query<T>(queryConfig)
             await client.query('COMMIT')
           } catch (proxyError) {
@@ -584,6 +588,11 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
   }
 }
 
+/** Seed for future user-scoped RLS adoption. Sets app.user_id for the current transaction. */
+export async function setUserContext(client: PoolClient, userId: string): Promise<void> {
+  await client.query('SET LOCAL app.user_id = $1', [userId])
+}
+
 export const queryWithTimeout = async <T extends QueryResultRow = QueryResultRow>(
   poolInstance: Pool,
   text: string,
@@ -591,7 +600,10 @@ export const queryWithTimeout = async <T extends QueryResultRow = QueryResultRow
   timeoutMs: number,
 ) => {
   const client = await poolInstance.connect()
-  const safeTimeoutMs = Math.max(1, Math.floor(timeoutMs))
+  const safeTimeoutMs = parseInt(String(Math.max(1, Math.floor(timeoutMs))), 10)
+  if (!Number.isFinite(safeTimeoutMs)) {
+    throw new Error(`Invalid timeout value: ${String(timeoutMs)}`)
+  }
   try {
     await client.query('BEGIN')
     await client.query(`SET LOCAL statement_timeout = ${safeTimeoutMs}`)

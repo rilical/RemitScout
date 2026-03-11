@@ -6580,7 +6580,10 @@ const selectedHistoryLoading = computed(() => {
   const pair = selectedPair.value
   if (!pair) return false
   const key = buildHistoryKey(pair.base, pair.quote, selectedHistoryDays.value)
-  return Boolean(rateHistoryLoading.value[key])
+  if (rateHistoryLoading.value[key]) return true
+  // Treat unfetched timeframes as loading to avoid flash of "no data"
+  if (!rateHistoryCache.value[key]) return true
+  return false
 })
 
 const SELECTED_HISTORY_REFRESH_POLL_MS = 2500
@@ -6925,7 +6928,10 @@ async function handleAddToWatchlist() {
   }
 }
 
+let alertActionPending = false
+
 function handleSetAlert() {
+  if (alertActionPending) return
   if (alertsLimitReached.value) {
     openLimitModal('alert')
     return
@@ -6935,6 +6941,7 @@ function handleSetAlert() {
     showCorridorSelector.value = true
     return
   }
+  alertActionPending = true
   const target: WatchTarget = {
     type: 'corridor',
     from: selectedCorridor.value.from,
@@ -6943,6 +6950,7 @@ function handleSetAlert() {
   }
   const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`
   modal.open({ target, label, source: 'dashboard' })
+  nextTick(() => { alertActionPending = false })
 }
 
 // Account section state
@@ -7485,24 +7493,25 @@ const resolveAllAvailableGoldHistoryRange = (
 const exportStatusMessage = ref<string | null>(null)
 const exportErrorMessage = ref<string | null>(null)
 const exportJobId = ref<string | null>(null)
-let exportPollTimer: ReturnType<typeof setInterval> | null = null
-let gdprExportPollTimer: ReturnType<typeof setInterval> | null = null
+let exportPollTimer: ReturnType<typeof setTimeout> | null = null
+let gdprExportPollTimer: ReturnType<typeof setTimeout> | null = null
 
 const clearExportPolling = () => {
   if (exportPollTimer) {
-    clearInterval(exportPollTimer)
+    clearTimeout(exportPollTimer)
     exportPollTimer = null
   }
 }
 
 const clearGdprExportPolling = () => {
   if (gdprExportPollTimer) {
-    clearInterval(gdprExportPollTimer)
+    clearTimeout(gdprExportPollTimer)
     gdprExportPollTimer = null
   }
 }
 
 onBeforeUnmount(() => {
+  clearTimeout(clearConfirmTimer)
   clearExportPolling()
   clearGdprExportPolling()
   stopOpsAutoRefresh()
@@ -7516,7 +7525,7 @@ const triggerDownload = (url: string) => {
 
 const pollExportStatus = async (jobId: string) => {
   clearExportPolling()
-  exportPollTimer = setInterval(async () => {
+  const poll = async () => {
     try {
       const response = await exportsApi.getExportStatus(jobId)
       const status = response.job.status
@@ -7532,17 +7541,18 @@ const pollExportStatus = async (jobId: string) => {
         triggerDownload(download.url)
         isExporting.value = false
         clearExportPolling()
+        return
       }
- else {
-        exportStatusMessage.value = 'Export in progress...'
-      }
+      exportStatusMessage.value = 'Export in progress...'
+      exportPollTimer = setTimeout(poll, 2000)
     }
- catch (error: unknown) {
+    catch (error: unknown) {
       exportErrorMessage.value = resolveExportErrorMessage(error, 'Failed to check export status.')
       isExporting.value = false
       clearExportPolling()
     }
-  }, 2000)
+  }
+  exportPollTimer = setTimeout(poll, 2000)
 }
 
 function setExportDateRange(range: ExportDateRange) {
@@ -7576,24 +7586,35 @@ watch(
     if (isOpen) {
       const range = exportSettings.value.dateRange || '30d'
       setExportDateRange(range)
+    } else {
+      clearExportPolling()
     }
   },
 )
 
+let exportSettingsUpdating = false
+
 watch(
   () => exportSettings.value.dataType,
   (dataType) => {
-    if (dataType === 'indices' && !indicesExportsEnabled.value) {
-      exportSettings.value.dataType = 'history'
-      exportSettings.value.includeCorridorHistory = false
-      return
+    if (exportSettingsUpdating) return
+    exportSettingsUpdating = true
+    try {
+      if (dataType === 'indices' && !indicesExportsEnabled.value) {
+        exportSettings.value.dataType = 'history'
+        exportSettings.value.includeCorridorHistory = false
+        return
+      }
+      if (dataType === 'indices') {
+        exportSettings.value.includeCorridorHistory = true
+        return
+      }
+      if (dataType !== 'history') {
+        exportSettings.value.includeCorridorHistory = false
+      }
     }
-    if (dataType === 'indices') {
-      exportSettings.value.includeCorridorHistory = true
-      return
-    }
-    if (dataType !== 'history') {
-      exportSettings.value.includeCorridorHistory = false
+    finally {
+      exportSettingsUpdating = false
     }
   },
 )
@@ -7601,6 +7622,7 @@ watch(
 watch(
   () => exportSettings.value.includeCorridorHistory,
   (enabled) => {
+    if (exportSettingsUpdating) return
     if (enabled) {
       setExportDateRange(exportSettings.value.dateRange || '30d')
     }
@@ -7610,8 +7632,15 @@ watch(
 watch(
   () => exportCorridorIds.value.length,
   (count) => {
-    if (count === 0) {
-      exportSettings.value.includeCorridorHistory = false
+    if (exportSettingsUpdating) return
+    exportSettingsUpdating = true
+    try {
+      if (count === 0) {
+        exportSettings.value.includeCorridorHistory = false
+      }
+    }
+    finally {
+      exportSettingsUpdating = false
     }
   },
 )
@@ -7712,7 +7741,7 @@ const requestGdprExport = async () => {
     gdprExportStatus.value = `Export requested (job ${response.job.id}). Preparing your download...`
 
     clearGdprExportPolling()
-    gdprExportPollTimer = setInterval(async () => {
+    const pollGdpr = async () => {
       try {
         const status = await dataExportApi.getExportStatus(response.job.id)
         const jobStatus = status.job.status
@@ -7731,16 +7760,18 @@ const requestGdprExport = async () => {
         }
         if (jobStatus === 'running') {
           gdprExportStatus.value = 'Export is running...'
-          return
+        } else {
+          gdprExportStatus.value = 'Export queued...'
         }
-        gdprExportStatus.value = 'Export queued...'
+        gdprExportPollTimer = setTimeout(pollGdpr, 2500)
       }
- catch (error: unknown) {
+      catch (error: unknown) {
         gdprExportStatus.value = null
         gdprExportError.value = extractErrorMessage(error, 'Failed to check export status.')
         clearGdprExportPolling()
       }
-    }, 2500)
+    }
+    gdprExportPollTimer = setTimeout(pollGdpr, 2500)
   }
  catch (error: unknown) {
     gdprExportError.value = extractErrorMessage(error, 'Failed to request GDPR export.')

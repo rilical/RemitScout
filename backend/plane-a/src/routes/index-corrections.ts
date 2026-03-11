@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin } from '../plugins/auth-plugin'
-import { ValidationError } from '../../../shared/errors'
+import { AuthorizationError, ValidationError } from '../../../shared/errors'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 
 const logger = createLogger('plane-a.index-corrections')
@@ -247,6 +247,37 @@ export const indexCorrectionRoutes = async (app: FastifyInstance) => {
 
       try {
         await client.query('BEGIN')
+
+        // H10: Prevent self-approval — the approver must differ from the creator
+        const existing = await query<Pick<IndexCorrectionRecord, 'corrected_by' | 'approved_by'>>(
+          `SELECT corrected_by, approved_by FROM gold_export.index_correction
+           WHERE correction_id = $1
+           FOR UPDATE`,
+          [correctionId],
+          client,
+        )
+
+        if (existing.rows.length === 0) {
+          await client.query('ROLLBACK')
+          return {
+            error: 'not_found_or_already_approved',
+            message: 'Correction not found or already approved.',
+          }
+        }
+
+        if (existing.rows[0].approved_by !== null) {
+          await client.query('ROLLBACK')
+          return {
+            error: 'not_found_or_already_approved',
+            message: 'Correction not found or already approved.',
+          }
+        }
+
+        const creatorIdentifier = existing.rows[0].corrected_by
+        if (creatorIdentifier === approvedBy || creatorIdentifier === actorId) {
+          await client.query('ROLLBACK')
+          throw new AuthorizationError('Self-approval is not permitted. A different admin must approve this correction.')
+        }
 
         const result = await query<IndexCorrectionRecord>(
           `UPDATE gold_export.index_correction

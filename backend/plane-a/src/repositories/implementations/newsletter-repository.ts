@@ -19,6 +19,20 @@ export class NewsletterRepository implements INewsletterRepository {
         source,
         verify_token_expires_at
       ) VALUES ($1, 'pending', $2, $3, $4, $5)
+      ON CONFLICT (email) DO UPDATE SET
+        verify_token_hash = EXCLUDED.verify_token_hash,
+        unsubscribe_token_hash = EXCLUDED.unsubscribe_token_hash,
+        source = COALESCE(EXCLUDED.source, silver.newsletter_subscriber.source),
+        verify_token_expires_at = EXCLUDED.verify_token_expires_at,
+        status = CASE
+          WHEN silver.newsletter_subscriber.status = 'active' THEN silver.newsletter_subscriber.status
+          ELSE 'pending'
+        END,
+        verified_at = CASE
+          WHEN silver.newsletter_subscriber.status = 'active' THEN silver.newsletter_subscriber.verified_at
+          ELSE NULL
+        END,
+        unsubscribed_at = NULL
       RETURNING id, email, status, verify_token_hash, unsubscribe_token_hash, source,
                 created_at, verified_at, unsubscribed_at, verify_token_expires_at`,
       [
@@ -30,7 +44,11 @@ export class NewsletterRepository implements INewsletterRepository {
       ],
       this.pool,
     )
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT into newsletter_subscriber returned no rows')
+    }
+    return row
   }
 
   async findByEmail(email: string): Promise<NewsletterSubscriberRow | null> {

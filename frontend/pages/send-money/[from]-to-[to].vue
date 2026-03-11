@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50">
+  <div v-if="isValidCorridor" class="min-h-screen bg-neutral-50">
     <!-- Corridor Decision Header -->
     <section class="relative overflow-hidden bg-neutral-900 text-white">
       <div class="container relative py-8">
@@ -774,7 +774,7 @@
                 <button
                   type="button"
                   class="text-body-sm mt-4 inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-60 motion-safe:transition-colors"
-                  :disabled="quotesPending || quoteRefreshPending"
+                  :disabled="quotesPending || quoteRefreshPending || refreshCooldown"
                   @click="handleRefreshQuotes"
                 >
                   Refresh live quotes
@@ -834,7 +834,7 @@
                 <button
                   type="button"
                   class="text-body-sm mt-4 inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-60 motion-safe:transition-colors"
-                  :disabled="quotesPending || quoteRefreshPending"
+                  :disabled="quotesPending || quoteRefreshPending || refreshCooldown"
                   @click="handleRefreshQuotes"
                 >
                   Refresh live quotes
@@ -1722,6 +1722,11 @@
       :variant="toastVariant"
     />
   </div>
+  <div v-else class="flex min-h-screen items-center justify-center bg-neutral-50">
+    <div class="text-center">
+      <p class="text-body-lg text-neutral-500">Redirecting...</p>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -2000,6 +2005,9 @@ const fromSlug = computed(() => normalizeSlug(currentRoute.params.from));
 const toSlug = computed(() => normalizeSlug(currentRoute.params.to));
 const canonicalFrom = computed(() => getCanonicalSlug(fromSlug.value));
 const canonicalTo = computed(() => getCanonicalSlug(toSlug.value));
+const isValidCorridor = computed(() => {
+  return Boolean(getCountryFromSlug(canonicalFrom.value) && getCountryFromSlug(canonicalTo.value))
+});
 const amountParam = computed(() =>
   Array.isArray(currentRoute.query.amount)
     ? currentRoute.query.amount[0]
@@ -2155,6 +2163,10 @@ watch(
   },
   { immediate: true }
 );
+
+if (import.meta.client && !isValidCorridor.value) {
+  navigateTo('/send-money', { redirectCode: 302 })
+}
 
 if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) {
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 });
@@ -4698,7 +4710,15 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual', signal?: AbortSign
   }
 };
 
+const lastRefreshAttempt = ref(0)
+const refreshCooldown = ref(false)
+
 const handleRefreshQuotes = async () => {
+  const now = Date.now()
+  if (now - lastRefreshAttempt.value < 5000) return
+  lastRefreshAttempt.value = now
+  refreshCooldown.value = true
+  setTimeout(() => { refreshCooldown.value = false }, 5000)
   await requestQuoteRefresh('manual');
   await refreshQuotes();
 };

@@ -52,6 +52,8 @@ export class CircuitBreaker {
   private state: CircuitState = 'CLOSED'
   private consecutiveFailures = 0
   private openedAtMs: number | null = null
+  /** True when a HALF_OPEN probe is in-flight, preventing additional probes. */
+  private halfOpenProbeInflight = false
 
   constructor(options: CircuitBreakerOptions) {
     this.name = options.name
@@ -95,10 +97,17 @@ export class CircuitBreaker {
 
   canAttempt(): boolean {
     if (this.state === 'CLOSED') return true
-    if (this.state === 'HALF_OPEN') return true
+    if (this.state === 'HALF_OPEN') {
+      // Only allow a single probe request while in HALF_OPEN.
+      // Additional callers are rejected until the probe resolves.
+      if (this.halfOpenProbeInflight) return false
+      this.halfOpenProbeInflight = true
+      return true
+    }
     if (this.state === 'OPEN') {
       if (!this.isOpen()) {
         this.transition('HALF_OPEN', { reason: 'open_window_elapsed' })
+        this.halfOpenProbeInflight = true
         return true
       }
       return false
@@ -108,6 +117,7 @@ export class CircuitBreaker {
 
   onSuccess(): void {
     this.consecutiveFailures = 0
+    this.halfOpenProbeInflight = false
     if (this.state !== 'CLOSED') {
       this.transition('CLOSED', { reason: 'success' })
     }
@@ -115,6 +125,19 @@ export class CircuitBreaker {
 
   onFailure(error: unknown): void {
     this.consecutiveFailures += 1
+
+    // If the circuit is HALF_OPEN, a single probe failure must immediately
+    // re-open the circuit with a fresh cooldown to prevent probe leakage.
+    if (this.state === 'HALF_OPEN') {
+      this.halfOpenProbeInflight = false
+      this.transition('OPEN', {
+        reason: 'half_open_probe_failed',
+        consecutive_failures: this.consecutiveFailures,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return
+    }
+
     if (this.consecutiveFailures >= this.openAfterFailures) {
       this.transition('OPEN', {
         reason: 'failure_threshold_reached',

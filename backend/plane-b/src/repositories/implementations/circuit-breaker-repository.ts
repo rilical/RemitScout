@@ -103,8 +103,7 @@ export class CircuitBreakerRepository implements ICircuitBreakerRepository {
               updated_at = NOW()
         WHERE provider_id = $1
           AND state = 'open'
-          AND cooldown_until IS NOT NULL
-          AND cooldown_until <= NOW()`,
+          AND (cooldown_until IS NULL OR cooldown_until <= NOW())`,
       [providerId],
       this.pool,
     )

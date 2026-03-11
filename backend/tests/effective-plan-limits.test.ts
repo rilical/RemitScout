@@ -14,6 +14,7 @@ const mockWatchlistRepository = {
   findByTarget: vi.fn(),
   countByUserId: vi.fn(),
   create: vi.fn(),
+  createWithQuotaCheck: vi.fn(),
 }
 
 vi.mock('../shared/db', () => ({
@@ -100,6 +101,7 @@ describe('effective plan limits (inactive plus behaves as free)', () => {
     })
     mockWatchlistRepository.findByTarget.mockResolvedValue(null)
     mockWatchlistRepository.countByUserId.mockResolvedValue(3)
+    mockWatchlistRepository.createWithQuotaCheck.mockResolvedValue({ status: 'quota_exceeded', count: 3 })
 
     const app = makeApp()
     const { watchlistRoutes } = await import('../plane-a/src/routes/watchlist')

@@ -157,13 +157,19 @@ export const retry = async <T>(
           error: error instanceof Error ? error.message : String(error),
         })
         await new Promise<void>((resolve, reject) => {
-          if (opts.signal) {
-            opts.signal.addEventListener('abort', () => {
-              clearTimeout(timeoutId)
-              reject(new Error('Retry cancelled via AbortSignal'))
-            })
+          const timeoutId = setTimeout(() => {
+            if (opts.signal) {
+              opts.signal.removeEventListener('abort', onAbort)
+            }
+            resolve()
+          }, actualDelay)
+          const onAbort = () => {
+            clearTimeout(timeoutId)
+            reject(new Error('Retry cancelled via AbortSignal'))
           }
-          const timeoutId = setTimeout(resolve, actualDelay)
+          if (opts.signal) {
+            opts.signal.addEventListener('abort', onAbort, { once: true })
+          }
         })
       } else {
         logger.debug('retry_waiting', {
@@ -173,13 +179,19 @@ export const retry = async <T>(
           error: error instanceof Error ? error.message : String(error),
         })
         await new Promise<void>((resolve, reject) => {
-          if (opts.signal) {
-            opts.signal.addEventListener('abort', () => {
-              clearTimeout(timeoutId)
-              reject(new Error('Retry cancelled via AbortSignal'))
-            })
+          const timeoutId = setTimeout(() => {
+            if (opts.signal) {
+              opts.signal.removeEventListener('abort', onAbort)
+            }
+            resolve()
+          }, delay)
+          const onAbort = () => {
+            clearTimeout(timeoutId)
+            reject(new Error('Retry cancelled via AbortSignal'))
           }
-          const timeoutId = setTimeout(resolve, delay)
+          if (opts.signal) {
+            opts.signal.addEventListener('abort', onAbort, { once: true })
+          }
         })
       }
       attempt += 1

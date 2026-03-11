@@ -1,10 +1,14 @@
 import type { Pool } from 'pg'
 import { query } from '../../../../shared/db'
+import { createLogger } from '../../../../shared/logger'
 import type {
   IWatchlistRepository,
   WatchlistItemInput,
   WatchlistItemRow,
+  WatchlistQuotaCheckResult,
 } from '../interfaces/watchlist-repository.interface'
+
+const logger = createLogger('plane-a.watchlist-repository')
 
 export class WatchlistRepository implements IWatchlistRepository {
   constructor(private readonly pool: Pool) {}
@@ -68,7 +72,86 @@ export class WatchlistRepository implements IWatchlistRepository {
       ],
       this.pool,
     )
-    return result.rows[0]
+    const row = result.rows[0]
+    if (!row) {
+      throw new Error('INSERT into watchlist_item returned no rows')
+    }
+    return row
+  }
+
+  async createWithQuotaCheck(
+    input: WatchlistItemInput,
+    quotaLimit: number,
+  ): Promise<WatchlistQuotaCheckResult> {
+    const now = new Date()
+    const userId = input.user_id
+    if (!userId) {
+      throw new Error('createWithQuotaCheck requires user_id in input')
+    }
+    const client = await this.pool.connect()
+    try {
+      await client.query('BEGIN')
+
+      // Lock the user's existing watchlist rows to serialize concurrent
+      // creation requests for the same user.  This prevents two requests
+      // from both reading the same count and both passing the quota check.
+      await query(
+        `SELECT id FROM silver.watchlist_item
+         WHERE user_id = $1 AND deleted_at IS NULL
+         FOR UPDATE`,
+        [userId],
+        client,
+      )
+
+      // Count existing items inside the serialized transaction
+      const countResult = await query<{ count: string }>(
+        `SELECT COUNT(*) AS count
+         FROM silver.watchlist_item
+         WHERE user_id = $1 AND deleted_at IS NULL`,
+        [userId],
+        client,
+      )
+      const currentCount = parseInt(countResult.rows[0]?.count || '0', 10)
+
+      if (currentCount >= quotaLimit) {
+        await client.query('ROLLBACK')
+        return { status: 'quota_exceeded', count: currentCount }
+      }
+
+      // Insert the watchlist item
+      const result = await query<WatchlistItemRow>(
+        `INSERT INTO silver.watchlist_item (owner_type, user_id, guest_id, target_type, target_payload, label, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $7)
+         RETURNING id, owner_type, user_id, guest_id, target_type, target_payload, label, created_at, updated_at, deleted_at`,
+        [
+          input.owner_type,
+          input.user_id || null,
+          input.guest_id || null,
+          input.target_type,
+          JSON.stringify(input.target_payload),
+          input.label || null,
+          now,
+        ],
+        client,
+      )
+      const row = result.rows[0]
+      if (!row) {
+        throw new Error('INSERT into watchlist_item returned no rows')
+      }
+
+      await client.query('COMMIT')
+      return { status: 'created', item: row }
+    } catch (error) {
+      await client.query('ROLLBACK').catch((rollbackError) => {
+        logger.error('create_watchlist_quota_check_rollback_failed', {
+          user_id: userId,
+          error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+        })
+      })
+      throw error
+    } finally {
+      client.release()
+    }
   }
 
   async update(id: string, userId: string, updates: { label?: string | null }): Promise<WatchlistItemRow | null> {

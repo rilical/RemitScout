@@ -26,8 +26,11 @@ vi.mock('../shared/config', async (importOriginal) => {
   }
 })
 
+const mockQuery = vi.fn()
+
 vi.mock('../shared/db', () => ({
   getPool: vi.fn().mockReturnValue({}),
+  query: (...args: any[]) => mockQuery(...args),
 }))
 
 vi.mock('../plane-a/src/plugins/auth-plugin', () => ({

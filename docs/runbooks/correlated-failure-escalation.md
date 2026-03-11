@@ -22,7 +22,7 @@ When the agent orchestrator detects >= 10 simultaneous failure bundles in a sing
 
 - Slack critical alert: "Correlated failure: N bundles detected (threshold: 10)"
 - No repair PRs generated despite multiple providers failing
-- CloudWatch alarm fires on `correlated_failure_escalation`
+- CloudWatch alarm fires on `correlated_failure_escalation` (sum >= 1 in a 5-minute period, routed to critical action)
 
 ## Diagnosis
 

@@ -390,7 +390,7 @@ const main = async () => {
       }
 
       logger.info('launch_user_seeded', {
-        email: user.email,
+        email: user.email.replace(/(.{2}).*@/, '$1***@'),
         user_id: supabase.userId,
         created: supabase.created,
         app_role: user.appRole,
@@ -430,11 +430,11 @@ const main = async () => {
       for (const user of LAUNCH_USERS) {
         const row = verifyResult.rows.find((r) => r.email?.toLowerCase() === user.email.toLowerCase())
         if (!row) {
-          logger.error('seed_verify_missing', { email: user.email })
+          logger.error('seed_verify_missing', { email: user.email.replace(/(.{2}).*@/, '$1***@') })
           mismatches++
         } else if (row.app_role !== user.appRole || row.plan_code !== user.planCode) {
           logger.error('seed_verify_mismatch', {
-            email: user.email,
+            email: user.email.replace(/(.{2}).*@/, '$1***@'),
             expected_role: user.appRole,
             actual_role: row.app_role,
             expected_plan: user.planCode,
