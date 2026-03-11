@@ -64,7 +64,7 @@ describe('CountrySelect', () => {
 
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['PH'])
     expect(wrapper.emitted('country-selected')?.[0]).toEqual(['PH', 'PHP'])
-    expect((input.element as HTMLInputElement).value).toBe('🇵🇭 Philippines')
+    expect((input.element as HTMLInputElement).value).toBe('Philippines')
 
     wrapper.unmount()
   })
@@ -90,7 +90,7 @@ describe('CountrySelect', () => {
     await flushPromises()
 
     expect(input.attributes('aria-expanded')).toBe('false')
-    expect((input.element as HTMLInputElement).value).toBe('🇺🇸 United States')
+    expect((input.element as HTMLInputElement).value).toBe('United States')
 
     wrapper.unmount()
   })
@@ -117,7 +117,7 @@ describe('CountrySelect', () => {
     expect(input.attributes('aria-expanded')).toBe('false')
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['MX'])
     expect(wrapper.emitted('country-selected')?.[0]).toEqual(['MX', 'MXN'])
-    expect((input.element as HTMLInputElement).value).toBe('🇲🇽 Mexico')
+    expect((input.element as HTMLInputElement).value).toBe('Mexico')
 
     wrapper.unmount()
   })
@@ -147,7 +147,7 @@ describe('CountrySelect', () => {
     expect(input.attributes('aria-expanded')).toBe('false')
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['MX'])
     expect(wrapper.emitted('country-selected')?.[0]).toEqual(['MX', 'MXN'])
-    expect((input.element as HTMLInputElement).value).toBe('🇲🇽 Mexico')
+    expect((input.element as HTMLInputElement).value).toBe('Mexico')
 
     wrapper.unmount()
   })
@@ -193,7 +193,7 @@ describe('CountrySelect', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('🇩🇿')
-    expect((wrapper.get('input').element as HTMLInputElement).value).toBe('🇩🇿 Algeria')
+    expect((wrapper.get('input').element as HTMLInputElement).value).toBe('Algeria')
 
     wrapper.unmount()
   })
