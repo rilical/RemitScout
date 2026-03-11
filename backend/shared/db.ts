@@ -196,7 +196,7 @@ const getPoolSizeLimits = (): { max: number; min: number } => {
 
   const defaultLimits = (() => {
     if (isLambda) {
-      return { max: 20, min: 1 }
+      return { max: 5, min: 1 }
     }
     if (isECS) {
       return appEnv === 'production' ? { max: 50, min: 2 } : { max: 8, min: 1 }

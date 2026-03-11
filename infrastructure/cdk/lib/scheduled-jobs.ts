@@ -488,7 +488,6 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -773,7 +772,6 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -887,7 +885,6 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -1098,7 +1095,6 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -1194,7 +1190,6 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -1282,7 +1277,6 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -1485,7 +1479,6 @@ export const createScheduledJobs = (
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -1645,34 +1638,131 @@ export const createScheduledJobs = (
     redisSsmName,
   })
 
-  const goldPublisherRule = createPlaneCLambdaJob({
+  // Gold publisher needs both Plane B (silver reads) and Plane C (gold writes),
+  // so we use an inline setup instead of createPlaneCLambdaJob (which only wires Plane C).
+  const goldPublisherEnvironment: Record<string, string> = {
+    JOB_NAME: 'gold-publisher',
+    ENVIRONMENT: options.envName,
+    NODE_ENV: 'production',
+    PGSSLMODE: 'require',
+    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    ...tracingEnv,
+    CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
+    CLOUDWATCH_NAMESPACE: 'RemitScout',
+    CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
+    CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (planeBDbHost) {
+    goldPublisherEnvironment.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (planeBDbPort) {
+    goldPublisherEnvironment.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (planeBDbName) {
+    goldPublisherEnvironment.PLANE_B_DB_NAME = planeBDbName
+  }
+  if (planeCDbHost) {
+    goldPublisherEnvironment.PLANE_C_DB_HOST = planeCDbHost
+  }
+  if (planeCDbPort) {
+    goldPublisherEnvironment.PLANE_C_DB_PORT = planeCDbPort
+  }
+  if (planeCDbName) {
+    goldPublisherEnvironment.PLANE_C_DB_NAME = planeCDbName
+  }
+
+  const goldPublisherFunction = new NodejsFunction(
     scope,
-    options,
-    id: 'GoldPublisherJob',
-    jobName: 'gold-publisher',
-    entry: path.resolve(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'backend',
-      'scripts',
-      'aws',
-      'gold-publisher-lambda.ts',
-    ),
-    schedule: Schedule.rate(Duration.hours(4)),
-    enabled: rulesEnabled,
-    logRetention,
-    otelLambdaLayer,
-    lambdaNetworking: planeCLambdaNetworking,
-    planeCDbSecretArn,
-    planeCDbSsmName,
-    planeCDbHost,
-    planeCDbPort,
-    planeCDbName,
+    'GoldPublisherJobFunction',
+    {
+      entry: path.resolve(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'backend',
+        'scripts',
+        'aws',
+        'gold-publisher-lambda.ts',
+      ),
+      handler: 'handler',
+      runtime: Runtime.NODEJS_20_X,
+      architecture: options.lambdaArchitecture,
+      memorySize: 512,
+      timeout: Duration.minutes(5),
+      ...planeCLambdaNetworking,
+      role: options.roles.planeCLambdaRole,
+      tracing: tracingMode,
+      environment: goldPublisherEnvironment,
+      logRetention,
+      layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+    },
+  )
+
+  applySentryEnv(
+    scope,
+    goldPublisherFunction,
+    'GoldPublisherSentrySecret',
+    options.sentrySecretArn,
+    options.sentrySecretJsonKey,
+  )
+
+  if (planeBDbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'GoldPublisherPlaneBDbSecret',
+      planeBDbSecretArn,
+    )
+    secret.grantRead(goldPublisherFunction)
+    goldPublisherFunction.addEnvironment(
+      'PLANE_B_DB_SECRET_ARN',
+      planeBDbSecretArn,
+    )
+  }
+  if (planeBDbSsmName) {
+    goldPublisherFunction.addEnvironment(
+      'PLANE_B_DB_SSM_NAME',
+      planeBDbSsmName,
+    )
+  }
+  if (planeCDbSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      'GoldPublisherPlaneCDbSecret',
+      planeCDbSecretArn,
+    )
+    secret.grantRead(goldPublisherFunction)
+    goldPublisherFunction.addEnvironment(
+      'PLANE_C_DB_SECRET_ARN',
+      planeCDbSecretArn,
+    )
+  }
+  if (planeCDbSsmName) {
+    goldPublisherFunction.addEnvironment(
+      'PLANE_C_DB_SSM_NAME',
+      planeCDbSsmName,
+    )
+  }
+  applyRedisEnv(
+    scope,
+    goldPublisherFunction,
+    'GoldPublisherRedisSecret',
     redisSecretArn,
     redisSsmName,
+    redisUrl,
+  )
+
+  const goldPublisherRule = new Rule(scope, 'GoldPublisherJobSchedule', {
+    ruleName: ruleName('gold-publisher'),
+    schedule: Schedule.rate(Duration.hours(4)),
+    description: 'Runs gold-publisher on a schedule.',
+    enabled: rulesEnabled,
   })
+  tagManagedRule(goldPublisherRule, options.envName)
+
+  goldPublisherRule.addTarget(
+    new LambdaFunction(goldPublisherFunction, { retryAttempts: 1 }),
+  )
 
   const goldIndicesRule = createPlaneCLambdaJob({
     scope,
@@ -2233,7 +2323,6 @@ export const createScheduledJobs = (
           ENVIRONMENT: options.envName,
           NODE_ENV: 'production',
           PGSSLMODE: 'require',
-          DB_DISABLE_STATEMENT_TIMEOUT: '1',
           ...tracingEnv,
           CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
           CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -2329,7 +2418,6 @@ export const createScheduledJobs = (
           ENVIRONMENT: options.envName,
           NODE_ENV: 'production',
           PGSSLMODE: 'require',
-          DB_DISABLE_STATEMENT_TIMEOUT: '1',
           ...tracingEnv,
           CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
           CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -2615,7 +2703,6 @@ const createPlaneBLambdaJob = ({
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     TRACING_EXPORTER: tracingExporter,
     NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
@@ -2736,7 +2823,6 @@ const createPlaneCLambdaJob = ({
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
     TRACING_EXPORTER: tracingExporter,
     NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
@@ -2746,6 +2832,7 @@ const createPlaneCLambdaJob = ({
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
   if (jobName === 'institutional-daily-export') {
+    environment.DB_DISABLE_STATEMENT_TIMEOUT = '1'
     if (options.exportsBucketName) {
       environment.EXPORTS_S3_BUCKET = options.exportsBucketName
     }

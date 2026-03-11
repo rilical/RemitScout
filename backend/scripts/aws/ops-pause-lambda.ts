@@ -285,6 +285,21 @@ const stopEventRuleStartedTasks = async (
   return { matched: toStop.length, stopped }
 }
 
+const RESUME_BATCH_DELAY_MS = 15_000
+
+/**
+ * Priority-ordered batch suffixes for staggered resume. Infrastructure-critical
+ * jobs first, analytics/cleanup last. Rules are matched by suffix after the
+ * environment prefix (e.g. `remit-scout-staging-data-health-slo`).
+ */
+const RESUME_BATCH_ORDER: string[][] = [
+  ['data-health-slo', 'gold-reconciliation', 'b2b-sweep-scheduler', 'gold-fx-rates'],
+  ['gold-publisher', 'gold-indices', 'gold-pulse-cache', 'gold-popular-corridors'],
+  ['provider-weighting', 'smart-alerts', 'alert-corridor-refresh', 'alert-evaluation'],
+  ['institutional-daily-export', 'oanda-sync', 'audit-log-cleanup', 'session-cleanup'],
+  ['bank-vs-specialist', 'telemetry-analytics', 'stoplist-auto-resume', 'probe-fan-in'],
+]
+
 const setRulesEnabled = async (
   client: EventBridgeClient,
   ruleNames: string[],
@@ -303,6 +318,54 @@ const setRulesEnabled = async (
       }
     }),
   )
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Enables rules in priority-ordered batches with delays between each batch to
+ * avoid thundering-herd DB connection storms after ops-resume.
+ */
+const staggeredEnableRules = async (
+  client: EventBridgeClient,
+  ruleNames: string[],
+): Promise<void> => {
+  const remaining = new Set(ruleNames)
+  const batches: string[][] = []
+
+  for (const suffixes of RESUME_BATCH_ORDER) {
+    const batch: string[] = []
+    for (const ruleName of remaining) {
+      const lower = ruleName.toLowerCase()
+      if (suffixes.some((suffix) => lower.includes(suffix))) {
+        batch.push(ruleName)
+      }
+    }
+    for (const matched of batch) {
+      remaining.delete(matched)
+    }
+    if (batch.length > 0) {
+      batches.push(batch)
+    }
+  }
+
+  // Any rules not matched by the priority batches go into a final catch-all batch
+  if (remaining.size > 0) {
+    batches.push([...remaining])
+  }
+
+  for (let i = 0; i < batches.length; i++) {
+    if (i > 0) {
+      logger.info('resume_batch_delay', { batchIndex: i, delayMs: RESUME_BATCH_DELAY_MS })
+      await sleep(RESUME_BATCH_DELAY_MS)
+    }
+    logger.info('resume_batch_enable', {
+      batchIndex: i,
+      ruleCount: batches[i].length,
+      rules: batches[i],
+    })
+    await setRulesEnabled(client, batches[i], true)
+  }
 }
 
 const setEcsDesiredCounts = async (
@@ -857,7 +920,7 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
             'EVENT_RULE_ALLOWLIST is empty; leaving rules disabled to prevent runaway scheduled ECS tasks.',
         })
       } else {
-        await setRulesEnabled(events, rulesToEnable, true)
+        await staggeredEnableRules(events, rulesToEnable)
       }
 
       if (purgeQueuesOnResume && purgeQueueUrls.length > 0) {
@@ -894,7 +957,7 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
             'EVENT_RULE_ALLOWLIST is empty; leaving rules disabled to prevent runaway scheduled ECS tasks.',
         })
       } else {
-        await setRulesEnabled(events, rulesToEnable, true)
+        await staggeredEnableRules(events, rulesToEnable)
       }
 
       if (purgeQueuesOnResume && purgeQueueUrls.length > 0) {

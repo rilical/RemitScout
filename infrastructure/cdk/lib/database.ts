@@ -120,7 +120,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
           publiclyAccessible: false,
         }),
         serverlessV2MinCapacity: isDev ? 0 : 0.5,
-        serverlessV2MaxCapacity: isDev ? 1 : 2,
+        serverlessV2MaxCapacity: isDev ? 1 : 8,
         ...(isDev ? { serverlessV2AutoPauseDuration: Duration.minutes(10) } : {}),
       })
 

@@ -3,7 +3,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {
   Alarm,
+  AlarmRule,
   ComparisonOperator,
+  CompositeAlarm,
   Dashboard,
   GraphWidget,
   MathExpression,
@@ -66,6 +68,7 @@ export const createMonitoring = (
 ): MonitoringResources => {
   const isProd = options.envName === 'prod'
   const isStaging = options.envName === 'staging'
+  const isDev = options.envName === 'dev'
   const serviceDimension = 'remit-scout'
   const useExplicitAlarmNames = options.envName !== 'dev'
   const dbRunbookRef = 'ops/brain/README.md#database-incidents'
@@ -631,6 +634,73 @@ export const createMonitoring = (
   })
   dbPoolWaitingAlarm.addAlarmAction(opsAction)
 
+  // DB pool utilization alarm: fires when active connections exceed 80% of pool size
+  const poolActivePlaneA = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_active',
+    statistic: 'Maximum',
+    period: Duration.minutes(5),
+    dimensionsMap: { pool_name: 'plane-a', environment: options.envName },
+  })
+  const poolActivePlaneB = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_active',
+    statistic: 'Maximum',
+    period: Duration.minutes(5),
+    dimensionsMap: { pool_name: 'plane-b', environment: options.envName },
+  })
+  const poolActivePlaneC = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_active',
+    statistic: 'Maximum',
+    period: Duration.minutes(5),
+    dimensionsMap: { pool_name: 'plane-c', environment: options.envName },
+  })
+  const poolTotalPlaneA = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_total',
+    statistic: 'Maximum',
+    period: Duration.minutes(5),
+    dimensionsMap: { pool_name: 'plane-a', environment: options.envName },
+  })
+  const poolTotalPlaneB = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_total',
+    statistic: 'Maximum',
+    period: Duration.minutes(5),
+    dimensionsMap: { pool_name: 'plane-b', environment: options.envName },
+  })
+  const poolTotalPlaneC = new Metric({
+    namespace: 'RemitScout',
+    metricName: 'db_connection_pool_total',
+    statistic: 'Maximum',
+    period: Duration.minutes(5),
+    dimensionsMap: { pool_name: 'plane-c', environment: options.envName },
+  })
+  const dbPoolUtilizationMax = new MathExpression({
+    expression: 'MAX([IF(tA>0,(aA/tA)*100,0), IF(tB>0,(aB/tB)*100,0), IF(tC>0,(aC/tC)*100,0)])',
+    usingMetrics: {
+      aA: poolActivePlaneA,
+      aB: poolActivePlaneB,
+      aC: poolActivePlaneC,
+      tA: poolTotalPlaneA,
+      tB: poolTotalPlaneB,
+      tC: poolTotalPlaneC,
+    },
+    period: Duration.minutes(5),
+    label: 'DB Pool Utilization % (max across planes)',
+  })
+  const dbPoolUtilizationAlarm = new Alarm(scope, 'DbPoolUtilizationAlarm', {
+    alarmName: `remit-scout-${options.envName}-db-pool-utilization-high`,
+    metric: dbPoolUtilizationMax,
+    threshold: 80,
+    evaluationPeriods: 3,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'DB pool active connections exceed 80% of total pool size for 15+ minutes',
+  })
+  dbPoolUtilizationAlarm.addAlarmAction(warningAction)
+
   const auroraFreeableMemoryAlarm = new Alarm(scope, 'AuroraFreeableMemoryAlarm', {
     alarmName: `remit-scout-${options.envName}-aurora-freeable-memory-low`,
     metric: options.database.cluster.metric('FreeableMemory', {
@@ -811,7 +881,7 @@ export const createMonitoring = (
   }
 
   const sloMissingDataBehavior = isProd || isStaging
-    ? TreatMissingData.BREACHING
+    ? TreatMissingData.IGNORE
     : TreatMissingData.NOT_BREACHING
   const sloAlarmConfigs = [
     { sloName: 'freshness_p95', timeWindow: '1h', alarmSuffix: 'freshness-slo-breach' },
@@ -1094,6 +1164,9 @@ export const createMonitoring = (
     alarm.addAlarmAction(warningAction)
   }
 
+  // Dev probes run every 30 min vs 5 min in staging/prod. Use 3 eval periods
+  // (45 min window) in dev to avoid false positives between probe runs.
+  const probeHeartbeatEvalPeriods = isDev ? 3 : 1
   const probeHeartbeatAlarms = probeProviders.map((providerId) =>
     new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeHeartbeatAlarm`, {
       alarmName: `remit-scout-${options.envName}-${providerId}-probe-heartbeat`,
@@ -1108,7 +1181,7 @@ export const createMonitoring = (
         },
       }),
       threshold: 1,
-      evaluationPeriods: 1,
+      evaluationPeriods: probeHeartbeatEvalPeriods,
       comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
       treatMissingData: TreatMissingData.BREACHING,
       alarmDescription: `${providerId} probe heartbeat missing`,
@@ -1258,7 +1331,7 @@ export const createMonitoring = (
     threshold: 1,
     evaluationPeriods: 2,
     comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-    treatMissingData: TreatMissingData.BREACHING,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
     alarmDescription: 'Plane A API is not responding to health checks',
   })
   apiEndpointDownAlarm.addAlarmAction(criticalAction)
@@ -1933,6 +2006,19 @@ export const createMonitoring = (
       'ensure_daily_partitions() cron may have failed',
   })
   partitionDefaultRowCountAlarm.addAlarmAction(opsAction)
+
+  // Composite alarm: fires when 2+ infrastructure alarms are active simultaneously,
+  // indicating systemic degradation rather than an isolated issue.
+  const infraDegradedAlarm = new CompositeAlarm(scope, 'InfraDegradedComposite', {
+    compositeAlarmName: `remit-scout-${options.envName}-infra-degraded`,
+    alarmRule: AlarmRule.anyOf(
+      AlarmRule.allOf(rdsCpuAlarm, dbPoolWaitingAlarm),
+      AlarmRule.allOf(rdsCpuAlarm, apiEndpointDownAlarm),
+      AlarmRule.allOf(dbPoolWaitingAlarm, rdsConnectionsAlarm),
+    ),
+    alarmDescription: 'Multiple infrastructure alarms active — systemic degradation detected',
+  })
+  infraDegradedAlarm.addAlarmAction(criticalAction)
 
   dashboard.addWidgets(
     dataFreshnessWidget,
