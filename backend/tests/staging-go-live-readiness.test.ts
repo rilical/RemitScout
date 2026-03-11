@@ -125,6 +125,16 @@ describe('staging go-live readiness policy', () => {
     )
   })
 
+  it('allows staging when metric streaming is intentionally disabled', () => {
+    const evaluation = evaluateStagingGoLiveReadiness({
+      ...buildBaseEnv(),
+      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '0',
+      NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: '',
+    })
+
+    expect(evaluation.policyViolations).toEqual([])
+  })
+
   it('blocks drifted New Relic cost-control settings', () => {
     const evaluation = evaluateStagingGoLiveReadiness({
       ...buildBaseEnv(),

@@ -389,26 +389,25 @@ export const evaluateStagingGoLiveReadiness = (
   }
 
   const metricStreamEnabled = readEnvValue(env, 'NEW_RELIC_AWS_METRIC_STREAM_ENABLED').toLowerCase()
-  if (FALSE_VALUES.has(metricStreamEnabled)) {
-    policyViolations.push('NEW_RELIC_AWS_METRIC_STREAM_ENABLED must stay enabled in staging')
-  }
 
   const logForwardingEnabled = readEnvValue(env, 'NEW_RELIC_AWS_LOG_FORWARDING_ENABLED').toLowerCase()
   if (!logForwardingEnabled || !FALSE_VALUES.has(logForwardingEnabled)) {
     policyViolations.push('NEW_RELIC_AWS_LOG_FORWARDING_ENABLED must be "0" in staging')
   }
 
-  const metricNamespaces = new Set(
-    splitCsv(readEnvValue(env, 'NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES')),
-  )
-  const requiredMetricNamespaces = ['AWS/SQS', 'AWS/ECS', 'AWS/Lambda', 'AWS/Events']
-  if (
-    metricNamespaces.size !== requiredMetricNamespaces.length
-    || requiredMetricNamespaces.some(namespace => !metricNamespaces.has(namespace))
-  ) {
-    policyViolations.push(
-      `NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES must be exactly ${requiredMetricNamespaces.join(', ')}`,
+  if (!FALSE_VALUES.has(metricStreamEnabled)) {
+    const metricNamespaces = new Set(
+      splitCsv(readEnvValue(env, 'NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES')),
     )
+    const requiredMetricNamespaces = ['AWS/SQS', 'AWS/ECS', 'AWS/Lambda', 'AWS/Events']
+    if (
+      metricNamespaces.size !== requiredMetricNamespaces.length
+      || requiredMetricNamespaces.some(namespace => !metricNamespaces.has(namespace))
+    ) {
+      policyViolations.push(
+        `NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES must be exactly ${requiredMetricNamespaces.join(', ')}`,
+      )
+    }
   }
 
   if (triangulationEnabled) {

@@ -143,17 +143,16 @@ if (isStrictEnv) {
     if (logsEnabled) {
       missing.push('NEW_RELIC_LOGS_ENABLED (must be 0 in staging)')
     }
-    if (!awsMetricStreamEnabled) {
-      missing.push('NEW_RELIC_AWS_METRIC_STREAM_ENABLED (must be 1 in staging)')
-    }
     if (awsLogForwardingEnabled) {
       missing.push('NEW_RELIC_AWS_LOG_FORWARDING_ENABLED (must be 0 in staging)')
     }
-    const namespaces = normalizeNamespaces(process.env.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES)
-    if (!haveSameNamespaceSet(namespaces, REQUIRED_STAGING_METRIC_STREAM_NAMESPACES)) {
-      missing.push(
-        `NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES (must be exactly ${REQUIRED_STAGING_METRIC_STREAM_NAMESPACES.join(',')})`,
-      )
+    if (awsMetricStreamEnabled) {
+      const namespaces = normalizeNamespaces(process.env.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES)
+      if (!haveSameNamespaceSet(namespaces, REQUIRED_STAGING_METRIC_STREAM_NAMESPACES)) {
+        missing.push(
+          `NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES (must be exactly ${REQUIRED_STAGING_METRIC_STREAM_NAMESPACES.join(',')})`,
+        )
+      }
     }
   }
 
