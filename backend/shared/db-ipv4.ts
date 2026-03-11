@@ -35,7 +35,6 @@ const normalizeRegion = (value: string | null | undefined) => {
   if (!normalized) return ''
   return normalized.replace(/_/g, '-')
 }
-
 const parseConnectionString = (connectionString: string) => {
   try {
     return new URL(connectionString)
@@ -125,7 +124,6 @@ const rewriteSupabaseConnectionStringForPooler = (
     source: candidate.source,
   }
 }
-
 const defaultResolveIpv4Address: ResolveIpv4Address = async (hostname) => {
   const resolved = await lookup(hostname, { family: 4 })
   return resolved.address || null
