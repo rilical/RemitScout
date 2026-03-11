@@ -585,6 +585,7 @@ export default defineNuxtConfig({
         '/contact',
         '/faq',
         '/plus',
+        '/robots.txt',
         '/corrections',
         '/privacy',
         '/terms',
