@@ -126,6 +126,7 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
             'ecs:ListTasks',
             'ecs:DescribeClusters',
             'ecs:DescribeServices',
+            'ecs:UpdateService',
           ],
           resources: [
             `arn:aws:ecs:${region}:${account}:cluster/${envPrefix}`,

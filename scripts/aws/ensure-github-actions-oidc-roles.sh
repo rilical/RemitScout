@@ -79,9 +79,11 @@ inline_policy_json() {
       "Action": [
         "cloudformation:Describe*",
         "cloudformation:Get*",
-        "cloudformation:List*"
+        "cloudformation:List*",
+        "cloudformation:CancelUpdateStack",
+        "cloudformation:ContinueUpdateRollback"
       ],
-      "Resource": "*"
+      "Resource": "arn:aws:cloudformation:*:*:stack/remit-scout-*/*"
     },
     {
       "Sid": "CloudWatchDeploySignals",
@@ -148,7 +150,8 @@ inline_policy_json() {
         "ecs:RunTask",
         "ecs:DescribeTasks",
         "ecs:DescribeServices",
-        "ecs:ListTasks"
+        "ecs:ListTasks",
+        "ecs:UpdateService"
       ],
       "Resource": "*"
     },
