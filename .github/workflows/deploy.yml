@@ -966,12 +966,12 @@ jobs:
             echo "Missing NEW_RELIC_PROD_AWS_ACCOUNT_ID / NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
-          if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
+          if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-0}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-0}" != "0" ]; } && \
              [ -z "${NEW_RELIC_INGEST_KEY_SECRET_ARN:-}" ]; then
             echo "Missing NEW_RELIC_INGEST_KEY_SECRET_ARN for New Relic AWS metric/log streaming."
             exit 1
           fi
-          if [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] && \
+          if [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-0}" != "0" ] && \
              [ -z "${NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES:-}" ]; then
             echo "Missing NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES for explicit staging metric stream allowlisting."
             exit 1
@@ -2477,7 +2477,7 @@ jobs:
             echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
-          if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
+          if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-0}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-0}" != "0" ]; } && \
              [ -z "${NEW_RELIC_INGEST_KEY_SECRET_ARN:-}" ]; then
             echo "Missing NEW_RELIC_INGEST_KEY_SECRET_ARN for New Relic AWS metric/log streaming."
             exit 1
