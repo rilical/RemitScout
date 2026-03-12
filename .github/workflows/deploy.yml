@@ -665,7 +665,7 @@ jobs:
       group: deploy-staging
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 210
     environment: staging
     permissions:
       contents: read
