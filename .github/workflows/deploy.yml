@@ -358,11 +358,11 @@ jobs:
           fi
 
           aws_cf() {
-            aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+            timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
           }
 
           aws_ecs() {
-            aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
+            timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
           }
 
           stack_status() {
@@ -381,9 +381,15 @@ jobs:
             aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
+          start_epoch="$(date +%s)"
+          timeout_seconds=900
+          deadline_epoch=$((start_epoch + timeout_seconds))
           max_attempts=90
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
+            if [ "$(date +%s)" -ge "${deadline_epoch}" ]; then
+              break
+            fi
             status="$(stack_status)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -417,8 +423,8 @@ jobs:
             esac
           done
 
-          timeout_seconds=$((max_attempts * poll_seconds))
-          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
+          elapsed_seconds=$(( $(date +%s) - start_epoch ))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${elapsed_seconds}s."
           exit 1
 
       - name: Pre-deploy infrastructure health check (dev)
@@ -1141,11 +1147,11 @@ jobs:
           fi
 
           aws_cf() {
-            aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+            timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
           }
 
           aws_ecs() {
-            aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
+            timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
           }
 
           stack_status() {
@@ -1164,9 +1170,15 @@ jobs:
             aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
+          start_epoch="$(date +%s)"
+          timeout_seconds=900
+          deadline_epoch=$((start_epoch + timeout_seconds))
           max_attempts=90
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
+            if [ "$(date +%s)" -ge "${deadline_epoch}" ]; then
+              break
+            fi
             status="$(stack_status)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -1200,8 +1212,8 @@ jobs:
             esac
           done
 
-          timeout_seconds=$((max_attempts * poll_seconds))
-          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
+          elapsed_seconds=$(( $(date +%s) - start_epoch ))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${elapsed_seconds}s."
           exit 1
 
       - name: Pre-deploy infrastructure health check (staging)
@@ -2619,11 +2631,11 @@ jobs:
           fi
 
           aws_cf() {
-            aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+            timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
           }
 
           aws_ecs() {
-            aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
+            timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
           }
 
           stack_status() {
@@ -2642,9 +2654,15 @@ jobs:
             aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
+          start_epoch="$(date +%s)"
+          timeout_seconds=900
+          deadline_epoch=$((start_epoch + timeout_seconds))
           max_attempts=90
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
+            if [ "$(date +%s)" -ge "${deadline_epoch}" ]; then
+              break
+            fi
             status="$(stack_status)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -2678,8 +2696,8 @@ jobs:
             esac
           done
 
-          timeout_seconds=$((max_attempts * poll_seconds))
-          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
+          elapsed_seconds=$(( $(date +%s) - start_epoch ))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${elapsed_seconds}s."
           exit 1
 
       - name: Pre-deploy infrastructure health check (prod)
