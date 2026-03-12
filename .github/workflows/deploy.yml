@@ -441,18 +441,19 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
-                # Every 60s, check if ECS services are stuck in failed deployment
+                # Every 60s, check if ECS services have actually entered a failed rollout.
+                # PRIMARY=IN_PROGRESS is expected while CloudFormation/ECS is converging.
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
                   failing=0
                   while IFS= read -r service_arn; do
                     [ -n "${service_arn}" ] || continue
                     rollout_state="$(aws_ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services "${service_arn}" --query 'services[0].deployments[?status==`PRIMARY`].rolloutState | [0]' --output text 2>/dev/null || echo '')"
-                    if [ "${rollout_state}" = "IN_PROGRESS" ]; then
+                    if [ "${rollout_state}" = "FAILED" ]; then
                       failing=$((failing + 1))
                     fi
                   done < <(aws_ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns[]' --output text 2>/dev/null | tr '\t' '\n')
                   if [ "${failing}" -gt 3 ]; then
-                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::${failing} ECS services are in FAILED rollout state. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
                     print_stack_diagnostics
                     exit 1
@@ -1259,18 +1260,19 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
-                # Every 60s, check if ECS services are stuck in failed deployment
+                # Every 60s, check if ECS services have actually entered a failed rollout.
+                # PRIMARY=IN_PROGRESS is expected while CloudFormation/ECS is converging.
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
                   failing=0
                   while IFS= read -r service_arn; do
                     [ -n "${service_arn}" ] || continue
                     rollout_state="$(aws_ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services "${service_arn}" --query 'services[0].deployments[?status==`PRIMARY`].rolloutState | [0]' --output text 2>/dev/null || echo '')"
-                    if [ "${rollout_state}" = "IN_PROGRESS" ]; then
+                    if [ "${rollout_state}" = "FAILED" ]; then
                       failing=$((failing + 1))
                     fi
                   done < <(aws_ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns[]' --output text 2>/dev/null | tr '\t' '\n')
                   if [ "${failing}" -gt 3 ]; then
-                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::${failing} ECS services are in FAILED rollout state. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
                     exit 1
                   fi
@@ -2769,18 +2771,19 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
-                # Every 60s, check if ECS services are stuck in failed deployment
+                # Every 60s, check if ECS services have actually entered a failed rollout.
+                # PRIMARY=IN_PROGRESS is expected while CloudFormation/ECS is converging.
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
                   failing=0
                   while IFS= read -r service_arn; do
                     [ -n "${service_arn}" ] || continue
                     rollout_state="$(aws_ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services "${service_arn}" --query 'services[0].deployments[?status==`PRIMARY`].rolloutState | [0]' --output text 2>/dev/null || echo '')"
-                    if [ "${rollout_state}" = "IN_PROGRESS" ]; then
+                    if [ "${rollout_state}" = "FAILED" ]; then
                       failing=$((failing + 1))
                     fi
                   done < <(aws_ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns[]' --output text 2>/dev/null | tr '\t' '\n')
                   if [ "${failing}" -gt 3 ]; then
-                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::${failing} ECS services are in FAILED rollout state. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
                     exit 1
                   fi
