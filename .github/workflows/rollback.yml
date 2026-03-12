@@ -173,7 +173,7 @@ jobs:
           status="$(stack_status)"
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
             echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
-            aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
           # Wait for stack to reach a deployable state (5 min max)

@@ -357,22 +357,34 @@ jobs:
             exit 1
           fi
 
-          if ! aws cloudformation describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
+          aws_cf() {
+            aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+          }
+
+          aws_ecs() {
+            aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
+          }
+
+          stack_status() {
+            aws_cf describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text
+          }
+
+          if ! aws_cf describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
             echo "Stack ${STACK_NAME} not found yet; continuing."
             exit 0
           fi
 
-          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+          status="$(stack_status)"
           echo "Current stack status: ${status}"
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
             echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
-            aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
           max_attempts=90
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
-            status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+            status="$(stack_status)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
                 echo "Stack is stable and deployable: ${status}"
@@ -382,13 +394,14 @@ jobs:
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
                 # Every 60s, check if ECS services are stuck in failed deployment
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
-                    | jq -r '.serviceArns[]' 2>/dev/null \
-                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
-                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")"
-                  failing="$(printf '%s\n' "${failing}" | tail -n 1 | tr -dc '0-9')"
-                  [ -n "${failing}" ] || failing=0
+                  failing=0
+                  while IFS= read -r service_arn; do
+                    [ -n "${service_arn}" ] || continue
+                    rollout_state="$(aws_ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services "${service_arn}" --query 'services[0].deployments[?status==`PRIMARY`].rolloutState | [0]' --output text 2>/dev/null || echo '')"
+                    if [ "${rollout_state}" = "IN_PROGRESS" ]; then
+                      failing=$((failing + 1))
+                    fi
+                  done < <(aws_ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns[]' --output text 2>/dev/null | tr '\t' '\n')
                   if [ "${failing}" -gt 3 ]; then
                     echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
@@ -1127,22 +1140,34 @@ jobs:
             exit 1
           fi
 
-          if ! aws cloudformation describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
+          aws_cf() {
+            aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+          }
+
+          aws_ecs() {
+            aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
+          }
+
+          stack_status() {
+            aws_cf describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text
+          }
+
+          if ! aws_cf describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
             echo "Stack ${STACK_NAME} not found yet; continuing."
             exit 0
           fi
 
-          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+          status="$(stack_status)"
           echo "Current stack status: ${status}"
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
             echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
-            aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
           max_attempts=90
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
-            status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+            status="$(stack_status)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
                 echo "Stack is stable and deployable: ${status}"
@@ -1152,13 +1177,14 @@ jobs:
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
                 # Every 60s, check if ECS services are stuck in failed deployment
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
-                    | jq -r '.serviceArns[]' 2>/dev/null \
-                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
-                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")"
-                  failing="$(printf '%s\n' "${failing}" | tail -n 1 | tr -dc '0-9')"
-                  [ -n "${failing}" ] || failing=0
+                  failing=0
+                  while IFS= read -r service_arn; do
+                    [ -n "${service_arn}" ] || continue
+                    rollout_state="$(aws_ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services "${service_arn}" --query 'services[0].deployments[?status==`PRIMARY`].rolloutState | [0]' --output text 2>/dev/null || echo '')"
+                    if [ "${rollout_state}" = "IN_PROGRESS" ]; then
+                      failing=$((failing + 1))
+                    fi
+                  done < <(aws_ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns[]' --output text 2>/dev/null | tr '\t' '\n')
                   if [ "${failing}" -gt 3 ]; then
                     echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
@@ -2592,22 +2618,34 @@ jobs:
             exit 1
           fi
 
-          if ! aws cloudformation describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
+          aws_cf() {
+            aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+          }
+
+          aws_ecs() {
+            aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
+          }
+
+          stack_status() {
+            aws_cf describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text
+          }
+
+          if ! aws_cf describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
             echo "Stack ${STACK_NAME} not found yet; continuing."
             exit 0
           fi
 
-          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+          status="$(stack_status)"
           echo "Current stack status: ${status}"
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
             echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
-            aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
           max_attempts=90
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
-            status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+            status="$(stack_status)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
                 echo "Stack is stable and deployable: ${status}"
@@ -2617,13 +2655,14 @@ jobs:
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
                 # Every 60s, check if ECS services are stuck in failed deployment
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
-                    | jq -r '.serviceArns[]' 2>/dev/null \
-                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
-                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")"
-                  failing="$(printf '%s\n' "${failing}" | tail -n 1 | tr -dc '0-9')"
-                  [ -n "${failing}" ] || failing=0
+                  failing=0
+                  while IFS= read -r service_arn; do
+                    [ -n "${service_arn}" ] || continue
+                    rollout_state="$(aws_ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services "${service_arn}" --query 'services[0].deployments[?status==`PRIMARY`].rolloutState | [0]' --output text 2>/dev/null || echo '')"
+                    if [ "${rollout_state}" = "IN_PROGRESS" ]; then
+                      failing=$((failing + 1))
+                    fi
+                  done < <(aws_ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns[]' --output text 2>/dev/null | tr '\t' '\n')
                   if [ "${failing}" -gt 3 ]; then
                     echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
