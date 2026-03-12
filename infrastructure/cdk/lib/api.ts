@@ -545,6 +545,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     retentionPeriod: Duration.days(14),
   })
 
+  const planeCReservedConcurrency = isProd ? 50 : isDev ? 10 : undefined
+
   const planeCFunction = new NodejsFunction(scope, 'PlaneCApiFunction', {
     entry: path.resolve(__dirname, '..', '..', '..', 'backend', 'plane-c', 'src', 'lambda.ts'),
     handler: 'handler',
@@ -552,7 +554,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     architecture: lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.seconds(30),
-    reservedConcurrentExecutions: isProd ? 50 : isStaging ? 25 : 10,
+    reservedConcurrentExecutions: planeCReservedConcurrency,
     role: options.roles.planeCLambdaRole,
     tracing: tracingMode,
     vpc: options.vpc,
@@ -642,6 +644,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeAEnvironment.PLANE_C_BASE_URL = planeCApi.apiEndpoint
   }
 
+  const planeAReservedConcurrency = isProd ? 100 : isDev ? 25 : undefined
+
   const planeAFunction = new NodejsFunction(scope, 'PlaneAApiFunction', {
     entry: path.resolve(__dirname, '..', '..', '..', 'backend', 'plane-a', 'src', 'lambda.ts'),
     handler: 'handler',
@@ -649,7 +653,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     architecture: lambdaArchitecture,
     memorySize: 1024,
     timeout: Duration.seconds(30),
-    reservedConcurrentExecutions: isProd ? 100 : isStaging ? 50 : 25,
+    reservedConcurrentExecutions: planeAReservedConcurrency,
     role: options.roles.planeALambdaRole,
     tracing: tracingMode,
     vpc: options.vpc,
