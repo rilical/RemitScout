@@ -427,8 +427,8 @@ jobs:
           start_epoch="$(date +%s)"
           timeout_seconds=1800
           deadline_epoch=$((start_epoch + timeout_seconds))
-          max_attempts=90
           poll_seconds=10
+          max_attempts=$((timeout_seconds / poll_seconds))
           for i in $(seq 1 "${max_attempts}"); do
             if [ "$(date +%s)" -ge "${deadline_epoch}" ]; then
               break
@@ -1246,8 +1246,8 @@ jobs:
           start_epoch="$(date +%s)"
           timeout_seconds=1800
           deadline_epoch=$((start_epoch + timeout_seconds))
-          max_attempts=90
           poll_seconds=10
+          max_attempts=$((timeout_seconds / poll_seconds))
           for i in $(seq 1 "${max_attempts}"); do
             if [ "$(date +%s)" -ge "${deadline_epoch}" ]; then
               break
@@ -2757,8 +2757,8 @@ jobs:
           start_epoch="$(date +%s)"
           timeout_seconds=1800
           deadline_epoch=$((start_epoch + timeout_seconds))
-          max_attempts=90
           poll_seconds=10
+          max_attempts=$((timeout_seconds / poll_seconds))
           for i in $(seq 1 "${max_attempts}"); do
             if [ "$(date +%s)" -ge "${deadline_epoch}" ]; then
               break
