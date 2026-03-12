@@ -382,7 +382,7 @@ jobs:
           fi
 
           start_epoch="$(date +%s)"
-          timeout_seconds=900
+          timeout_seconds=1800
           deadline_epoch=$((start_epoch + timeout_seconds))
           max_attempts=90
           poll_seconds=10
@@ -1171,7 +1171,7 @@ jobs:
           fi
 
           start_epoch="$(date +%s)"
-          timeout_seconds=900
+          timeout_seconds=1800
           deadline_epoch=$((start_epoch + timeout_seconds))
           max_attempts=90
           poll_seconds=10
@@ -2655,7 +2655,7 @@ jobs:
           fi
 
           start_epoch="$(date +%s)"
-          timeout_seconds=900
+          timeout_seconds=1800
           deadline_epoch=$((start_epoch + timeout_seconds))
           max_attempts=90
           poll_seconds=10
