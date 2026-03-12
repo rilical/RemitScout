@@ -182,7 +182,7 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
   new Role(scope, 'GithubActionsDeployStagingRole', {
     roleName: 'remit-scout-gha-deploy-staging',
     description: `GitHub Actions deploy role (staging) for ${repoOwner}/${repoName}`,
-    assumedBy: makePrincipal('refs/heads/main'),
+    assumedBy: makePrincipal('refs/heads/staging'),
     inlinePolicies: { DeployPermissions: buildDeployPolicy('staging') },
     maxSessionDuration: Duration.hours(3),
   })

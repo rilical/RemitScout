@@ -349,6 +349,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
           ENV_NAME: dev
         run: |
           set -euo pipefail
@@ -359,6 +360,31 @@ jobs:
 
           aws_cf() {
             timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+          }
+
+          continue_update_rollback() {
+            if aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null; then
+              return 0
+            fi
+
+            echo "Direct continue-update-rollback was denied. Retrying with the CDK bootstrap deploy role."
+            local account_id
+            account_id="$(aws sts get-caller-identity --query Account --output text)"
+            local deploy_role_arn="arn:aws:iam::${account_id}:role/cdk-hnb659fds-deploy-role-${account_id}-${AWS_REGION}"
+            local assumed
+            assumed="$(aws sts assume-role \
+              --role-arn "${deploy_role_arn}" \
+              --role-session-name "cf-rollback-recovery-dev" \
+              --duration-seconds 3600 \
+              --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' \
+              --output text)"
+            if [ -z "${assumed}" ]; then
+              echo "::error::Failed to assume bootstrap deploy role ${deploy_role_arn} for rollback recovery."
+              return 1
+            fi
+            read -r AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN <<<"${assumed}"
+            export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           }
 
           aws_ecs() {
@@ -378,7 +404,7 @@ jobs:
           echo "Current stack status: ${status}"
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
             echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
-            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            continue_update_rollback
           fi
 
           start_epoch="$(date +%s)"
@@ -1138,6 +1164,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
           ENV_NAME: staging
         run: |
           set -euo pipefail
@@ -1148,6 +1175,31 @@ jobs:
 
           aws_cf() {
             timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+          }
+
+          continue_update_rollback() {
+            if aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null; then
+              return 0
+            fi
+
+            echo "Direct continue-update-rollback was denied. Retrying with the CDK bootstrap deploy role."
+            local account_id
+            account_id="$(aws sts get-caller-identity --query Account --output text)"
+            local deploy_role_arn="arn:aws:iam::${account_id}:role/cdk-hnb659fds-deploy-role-${account_id}-${AWS_REGION}"
+            local assumed
+            assumed="$(aws sts assume-role \
+              --role-arn "${deploy_role_arn}" \
+              --role-session-name "cf-rollback-recovery-staging" \
+              --duration-seconds 3600 \
+              --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' \
+              --output text)"
+            if [ -z "${assumed}" ]; then
+              echo "::error::Failed to assume bootstrap deploy role ${deploy_role_arn} for rollback recovery."
+              return 1
+            fi
+            read -r AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN <<<"${assumed}"
+            export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           }
 
           aws_ecs() {
@@ -1167,7 +1219,7 @@ jobs:
           echo "Current stack status: ${status}"
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
             echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
-            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            continue_update_rollback
           fi
 
           start_epoch="$(date +%s)"
@@ -2622,6 +2674,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
           ENV_NAME: prod
         run: |
           set -euo pipefail
@@ -2632,6 +2685,31 @@ jobs:
 
           aws_cf() {
             timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
+          }
+
+          continue_update_rollback() {
+            if aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null; then
+              return 0
+            fi
+
+            echo "Direct continue-update-rollback was denied. Retrying with the CDK bootstrap deploy role."
+            local account_id
+            account_id="$(aws sts get-caller-identity --query Account --output text)"
+            local deploy_role_arn="arn:aws:iam::${account_id}:role/cdk-hnb659fds-deploy-role-${account_id}-${AWS_REGION}"
+            local assumed
+            assumed="$(aws sts assume-role \
+              --role-arn "${deploy_role_arn}" \
+              --role-session-name "cf-rollback-recovery-prod" \
+              --duration-seconds 3600 \
+              --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' \
+              --output text)"
+            if [ -z "${assumed}" ]; then
+              echo "::error::Failed to assume bootstrap deploy role ${deploy_role_arn} for rollback recovery."
+              return 1
+            fi
+            read -r AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN <<<"${assumed}"
+            export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           }
 
           aws_ecs() {
@@ -2651,7 +2729,7 @@ jobs:
           echo "Current stack status: ${status}"
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
             echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
-            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            continue_update_rollback
           fi
 
           start_epoch="$(date +%s)"

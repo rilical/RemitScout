@@ -96,7 +96,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: remit-scout-gha-deploy-staging
-      Description: GitHub Actions deploy role for staging (refs/heads/main)
+      Description: GitHub Actions deploy role for staging (refs/heads/staging)
       MaxSessionDuration: 3600
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -109,7 +109,7 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/staging
       Policies:
         - PolicyName: remit-scout-gha-deploy-staging
           PolicyDocument:
@@ -121,6 +121,7 @@ Resources:
                   - cloudformation:Describe*
                   - cloudformation:Get*
                   - cloudformation:List*
+                  - cloudformation:ContinueUpdateRollback
                 Resource: '*'
               - Sid: BootstrapAssume
                 Effect: Allow
