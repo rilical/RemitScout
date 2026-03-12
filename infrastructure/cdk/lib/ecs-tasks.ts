@@ -342,6 +342,11 @@ export const createEcsTasks = (
   const agentBedrockSecretArn = options.agentBedrockSecretArn
   const newRelicIngestKeySecretArn = options.newRelicIngestKeySecretArn
   const newRelicIngestKeySecretJsonKey = options.newRelicIngestKeySecretJsonKey
+  const planeADbSecretArn = options.planeADbSecretArn ?? options.planeBDbSecretArn
+  const planeADbSsmName = options.planeADbSsmName ?? options.planeBDbSsmName
+  const planeADbHost = options.planeADbHost ?? options.planeBDbHost
+  const planeADbPort = options.planeADbPort ?? options.planeBDbPort
+  const planeADbName = options.planeADbName ?? options.planeBDbName
 
   const buildSecrets = (): Record<string, EcsSecret> => {
     const secrets: Record<string, EcsSecret> = {}
@@ -362,6 +367,22 @@ export const createEcsTasks = (
       )
       secrets.PLANE_B_DB_USERNAME = EcsSecret.fromSecretsManager(secret, 'username')
       secrets.PLANE_B_DB_PASSWORD = EcsSecret.fromSecretsManager(secret, 'password')
+    }
+
+    if (planeADbSsmName) {
+      const parameter = StringParameter.fromStringParameterName(
+        scope,
+        'PlaneAEcsDatabaseParameter',
+        planeADbSsmName,
+      )
+      secrets.DATABASE_URL_PLANE_A = EcsSecret.fromSsmParameter(parameter)
+    } else if (planeADbSecretArn) {
+      const secret = importSecretByRef(
+        'PlaneAEcsDatabaseSecret',
+        planeADbSecretArn,
+      )
+      secrets.PLANE_A_DB_USERNAME = EcsSecret.fromSecretsManager(secret, 'username')
+      secrets.PLANE_A_DB_PASSWORD = EcsSecret.fromSecretsManager(secret, 'password')
     }
 
     if (redisSecretArn) {
@@ -1541,12 +1562,6 @@ export const createEcsTasks = (
     opsAlertsQueueOtelCollector.addMountPoints(tmpMountPoint)
   }
 
-  const planeADbSecretArn = options.planeADbSecretArn ?? options.planeBDbSecretArn
-  const planeADbSsmName = options.planeADbSsmName ?? options.planeBDbSsmName
-  const planeADbHost = options.planeADbHost ?? options.planeBDbHost
-  const planeADbPort = options.planeADbPort ?? options.planeBDbPort
-  const planeADbName = options.planeADbName ?? options.planeBDbName
-
   const planeAWorkerEnv: Record<string, string> = {
     ...sharedEnv,
   }
@@ -2031,6 +2046,21 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      ...(planeADbHost
+        ? { PLANE_A_DB_HOST: planeADbHost }
+        : {}),
+      ...(planeADbSecretArn
+        ? { PLANE_A_DB_SECRET_ARN: planeADbSecretArn }
+        : {}),
+      ...(planeADbSsmName
+        ? { PLANE_A_DB_SSM_NAME: planeADbSsmName }
+        : {}),
+      ...(planeADbPort
+        ? { PLANE_A_DB_PORT: planeADbPort }
+        : {}),
+      ...(planeADbName
+        ? { PLANE_A_DB_NAME: planeADbName }
+        : {}),
       ...(planeBDbMigratorSecretArn
         ? { PLANE_B_DB_MIGRATOR_SECRET_ARN: planeBDbMigratorSecretArn }
         : {}),

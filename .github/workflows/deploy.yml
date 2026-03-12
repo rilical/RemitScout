@@ -1492,7 +1492,7 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; DATABASE_URL=\\\"postgres://\${PLANE_B_DB_USERNAME}:\${PLANE_B_DB_PASSWORD}@\${PLANE_B_DB_HOST}:\${PLANE_B_DB_PORT:-5432}/\${PLANE_B_DB_NAME}?sslmode=require\\\"; export DATABASE_URL DATABASE_URL_PLANE_A=\\\"\$DATABASE_URL\\\"; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; if [ -z \\\"\\${DATABASE_URL_PLANE_A:-}\\\" ]; then if [ -z \\\"\\${PLANE_A_DB_USERNAME:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_PASSWORD:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_HOST:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_NAME:-}\\\" ]; then echo \\\"Missing Plane A database configuration for launch-user seeding\\\" >&2; exit 1; fi; DATABASE_URL_PLANE_A=\\\"postgres://\\${PLANE_A_DB_USERNAME}:\\${PLANE_A_DB_PASSWORD}@\\${PLANE_A_DB_HOST}:\\${PLANE_A_DB_PORT:-5432}/\\${PLANE_A_DB_NAME}?sslmode=require\\\"; export DATABASE_URL_PLANE_A; fi; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
@@ -3017,7 +3017,7 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; DATABASE_URL=\\\"postgres://\${PLANE_B_DB_USERNAME}:\${PLANE_B_DB_PASSWORD}@\${PLANE_B_DB_HOST}:\${PLANE_B_DB_PORT:-5432}/\${PLANE_B_DB_NAME}?sslmode=require\\\"; export DATABASE_URL DATABASE_URL_PLANE_A=\\\"\$DATABASE_URL\\\"; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; if [ -z \\\"\\${DATABASE_URL_PLANE_A:-}\\\" ]; then if [ -z \\\"\\${PLANE_A_DB_USERNAME:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_PASSWORD:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_HOST:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_NAME:-}\\\" ]; then echo \\\"Missing Plane A database configuration for launch-user seeding\\\" >&2; exit 1; fi; DATABASE_URL_PLANE_A=\\\"postgres://\\${PLANE_A_DB_USERNAME}:\\${PLANE_A_DB_PASSWORD}@\\${PLANE_A_DB_HOST}:\\${PLANE_A_DB_PORT:-5432}/\\${PLANE_A_DB_NAME}?sslmode=require\\\"; export DATABASE_URL_PLANE_A; fi; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
