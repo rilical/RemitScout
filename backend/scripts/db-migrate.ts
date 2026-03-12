@@ -140,7 +140,10 @@ function parseCliArgs(): { dryRun: boolean; list: boolean; targetVersion: number
   if (tvIndex !== -1 && tvIndex + 1 < args.length) {
     const parsed = parseInt(args[tvIndex + 1], 10)
     if (Number.isNaN(parsed) || parsed < 0) {
-      logger.error({ value: args[tvIndex + 1] }, 'Invalid --target-version value; must be a non-negative integer')
+      logger.error('invalid_target_version', {
+        value: args[tvIndex + 1],
+        message: 'Invalid --target-version value; must be a non-negative integer',
+      })
       process.exit(1)
     }
     targetVersion = parsed
@@ -170,7 +173,11 @@ export const listMigrations = async (target: MigrationTarget): Promise<void> => 
       .filter((file) => file.endsWith('.sql') && file !== 'TEMPLATE.sql')
       .sort()
 
-    logger.info({ target: target.label, total: files.length, applied: applied.size }, 'Migration status')
+    logger.info('migration_status', {
+      target: target.label,
+      total: files.length,
+      applied: applied.size,
+    })
 
     const header = `${'Version'.padEnd(8)} ${'Filename'.padEnd(55)} ${'Applied'.padEnd(9)} Reversible`
     const separator = '-'.repeat(header.length)
@@ -215,18 +222,27 @@ export const rollbackMigrations = async (
     const toRollback = appliedFiles.filter((file) => extractVersion(file) > targetVersion)
 
     if (toRollback.length === 0) {
-      logger.info({ target: target.label, targetVersion }, 'No migrations to roll back — already at or below target version')
+      logger.info('rollback_noop', {
+        target: target.label,
+        targetVersion,
+        message: 'No migrations to roll back — already at or below target version',
+      })
       return 0
     }
 
     // Dry-run / confirmation gate
     if (!confirmRollback) {
-      logger.warn({ target: target.label, targetVersion, count: toRollback.length }, 'Rollback preview (no changes applied)')
+      logger.warn('rollback_preview', {
+        target: target.label,
+        targetVersion,
+        count: toRollback.length,
+        message: 'Rollback preview (no changes applied)',
+      })
       for (const file of toRollback) {
         const content = await readFile(path.join(migrationsDir, file), 'utf8')
         const parsed = parseMigrationFile(file, content)
         const status = parsed.isReversible ? 'reversible' : 'NON-REVERSIBLE'
-        logger.warn({ file, status }, 'Would roll back')
+        logger.warn('rollback_candidate', { file, status, message: 'Would roll back' })
       }
       logger.warn('To proceed, re-run with --confirm-rollback')
       return 0
@@ -239,10 +255,11 @@ export const rollbackMigrations = async (
       const parsed = parseMigrationFile(file, content)
 
       if (!parsed.isReversible) {
-        logger.error(
-          { file },
-          'Cannot roll back non-reversible migration. Aborting rollback. No further migrations will be rolled back.',
-        )
+        logger.error('rollback_non_reversible', {
+          file,
+          message:
+            'Cannot roll back non-reversible migration. Aborting rollback. No further migrations will be rolled back.',
+        })
         throw new Error(`Migration ${file} is not reversible. Rollback aborted.`)
       }
 
@@ -251,7 +268,7 @@ export const rollbackMigrations = async (
         await db.query(parsed.rollbackSql!)
         await db.query('DELETE FROM public.schema_migrations WHERE id = $1', [file])
         await db.query('COMMIT')
-        logger.info({ target: target.label, file }, 'Rolled back migration')
+        logger.info('migration_rolled_back', { target: target.label, file })
         rolledBack++
       } catch (error) {
         await db.query('ROLLBACK')
@@ -259,7 +276,11 @@ export const rollbackMigrations = async (
       }
     }
 
-    logger.info({ target: target.label, rolledBack, targetVersion }, 'Rollback complete')
+    logger.info('rollback_complete', {
+      target: target.label,
+      rolledBack,
+      targetVersion,
+    })
     return rolledBack
   } finally {
     await db.end()
@@ -299,11 +320,18 @@ export const applyMigrations = async (
 
     if (options.dryRun) {
       if (pending.length === 0) {
-        logger.info({ target: target.label }, 'Dry run: no pending migrations')
+        logger.info('migration_dry_run_empty', {
+          target: target.label,
+          message: 'Dry run: no pending migrations',
+        })
       } else {
-        logger.info({ target: target.label, count: pending.length }, 'Dry run: pending migrations')
+        logger.info('migration_dry_run_pending', {
+          target: target.label,
+          count: pending.length,
+          message: 'Dry run: pending migrations',
+        })
         for (const file of pending) {
-          logger.info({ target: target.label, file }, 'Pending')
+          logger.info('migration_pending', { target: target.label, file })
         }
       }
       return pending.length
@@ -318,7 +346,7 @@ export const applyMigrations = async (
         await db.query(parsed.forwardSql)
         await db.query('INSERT INTO public.schema_migrations (id) VALUES ($1)', [file])
         await db.query('COMMIT')
-        logger.info({ target: target.label, file }, 'Applied migration')
+        logger.info('migration_applied', { target: target.label, file })
         appliedCount++
       } catch (error) {
         await db.query('ROLLBACK')
@@ -327,9 +355,16 @@ export const applyMigrations = async (
     }
 
     if (appliedCount === 0) {
-      logger.info({ target: target.label }, 'All migrations are already applied')
+      logger.info('migration_noop', {
+        target: target.label,
+        message: 'All migrations are already applied',
+      })
     } else {
-      logger.info({ target: target.label, count: appliedCount }, 'Successfully applied migrations')
+      logger.info('migration_complete', {
+        target: target.label,
+        count: appliedCount,
+        message: 'Successfully applied migrations',
+      })
     }
     return appliedCount
   } finally {
@@ -427,7 +462,7 @@ const handleError = (error: unknown) => {
     errorString = String(error)
   }
 
-  logger.error({ error: errorMessage }, 'Migration failed')
+  logger.error('migration_failed', { error: errorMessage })
   if (errorMessage.toLowerCase().includes('permission denied for schema')) {
     logger.error(
       'Permission denied while applying migrations. ' +
