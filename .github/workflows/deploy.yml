@@ -1198,8 +1198,17 @@ jobs:
             timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 cloudformation "$@"
           }
 
+          rollback_skip_args=()
+          if [ "${ENV_NAME}" = "staging" ]; then
+            rollback_skip_args=(
+              --resources-to-skip
+              "RuntimeNestedStackRuntimeNestedStackResourceAA41CB9F.AgentOrchestratorServiceDDC1295C"
+              "RuntimeNestedStackRuntimeNestedStackResourceAA41CB9F.OpsAlertsQueueWorkerServiceD58F4B7D"
+            )
+          fi
+
           continue_update_rollback() {
-            if aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null; then
+            if aws_cf continue-update-rollback --stack-name "${STACK_NAME}" "${rollback_skip_args[@]}" >/dev/null; then
               return 0
             fi
 
@@ -1220,7 +1229,7 @@ jobs:
             fi
             read -r AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN <<<"${assumed}"
             export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
-            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            aws_cf continue-update-rollback --stack-name "${STACK_NAME}" "${rollback_skip_args[@]}" >/dev/null
           }
 
           aws_ecs() {
@@ -1261,7 +1270,7 @@ jobs:
           fi
 
           start_epoch="$(date +%s)"
-          timeout_seconds=1800
+          timeout_seconds=14400
           deadline_epoch=$((start_epoch + timeout_seconds))
           poll_seconds=10
           max_attempts=$((timeout_seconds / poll_seconds))
