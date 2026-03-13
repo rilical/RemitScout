@@ -1169,6 +1169,10 @@ jobs:
             -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBOpsAlertsMode=off \
+            -c planeBOpsAlertsDesiredCount=0 \
+            -c agentOrchestratorServiceEnabled=false \
+            -c agentOrchestratorDesiredCount=0 \
             -c planeBIngestDesiredCount=1 \
             -c planeBB2cRefreshDesiredCount=1 \
             -c planeBFxRateRefreshDesiredCount=1 \
@@ -1443,6 +1447,10 @@ jobs:
             -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBOpsAlertsMode=off \
+            -c planeBOpsAlertsDesiredCount=0 \
+            -c agentOrchestratorServiceEnabled=false \
+            -c agentOrchestratorDesiredCount=0 \
             -c planeBIngestDesiredCount=1 \
             -c planeBB2cRefreshDesiredCount=1 \
             -c planeBFxRateRefreshDesiredCount=1 \
