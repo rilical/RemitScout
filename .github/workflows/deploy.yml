@@ -1528,22 +1528,40 @@ jobs:
           subnet_list="$(printf '"%s",' "${subnets[@]}")"
           subnet_list="[${subnet_list%,}]"
 
-          # Build environment overrides JSON
-          env_overrides='['
+          # Build environment overrides JSON without exposing shell interpolation bugs.
+          env_rows=()
           for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY LAUNCH_PASSWORD_OMAR LAUNCH_PASSWORD_DEVELOPER LAUNCH_PASSWORD_AUSTRILIC LAUNCH_PASSWORD_GHABAYENEDU LAUNCH_PASSWORD_SUPPORT DEFAULT_LAUNCH_PASSWORD; do
             val="${!var:-}"
             if [ -n "$val" ]; then
-              env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
+              env_rows+=("$(jq -cn --arg name "$var" --arg value "$val" '{name:$name,value:$value}')")
             fi
           done
-          env_overrides="${env_overrides%,}]"
+          if [ "${#env_rows[@]}" -gt 0 ]; then
+            env_overrides="$(printf '%s\n' "${env_rows[@]}" | jq -cs '.')"
+          else
+            env_overrides='[]'
+          fi
+          seed_cmd="$(cat <<'EOF'
+          set -euo pipefail
+          if [ -z "${DATABASE_URL_PLANE_A:-}" ]; then
+            if [ -z "${PLANE_A_DB_USERNAME:-}" ] || [ -z "${PLANE_A_DB_PASSWORD:-}" ] || [ -z "${PLANE_A_DB_HOST:-}" ] || [ -z "${PLANE_A_DB_NAME:-}" ]; then
+              echo "Missing Plane A database configuration for launch-user seeding" >&2
+              exit 1
+            fi
+            DATABASE_URL_PLANE_A="postgres://${PLANE_A_DB_USERNAME}:${PLANE_A_DB_PASSWORD}@${PLANE_A_DB_HOST}:${PLANE_A_DB_PORT:-5432}/${PLANE_A_DB_NAME}?sslmode=require"
+            export DATABASE_URL_PLANE_A
+          fi
+          node backend/dist/scripts/seed-launch-users.js --force
+          EOF
+          )"
+          overrides="$(jq -cn --arg cmd "$seed_cmd" --argjson env "$env_overrides" '{containerOverrides:[{name:"DbMigrateContainer",command:["sh","-lc",$cmd],environment:$env}]}' )"
 
           task_arn="$(aws ecs run-task \
             --cluster "$cluster" \
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; if [ -z \\\"\\${DATABASE_URL_PLANE_A:-}\\\" ]; then if [ -z \\\"\\${PLANE_A_DB_USERNAME:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_PASSWORD:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_HOST:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_NAME:-}\\\" ]; then echo \\\"Missing Plane A database configuration for launch-user seeding\\\" >&2; exit 1; fi; DATABASE_URL_PLANE_A=\\\"postgres://\\${PLANE_A_DB_USERNAME}:\\${PLANE_A_DB_PASSWORD}@\\${PLANE_A_DB_HOST}:\\${PLANE_A_DB_PORT:-5432}/\\${PLANE_A_DB_NAME}?sslmode=require\\\"; export DATABASE_URL_PLANE_A; fi; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "$overrides" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
@@ -3074,22 +3092,40 @@ jobs:
           subnet_list="$(printf '"%s",' "${subnets[@]}")"
           subnet_list="[${subnet_list%,}]"
 
-          # Build environment overrides JSON
-          env_overrides='['
+          # Build environment overrides JSON without exposing shell interpolation bugs.
+          env_rows=()
           for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY LAUNCH_PASSWORD_OMAR LAUNCH_PASSWORD_DEVELOPER LAUNCH_PASSWORD_AUSTRILIC LAUNCH_PASSWORD_GHABAYENEDU LAUNCH_PASSWORD_SUPPORT DEFAULT_LAUNCH_PASSWORD; do
             val="${!var:-}"
             if [ -n "$val" ]; then
-              env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
+              env_rows+=("$(jq -cn --arg name "$var" --arg value "$val" '{name:$name,value:$value}')")
             fi
           done
-          env_overrides="${env_overrides%,}]"
+          if [ "${#env_rows[@]}" -gt 0 ]; then
+            env_overrides="$(printf '%s\n' "${env_rows[@]}" | jq -cs '.')"
+          else
+            env_overrides='[]'
+          fi
+          seed_cmd="$(cat <<'EOF'
+          set -euo pipefail
+          if [ -z "${DATABASE_URL_PLANE_A:-}" ]; then
+            if [ -z "${PLANE_A_DB_USERNAME:-}" ] || [ -z "${PLANE_A_DB_PASSWORD:-}" ] || [ -z "${PLANE_A_DB_HOST:-}" ] || [ -z "${PLANE_A_DB_NAME:-}" ]; then
+              echo "Missing Plane A database configuration for launch-user seeding" >&2
+              exit 1
+            fi
+            DATABASE_URL_PLANE_A="postgres://${PLANE_A_DB_USERNAME}:${PLANE_A_DB_PASSWORD}@${PLANE_A_DB_HOST}:${PLANE_A_DB_PORT:-5432}/${PLANE_A_DB_NAME}?sslmode=require"
+            export DATABASE_URL_PLANE_A
+          fi
+          node backend/dist/scripts/seed-launch-users.js --force
+          EOF
+          )"
+          overrides="$(jq -cn --arg cmd "$seed_cmd" --argjson env "$env_overrides" '{containerOverrides:[{name:"DbMigrateContainer",command:["sh","-lc",$cmd],environment:$env}]}' )"
 
           task_arn="$(aws ecs run-task \
             --cluster "$cluster" \
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; if [ -z \\\"\\${DATABASE_URL_PLANE_A:-}\\\" ]; then if [ -z \\\"\\${PLANE_A_DB_USERNAME:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_PASSWORD:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_HOST:-}\\\" ] || [ -z \\\"\\${PLANE_A_DB_NAME:-}\\\" ]; then echo \\\"Missing Plane A database configuration for launch-user seeding\\\" >&2; exit 1; fi; DATABASE_URL_PLANE_A=\\\"postgres://\\${PLANE_A_DB_USERNAME}:\\${PLANE_A_DB_PASSWORD}@\\${PLANE_A_DB_HOST}:\\${PLANE_A_DB_PORT:-5432}/\\${PLANE_A_DB_NAME}?sslmode=require\\\"; export DATABASE_URL_PLANE_A; fi; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "$overrides" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
