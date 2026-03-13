@@ -53,6 +53,7 @@ export const handler = async (): Promise<void> => {
     loggerName: 'script.ops-alerts-queue-worker-ecs.health-server',
     enableDatabaseCheck: false,
   })
+  process.env.HEALTH_SERVER_STARTED = '1'
 
   const { runOpsAlertsQueueWorkerLoop } = await import('../ops-alerts-queue-worker')
   await runOpsAlertsQueueWorkerLoop()

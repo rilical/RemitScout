@@ -91,7 +91,7 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
     return
   }
 
-  if (!isLambdaRuntime && healthEnabled) {
+  if (!isLambdaRuntime && healthEnabled && process.env.HEALTH_SERVER_STARTED !== '1') {
     try {
       healthServer = await startHealthServer({
         port: healthPort,

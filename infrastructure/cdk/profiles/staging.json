@@ -17,7 +17,7 @@
   "planeBFxRateRefreshServiceEnabled": true,
   "alertEvaluationServiceEnabled": true,
   "exportServiceEnabled": true,
-  "agentOrchestratorServiceEnabled": true,
+  "agentOrchestratorServiceEnabled": false,
   "stressResponderServiceEnabled": true,
   "normalizationServiceEnabled": true,
   "planeBIngestDesiredCount": 1,
@@ -30,10 +30,12 @@
   "planeBOpsAlertsDesiredCount": 1,
   "alertEvaluationDesiredCount": 1,
   "exportWorkerDesiredCount": 1,
-  "agentOrchestratorDesiredCount": 1,
+  "agentOrchestratorDesiredCount": 0,
   "stressResponderDesiredCount": 1,
   "normalizationWorkerDesiredCount": 1,
   "planeBQueueWorkerDesiredCount": 1,
   "planeBQueueWorkerMaxCount": 6,
+  "planeBOpsAlertsMode": "off",
+  "planeBOpsAlertsDesiredCount": 0,
   "opsResumeRuleAllowlist": []
 }
