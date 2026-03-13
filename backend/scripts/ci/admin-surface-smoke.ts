@@ -788,9 +788,7 @@ const main = async () => {
     }
   }
 
-  const effectiveFlags = await jsonFetch<FeatureFlagsEffectiveResponse>(`${apiBase}/feature-flags/effective`, {
-    headers: adminHeaders,
-  })
+  const effectiveFlags = await jsonFetch<FeatureFlagsEffectiveResponse>(`${apiBase}/feature-flags/effective`)
   record({
     name: 'GET /feature-flags/effective',
     ok: effectiveFlags.status < 400 && Array.isArray(effectiveFlags.body?.flags) && Array.isArray(effectiveFlags.body?.definitions),
