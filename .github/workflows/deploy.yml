@@ -1734,7 +1734,8 @@ jobs:
           }
 
           consecutive=0
-          for attempt in $(seq 1 12); do
+          max_attempts=36
+          for attempt in $(seq 1 "${max_attempts}"); do
             refresh_status="$(fetch_status /tmp/refresh-status.out "${api_base}/api/v1/quotes/refresh-status?request_ids=00000000-0000-4000-8000-000000000001")"
             session_status="$(fetch_status /tmp/session-track.out -X POST "${api_base}/api/v1/sessions/track" -H 'content-type: application/json' --data '{"session_id":"stg-check-session","anon_id":"stg-check-anon","metadata":{"source":"deploy-check"}}')"
             pricing_status="$(fetch_status /tmp/pricing.out "${api_base}/api/v1/billing/pricing")"
@@ -1757,10 +1758,10 @@ jobs:
               fi
             else
               consecutive=0
-              echo "Waiting for public route stabilization (attempt ${attempt}/12, refresh=${refresh_status}, session=${session_status}, pricing=${pricing_status}, health=${health_status}, ready=${ready_status}, corridors=${corridor_status}, providers=${providers_status})."
+              echo "Waiting for public route stabilization (attempt ${attempt}/${max_attempts}, refresh=${refresh_status}, session=${session_status}, pricing=${pricing_status}, health=${health_status}, ready=${ready_status}, corridors=${corridor_status}, providers=${providers_status})."
             fi
 
-            if [ "${attempt}" -eq 12 ]; then
+            if [ "${attempt}" -eq "${max_attempts}" ]; then
               echo "::error::Public API routes did not stabilize before staging verification."
               cat /tmp/refresh-status.out
               cat /tmp/session-track.out
