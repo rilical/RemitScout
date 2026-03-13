@@ -1200,11 +1200,23 @@ jobs:
 
           rollback_skip_args=()
           if [ "${ENV_NAME}" = "staging" ]; then
-            rollback_skip_args=(
-              --resources-to-skip
-              "RuntimeNestedStackRuntimeNestedStackResourceAA41CB9F.AgentOrchestratorServiceDDC1295C"
-              "RuntimeNestedStackRuntimeNestedStackResourceAA41CB9F.OpsAlertsQueueWorkerServiceD58F4B7D"
-            )
+            nested_stack_arn="$(
+              aws_cf describe-stack-resource \
+                --stack-name "${STACK_NAME}" \
+                --logical-resource-id "RuntimeNestedStackRuntimeNestedStackResourceAA41CB9F" \
+                --query 'StackResourceDetail.PhysicalResourceId' \
+                --output text 2>/dev/null || true
+            )"
+            if [ -n "${nested_stack_arn}" ] && [ "${nested_stack_arn}" != "None" ]; then
+              nested_stack_name="$(printf '%s' "${nested_stack_arn}" | awk -F'/' '{print $(NF-1)}')"
+              if [ -n "${nested_stack_name}" ]; then
+                rollback_skip_args=(
+                  --resources-to-skip
+                  "${nested_stack_name}.AgentOrchestratorServiceDDC1295C"
+                  "${nested_stack_name}.OpsAlertsQueueWorkerServiceD58F4B7D"
+                )
+              fi
+            fi
           fi
 
           continue_update_rollback() {
