@@ -1506,6 +1506,7 @@ jobs:
         env:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
+          SEED_BLOCKING: '0'
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
@@ -1556,13 +1557,27 @@ jobs:
           )"
           overrides="$(jq -cn --arg cmd "$seed_cmd" --argjson env "$env_overrides" '{containerOverrides:[{name:"DbMigrateContainer",command:["sh","-lc",$cmd],environment:$env}]}' )"
 
-          task_arn="$(aws ecs run-task \
+          run_task_json="$(aws ecs run-task \
             --cluster "$cluster" \
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
             --overrides "$overrides" \
-            --query "tasks[0].taskArn" --output text)"
+            --output json)"
+          task_arn="$(echo "$run_task_json" | jq -r '.tasks[0].taskArn // "None"')"
+
+          if [ "$task_arn" = "None" ]; then
+            echo "::warning::Seed task did not start."
+            failure_rows="$(echo "$run_task_json" | jq -r '.failures[]? | [.arn, .reason, (.detail // "")] | @tsv')"
+            if [ -n "$failure_rows" ]; then
+              printf '%s\n' "$failure_rows"
+            fi
+            if [ "${SEED_BLOCKING:-1}" = "1" ]; then
+              exit 1
+            fi
+            echo "::warning::Continuing staging deploy without launch-user reseeding."
+            exit 0
+          fi
 
           echo "Seed task: $task_arn"
           aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
@@ -1593,7 +1608,10 @@ jobs:
                 --query 'events[].message' \
                 --output text || true
             fi
-            exit 1
+            if [ "${SEED_BLOCKING:-1}" = "1" ]; then
+              exit 1
+            fi
+            echo "::warning::Continuing staging deploy despite launch-user seed failure."
           else
             echo "Seed completed successfully."
           fi
