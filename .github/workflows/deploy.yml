@@ -1227,6 +1227,23 @@ jobs:
             timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
           }
 
+          print_stack_diagnostics() {
+            echo "::group::CloudFormation stack diagnostics"
+            aws_cf describe-stacks \
+              --stack-name "${STACK_NAME}" \
+              --query 'Stacks[0].{Status:StackStatus,Reason:StackStatusReason,LastUpdated:LastUpdatedTime}' \
+              --output json || true
+            echo "::endgroup::"
+
+            echo "::group::Recent CloudFormation events"
+            aws_cf describe-stack-events \
+              --stack-name "${STACK_NAME}" \
+              --max-items 40 \
+              --query 'StackEvents[0:20].[Timestamp,LogicalResourceId,ResourceType,ResourceStatus,ResourceStatusReason]' \
+              --output table || true
+            echo "::endgroup::"
+          }
+
           stack_status() {
             aws_cf describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text
           }
@@ -1274,6 +1291,7 @@ jobs:
                   if [ "${failing}" -gt 3 ]; then
                     echo "::error::${failing} ECS services are in FAILED rollout state. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                    print_stack_diagnostics
                     exit 1
                   fi
                 fi
@@ -1281,6 +1299,7 @@ jobs:
                 ;;
               *)
                 echo "::error::Stack is not deployable after recovery: ${status}"
+                print_stack_diagnostics
                 exit 1
                 ;;
             esac
@@ -1288,6 +1307,7 @@ jobs:
 
           elapsed_seconds=$(( $(date +%s) - start_epoch ))
           echo "::error::Timed out waiting for stack to reach a deployable state after ${elapsed_seconds}s."
+          print_stack_diagnostics
           exit 1
 
       - name: Pre-deploy infrastructure health check (staging)
@@ -2738,6 +2758,23 @@ jobs:
             timeout 45s aws --cli-connect-timeout 10 --cli-read-timeout 30 ecs "$@"
           }
 
+          print_stack_diagnostics() {
+            echo "::group::CloudFormation stack diagnostics"
+            aws_cf describe-stacks \
+              --stack-name "${STACK_NAME}" \
+              --query 'Stacks[0].{Status:StackStatus,Reason:StackStatusReason,LastUpdated:LastUpdatedTime}' \
+              --output json || true
+            echo "::endgroup::"
+
+            echo "::group::Recent CloudFormation events"
+            aws_cf describe-stack-events \
+              --stack-name "${STACK_NAME}" \
+              --max-items 40 \
+              --query 'StackEvents[0:20].[Timestamp,LogicalResourceId,ResourceType,ResourceStatus,ResourceStatusReason]' \
+              --output table || true
+            echo "::endgroup::"
+          }
+
           stack_status() {
             aws_cf describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text
           }
@@ -2785,6 +2822,7 @@ jobs:
                   if [ "${failing}" -gt 3 ]; then
                     echo "::error::${failing} ECS services are in FAILED rollout state. Likely infrastructure dependency issue."
                     echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                    print_stack_diagnostics
                     exit 1
                   fi
                 fi
@@ -2792,6 +2830,7 @@ jobs:
                 ;;
               *)
                 echo "::error::Stack is not deployable after recovery: ${status}"
+                print_stack_diagnostics
                 exit 1
                 ;;
             esac
@@ -2799,6 +2838,7 @@ jobs:
 
           elapsed_seconds=$(( $(date +%s) - start_epoch ))
           echo "::error::Timed out waiting for stack to reach a deployable state after ${elapsed_seconds}s."
+          print_stack_diagnostics
           exit 1
 
       - name: Pre-deploy infrastructure health check (prod)
