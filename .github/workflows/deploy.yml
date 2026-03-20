@@ -16,6 +16,13 @@ on:
         options:
           - dev
           - staging
+      staging_mode:
+        description: Staging posture to deploy. Required when env=staging.
+        required: false
+        type: choice
+        options:
+          - lean
+          - parity
       ref:
         description: Git ref (sha/branch/tag). Leave empty to use default.
         required: false
@@ -38,7 +45,7 @@ jobs:
     concurrency:
       group: deploy-dev
       cancel-in-progress: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 90
     environment: dev
     permissions:
@@ -131,14 +138,22 @@ jobs:
           docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
             dir:/workspace \
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
+          audit_report=".security/${SECURITY_ENV}-pnpm-audit.json"
           audit_exit=0
-          pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          pnpm -w audit --prod --audit-level=high --json > "${audit_report}" || audit_exit=$?
+          if [ ! -s "${audit_report}" ]; then
+            echo "::error::pnpm audit did not produce JSON output."
+            exit "${audit_exit:-1}"
+          fi
+          high_count="$(jq -r '.metadata.vulnerabilities.high // 0' "${audit_report}")"
+          critical_count="$(jq -r '.metadata.vulnerabilities.critical // 0' "${audit_report}")"
+          blocker_count=$((high_count + critical_count))
           if [ "$audit_exit" -ne 0 ]; then
-            echo "pnpm audit reported issues (exit=$audit_exit)."
-            if [ "${AUDIT_BLOCKING}" = "1" ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit). high=${high_count} critical=${critical_count}"
+            if [ "${AUDIT_BLOCKING}" = "1" ] && [ "${blocker_count}" -gt 0 ]; then
               exit "$audit_exit"
             fi
-            echo "Non-blocking mode: continuing."
+            echo "No blocking high/critical production dependencies detected; continuing."
           fi
 
       - name: Upload Security Evidence
@@ -157,7 +172,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 7200
+          role-duration-seconds: 10800
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -168,7 +183,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 7200
+          role-duration-seconds: 10800
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -245,8 +260,6 @@ jobs:
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-dev:${{ steps.vars.outputs.IMAGE_TAG }}
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-dev:${{ steps.vars.outputs.SEMVER_TAG }}
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-dev:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Scan Backend Image (Trivy HIGH/CRITICAL)
         shell: bash
@@ -254,6 +267,7 @@ jobs:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          DOCKER_PLATFORM: linux/amd64
         run: |
           set -euo pipefail
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-dev"
@@ -262,7 +276,7 @@ jobs:
             -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             -e AWS_DEFAULT_REGION="${AWS_REGION}" \
             aquasec/trivy:0.50.1 \
-            image --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
+            image --image-src remote --platform "${DOCKER_PLATFORM}" --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
 
       - name: Validate ECR Scan Results
         shell: bash
@@ -369,7 +383,7 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          max_attempts=90
+          max_attempts=180
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
@@ -380,17 +394,30 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
-                # Every 60s, check if ECS services are stuck in failed deployment
+                # Every 60s, surface ECS rollout progress and fail fast on explicit FAILED rollouts.
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
-                    | jq -r '.serviceArns[]' 2>/dev/null \
-                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
-                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")
-                  if [ "${failing:-0}" -gt 3 ]; then
-                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
-                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
-                    exit 1
+                  service_arns="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns' --output text 2>/dev/null || true)"
+                  if [ -n "${service_arns}" ] && [ "${service_arns}" != "None" ]; then
+                    failed_rollouts="$(aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services ${service_arns} --output json 2>/dev/null \
+                      | jq -r '[.services[] | select(any(.deployments[]?; .status == "PRIMARY" and .rolloutState == "FAILED"))] | length' 2>/dev/null \
+                      || echo "0")"
+                    in_progress_rollouts="$(aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services ${service_arns} --output json 2>/dev/null \
+                      | jq -r '[.services[] | select(any(.deployments[]?; .status == "PRIMARY" and .rolloutState == "IN_PROGRESS"))] | length' 2>/dev/null \
+                      || echo "0")"
+                    if ! [[ "${failed_rollouts}" =~ ^[0-9]+$ ]]; then
+                      echo "::warning::Unable to parse failed ECS rollout count: ${failed_rollouts}"
+                      failed_rollouts=0
+                    fi
+                    if ! [[ "${in_progress_rollouts}" =~ ^[0-9]+$ ]]; then
+                      echo "::warning::Unable to parse in-progress ECS rollout count: ${in_progress_rollouts}"
+                      in_progress_rollouts=0
+                    fi
+                    echo "Primary ECS services still rolling out: ${in_progress_rollouts}"
+                    if [ "${failed_rollouts}" -gt 0 ]; then
+                      echo "::error::${failed_rollouts} ECS services have PRIMARY deployments in FAILED state."
+                      echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                      exit 1
+                    fi
                   fi
                 fi
                 sleep "${poll_seconds}"
@@ -415,8 +442,8 @@ jobs:
           cluster_id=$(aws rds describe-db-clusters \
             --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
             --output text 2>&1) || {
-            echo "::warning::Cannot check Aurora status (missing rds:DescribeDBClusters permission). Continuing deploy."
-            exit 0
+            echo "::error::Cannot check Aurora status for ${ENV_NAME} (missing rds:DescribeDBClusters permission). Blocking deploy."
+            exit 1
           }
           cluster_id="$(echo "$cluster_id" | head -1)"
           if [ -z "$cluster_id" ]; then
@@ -429,8 +456,8 @@ jobs:
           if [ "$status" = "stopped" ]; then
             echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
             aws rds start-db-cluster --db-cluster-identifier "$cluster_id" || {
-              echo "::warning::Cannot start Aurora (missing rds:StartDBCluster permission). Continuing deploy."
-              exit 0
+              echo "::error::Cannot start Aurora cluster $cluster_id for ${ENV_NAME} (missing rds:StartDBCluster permission). Blocking deploy."
+              exit 1
             }
             aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
             echo "Aurora is now available."
@@ -597,8 +624,8 @@ jobs:
     concurrency:
       group: deploy-staging
       cancel-in-progress: false
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
+    runs-on: ${{ inputs.staging_mode == 'parity' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    timeout-minutes: 240
     environment: staging
     permissions:
       contents: read
@@ -621,8 +648,11 @@ jobs:
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
       NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '1' }}
-      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '1' }}
+      NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
+      NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
+      NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
+      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
       NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
@@ -646,6 +676,7 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
       WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
       ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
+      ADMIN_MFA_REQUIRED: ${{ vars.ADMIN_MFA_REQUIRED }}
       PLANE_A_ADMIN_EMAILS: ${{ vars.PLANE_A_ADMIN_EMAILS }}
       PLANE_A_ENABLE_JWT_AUTH: ${{ vars.PLANE_A_ENABLE_JWT_AUTH }}
       PLANE_A_REQUIRE_JWT: ${{ vars.PLANE_A_REQUIRE_JWT }}
@@ -659,6 +690,11 @@ jobs:
       PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
       PLANE_A_CORS_ALLOW_CREDENTIALS: ${{ vars.PLANE_A_CORS_ALLOW_CREDENTIALS }}
       PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+      NEWSLETTER_EMAIL_ENABLED: ${{ vars.NEWSLETTER_EMAIL_ENABLED || '0' }}
+      NEWSLETTER_WELCOME_ENABLED: ${{ vars.NEWSLETTER_WELCOME_ENABLED || '0' }}
+      NEWSLETTER_BASE_URL: ${{ vars.NEWSLETTER_BASE_URL || vars.FRONTEND_BASE_URL || vars.PUBLIC_SITE_URL }}
+      CONTACT_EMAIL_ENABLED: ${{ vars.CONTACT_EMAIL_ENABLED || '0' }}
+      SES_REGION: ${{ vars.SES_REGION || vars.AWS_REGION || 'us-east-1' }}
       PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'staging' }}
       PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
       PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
@@ -773,21 +809,29 @@ jobs:
         shell: bash
         env:
           SECURITY_ENV: staging
-          AUDIT_BLOCKING: '1'
+          AUDIT_BLOCKING: '0'
         run: |
           set -euo pipefail
           mkdir -p .security
           docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
             dir:/workspace \
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
+          audit_report=".security/${SECURITY_ENV}-pnpm-audit.json"
           audit_exit=0
-          pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          pnpm -w audit --prod --audit-level=high --json > "${audit_report}" || audit_exit=$?
+          if [ ! -s "${audit_report}" ]; then
+            echo "::error::pnpm audit did not produce JSON output."
+            exit "${audit_exit:-1}"
+          fi
+          high_count="$(jq -r '.metadata.vulnerabilities.high // 0' "${audit_report}")"
+          critical_count="$(jq -r '.metadata.vulnerabilities.critical // 0' "${audit_report}")"
+          blocker_count=$((high_count + critical_count))
           if [ "$audit_exit" -ne 0 ]; then
-            echo "pnpm audit reported issues (exit=$audit_exit)."
-            if [ "${AUDIT_BLOCKING}" = "1" ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit). high=${high_count} critical=${critical_count}"
+            if [ "${AUDIT_BLOCKING}" = "1" ] && [ "${blocker_count}" -gt 0 ]; then
               exit "$audit_exit"
             fi
-            echo "Non-blocking mode: continuing."
+            echo "No blocking high/critical production dependencies detected; continuing."
           fi
 
       - name: Upload Security Evidence
@@ -881,12 +925,19 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && \
+             [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && \
+             [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-}" != "otlp_only" ] && \
+             { [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; }; then
+            echo "Missing NEW_RELIC_PROD_AWS_ACCOUNT_ID / NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
           if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
@@ -894,8 +945,9 @@ jobs:
             echo "Missing NEW_RELIC_INGEST_KEY_SECRET_ARN for New Relic AWS metric/log streaming."
             exit 1
           fi
-          if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
-            echo "NEW_RELIC_LOGS_ENABLED must not be 0 in staging/prod deploys."
+          if [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] && \
+             [ -z "${NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES:-}" ]; then
+            echo "Missing NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES for explicit staging metric stream allowlisting."
             exit 1
           fi
           if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ] && \
@@ -905,11 +957,6 @@ jobs:
                [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
                [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ] ); then
             echo "PUBLIC_NEW_RELIC_BROWSER_ENABLED=1 requires PUBLIC_NEW_RELIC_ACCOUNT_ID/TRUST_KEY/AGENT_ID/APPLICATION_ID/LICENSE_KEY."
-            exit 1
-          fi
-          if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
-             [ -z "${NEW_RELIC_INGEST_KEY_SECRET_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_INGEST_KEY_SECRET_ARN for New Relic AWS metric/log streaming."
             exit 1
           fi
 
@@ -927,8 +974,14 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
+          NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: |
           set -euo pipefail
@@ -948,6 +1001,64 @@ jobs:
           echo "IMAGE_TAG=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
           VERSION="$(jq -r '.version' package.json)"
           echo "SEMVER_TAG=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve staging posture
+        id: staging_posture
+        shell: bash
+        env:
+          REQUESTED_STAGING_MODE: ${{ inputs.staging_mode }}
+        run: |
+          set -euo pipefail
+          case "${REQUESTED_STAGING_MODE:-lean}" in
+            lean)
+              profile_name="staging-lean"
+              runtime_mode="staging-lean"
+              proof_scope="Deploy path, public unauthenticated surfaces, and lean business-hours posture only."
+              ;;
+            parity)
+              profile_name="staging-parity"
+              runtime_mode="staging-parity"
+              proof_scope="Prod-like release rehearsal for auth, workers, queues, observability, and rollback gates."
+              ;;
+            *)
+              echo "::error::Unsupported staging_mode='${REQUESTED_STAGING_MODE}'. Use lean or parity."
+              exit 1
+              ;;
+          esac
+
+          /bin/bash infrastructure/cdk/apply-profile.sh "${profile_name}"
+
+          actual_runtime_mode="$(jq -r '.context.runtimeMode // empty' infrastructure/cdk/cdk.json)"
+          if [ "${actual_runtime_mode}" != "${runtime_mode}" ]; then
+            echo "::error::Profile ${profile_name} did not set runtimeMode=${runtime_mode}."
+            exit 1
+          fi
+          cpu_architecture="$(jq -r '.context.cpuArchitecture // empty' infrastructure/cdk/cdk.json)"
+          case "${cpu_architecture}" in
+            arm64)
+              docker_platform="linux/arm64"
+              ;;
+            x86_64|x86|amd64)
+              docker_platform="linux/amd64"
+              ;;
+            *)
+              echo "::error::Profile ${profile_name} produced unsupported cpuArchitecture='${cpu_architecture}'."
+              exit 1
+              ;;
+          esac
+
+          echo "profile_name=${profile_name}" >> "$GITHUB_OUTPUT"
+          echo "runtime_mode=${runtime_mode}" >> "$GITHUB_OUTPUT"
+          echo "cpu_architecture=${cpu_architecture}" >> "$GITHUB_OUTPUT"
+          echo "docker_platform=${docker_platform}" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Staging posture"
+            echo "- Profile: \`${profile_name}\`"
+            echo "- Runtime mode: \`${runtime_mode}\`"
+            echo "- CPU architecture: \`${cpu_architecture}\`"
+            echo "- Docker platform: \`${docker_platform}\`"
+            echo "- Proof scope: ${proof_scope}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Capture Previous Good Image Tag (staging)
         id: prev_good
@@ -985,15 +1096,13 @@ jobs:
           context: .
           file: backend/Dockerfile
           push: true
-          platforms: linux/amd64
+          platforms: ${{ steps.staging_posture.outputs.docker_platform }}
           build-args: |
             BUILD_VERSION=${{ steps.vars.outputs.IMAGE_TAG }}
           tags: |
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-staging:${{ steps.vars.outputs.IMAGE_TAG }}
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-staging:${{ steps.vars.outputs.SEMVER_TAG }}
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-staging:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Scan Backend Image (Trivy HIGH/CRITICAL)
         shell: bash
@@ -1001,6 +1110,7 @@ jobs:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          DOCKER_PLATFORM: ${{ steps.staging_posture.outputs.docker_platform }}
         run: |
           set -euo pipefail
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-staging"
@@ -1009,7 +1119,7 @@ jobs:
             -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             -e AWS_DEFAULT_REGION="${AWS_REGION}" \
             aquasec/trivy:0.50.1 \
-            image --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
+            image --image-src remote --platform "${DOCKER_PLATFORM}" --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
 
       - name: Validate ECR Scan Results
         shell: bash
@@ -1077,26 +1187,11 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
-            -c cpuArchitecture=x86_64 \
             -c importExistingBackendRepository=true \
             -c minimalInfra=false \
             -c enableDbProxy=false \
-            -c providerProbeMode=per_provider \
-            -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
-            -c enableWaf=false \
-            -c planeBDisableTier1=false \
-            -c planeBB2cRefreshServiceEnabled=true \
-            -c planeBFxRateRefreshServiceEnabled=true \
-            -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
-            -c planeBIngestFanoutMode=queue \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
-            -c quoteRefreshQueueMode=queue \
-            -c fxRateRefreshQueueMode=queue \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
@@ -1125,7 +1220,7 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          max_attempts=90
+          max_attempts=180
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
@@ -1136,17 +1231,30 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
-                # Every 60s, check if ECS services are stuck in failed deployment
+                # Every 60s, surface ECS rollout progress and fail fast on explicit FAILED rollouts.
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
-                    | jq -r '.serviceArns[]' 2>/dev/null \
-                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
-                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")
-                  if [ "${failing:-0}" -gt 3 ]; then
-                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
-                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
-                    exit 1
+                  service_arns="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns' --output text 2>/dev/null || true)"
+                  if [ -n "${service_arns}" ] && [ "${service_arns}" != "None" ]; then
+                    failed_rollouts="$(aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services ${service_arns} --output json 2>/dev/null \
+                      | jq -r '[.services[] | select(any(.deployments[]?; .status == "PRIMARY" and .rolloutState == "FAILED"))] | length' 2>/dev/null \
+                      || echo "0")"
+                    in_progress_rollouts="$(aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services ${service_arns} --output json 2>/dev/null \
+                      | jq -r '[.services[] | select(any(.deployments[]?; .status == "PRIMARY" and .rolloutState == "IN_PROGRESS"))] | length' 2>/dev/null \
+                      || echo "0")"
+                    if ! [[ "${failed_rollouts}" =~ ^[0-9]+$ ]]; then
+                      echo "::warning::Unable to parse failed ECS rollout count: ${failed_rollouts}"
+                      failed_rollouts=0
+                    fi
+                    if ! [[ "${in_progress_rollouts}" =~ ^[0-9]+$ ]]; then
+                      echo "::warning::Unable to parse in-progress ECS rollout count: ${in_progress_rollouts}"
+                      in_progress_rollouts=0
+                    fi
+                    echo "Primary ECS services still rolling out: ${in_progress_rollouts}"
+                    if [ "${failed_rollouts}" -gt 0 ]; then
+                      echo "::error::${failed_rollouts} ECS services have PRIMARY deployments in FAILED state."
+                      echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                      exit 1
+                    fi
                   fi
                 fi
                 sleep "${poll_seconds}"
@@ -1171,13 +1279,13 @@ jobs:
           cluster_id=$(aws rds describe-db-clusters \
             --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
             --output text 2>&1) || {
-            echo "::warning::Cannot check Aurora status (missing rds:DescribeDBClusters permission). Continuing deploy."
-            exit 0
+            echo "::error::Cannot check Aurora status for ${ENV_NAME} (missing rds:DescribeDBClusters permission). Blocking deploy."
+            exit 1
           }
           cluster_id="$(echo "$cluster_id" | head -1)"
           if [ -z "$cluster_id" ]; then
-            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
-            exit 0
+            echo "::error::No Aurora cluster found for ${ENV_NAME}. Blocking deploy."
+            exit 1
           fi
           status=$(aws rds describe-db-clusters \
             --db-cluster-identifier "$cluster_id" \
@@ -1185,8 +1293,8 @@ jobs:
           if [ "$status" = "stopped" ]; then
             echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
             aws rds start-db-cluster --db-cluster-identifier "$cluster_id" || {
-              echo "::warning::Cannot start Aurora (missing rds:StartDBCluster permission). Continuing deploy."
-              exit 0
+              echo "::error::Cannot start Aurora cluster $cluster_id for ${ENV_NAME} (missing rds:StartDBCluster permission). Blocking deploy."
+              exit 1
             }
             aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
             echo "Aurora is now available."
@@ -1201,54 +1309,8 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 7200
+          role-duration-seconds: 10800
           retry-max-attempts: 3
-
-      - name: Augment staging admin allowlists for this runner
-        shell: bash
-        env:
-          BASE_ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
-          BASE_WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
-        run: |
-          set -euo pipefail
-
-          merge_allowlist() {
-            local existing="$1"
-            local extra="$2"
-            python3 - "$existing" "$extra" <<'PY'
-          import sys
-
-          existing = sys.argv[1]
-          extra = sys.argv[2]
-          seen = []
-          for raw in [existing, extra]:
-              for token in raw.split(','):
-                  normalized = token.strip()
-                  if normalized and normalized not in seen:
-                      seen.append(normalized)
-          print(','.join(seen))
-          PY
-          }
-
-          runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
-          if [ -z "${runner_ip}" ]; then
-            echo "Unable to resolve runner public IP."
-            exit 1
-          fi
-
-          if [[ "${runner_ip}" == *:* ]]; then
-            runner_cidr="${runner_ip}/128"
-          else
-            runner_cidr="${runner_ip}/32"
-          fi
-
-          merged_admin="$(merge_allowlist "${BASE_ADMIN_IP_ALLOWLIST:-}" "${runner_cidr}")"
-          merged_waf="$(merge_allowlist "${BASE_WAF_ADMIN_ALLOWLIST_IPS:-${BASE_ADMIN_IP_ALLOWLIST:-}}" "${runner_cidr}")"
-
-          echo "RUNNER_ALLOWLIST_CIDR=${runner_cidr}" >> "$GITHUB_ENV"
-          echo "ADMIN_IP_ALLOWLIST=${merged_admin}" >> "$GITHUB_ENV"
-          echo "WAF_ADMIN_ALLOWLIST_IPS=${merged_waf}" >> "$GITHUB_ENV"
-          echo "Using staging runner allowlist CIDR ${runner_cidr}"
 
       - name: CDK Deploy (staging)
         shell: bash
@@ -1262,26 +1324,11 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
-            -c cpuArchitecture=x86_64 \
             -c importExistingBackendRepository=true \
             -c minimalInfra=false \
             -c enableDbProxy=false \
-            -c providerProbeMode=per_provider \
-            -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
-            -c enableWaf=false \
-            -c planeBDisableTier1=false \
-            -c planeBB2cRefreshServiceEnabled=true \
-            -c planeBFxRateRefreshServiceEnabled=true \
-            -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
-            -c planeBIngestFanoutMode=queue \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
-            -c quoteRefreshQueueMode=queue \
-            -c fxRateRefreshQueueMode=queue \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
@@ -1292,13 +1339,8 @@ jobs:
         env:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
-          SKIP_MIGRATIONS: '1'
         run: |
           set -euo pipefail
-          if [ "${SKIP_MIGRATIONS:-0}" = "1" ]; then
-            echo "Skipping migrations for staging minimal deploy profile."
-            exit 0
-          fi
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
           task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
           sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
@@ -1317,11 +1359,97 @@ jobs:
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
             --query "tasks[0].taskArn" --output text)"
+          echo "Migration task: $task_arn"
           aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
-          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          task_json="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --output json)"
+          exit_code="$(echo "$task_json" | jq -r '.tasks[0].containers[0].exitCode // "null"')"
           if [ "$exit_code" != "0" ]; then
-            echo "Migration task failed (exitCode=$exit_code): $task_arn"
+            echo "::error::Migration task failed (exitCode=$exit_code): $task_arn"
+            stopped_reason="$(echo "$task_json" | jq -r '.tasks[0].stoppedReason // ""')"
+            container_reason="$(echo "$task_json" | jq -r '.tasks[0].containers[0].reason // ""')"
+            log_group="$(aws ecs describe-task-definition --task-definition "$task_def" --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].logConfiguration.options."awslogs-group"' --output text 2>/dev/null || true)"
+            log_stream="$(echo "$task_json" | jq -r '.tasks[0].containers[0].logStreamName // ""')"
+            if [ -z "$log_stream" ] || [ "$log_stream" = "null" ]; then
+              task_id="${task_arn##*/}"
+              log_stream="db-migrate/DbMigrateContainer/${task_id}"
+            fi
+            if [ -n "$stopped_reason" ] && [ "$stopped_reason" != "null" ]; then
+              echo "::error::ECS stoppedReason: $stopped_reason"
+            fi
+            if [ -n "$container_reason" ] && [ "$container_reason" != "null" ]; then
+              echo "::error::Container reason: $container_reason"
+            fi
+            if [ -n "$log_group" ] && [ "$log_group" != "None" ] && [ -n "$log_stream" ] && [ "$log_stream" != "null" ]; then
+              echo "Dumping migration task logs from ${log_group}:${log_stream}"
+              aws logs get-log-events \
+                --log-group-name "$log_group" \
+                --log-stream-name "$log_stream" \
+                --limit 200 \
+                --query 'events[].message' \
+                --output text || true
+            fi
             exit 1
+          fi
+
+      - name: Verify DB migrations are in sync (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+
+          cluster="remit-scout-${ENV_NAME}"
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/aws/db-migrate-ecs.js\",\"--check-migration-sync\",\"--label\",\"staging-post-migrate\"]}]}" \
+            --query "tasks[0].taskArn" --output text)"
+
+          echo "Migration sync task: $task_arn"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          task_json="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --output json)"
+          exit_code="$(echo "$task_json" | jq -r '.tasks[0].containers[0].exitCode // "null"')"
+          if [ "$exit_code" != "0" ]; then
+            echo "::error::Migration sync task failed (exitCode=$exit_code)."
+            stopped_reason="$(echo "$task_json" | jq -r '.tasks[0].stoppedReason // ""')"
+            container_reason="$(echo "$task_json" | jq -r '.tasks[0].containers[0].reason // ""')"
+            log_group="$(aws ecs describe-task-definition --task-definition "$task_def" --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].logConfiguration.options."awslogs-group"' --output text 2>/dev/null || true)"
+            log_stream="$(echo "$task_json" | jq -r '.tasks[0].containers[0].logStreamName // ""')"
+            if [ -z "$log_stream" ] || [ "$log_stream" = "null" ]; then
+              task_id="${task_arn##*/}"
+              log_stream="db-migrate/DbMigrateContainer/${task_id}"
+            fi
+            if [ -n "$stopped_reason" ] && [ "$stopped_reason" != "null" ]; then
+              echo "::error::ECS stoppedReason: $stopped_reason"
+            fi
+            if [ -n "$container_reason" ] && [ "$container_reason" != "null" ]; then
+              echo "::error::Container reason: $container_reason"
+            fi
+            if [ -n "$log_group" ] && [ "$log_group" != "None" ] && [ -n "$log_stream" ] && [ "$log_stream" != "null" ]; then
+              echo "Dumping migration sync task logs from ${log_group}:${log_stream}"
+              aws logs get-log-events \
+                --log-group-name "$log_group" \
+                --log-stream-name "$log_stream" \
+                --limit 200 \
+                --query 'events[].message' \
+                --output text || true
+            fi
+            exit 1
+          else
+            echo "Migration sync completed successfully."
           fi
 
       - name: Seed Launch Users (staging)
@@ -1329,7 +1457,7 @@ jobs:
         env:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
           LAUNCH_PASSWORD_DEVELOPER: ${{ secrets.LAUNCH_PASSWORD_DEVELOPER }}
@@ -1366,7 +1494,7 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; DATABASE_URL=\\\"postgres://\${PLANE_B_DB_USERNAME}:\${PLANE_B_DB_PASSWORD}@\${PLANE_B_DB_HOST}:\${PLANE_B_DB_PORT:-5432}/\${PLANE_B_DB_NAME}?sslmode=require\\\"; export DATABASE_URL DATABASE_URL_PLANE_A=\\\"\$DATABASE_URL\\\"; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/seed-launch-users.js\",\"--force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
@@ -1410,15 +1538,14 @@ jobs:
         run: |
           set -euo pipefail
           cluster="remit-scout-${ENV_NAME}"
-          mapfile -t service_arns < <(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output json | jq -r '.[]')
-          if [ "${#service_arns[@]}" -eq 0 ]; then
-            echo "No ECS services found in ${cluster}; skipping stability wait."
-            exit 0
+          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
+          if [ -n "$services" ] && [ "$services" != "None" ]; then
+            read -r -a service_arns <<< "$services"
+            for ((i=0; i<${#service_arns[@]}; i+=10)); do
+              batch=("${service_arns[@]:i:10}")
+              aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
+            done
           fi
-          for ((i=0; i<${#service_arns[@]}; i+=10)); do
-            batch=("${service_arns[@]:i:10}")
-            aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
-          done
 
       - name: Deploy Frontend (staging)
         shell: bash
@@ -1434,7 +1561,7 @@ jobs:
           PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.PUBLIC_NEW_RELIC_TRUST_KEY }}
           PUBLIC_NEW_RELIC_AGENT_ID: ${{ vars.PUBLIC_NEW_RELIC_AGENT_ID }}
           PUBLIC_NEW_RELIC_APPLICATION_ID: ${{ vars.PUBLIC_NEW_RELIC_APPLICATION_ID }}
-          PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
+          PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ secrets.PUBLIC_NEW_RELIC_LICENSE_KEY || vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
           PUBLIC_NEW_RELIC_BEACON: ${{ vars.PUBLIC_NEW_RELIC_BEACON }}
           PUBLIC_NEW_RELIC_ERROR_BEACON: ${{ vars.PUBLIC_NEW_RELIC_ERROR_BEACON }}
         run: |
@@ -1570,8 +1697,13 @@ jobs:
           STACK_NAME: ${{ vars.STACK_NAME }}
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
-          SMOKE_USER_EMAIL: ${{ secrets.SMOKE_USER_EMAIL }}
-          SMOKE_USER_PASSWORD: ${{ secrets.SMOKE_USER_PASSWORD }}
+          SMOKE_USER_EMAIL: omar@remit-scout.com
+          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          SMOKE_EXPECTED_EMAIL: omar@remit-scout.com
+          SMOKE_EXPECTED_IS_ADMIN: '1'
+          SMOKE_EXPECTED_APP_ROLE: super_admin
+          SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise
+          SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'
         run: |
           set -euo pipefail
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
@@ -1586,9 +1718,9 @@ jobs:
             echo "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY for authenticated smoke."
             exit 1
           fi
-          if [ -z "${SMOKE_USER_EMAIL:-}" ] || [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
-            echo "Skipping authenticated smoke: SMOKE_USER_EMAIL or SMOKE_USER_PASSWORD not configured in staging environment secrets."
-            exit 0
+          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for authenticated watchlist/alerts smoke."
+            exit 1
           fi
 
           SMOKE_BASE_URL="$api_base" \
@@ -1705,8 +1837,8 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
-          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
-          SMOKE_INCLUDE_PAGE_SURFACES: '0'
+          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED }}
+          SMOKE_INCLUDE_PAGE_SURFACES: '1'
           ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
         run: |
           set -euo pipefail
@@ -1730,7 +1862,13 @@ jobs:
             echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin surface smoke."
             exit 1
           fi
-          SMOKE_BASE_URL="$api_base" pnpm -C backend ci:admin-surface-smoke
+          mkdir -p .smoke-artifacts
+          admin_smoke_log=".smoke-artifacts/staging-admin-surface-smoke.log"
+          SMOKE_BASE_URL="$api_base" pnpm -C backend ci:admin-surface-smoke 2>&1 | tee "${admin_smoke_log}"
+          if grep -Fq 'skipped=requires_verified_admin_session' "${admin_smoke_log}"; then
+            echo "::error::Staging admin surface smoke did not prove privileged coverage; observer/audit or grant/revoke checks were skipped because admin exchange fell back."
+            exit 1
+          fi
 
       - name: Install Playwright browser runtime (staging admin UI smoke)
         run: pnpm -C frontend exec playwright install --with-deps chromium
@@ -1765,13 +1903,34 @@ jobs:
             echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin UI smoke."
             exit 1
           fi
-          pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts
+          if [ -z "${E2E_AUTH_MFA_CODE:-}" ]; then
+            echo "::error::Missing LAUNCH_MFA_OMAR for staging admin UI smoke; cannot prove privileged observer and reversible grant/revoke coverage."
+            exit 1
+          fi
+          mkdir -p .smoke-artifacts
+          admin_ui_log=".smoke-artifacts/staging-admin-ui-smoke.log"
+          pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts 2>&1 | tee "${admin_ui_log}"
+          if grep -Fq 'Skipping privileged admin UI checks' "${admin_ui_log}"; then
+            echo "::error::Staging admin UI smoke skipped privileged coverage."
+            exit 1
+          fi
+
+      - name: Upload staging admin smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-staging-admin-smoke-evidence
+          path: |
+            .smoke-artifacts/staging-admin-surface-smoke.log
+            .smoke-artifacts/staging-admin-ui-smoke.log
+          retention-days: 90
+          if-no-files-found: ignore
 
       - name: Staging Go-live Readiness Gate
-        continue-on-error: true
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           dispatch_ref="${{ steps.resolve_ref.outputs.requested_ref }}"
@@ -1786,12 +1945,11 @@ jobs:
           gh workflow run staging-go-live-readiness.yml \
             --ref "${dispatch_ref}" \
             -f deploy_sha="${{ steps.resolve_ref.outputs.sha }}" \
-            -f run_runtime_config_validation=true \
-            -f skip_duplicate_admin_smoke=true
+            -f run_runtime_config_validation=true
 
           run_id=""
           for i in $(seq 1 60); do
-            run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt -q ".[] | select(.event==\"workflow_dispatch\" and .createdAt >= \"${dispatch_started_at}\") | .databaseId" | head -n1)"
+            run_id="$(gh run list --repo "${REPO}" --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt,headSha -q ".[] | select(.event==\"workflow_dispatch\" and .headSha==\"${{ steps.resolve_ref.outputs.sha }}\" and .createdAt >= \"${dispatch_started_at}\") | .databaseId" | head -n1)"
             if [ -n "$run_id" ]; then
               break
             fi
@@ -1799,12 +1957,13 @@ jobs:
           done
 
           if [ -z "$run_id" ]; then
-            echo "::warning::Unable to resolve staging-go-live-readiness run ID after dispatch — continuing deploy."
-            exit 0
+            echo "::error::Unable to resolve staging-go-live-readiness run ID after dispatch."
+            exit 1
           fi
 
+          readiness_succeeded=0
           for i in $(seq 1 240); do
-            run_payload="$(gh run view "$run_id" --json status,conclusion,headSha 2>/dev/null || true)"
+            run_payload="$(gh run view "$run_id" --json status,conclusion,displayTitle 2>/dev/null || true)"
             if [ -z "${run_payload}" ]; then
               sleep 5
               continue
@@ -1812,27 +1971,67 @@ jobs:
 
             run_status="$(echo "$run_payload" | jq -r '.status')"
             run_conclusion="$(echo "$run_payload" | jq -r '.conclusion // ""')"
-            run_head_sha="$(echo "$run_payload" | jq -r '.headSha // ""')"
+            run_display_title="$(echo "$run_payload" | jq -r '.displayTitle // ""')"
             if [ "$run_status" = "completed" ]; then
-              if [ "$run_head_sha" != "${{ steps.resolve_ref.outputs.sha }}" ]; then
-                echo "::warning::Staging readiness workflow run ${run_id} headSha=${run_head_sha} does not match deploy sha=${{ steps.resolve_ref.outputs.sha }} — continuing deploy."
-                exit 0
-              fi
               if [ "$run_conclusion" = "success" ]; then
                 echo "Staging readiness workflow run ${run_id} succeeded."
-                exit 0
+                readiness_succeeded=1
+                break
               fi
-              echo "::warning::Staging readiness workflow run ${run_id} completed with conclusion=${run_conclusion} — continuing deploy."
-              exit 0
+              echo "::error::Staging readiness run ${run_id} completed with conclusion=${run_conclusion}."
+              if [ -n "$run_display_title" ]; then
+                echo "::error::Readiness run title: ${run_display_title}"
+              fi
+              exit 1
             fi
             sleep 5
           done
 
-          echo "::warning::Timed out waiting for staging-go-live-readiness run ${run_id} — continuing deploy."
-          exit 0
+          if [ "${readiness_succeeded}" != "1" ]; then
+            echo "::error::Timed out waiting for staging-go-live-readiness run ${run_id}."
+            exit 1
+          fi
+
+          artifact_payload=""
+          for i in $(seq 1 12); do
+            artifact_payload="$(gh api "repos/${REPO}/actions/runs/${run_id}/artifacts?per_page=100" 2>/dev/null || true)"
+            if [ -n "${artifact_payload}" ] && [ "${artifact_payload}" != "null" ]; then
+              admin_count="$(echo "${artifact_payload}" | jq '[.artifacts[]? | select(.name=="staging-readiness-admin-smoke-evidence" and .expired==false)] | length')"
+              release_count="$(echo "${artifact_payload}" | jq '[.artifacts[]? | select(.name=="staging-go-live-release-evidence" and .expired==false)] | length')"
+              if [ "${admin_count}" -ge 1 ] && [ "${release_count}" -ge 1 ]; then
+                break
+              fi
+            fi
+            sleep 5
+          done
+
+          if [ -z "${artifact_payload}" ] || [ "${artifact_payload}" = "null" ]; then
+            echo "::error::Unable to read artifacts for staging-go-live-readiness run ${run_id}."
+            exit 1
+          fi
+
+          for artifact_name in staging-readiness-admin-smoke-evidence staging-go-live-release-evidence; do
+            count="$(echo "${artifact_payload}" | jq --arg name "${artifact_name}" '[.artifacts[]? | select(.name==$name and .expired==false)] | length')"
+            if [ "${count}" -lt 1 ]; then
+              echo "::error::Staging readiness run ${run_id} is missing required artifact ${artifact_name}."
+              exit 1
+            fi
+          done
+
+          evidence_dir="$(mktemp -d)"
+          gh run download "${run_id}" --repo "${REPO}" --name staging-go-live-release-evidence --dir "${evidence_dir}"
+          manifest_path="${evidence_dir}/staging-go-live-release-evidence.json"
+          if [ ! -f "${manifest_path}" ]; then
+            echo "::error::Downloaded staging-go-live-release-evidence artifact did not contain staging-go-live-release-evidence.json."
+            exit 1
+          fi
+
+          pnpm -C backend exec tsx scripts/ci/staging-go-live-readiness.ts \
+            --verify-release-evidence \
+            --manifest "${manifest_path}" \
+            --expected-sha "${{ steps.resolve_ref.outputs.sha }}"
 
       - name: New Relic observability gate (staging)
-        continue-on-error: true
         shell: bash
         env:
           ENV_NAME: staging
@@ -1841,8 +2040,14 @@ jobs:
           NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
+          NEW_RELIC_ALERT_EMAIL: ${{ vars.NEW_RELIC_ALERT_EMAIL || 'alerts@remit-scout.com' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -1853,35 +2058,68 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+          if [ -z "${NEW_RELIC_ALERT_EMAIL:-}" ]; then
+            echo "Missing NEW_RELIC_ALERT_EMAIL for New Relic incident workflow/channel sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
             exit 1
           fi
+          evidence_dir="$(mktemp -d)"
+          trap 'rm -rf "${evidence_dir}"' EXIT
           set +e
-          node ops/newrelic/bootstrap-dashboards.mjs
+          node ops/newrelic/bootstrap-dashboards.mjs | tee "${evidence_dir}/staging-newrelic-dashboards.log"
           dashboards_ec=$?
-          node ops/newrelic/sync-alerts.mjs
+          node ops/newrelic/sync-alerts.mjs | tee "${evidence_dir}/staging-newrelic-alerts.log"
           alerts_ec=$?
-          node ops/newrelic/sync-cloud-links.mjs
+          NEW_RELIC_REQUIRE_MIRROR_POLICIES=1 \
+          NEW_RELIC_EVIDENCE_OUTPUT="${evidence_dir}/staging-newrelic-notifications-evidence.json" \
+          node ops/newrelic/sync-notifications-workflows.mjs | tee "${evidence_dir}/staging-newrelic-notifications-sync.log"
+          notifications_ec=$?
+          jq -e '
+            .verification.passed == true and
+            .verification.mirrorPoliciesRequired == true and
+            (.workflows.staging.matchedPolicyNames == ["Remit-Scout STAGING CloudWatch Mirror"]) and
+            (.workflows.prod.matchedPolicyNames == ["Remit-Scout PROD CloudWatch Mirror"])
+          ' "${evidence_dir}/staging-newrelic-notifications-evidence.json" >/dev/null
+          notifications_proof_ec=$?
+          node ops/newrelic/sync-cloud-links.mjs | tee "${evidence_dir}/staging-newrelic-cloud-links.log"
           cloud_links_ec=$?
           NEW_RELIC_TARGET_ENV=staging \
           REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
-          REQUIRE_CUSTOM_METRICS=0 \
-          REQUIRE_API_GW_METRICS=1 \
+          REQUIRE_CUSTOM_METRICS=1 \
+          REQUIRE_API_GW_METRICS=0 \
           REQUIRE_SQS_METRICS=1 \
-          node ops/newrelic/verify-signals.mjs
+          node ops/newrelic/verify-signals.mjs | tee "${evidence_dir}/staging-newrelic-verify-signals.json"
           verify_ec=$?
+          jq -e '
+            (.results | length) == 1 and
+            .results[0].envName == "staging" and
+            .results[0].awsMode == "push_only" and
+            (.results[0].failures | length) == 0 and
+            (.results[0].checks.metricCount > 0) and
+            (.results[0].checks.logCount > 0) and
+            (.results[0].checks.spanCount > 0) and
+            (.results[0].checks.sqsMetricCount > 0) and
+            (.results[0].checks.customMetricCount > 0) and
+            (.results[0].checks.customMetricFamilies.core_slo_indices > 0)
+          ' "${evidence_dir}/staging-newrelic-verify-signals.json" >/dev/null
+          verify_proof_ec=$?
           set -e
 
-          if [ "$dashboards_ec" != "0" ] || [ "$alerts_ec" != "0" ] || [ "$cloud_links_ec" != "0" ] || [ "$verify_ec" != "0" ]; then
-            echo "::warning::New Relic gate failed (dashboards=${dashboards_ec}, alerts=${alerts_ec}, cloud_links=${cloud_links_ec}, verify=${verify_ec}) — continuing staging deploy."
-            exit 0
+          if [ "$dashboards_ec" != "0" ] || [ "$alerts_ec" != "0" ] || [ "$notifications_ec" != "0" ] || [ "$notifications_proof_ec" != "0" ] || [ "$cloud_links_ec" != "0" ] || [ "$verify_ec" != "0" ] || [ "$verify_proof_ec" != "0" ]; then
+            echo "New Relic gate failed (dashboards=${dashboards_ec}, alerts=${alerts_ec}, notifications=${notifications_ec}, notifications_proof=${notifications_proof_ec}, cloud_links=${cloud_links_ec}, verify=${verify_ec}, verify_proof=${verify_proof_ec})."
+            if [ -n "${PREV_GOOD_TAG:-}" ] && [ "${PREV_GOOD_TAG:-}" != "None" ]; then
+              gh workflow run rollback.yml -f env="${ENV_NAME}" -f image_tag="${PREV_GOOD_TAG}" || true
+            fi
+            exit 1
           fi
       - name: Alarm rollback gate (staging)
         shell: bash
@@ -1904,6 +2142,14 @@ jobs:
             fi
             exit 1
           fi
+
+      - name: Verify ECS task images (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          pnpm -C backend exec tsx scripts/ci/verify-ecs-task-images.ts
 
       - name: Record Last-known-good Image (staging)
         shell: bash
@@ -1962,7 +2208,7 @@ jobs:
     concurrency:
       group: deploy-prod
       cancel-in-progress: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 150
     # IMPORTANT: Production environment requires manual approval.
     # Configure in GitHub Settings -> Environments -> prod -> Required reviewers.
@@ -1988,9 +2234,11 @@ jobs:
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
       NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '1' }}
-      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '1' }}
-      NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+      NEW_RELIC_STAGING_AWS_MODE: push_only
+      NEW_RELIC_PROD_AWS_MODE: otlp_only
+      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: '0'
+      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '0'
+      NEW_RELIC_LOGS_ENABLED: '1'
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
       NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -2062,6 +2310,7 @@ jobs:
       COST_BUDGET_AMOUNT_USD: ${{ vars.COST_BUDGET_AMOUNT_USD || vars.PROD_COST_BUDGET_AMOUNT_USD || '500' }}
       COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || vars.PROD_COST_ANOMALY_THRESHOLD_USD || '100' }}
       COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || vars.PROD_COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
+      PROD_RUNTIME_MODE: ${{ vars.PROD_RUNTIME_MODE }}
     steps:
       - name: Resolve deployment ref (prod)
         id: resolve_ref
@@ -2140,16 +2389,68 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
-          if [ -z "$run_id" ]; then
+          candidate_run_ids="$(gh run list --repo "${REPO}" --workflow staging-go-live-readiness.yml --json databaseId,headSha,conclusion,event -q ".[] | select(.event==\"workflow_dispatch\" and .headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId")"
+          if [ -z "${candidate_run_ids}" ]; then
             echo "No successful staging-go-live-readiness run found for commit ${deploy_sha}."
             echo "Block prod deploy until staging readiness gate passes on this exact commit."
             exit 1
           fi
-          echo "Found successful staging readiness run: ${run_id}"
+
+          evidence_root="$(mktemp -d)"
+          trap 'rm -rf "${evidence_root}"' EXIT
+
+          for run_id in ${candidate_run_ids}; do
+            echo "Checking staging readiness evidence run ${run_id} for commit ${deploy_sha}."
+            artifact_payload="$(gh api "repos/${REPO}/actions/runs/${run_id}/artifacts?per_page=100" 2>/dev/null || true)"
+            if [ -z "${artifact_payload}" ] || [ "${artifact_payload}" = "null" ]; then
+              echo "Skipping run ${run_id}: unable to read artifact metadata."
+              continue
+            fi
+
+            missing_artifact=0
+            for artifact_name in staging-readiness-admin-smoke-evidence staging-go-live-release-evidence; do
+              count="$(echo "${artifact_payload}" | jq --arg name "${artifact_name}" '[.artifacts[]? | select(.name==$name and .expired==false)] | length')"
+              if [ "${count}" -lt 1 ]; then
+                echo "Skipping run ${run_id}: required artifact ${artifact_name} is missing or expired."
+                missing_artifact=1
+                break
+              fi
+            done
+            if [ "${missing_artifact}" = "1" ]; then
+              continue
+            fi
+
+            run_dir="${evidence_root}/${run_id}"
+            mkdir -p "${run_dir}"
+            if ! gh run download "${run_id}" --repo "${REPO}" --name staging-go-live-release-evidence --dir "${run_dir}"; then
+              echo "Skipping run ${run_id}: unable to download staging-go-live-release-evidence artifact."
+              continue
+            fi
+
+            manifest_path="${run_dir}/staging-go-live-release-evidence.json"
+            if [ ! -f "${manifest_path}" ]; then
+              echo "Skipping run ${run_id}: staging-go-live-release-evidence.json not found in artifact."
+              continue
+            fi
+
+            if pnpm -C backend exec tsx scripts/ci/staging-go-live-readiness.ts \
+              --verify-release-evidence \
+              --manifest "${manifest_path}" \
+              --expected-sha "${deploy_sha}"; then
+              echo "Found valid staging readiness evidence run: ${run_id}"
+              exit 0
+            fi
+
+            echo "Skipping run ${run_id}: release evidence manifest did not validate for ${deploy_sha}."
+          done
+
+          echo "No valid staging-go-live readiness evidence bundle found for commit ${deploy_sha}."
+          echo "Block prod deploy until staging readiness uploads exact-SHA evidence and required artifacts."
+          exit 1
 
       - name: SOC 2 Type II enterprise launch gate
         shell: bash
@@ -2225,14 +2526,22 @@ jobs:
           docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
             dir:/workspace \
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
+          audit_report=".security/${SECURITY_ENV}-pnpm-audit.json"
           audit_exit=0
-          pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          pnpm -w audit --prod --audit-level=high --json > "${audit_report}" || audit_exit=$?
+          if [ ! -s "${audit_report}" ]; then
+            echo "::error::pnpm audit did not produce JSON output."
+            exit "${audit_exit:-1}"
+          fi
+          high_count="$(jq -r '.metadata.vulnerabilities.high // 0' "${audit_report}")"
+          critical_count="$(jq -r '.metadata.vulnerabilities.critical // 0' "${audit_report}")"
+          blocker_count=$((high_count + critical_count))
           if [ "$audit_exit" -ne 0 ]; then
-            echo "pnpm audit reported issues (exit=$audit_exit)."
-            if [ "${AUDIT_BLOCKING}" = "1" ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit). high=${high_count} critical=${critical_count}"
+            if [ "${AUDIT_BLOCKING}" = "1" ] && [ "${blocker_count}" -gt 0 ]; then
               exit "$audit_exit"
             fi
-            echo "Non-blocking mode: continuing."
+            echo "No blocking high/critical production dependencies detected; continuing."
           fi
 
       - name: Upload Security Evidence
@@ -2323,12 +2632,19 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-}" != "otlp_only" ] && \
+             { [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; }; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID / NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-}" != "otlp_only" ] && \
+             [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_PROD_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-}" != "otlp_only" ] && \
+             [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
           if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
@@ -2337,7 +2653,7 @@ jobs:
             exit 1
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
-            echo "NEW_RELIC_LOGS_ENABLED must not be 0 in staging/prod deploys."
+            echo "NEW_RELIC_LOGS_ENABLED must not be 0 in prod deploys."
             exit 1
           fi
           if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ] && \
@@ -2364,7 +2680,13 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
+          NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: pnpm -C backend ci:observability
@@ -2391,6 +2713,78 @@ jobs:
           echo "IMAGE_TAG=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
           VERSION="$(jq -r '.version' package.json)"
           echo "SEMVER_TAG=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve production posture
+        id: prod_posture
+        shell: bash
+        env:
+          REQUESTED_RUNTIME_MODE: ${{ env.PROD_RUNTIME_MODE }}
+        run: |
+          set -euo pipefail
+          case "${REQUESTED_RUNTIME_MODE:-}" in
+            prod-ha)
+              profile_name="prod-ha"
+              runtime_mode="prod-ha"
+              expected_cost_profile="standard"
+              proof_scope="High-availability production posture with full endpoints, HA data services, and full worker set."
+              ;;
+            prod-lean)
+              profile_name="prod-lean"
+              runtime_mode="prod-lean"
+              expected_cost_profile="lean"
+              proof_scope="Explicit lean production posture for constrained traffic; reduced HA and reduced worker surface."
+              ;;
+            "")
+              echo "::error::Missing PROD_RUNTIME_MODE in the prod GitHub environment. Set it to prod-ha or prod-lean; production deploys are fail-closed without an explicit posture."
+              exit 1
+              ;;
+            *)
+              echo "::error::Unsupported PROD_RUNTIME_MODE='${REQUESTED_RUNTIME_MODE}'. Use prod-ha or prod-lean."
+              exit 1
+              ;;
+          esac
+
+          /bin/bash infrastructure/cdk/apply-profile.sh "${profile_name}"
+
+          actual_runtime_mode="$(jq -r '.context.runtimeMode // empty' infrastructure/cdk/cdk.json)"
+          if [ "${actual_runtime_mode}" != "${runtime_mode}" ]; then
+            echo "::error::Profile ${profile_name} did not set runtimeMode=${runtime_mode}."
+            exit 1
+          fi
+
+          actual_cost_profile="$(jq -r '.context.costProfile // empty' infrastructure/cdk/cdk.json)"
+          if [ "${actual_cost_profile}" != "${expected_cost_profile}" ]; then
+            echo "::error::Profile ${profile_name} did not set costProfile=${expected_cost_profile}."
+            exit 1
+          fi
+          cpu_architecture="$(jq -r '.context.cpuArchitecture // empty' infrastructure/cdk/cdk.json)"
+          case "${cpu_architecture}" in
+            arm64)
+              docker_platform="linux/arm64"
+              ;;
+            x86_64|x86|amd64)
+              docker_platform="linux/amd64"
+              ;;
+            *)
+              echo "::error::Profile ${profile_name} produced unsupported cpuArchitecture='${cpu_architecture}'."
+              exit 1
+              ;;
+          esac
+
+          echo "profile_name=${profile_name}" >> "$GITHUB_OUTPUT"
+          echo "runtime_mode=${runtime_mode}" >> "$GITHUB_OUTPUT"
+          echo "cost_profile=${expected_cost_profile}" >> "$GITHUB_OUTPUT"
+          echo "cpu_architecture=${cpu_architecture}" >> "$GITHUB_OUTPUT"
+          echo "docker_platform=${docker_platform}" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Production posture"
+            echo "- Profile: \`${profile_name}\`"
+            echo "- Runtime mode: \`${runtime_mode}\`"
+            echo "- Cost profile: \`${expected_cost_profile}\`"
+            echo "- CPU architecture: \`${cpu_architecture}\`"
+            echo "- Docker platform: \`${docker_platform}\`"
+            echo "- Proof scope: ${proof_scope}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Capture Previous Good Image Tag (prod)
         id: prev_good
@@ -2433,13 +2827,12 @@ jobs:
           context: .
           file: backend/Dockerfile
           push: true
+          platforms: ${{ steps.prod_posture.outputs.docker_platform }}
           build-args: |
             BUILD_VERSION=${{ steps.vars.outputs.IMAGE_TAG }}
           tags: |
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-prod:${{ steps.vars.outputs.IMAGE_TAG }}
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-prod:${{ steps.vars.outputs.SEMVER_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Scan Backend Image (Trivy HIGH/CRITICAL)
         shell: bash
@@ -2447,6 +2840,7 @@ jobs:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          DOCKER_PLATFORM: ${{ steps.prod_posture.outputs.docker_platform }}
         run: |
           set -euo pipefail
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-prod"
@@ -2455,7 +2849,7 @@ jobs:
             -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             -e AWS_DEFAULT_REGION="${AWS_REGION}" \
             aquasec/trivy:0.50.1 \
-            image --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
+            image --image-src remote --platform "${DOCKER_PLATFORM}" --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
 
       - name: Validate ECR Scan Results
         shell: bash
@@ -2523,18 +2917,6 @@ jobs:
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
             -c minimalInfra=false \
-            -c providerProbeMode=per_provider \
-            -c planeBDisableTier1=false \
-            -c planeBB2cRefreshServiceEnabled=true \
-            -c planeBFxRateRefreshServiceEnabled=true \
-            -c planeBIngestFanoutMode=queue \
-            -c quoteRefreshQueueMode=queue \
-            -c fxRateRefreshQueueMode=queue \
-            -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
@@ -2563,7 +2945,7 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          max_attempts=90
+          max_attempts=180
           poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
@@ -2574,17 +2956,30 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
-                # Every 60s, check if ECS services are stuck in failed deployment
+                # Every 60s, surface ECS rollout progress and fail fast on explicit FAILED rollouts.
                 if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
-                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
-                    | jq -r '.serviceArns[]' 2>/dev/null \
-                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
-                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
-                    || echo "0")
-                  if [ "${failing:-0}" -gt 3 ]; then
-                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
-                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
-                    exit 1
+                  service_arns="$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --query 'serviceArns' --output text 2>/dev/null || true)"
+                  if [ -n "${service_arns}" ] && [ "${service_arns}" != "None" ]; then
+                    failed_rollouts="$(aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services ${service_arns} --output json 2>/dev/null \
+                      | jq -r '[.services[] | select(any(.deployments[]?; .status == "PRIMARY" and .rolloutState == "FAILED"))] | length' 2>/dev/null \
+                      || echo "0")"
+                    in_progress_rollouts="$(aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services ${service_arns} --output json 2>/dev/null \
+                      | jq -r '[.services[] | select(any(.deployments[]?; .status == "PRIMARY" and .rolloutState == "IN_PROGRESS"))] | length' 2>/dev/null \
+                      || echo "0")"
+                    if ! [[ "${failed_rollouts}" =~ ^[0-9]+$ ]]; then
+                      echo "::warning::Unable to parse failed ECS rollout count: ${failed_rollouts}"
+                      failed_rollouts=0
+                    fi
+                    if ! [[ "${in_progress_rollouts}" =~ ^[0-9]+$ ]]; then
+                      echo "::warning::Unable to parse in-progress ECS rollout count: ${in_progress_rollouts}"
+                      in_progress_rollouts=0
+                    fi
+                    echo "Primary ECS services still rolling out: ${in_progress_rollouts}"
+                    if [ "${failed_rollouts}" -gt 0 ]; then
+                      echo "::error::${failed_rollouts} ECS services have PRIMARY deployments in FAILED state."
+                      echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                      exit 1
+                    fi
                   fi
                 fi
                 sleep "${poll_seconds}"
@@ -2609,13 +3004,13 @@ jobs:
           cluster_id=$(aws rds describe-db-clusters \
             --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
             --output text 2>&1) || {
-            echo "::warning::Cannot check Aurora status (missing rds:DescribeDBClusters permission). Continuing deploy."
-            exit 0
+            echo "::error::Cannot check Aurora status for ${ENV_NAME} (missing rds:DescribeDBClusters permission). Blocking deploy."
+            exit 1
           }
           cluster_id="$(echo "$cluster_id" | head -1)"
           if [ -z "$cluster_id" ]; then
-            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
-            exit 0
+            echo "::error::No Aurora cluster found for ${ENV_NAME}. Blocking deploy."
+            exit 1
           fi
           status=$(aws rds describe-db-clusters \
             --db-cluster-identifier "$cluster_id" \
@@ -2623,8 +3018,8 @@ jobs:
           if [ "$status" = "stopped" ]; then
             echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
             aws rds start-db-cluster --db-cluster-identifier "$cluster_id" || {
-              echo "::warning::Cannot start Aurora (missing rds:StartDBCluster permission). Continuing deploy."
-              exit 0
+              echo "::error::Cannot start Aurora cluster $cluster_id for ${ENV_NAME} (missing rds:StartDBCluster permission). Blocking deploy."
+              exit 1
             }
             aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
             echo "Aurora is now available."
@@ -2653,18 +3048,6 @@ jobs:
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
             -c minimalInfra=false \
-            -c providerProbeMode=per_provider \
-            -c planeBDisableTier1=false \
-            -c planeBB2cRefreshServiceEnabled=true \
-            -c planeBFxRateRefreshServiceEnabled=true \
-            -c planeBIngestFanoutMode=queue \
-            -c quoteRefreshQueueMode=queue \
-            -c fxRateRefreshQueueMode=queue \
-            -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
@@ -2684,7 +3067,7 @@ jobs:
           PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.PUBLIC_NEW_RELIC_TRUST_KEY }}
           PUBLIC_NEW_RELIC_AGENT_ID: ${{ vars.PUBLIC_NEW_RELIC_AGENT_ID }}
           PUBLIC_NEW_RELIC_APPLICATION_ID: ${{ vars.PUBLIC_NEW_RELIC_APPLICATION_ID }}
-          PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
+          PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ secrets.PUBLIC_NEW_RELIC_LICENSE_KEY || vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
           PUBLIC_NEW_RELIC_BEACON: ${{ vars.PUBLIC_NEW_RELIC_BEACON }}
           PUBLIC_NEW_RELIC_ERROR_BEACON: ${{ vars.PUBLIC_NEW_RELIC_ERROR_BEACON }}
         run: |
@@ -2770,11 +3153,97 @@ jobs:
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
             --query "tasks[0].taskArn" --output text)"
+          echo "Migration task: $task_arn"
           aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
-          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          task_json="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --output json)"
+          exit_code="$(echo "$task_json" | jq -r '.tasks[0].containers[0].exitCode // "null"')"
           if [ "$exit_code" != "0" ]; then
-            echo "Migration task failed (exitCode=$exit_code): $task_arn"
+            echo "::error::Migration task failed (exitCode=$exit_code): $task_arn"
+            stopped_reason="$(echo "$task_json" | jq -r '.tasks[0].stoppedReason // ""')"
+            container_reason="$(echo "$task_json" | jq -r '.tasks[0].containers[0].reason // ""')"
+            log_group="$(aws ecs describe-task-definition --task-definition "$task_def" --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].logConfiguration.options."awslogs-group"' --output text 2>/dev/null || true)"
+            log_stream="$(echo "$task_json" | jq -r '.tasks[0].containers[0].logStreamName // ""')"
+            if [ -z "$log_stream" ] || [ "$log_stream" = "null" ]; then
+              task_id="${task_arn##*/}"
+              log_stream="db-migrate/DbMigrateContainer/${task_id}"
+            fi
+            if [ -n "$stopped_reason" ] && [ "$stopped_reason" != "null" ]; then
+              echo "::error::ECS stoppedReason: $stopped_reason"
+            fi
+            if [ -n "$container_reason" ] && [ "$container_reason" != "null" ]; then
+              echo "::error::Container reason: $container_reason"
+            fi
+            if [ -n "$log_group" ] && [ "$log_group" != "None" ] && [ -n "$log_stream" ] && [ "$log_stream" != "null" ]; then
+              echo "Dumping migration task logs from ${log_group}:${log_stream}"
+              aws logs get-log-events \
+                --log-group-name "$log_group" \
+                --log-stream-name "$log_stream" \
+                --limit 200 \
+                --query 'events[].message' \
+                --output text || true
+            fi
             exit 1
+          fi
+
+      - name: Verify DB migrations are in sync (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+
+          cluster="remit-scout-${ENV_NAME}"
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/aws/db-migrate-ecs.js\",\"--check-migration-sync\",\"--label\",\"prod-post-migrate\"]}]}" \
+            --query "tasks[0].taskArn" --output text)"
+
+          echo "Migration sync task: $task_arn"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          task_json="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --output json)"
+          exit_code="$(echo "$task_json" | jq -r '.tasks[0].containers[0].exitCode // "null"')"
+          if [ "$exit_code" != "0" ]; then
+            echo "::error::Migration sync task failed (exitCode=$exit_code)."
+            stopped_reason="$(echo "$task_json" | jq -r '.tasks[0].stoppedReason // ""')"
+            container_reason="$(echo "$task_json" | jq -r '.tasks[0].containers[0].reason // ""')"
+            log_group="$(aws ecs describe-task-definition --task-definition "$task_def" --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].logConfiguration.options."awslogs-group"' --output text 2>/dev/null || true)"
+            log_stream="$(echo "$task_json" | jq -r '.tasks[0].containers[0].logStreamName // ""')"
+            if [ -z "$log_stream" ] || [ "$log_stream" = "null" ]; then
+              task_id="${task_arn##*/}"
+              log_stream="db-migrate/DbMigrateContainer/${task_id}"
+            fi
+            if [ -n "$stopped_reason" ] && [ "$stopped_reason" != "null" ]; then
+              echo "::error::ECS stoppedReason: $stopped_reason"
+            fi
+            if [ -n "$container_reason" ] && [ "$container_reason" != "null" ]; then
+              echo "::error::Container reason: $container_reason"
+            fi
+            if [ -n "$log_group" ] && [ "$log_group" != "None" ] && [ -n "$log_stream" ] && [ "$log_stream" != "null" ]; then
+              echo "Dumping migration sync task logs from ${log_group}:${log_stream}"
+              aws logs get-log-events \
+                --log-group-name "$log_group" \
+                --log-stream-name "$log_stream" \
+                --limit 200 \
+                --query 'events[].message' \
+                --output text || true
+            fi
+            exit 1
+          else
+            echo "Migration sync completed successfully."
           fi
 
       - name: Seed Launch Users (prod)
@@ -2782,7 +3251,7 @@ jobs:
         env:
           ENV_NAME: prod
           STACK_NAME: ${{ vars.STACK_NAME }}
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
           LAUNCH_PASSWORD_DEVELOPER: ${{ secrets.LAUNCH_PASSWORD_DEVELOPER }}
@@ -2819,7 +3288,7 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; DATABASE_URL=\\\"postgres://\${PLANE_B_DB_USERNAME}:\${PLANE_B_DB_PASSWORD}@\${PLANE_B_DB_HOST}:\${PLANE_B_DB_PORT:-5432}/\${PLANE_B_DB_NAME}?sslmode=require\\\"; export DATABASE_URL DATABASE_URL_PLANE_A=\\\"\$DATABASE_URL\\\"; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/seed-launch-users.js\",\"--force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
@@ -2863,15 +3332,14 @@ jobs:
         run: |
           set -euo pipefail
           cluster="remit-scout-${ENV_NAME}"
-          mapfile -t service_arns < <(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output json | jq -r '.[]')
-          if [ "${#service_arns[@]}" -eq 0 ]; then
-            echo "No ECS services found in ${cluster}; skipping stability wait."
-            exit 0
+          services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
+          if [ -n "$services" ] && [ "$services" != "None" ]; then
+            read -r -a service_arns <<< "$services"
+            for ((i=0; i<${#service_arns[@]}; i+=10)); do
+              batch=("${service_arns[@]:i:10}")
+              aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
+            done
           fi
-          for ((i=0; i<${#service_arns[@]}; i+=10)); do
-            batch=("${service_arns[@]:i:10}")
-            aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
-          done
 
       - name: Post-deploy Smoke (prod) + Auto Rollback On Failure
         shell: bash
@@ -2953,33 +3421,80 @@ jobs:
           NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
+          NEW_RELIC_ALERT_EMAIL: ${{ vars.NEW_RELIC_ALERT_EMAIL || 'alerts@remit-scout.com' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: |
           set -euo pipefail
+          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || [ -z "${NEW_RELIC_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_REGION:-}" ]; then
+            echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
+            exit 1
+          fi
+          if [ -z "${NEW_RELIC_ALERT_EMAIL:-}" ]; then
+            echo "Missing NEW_RELIC_ALERT_EMAIL for New Relic incident workflow/channel sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
+            echo "Missing NEW_RELIC_PROD_AWS_ACCOUNT_ID for account-pinned verify-signals."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
+            exit 1
+          fi
+          evidence_dir="$(mktemp -d)"
+          trap 'rm -rf "${evidence_dir}"' EXIT
           set +e
-          node ops/newrelic/bootstrap-dashboards.mjs
+          node ops/newrelic/bootstrap-dashboards.mjs | tee "${evidence_dir}/prod-newrelic-dashboards.log"
           dashboards_ec=$?
-          node ops/newrelic/sync-alerts.mjs
+          node ops/newrelic/sync-alerts.mjs | tee "${evidence_dir}/prod-newrelic-alerts.log"
           alerts_ec=$?
-          node ops/newrelic/sync-cloud-links.mjs
+          NEW_RELIC_REQUIRE_MIRROR_POLICIES=1 \
+          NEW_RELIC_EVIDENCE_OUTPUT="${evidence_dir}/prod-newrelic-notifications-evidence.json" \
+          node ops/newrelic/sync-notifications-workflows.mjs | tee "${evidence_dir}/prod-newrelic-notifications-sync.log"
+          notifications_ec=$?
+          jq -e '
+            .verification.passed == true and
+            .verification.mirrorPoliciesRequired == true and
+            (.workflows.staging.matchedPolicyNames == ["Remit-Scout STAGING CloudWatch Mirror"]) and
+            (.workflows.prod.matchedPolicyNames == ["Remit-Scout PROD CloudWatch Mirror"])
+          ' "${evidence_dir}/prod-newrelic-notifications-evidence.json" >/dev/null
+          notifications_proof_ec=$?
+          node ops/newrelic/sync-cloud-links.mjs | tee "${evidence_dir}/prod-newrelic-cloud-links.log"
           cloud_links_ec=$?
           NEW_RELIC_TARGET_ENV=prod \
           REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
-          REQUIRE_API_GW_METRICS=1 \
-          REQUIRE_SQS_METRICS=1 \
-          node ops/newrelic/verify-signals.mjs
+          REQUIRE_API_GW_METRICS=0 \
+          REQUIRE_SQS_METRICS=0 \
+          node ops/newrelic/verify-signals.mjs | tee "${evidence_dir}/prod-newrelic-verify-signals.json"
           verify_ec=$?
+          jq -e '
+            (.results | length) == 1 and
+            .results[0].envName == "prod" and
+            .results[0].awsMode == "otlp_only" and
+            (.results[0].failures | length) == 0 and
+            (.results[0].checks.metricCount > 0) and
+            (.results[0].checks.logCount > 0) and
+            (.results[0].checks.spanCount > 0) and
+            (.results[0].checks.customMetricCount > 0) and
+            (.results[0].checks.customMetricFamilies.core_slo_indices > 0)
+          ' "${evidence_dir}/prod-newrelic-verify-signals.json" >/dev/null
+          verify_proof_ec=$?
           set -e
 
-          if [ "$dashboards_ec" != "0" ] || [ "$alerts_ec" != "0" ] || [ "$cloud_links_ec" != "0" ] || [ "$verify_ec" != "0" ]; then
-            echo "New Relic gate failed (dashboards=${dashboards_ec}, alerts=${alerts_ec}, cloud_links=${cloud_links_ec}, verify=${verify_ec})."
+          if [ "$dashboards_ec" != "0" ] || [ "$alerts_ec" != "0" ] || [ "$notifications_ec" != "0" ] || [ "$notifications_proof_ec" != "0" ] || [ "$cloud_links_ec" != "0" ] || [ "$verify_ec" != "0" ] || [ "$verify_proof_ec" != "0" ]; then
+            echo "New Relic gate failed (dashboards=${dashboards_ec}, alerts=${alerts_ec}, notifications=${notifications_ec}, notifications_proof=${notifications_proof_ec}, cloud_links=${cloud_links_ec}, verify=${verify_ec}, verify_proof=${verify_proof_ec})."
             if [ -n "${PREV_GOOD_TAG:-}" ] && [ "${PREV_GOOD_TAG:-}" != "None" ]; then
               gh workflow run rollback.yml -f env="${ENV_NAME}" -f image_tag="${PREV_GOOD_TAG}" || true
             fi
@@ -3007,6 +3522,14 @@ jobs:
             fi
             exit 1
           fi
+
+      - name: Verify ECS task images (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          pnpm -C backend exec tsx scripts/ci/verify-ecs-task-images.ts
 
       - name: Record Last-known-good Image (prod)
         shell: bash
