@@ -850,7 +850,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 7200
+          role-duration-seconds: 14400
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -861,7 +861,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 7200
+          role-duration-seconds: 14400
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -1309,7 +1309,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 10800
+          role-duration-seconds: 14400
           retry-max-attempts: 3
 
       - name: CDK Deploy (staging)
@@ -2567,7 +2567,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 10800
+          role-duration-seconds: 14400
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -2578,7 +2578,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 10800
+          role-duration-seconds: 14400
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -3034,7 +3034,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 10800
+          role-duration-seconds: 14400
           retry-max-attempts: 3
 
       - name: CDK Deploy (prod)
