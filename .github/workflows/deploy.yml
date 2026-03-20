@@ -850,7 +850,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 14400
+          role-duration-seconds: 7200
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -861,7 +861,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 14400
+          role-duration-seconds: 7200
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -1303,6 +1303,30 @@ jobs:
             exit 1
           fi
           echo "Aurora health check passed: $status"
+
+      - name: Bootstrap deploy role session duration (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          set -euo pipefail
+          pnpm -C infrastructure/cdk exec -- cdk deploy \
+            "${STACK_NAME}/Foundation" \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            -c runtimeMode="${{ steps.staging_posture.outputs.runtime_mode }}" \
+            -c importExistingBackendRepository=true \
+            -c minimalInfra=false \
+            -c enableDbProxy=false \
+            -c enableCostGuardrails=false \
+            -c pinpointEnabled=false \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@***.com}" \
+            --require-approval never \
+            --exclusively
 
       - name: Refresh AWS credentials before CDK deploy (staging)
         uses: aws-actions/configure-aws-credentials@v4
@@ -2567,7 +2591,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 14400
+          role-duration-seconds: 10800
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -2578,7 +2602,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 14400
+          role-duration-seconds: 10800
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -3034,7 +3058,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 14400
+          role-duration-seconds: 10800
           retry-max-attempts: 3
 
       - name: CDK Deploy (prod)
