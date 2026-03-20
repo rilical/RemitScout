@@ -153,8 +153,10 @@
     "ci:audit:storage-encryption": "tsx scripts/ci/audit-storage-encryption.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-application-auto-scaling": "3.1006.0",
     "@aws-sdk/client-bedrock-runtime": "^3.1000.0",
     "@aws-sdk/client-cloudwatch": "^3.1000.0",
+    "@aws-sdk/client-ecr": "3.1006.0",
     "@aws-sdk/client-ecs": "^3.1000.0",
     "@aws-sdk/client-elasticache": "^3.1000.0",
     "@aws-sdk/client-eventbridge": "^3.1000.0",
@@ -201,7 +203,7 @@
     "robots-parser": "^3.0.1",
     "sharp": "^0.33.4",
     "stripe": "^20.4.0",
-    "undici": "^7.16.0",
+    "undici": "^7.24.0",
     "web-push": "^3.6.7",
     "zod": "^4.3.6"
   },
