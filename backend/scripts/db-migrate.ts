@@ -22,6 +22,7 @@ export interface ParsedMigration {
   forwardSql: string
   rollbackSql: string | null
   isReversible: boolean
+  useTransaction: boolean
 }
 
 /**
@@ -30,25 +31,29 @@ export interface ParsedMigration {
  * Convention:
  *  - `-- @rollback` separates forward SQL from rollback SQL
  *  - `-- @rollback impossible` marks the migration as non-reversible
+ *  - `-- @no-transaction` runs the migration outside BEGIN/COMMIT
  *  - No marker at all = non-reversible (backward compatible)
  */
 export function parseMigrationFile(_filename: string, content: string): ParsedMigration {
+  const noTransactionMarker = '-- @no-transaction'
   const impossibleMarker = '-- @rollback impossible'
   const marker = '-- @rollback'
+  const useTransaction = !content.includes(noTransactionMarker)
+  const normalizedContent = content.replace(noTransactionMarker, '').trim()
 
-  if (content.includes(impossibleMarker)) {
-    const forwardSql = content.substring(0, content.indexOf(impossibleMarker)).trim()
-    return { forwardSql, rollbackSql: null, isReversible: false }
+  if (normalizedContent.includes(impossibleMarker)) {
+    const forwardSql = normalizedContent.substring(0, normalizedContent.indexOf(impossibleMarker)).trim()
+    return { forwardSql, rollbackSql: null, isReversible: false, useTransaction }
   }
 
-  const markerIndex = content.indexOf(marker)
+  const markerIndex = normalizedContent.indexOf(marker)
   if (markerIndex === -1) {
-    return { forwardSql: content.trim(), rollbackSql: null, isReversible: false }
+    return { forwardSql: normalizedContent, rollbackSql: null, isReversible: false, useTransaction }
   }
 
-  const forwardSql = content.substring(0, markerIndex).trim()
-  const rollbackSql = content.substring(markerIndex + marker.length).trim()
-  return { forwardSql, rollbackSql, isReversible: true }
+  const forwardSql = normalizedContent.substring(0, markerIndex).trim()
+  const rollbackSql = normalizedContent.substring(markerIndex + marker.length).trim()
+  return { forwardSql, rollbackSql, isReversible: true, useTransaction }
 }
 
 /**
@@ -263,16 +268,23 @@ export const rollbackMigrations = async (
         throw new Error(`Migration ${file} is not reversible. Rollback aborted.`)
       }
 
-      await db.query('BEGIN')
-      try {
+      if (parsed.useTransaction) {
+        await db.query('BEGIN')
+        try {
+          await db.query(parsed.rollbackSql!)
+          await db.query('DELETE FROM public.schema_migrations WHERE id = $1', [file])
+          await db.query('COMMIT')
+          logger.info('migration_rolled_back', { target: target.label, file })
+          rolledBack++
+        } catch (error) {
+          await db.query('ROLLBACK')
+          throw error
+        }
+      } else {
         await db.query(parsed.rollbackSql!)
         await db.query('DELETE FROM public.schema_migrations WHERE id = $1', [file])
-        await db.query('COMMIT')
         logger.info('migration_rolled_back', { target: target.label, file })
         rolledBack++
-      } catch (error) {
-        await db.query('ROLLBACK')
-        throw error
       }
     }
 
@@ -341,16 +353,23 @@ export const applyMigrations = async (
     for (const file of pending) {
       const content = await readFile(path.join(migrationsDir, file), 'utf8')
       const parsed = parseMigrationFile(file, content)
-      await db.query('BEGIN')
-      try {
+      if (parsed.useTransaction) {
+        await db.query('BEGIN')
+        try {
+          await db.query(parsed.forwardSql)
+          await db.query('INSERT INTO public.schema_migrations (id) VALUES ($1)', [file])
+          await db.query('COMMIT')
+          logger.info('migration_applied', { target: target.label, file })
+          appliedCount++
+        } catch (error) {
+          await db.query('ROLLBACK')
+          throw error
+        }
+      } else {
         await db.query(parsed.forwardSql)
         await db.query('INSERT INTO public.schema_migrations (id) VALUES ($1)', [file])
-        await db.query('COMMIT')
         logger.info('migration_applied', { target: target.label, file })
         appliedCount++
-      } catch (error) {
-        await db.query('ROLLBACK')
-        throw error
       }
     }
 

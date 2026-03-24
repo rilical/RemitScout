@@ -26,7 +26,6 @@ import {
 import { createPool } from '../shared/db'
 import {
   resolveDbConnectionStringForIpv4,
-  rewriteDbConnectionStringForIpv4,
 } from '../shared/db-ipv4'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'

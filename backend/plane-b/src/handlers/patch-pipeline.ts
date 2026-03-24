@@ -2,7 +2,7 @@ import type { Pool } from 'pg'
 import type { JobContext, JobResult } from '../../../shared/types/job'
 import type { FailureBundle, FailureCategory } from '../../../shared/types/failure-bundle'
 import { BaseJobHandler } from './base-job-handler'
-import { PatchProposer, type PatchProposal } from '../agents/patch-proposer'
+import { PatchProposer } from '../agents/patch-proposer'
 import { PatchValidator } from '../agents/patch-validator'
 import { PatchDeployer } from '../agents/patch-deployer'
 

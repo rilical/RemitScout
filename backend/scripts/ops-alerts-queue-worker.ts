@@ -55,6 +55,7 @@ const loopJitterMs = config.workers.opsAlertsQueueWorker.loopJitterMs
 const messageJitterMs = config.workers.opsAlertsQueueWorker.messageJitterMs
 const healthEnabled = config.workers.health.enabled
 const healthPort = config.workers.health.port
+const healthServerStarted = config.workers.health.started
 const isLambdaRuntime = config.runtime.isLambda
 let healthServer: { close: () => Promise<void> } | null = null
 const activeExtenders = new Set<VisibilityTimeoutExtender>()
@@ -91,7 +92,7 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
     return
   }
 
-  if (!isLambdaRuntime && healthEnabled && process.env.HEALTH_SERVER_STARTED !== '1') {
+  if (!isLambdaRuntime && healthEnabled && !healthServerStarted) {
     try {
       healthServer = await startHealthServer({
         port: healthPort,

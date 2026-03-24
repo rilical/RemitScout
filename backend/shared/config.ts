@@ -1509,6 +1509,7 @@ const rawConfig = {
     health: {
       enabled: toBoolean(process.env.WORKER_HEALTH_ENABLED, true),
       port: toNumber(process.env.HEALTH_PORT, 8080),
+      started: toBoolean(process.env.HEALTH_SERVER_STARTED),
     },
     exportWorker: {
       queueBatchSize: toNumber(process.env.EXPORT_QUEUE_BATCH_SIZE, 5),

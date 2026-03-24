@@ -1,4 +1,5 @@
 -- Migration 111: Performance indexes and autovacuum tuning
+-- @no-transaction
 --
 -- Adds missing indexes identified during query-plan review and tunes
 -- autovacuum settings for high-churn tables that accumulate dead tuples
