@@ -475,60 +475,6 @@ jobs:
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: pnpm -C backend ci:observability
 
-      - name: New Relic sync + verify (staging hard gate)
-        env:
-          NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
-          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
-          NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
-          NEW_RELIC_ALERT_EMAIL: ${{ vars.NEW_RELIC_ALERT_EMAIL || 'alerts@remit-scout.com' }}
-          NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
-          NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
-          NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
-          NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
-          NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
-          NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
-          NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
-          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
-          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
-        run: |
-          set -euo pipefail
-          mkdir -p .smoke-artifacts
-          node ops/newrelic/bootstrap-dashboards.mjs | tee .smoke-artifacts/staging-newrelic-dashboards.log
-          node ops/newrelic/sync-alerts.mjs | tee .smoke-artifacts/staging-newrelic-alerts.log
-          NEW_RELIC_REQUIRE_MIRROR_POLICIES=1 \
-          NEW_RELIC_EVIDENCE_OUTPUT=.smoke-artifacts/staging-newrelic-notifications-evidence.json \
-          node ops/newrelic/sync-notifications-workflows.mjs | tee .smoke-artifacts/staging-newrelic-notifications-sync.log
-          jq -e '
-            .verification.passed == true and
-            .verification.mirrorPoliciesRequired == true and
-            (.workflows.staging.matchedPolicyNames == ["Remit-Scout STAGING CloudWatch Mirror"]) and
-            (.workflows.prod.matchedPolicyNames == ["Remit-Scout PROD CloudWatch Mirror"])
-          ' .smoke-artifacts/staging-newrelic-notifications-evidence.json >/dev/null
-          node ops/newrelic/sync-cloud-links.mjs | tee .smoke-artifacts/staging-newrelic-cloud-links.log
-          NEW_RELIC_TARGET_ENV=staging \
-          REQUIRE_ACCOUNT_PINNING=1 \
-          REQUIRE_LOGS=1 \
-          REQUIRE_SPANS=1 \
-          REQUIRE_API_GW_METRICS=0 \
-          REQUIRE_SQS_METRICS=1 \
-          node ops/newrelic/verify-signals.mjs | tee .smoke-artifacts/staging-newrelic-verify-signals.json
-          jq -e '
-            (.results | length) == 1 and
-            .results[0].envName == "staging" and
-            .results[0].awsMode == "push_only" and
-            (.results[0].failures | length) == 0 and
-            (.results[0].checks.metricCount > 0) and
-            (.results[0].checks.logCount > 0) and
-            (.results[0].checks.spanCount > 0) and
-            (.results[0].checks.sqsMetricCount > 0) and
-            (.results[0].checks.customMetricCount > 0) and
-            (.results[0].checks.customMetricFamilies.core_slo_indices > 0)
-          ' .smoke-artifacts/staging-newrelic-verify-signals.json >/dev/null
-
       - name: Runtime config validation (staging profile)
         if: inputs.run_runtime_config_validation
         env:
@@ -1008,6 +954,61 @@ jobs:
           fi
           mkdir -p .smoke-artifacts
           SMOKE_FETCH_RETRIES=10 pnpm -C backend ci:integration-smoke | tee .smoke-artifacts/staging-public-integration-post-ui-smoke.log
+
+      - name: New Relic sync + verify (staging hard gate)
+        env:
+          NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
+          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
+          NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
+          NEW_RELIC_ALERT_EMAIL: ${{ vars.NEW_RELIC_ALERT_EMAIL || 'alerts@remit-scout.com' }}
+          NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
+          NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
+          NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
+          NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
+          NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
+          NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
+          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
+          NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
+          NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
+          NEW_RELIC_WINDOW_MINUTES: '180'
+        run: |
+          set -euo pipefail
+          mkdir -p .smoke-artifacts
+          node ops/newrelic/bootstrap-dashboards.mjs | tee .smoke-artifacts/staging-newrelic-dashboards.log
+          node ops/newrelic/sync-alerts.mjs | tee .smoke-artifacts/staging-newrelic-alerts.log
+          NEW_RELIC_REQUIRE_MIRROR_POLICIES=1 \
+          NEW_RELIC_EVIDENCE_OUTPUT=.smoke-artifacts/staging-newrelic-notifications-evidence.json \
+          node ops/newrelic/sync-notifications-workflows.mjs | tee .smoke-artifacts/staging-newrelic-notifications-sync.log
+          jq -e '
+            .verification.passed == true and
+            .verification.mirrorPoliciesRequired == true and
+            (.workflows.staging.matchedPolicyNames == ["Remit-Scout STAGING CloudWatch Mirror"]) and
+            (.workflows.prod.matchedPolicyNames == ["Remit-Scout PROD CloudWatch Mirror"])
+          ' .smoke-artifacts/staging-newrelic-notifications-evidence.json >/dev/null
+          node ops/newrelic/sync-cloud-links.mjs | tee .smoke-artifacts/staging-newrelic-cloud-links.log
+          NEW_RELIC_TARGET_ENV=staging \
+          REQUIRE_ACCOUNT_PINNING=1 \
+          REQUIRE_LOGS=1 \
+          REQUIRE_SPANS=1 \
+          REQUIRE_API_GW_METRICS=0 \
+          REQUIRE_SQS_METRICS=1 \
+          node ops/newrelic/verify-signals.mjs | tee .smoke-artifacts/staging-newrelic-verify-signals.json
+          jq -e '
+            (.results | length) == 1 and
+            .results[0].envName == "staging" and
+            .results[0].awsMode == "push_only" and
+            (.results[0].failures | length) == 0 and
+            (.results[0].checks.metricCount > 0) and
+            (.results[0].checks.logCount > 0) and
+            (.results[0].checks.spanCount > 0) and
+            (.results[0].checks.sqsMetricCount > 0) and
+            (.results[0].checks.customMetricCount > 0) and
+            (.results[0].checks.customMetricFamilies.core_slo_indices > 0)
+          ' .smoke-artifacts/staging-newrelic-verify-signals.json >/dev/null
 
       - name: Observability business gate (staging hard gate)
         env:

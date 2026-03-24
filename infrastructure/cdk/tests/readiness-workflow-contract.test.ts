@@ -40,6 +40,13 @@ test('staging readiness observability gate exports the staging New Relic cloud-l
   )
 })
 
+test('staging readiness runs New Relic span verification after traffic-generating smokes', () => {
+  assert.match(
+    readinessWorkflow,
+    /Public integration smoke \(staging, post-ui\)[\s\S]*New Relic sync \+ verify \(staging hard gate\)[\s\S]*NEW_RELIC_WINDOW_MINUTES:\s+'180'[\s\S]*REQUIRE_SPANS=1/,
+  )
+})
+
 test('staging readiness evidence artifacts keep 90-day retention', () => {
   const matches = readinessWorkflow.match(/retention-days: 90/g) ?? []
   assert.equal(matches.length >= 2, true)

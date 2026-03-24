@@ -147,6 +147,7 @@ node ops/newrelic/sync-cloud-links.mjs
 Staging (account-pinned, required for promotion checks):
 
 ```bash
+# Run this after a smoke that exercises live staging Plane A/admin routes so New Relic has fresh trace traffic.
 NEW_RELIC_TARGET_ENV=staging \
 NEW_RELIC_STAGING_AWS_ACCOUNT_ID=010630709504 \
 REQUIRE_ACCOUNT_PINNING=1 \
