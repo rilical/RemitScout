@@ -54,3 +54,7 @@ test('launch-user seeding prefers the public Supabase URL fallback in deploy wor
     /Seed Launch Users \(prod\)[\s\S]*SUPABASE_URL: \$\{\{ vars\.PUBLIC_SUPABASE_URL \|\| vars\.SUPABASE_URL \|\| secrets\.SUPABASE_URL \}\}/,
   )
 })
+
+test('deploy workflow avoids head-induced pipefail when resolving GitHub Actions run ids', () => {
+  assert.doesNotMatch(deployWorkflow, /gh run list[\s\S]*\|\s*head -n1/)
+})

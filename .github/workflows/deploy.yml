@@ -107,7 +107,7 @@ jobs:
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion --jq "map(select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\"))[0].databaseId // \"\"")"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Manual deploys must reference a tested SHA."
@@ -849,7 +849,7 @@ jobs:
             exit 0
           fi
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion --jq "map(select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\"))[0].databaseId // \"\"")"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Manual deploys must reference a tested SHA."
@@ -2195,7 +2195,7 @@ jobs:
 
           run_id=""
           for i in $(seq 1 60); do
-            run_id="$(gh run list --repo "${REPO}" --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt,headSha -q ".[] | select(.event==\"workflow_dispatch\" and .headSha==\"${{ steps.resolve_ref.outputs.sha }}\" and .createdAt >= \"${dispatch_started_at}\") | .databaseId" | head -n1)"
+            run_id="$(gh run list --repo "${REPO}" --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt,headSha --jq "map(select(.event==\"workflow_dispatch\" and .headSha==\"${{ steps.resolve_ref.outputs.sha }}\" and .createdAt >= \"${dispatch_started_at}\"))[0].databaseId // \"\"")"
             if [ -n "$run_id" ]; then
               break
             fi
@@ -2623,7 +2623,7 @@ jobs:
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion --jq "map(select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\"))[0].databaseId // \"\"")"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Block prod deploy until ci/main succeeds on this exact commit."
