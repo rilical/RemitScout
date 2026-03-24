@@ -209,10 +209,14 @@ jobs:
           NODE_ENV: staging
           AWS_REGION: ${{ vars.AWS_REGION }}
           SENTRY_DSN: ${{ secrets.NUXT_PUBLIC_SENTRY_DSN }}
+          DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+          DATABASE_URL_PLANE_B_MIGRATOR: ${{ secrets.DATABASE_URL_PLANE_B_MIGRATOR || secrets.DATABASE_URL_PLANE_B }}
           ALLOW_DB_MIGRATOR_URL: '1'
         run: |
           set -euo pipefail
           mkdir -p .smoke-artifacts
+          unset PLANE_B_DB_SECRET_ARN PLANE_B_DB_SSM_NAME
+          unset PLANE_B_DB_MIGRATOR_SECRET_ARN PLANE_B_DB_MIGRATOR_SSM_NAME
           pnpm -C backend exec tsx scripts/aws/db-migrate-ecs.ts | tee .smoke-artifacts/staging-migration-apply.log
 
       - name: Staging go-live readiness (integrations + policy)

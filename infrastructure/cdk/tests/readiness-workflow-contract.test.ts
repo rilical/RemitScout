@@ -61,6 +61,13 @@ test('staging readiness candidate migration apply inherits staging sentry wiring
   )
 })
 
+test('staging readiness candidate migration apply uses direct staging DB URLs instead of task-secret IAM', () => {
+  assert.match(
+    readinessWorkflow,
+    /Apply repo migrations from exact SHA \(staging readiness\)[\s\S]*DATABASE_URL_PLANE_B:\s+\$\{\{\s*secrets\.DATABASE_URL_PLANE_B\s*\}\}[\s\S]*DATABASE_URL_PLANE_B_MIGRATOR:\s+\$\{\{\s*secrets\.DATABASE_URL_PLANE_B_MIGRATOR\s*\|\|\s*secrets\.DATABASE_URL_PLANE_B\s*\}\}[\s\S]*unset PLANE_B_DB_SECRET_ARN PLANE_B_DB_SSM_NAME[\s\S]*unset PLANE_B_DB_MIGRATOR_SECRET_ARN PLANE_B_DB_MIGRATOR_SSM_NAME/,
+  )
+})
+
 test('staging readiness evidence artifacts keep 90-day retention', () => {
   const matches = readinessWorkflow.match(/retention-days: 90/g) ?? []
   assert.equal(matches.length >= 2, true)
