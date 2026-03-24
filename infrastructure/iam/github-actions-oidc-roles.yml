@@ -17,8 +17,8 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: remit-scout-gha-deploy-dev
-      Description: GitHub Actions deploy role for dev (refs/heads/develop)
-      MaxSessionDuration: 3600
+      Description: GitHub Actions deploy role for dev (environment:dev plus develop ref)
+      MaxSessionDuration: 21600
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -30,7 +30,9 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/develop
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${GitHubOrg}/${GitHubRepo}:environment:dev
+                  - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/develop
       Policies:
         - PolicyName: remit-scout-gha-deploy-dev
           PolicyDocument:
@@ -42,7 +44,22 @@ Resources:
                   - cloudformation:Describe*
                   - cloudformation:Get*
                   - cloudformation:List*
+                  - cloudformation:DetectStackDrift
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:CancelUpdateStack
+                  - cloudformation:ContinueUpdateRollback
                 Resource: '*'
+              - Sid: SsmDeployState
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/remit-scout/dev/*
               - Sid: BootstrapAssume
                 Effect: Allow
                 Action: sts:AssumeRole
@@ -70,13 +87,201 @@ Resources:
                 Action:
                   - cloudfront:CreateInvalidation
                 Resource: '*'
+              - Sid: CloudWatchLogsRead
+                Effect: Allow
+                Action:
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: '*'
+              - Sid: SecretsManagerRead
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource:
+                  - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*dev*
+              - Sid: EventBridgeRead
+                Effect: Allow
+                Action:
+                  - events:ListRules
+                Resource: '*'
+              - Sid: EventBridgeManage
+                Effect: Allow
+                Action:
+                  - events:EnableRule
+                  - events:DisableRule
+                Resource:
+                  - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/remit-scout-dev*
+              - Sid: OpsPauseLambdaDiscover
+                Effect: Allow
+                Action:
+                  - lambda:ListFunctions
+                Resource: '*'
+              - Sid: OpsPauseLambdaInvoke
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:remit-scout-dev*OpsPauseControllerFuncti*
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:remit-scout-dev*OpsPauseControllerFuncti*:*
               - Sid: EcsMigrations
                 Effect: Allow
                 Action:
+                  - ecs:RegisterTaskDefinition
+                  - ecs:DeregisterTaskDefinition
                   - ecs:RunTask
+                  - ecs:ListServices
                   - ecs:DescribeTasks
+                  - ecs:DescribeTaskDefinition
+                  - ecs:DescribeClusters
                   - ecs:DescribeServices
                   - ecs:ListTasks
+                  - ecs:UpdateService
+                Resource: '*'
+              - Sid: RdsClusterAccess
+                Effect: Allow
+                Action:
+                  - rds:DescribeDBClusters
+                  - rds:StartDBCluster
+                Resource:
+                  - !Sub arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:remit-scout-dev*
+              - Sid: PassRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/remit-scout-*
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
+
+  DeployStagingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: remit-scout-gha-deploy-staging
+      Description: GitHub Actions deploy role for staging (environment:staging plus develop/main/staging refs)
+      MaxSessionDuration: 21600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref OidcProviderArn
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${GitHubOrg}/${GitHubRepo}:environment:staging
+                  - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/develop
+                  - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main
+                  - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/staging
+      Policies:
+        - PolicyName: remit-scout-gha-deploy-staging
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: CloudFormationRead
+                Effect: Allow
+                Action:
+                  - cloudformation:Describe*
+                  - cloudformation:Get*
+                  - cloudformation:List*
+                  - cloudformation:DetectStackDrift
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:CancelUpdateStack
+                  - cloudformation:ContinueUpdateRollback
+                Resource: '*'
+              - Sid: SsmDeployState
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/remit-scout/staging/*
+              - Sid: BootstrapAssume
+                Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
+              - Sid: EcrPushPull
+                Effect: Allow
+                Action:
+                  - ecr:*
+                Resource: '*'
+              - Sid: FrontendS3
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: arn:aws:s3:::remit-scout-*
+              - Sid: FrontendS3Objects
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:GetObject
+                Resource: arn:aws:s3:::remit-scout-*/*
+              - Sid: CloudFrontInvalidate
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                Resource: '*'
+              - Sid: CloudWatchLogsRead
+                Effect: Allow
+                Action:
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: '*'
+              - Sid: SecretsManagerRead
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource:
+                  - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*staging*
+              - Sid: EventBridgeRead
+                Effect: Allow
+                Action:
+                  - events:ListRules
+                Resource: '*'
+              - Sid: EventBridgeManage
+                Effect: Allow
+                Action:
+                  - events:EnableRule
+                  - events:DisableRule
+                Resource:
+                  - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/remit-scout-staging*
+              - Sid: OpsPauseLambdaDiscover
+                Effect: Allow
+                Action:
+                  - lambda:ListFunctions
+                Resource: '*'
+              - Sid: OpsPauseLambdaInvoke
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:remit-scout-staging*OpsPauseControllerFuncti*
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:remit-scout-staging*OpsPauseControllerFuncti*:*
+              - Sid: EcsMigrations
+                Effect: Allow
+                Action:
+                  - ecs:RegisterTaskDefinition
+                  - ecs:DeregisterTaskDefinition
+                  - ecs:RunTask
+                  - ecs:ListServices
+                  - ecs:DescribeTasks
+                  - ecs:DescribeTaskDefinition
+                  - ecs:DescribeClusters
+                  - ecs:DescribeServices
+                  - ecs:ListTasks
+                  - ecs:UpdateService
                 Resource: '*'
               - Sid: RdsClusterAccess
                 Effect: Allow
@@ -92,85 +297,12 @@ Resources:
                   - !Sub arn:aws:iam::${AWS::AccountId}:role/remit-scout-*
                   - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
 
-  DeployStagingRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: remit-scout-gha-deploy-staging
-      Description: GitHub Actions deploy role for staging (refs/heads/staging)
-      MaxSessionDuration: 3600
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRoleWithWebIdentity
-            Principal:
-              Federated: !Ref OidcProviderArn
-            Condition:
-              StringEquals:
-                token.actions.githubusercontent.com:aud: sts.amazonaws.com
-              StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/staging
-      Policies:
-        - PolicyName: remit-scout-gha-deploy-staging
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: CloudFormationRead
-                Effect: Allow
-                Action:
-                  - cloudformation:Describe*
-                  - cloudformation:Get*
-                  - cloudformation:List*
-                  - cloudformation:ContinueUpdateRollback
-                Resource: '*'
-              - Sid: BootstrapAssume
-                Effect: Allow
-                Action: sts:AssumeRole
-                Resource:
-                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
-              - Sid: EcrPushPull
-                Effect: Allow
-                Action:
-                  - ecr:*
-                Resource: '*'
-              - Sid: FrontendS3
-                Effect: Allow
-                Action:
-                  - s3:ListBucket
-                Resource: arn:aws:s3:::remit-scout-*
-              - Sid: FrontendS3Objects
-                Effect: Allow
-                Action:
-                  - s3:PutObject
-                  - s3:DeleteObject
-                  - s3:GetObject
-                Resource: arn:aws:s3:::remit-scout-*/*
-              - Sid: CloudFrontInvalidate
-                Effect: Allow
-                Action:
-                  - cloudfront:CreateInvalidation
-                Resource: '*'
-              - Sid: EcsMigrations
-                Effect: Allow
-                Action:
-                  - ecs:RunTask
-                  - ecs:DescribeTasks
-                  - ecs:DescribeServices
-                  - ecs:ListTasks
-                Resource: '*'
-              - Sid: PassRoles
-                Effect: Allow
-                Action: iam:PassRole
-                Resource:
-                  - !Sub arn:aws:iam::${AWS::AccountId}:role/remit-scout-*
-                  - !Sub arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*
-
   DeployProdRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: remit-scout-gha-deploy-prod
-      Description: GitHub Actions deploy role for prod (refs/tags/v*.*.*)
-      MaxSessionDuration: 3600
+      Description: GitHub Actions deploy role for prod (environment:prod plus release tags)
+      MaxSessionDuration: 21600
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -182,7 +314,9 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/tags/v*.*.*
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${GitHubOrg}/${GitHubRepo}:environment:prod
+                  - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/tags/v*.*.*
       Policies:
         - PolicyName: remit-scout-gha-deploy-prod
           PolicyDocument:
@@ -194,7 +328,22 @@ Resources:
                   - cloudformation:Describe*
                   - cloudformation:Get*
                   - cloudformation:List*
+                  - cloudformation:DetectStackDrift
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:CancelUpdateStack
+                  - cloudformation:ContinueUpdateRollback
                 Resource: '*'
+              - Sid: SsmDeployState
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/remit-scout/prod/*
               - Sid: BootstrapAssume
                 Effect: Allow
                 Action: sts:AssumeRole
@@ -222,14 +371,66 @@ Resources:
                 Action:
                   - cloudfront:CreateInvalidation
                 Resource: '*'
+              - Sid: CloudWatchLogsRead
+                Effect: Allow
+                Action:
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: '*'
+              - Sid: SecretsManagerRead
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource:
+                  - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*prod*
+              - Sid: EventBridgeRead
+                Effect: Allow
+                Action:
+                  - events:ListRules
+                Resource: '*'
+              - Sid: EventBridgeManage
+                Effect: Allow
+                Action:
+                  - events:EnableRule
+                  - events:DisableRule
+                Resource:
+                  - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/remit-scout-prod*
+              - Sid: OpsPauseLambdaDiscover
+                Effect: Allow
+                Action:
+                  - lambda:ListFunctions
+                Resource: '*'
+              - Sid: OpsPauseLambdaInvoke
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:remit-scout-prod*OpsPauseControllerFuncti*
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:remit-scout-prod*OpsPauseControllerFuncti*:*
               - Sid: EcsMigrations
                 Effect: Allow
                 Action:
+                  - ecs:RegisterTaskDefinition
+                  - ecs:DeregisterTaskDefinition
                   - ecs:RunTask
+                  - ecs:ListServices
                   - ecs:DescribeTasks
+                  - ecs:DescribeTaskDefinition
+                  - ecs:DescribeClusters
                   - ecs:DescribeServices
                   - ecs:ListTasks
+                  - ecs:UpdateService
                 Resource: '*'
+              - Sid: RdsClusterAccess
+                Effect: Allow
+                Action:
+                  - rds:DescribeDBClusters
+                  - rds:StartDBCluster
+                Resource:
+                  - !Sub arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:remit-scout-prod*
               - Sid: PassRoles
                 Effect: Allow
                 Action: iam:PassRole

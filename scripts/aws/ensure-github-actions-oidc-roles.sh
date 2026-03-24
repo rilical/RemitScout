@@ -3,8 +3,14 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-PROFILE="${AWS_PROFILE:-rs-dev}"
+PROFILE="${AWS_PROFILE:-}"
 REGION="${AWS_REGION:-us-east-1}"
+TARGET_ENVS="${TARGET_ENVS:-dev,staging,prod}"
+
+aws_cli=(aws)
+if [ -n "${PROFILE}" ]; then
+  aws_cli+=(--profile "${PROFILE}")
+fi
 
 REPO_URL="$(git -C "${ROOT_DIR}" remote get-url origin)"
 REPO_PATH="$(echo "${REPO_URL}" | sed -E 's#^https://github.com/##; s#^git@github.com:##; s#\\.git$##')"
@@ -21,28 +27,29 @@ GITHUB_REPO="${GITHUB_REPO%.git}"
 GITHUB_ORG_LOWER="$(echo "${GITHUB_ORG}" | tr '[:upper:]' '[:lower:]')"
 GITHUB_REPO_LOWER="$(echo "${GITHUB_REPO}" | tr '[:upper:]' '[:lower:]')"
 
-ACCOUNT_ID="$(AWS_PROFILE="${PROFILE}" aws sts get-caller-identity --query Account --output text)"
-
-OIDC_ARN="$(
-  AWS_PROFILE="${PROFILE}" aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[].Arn' --output text \
-    | tr '\t' '\n' \
-    | grep -F 'token.actions.githubusercontent.com' \
-    | head -n 1 \
-    | tr -d '\r'
-)"
+ACCOUNT_ID="$("${aws_cli[@]}" sts get-caller-identity --query Account --output text)"
+OIDC_ARN="${OIDC_PROVIDER_ARN:-arn:aws:iam::${ACCOUNT_ID}:oidc-provider/token.actions.githubusercontent.com}"
 
 if [ -z "${OIDC_ARN}" ]; then
-  echo "ERROR: token.actions.githubusercontent.com OIDC provider not found in account ${ACCOUNT_ID} (profile ${PROFILE})."
-  echo "Create it first in IAM -> Identity providers, then re-run."
+  echo "ERROR: token.actions.githubusercontent.com OIDC provider not found in account ${ACCOUNT_ID}."
   exit 1
 fi
 
 echo "Ensuring GitHub Actions OIDC deploy roles:"
 echo "  account: ${ACCOUNT_ID}"
 echo "  region:  ${REGION}"
-echo "  profile: ${PROFILE}"
+echo "  profile: ${PROFILE:-<env credentials>}"
 echo "  repo:    ${GITHUB_ORG}/${GITHUB_REPO}"
 echo "  oidc:    ${OIDC_ARN}"
+echo "  targets: ${TARGET_ENVS}"
+
+should_manage_env() {
+  local env_name="$1"
+  case ",${TARGET_ENVS}," in
+    *,"${env_name}",*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 assume_policy_json() {
   local patterns_json="$1"
@@ -80,10 +87,15 @@ inline_policy_json() {
         "cloudformation:Describe*",
         "cloudformation:Get*",
         "cloudformation:List*",
+        "cloudformation:DetectStackDrift",
+        "cloudformation:CreateChangeSet",
+        "cloudformation:ExecuteChangeSet",
+        "cloudformation:CreateStack",
+        "cloudformation:UpdateStack",
         "cloudformation:CancelUpdateStack",
         "cloudformation:ContinueUpdateRollback"
       ],
-      "Resource": "arn:aws:cloudformation:*:*:stack/remit-scout-*/*"
+      "Resource": "*"
     },
     {
       "Sid": "CloudWatchDeploySignals",
@@ -95,13 +107,51 @@ inline_policy_json() {
       "Resource": "*"
     },
     {
+      "Sid": "CloudWatchLogsRead",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "SsmDeployState",
       "Effect": "Allow",
       "Action": [
         "ssm:GetParameter",
-        "ssm:PutParameter"
+        "ssm:PutParameter",
+        "ssm:DeleteParameter"
       ],
       "Resource": "arn:aws:ssm:*:*:parameter/remit-scout/*"
+    },
+    {
+      "Sid": "SecretsManagerRead",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
+      "Resource": "arn:aws:secretsmanager:*:*:secret:*"
+    },
+    {
+      "Sid": "EventBridgeRead",
+      "Effect": "Allow",
+      "Action": [
+        "events:ListRules"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "EventBridgeManage",
+      "Effect": "Allow",
+      "Action": [
+        "events:EnableRule",
+        "events:DisableRule"
+      ],
+      "Resource": "arn:aws:events:*:*:rule/remit-scout-*"
     },
     {
       "Sid": "BootstrapAssume",
@@ -144,11 +194,35 @@ inline_policy_json() {
       "Resource": "*"
     },
     {
+      "Sid": "OpsPauseLambdaDiscover",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:ListFunctions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "OpsPauseLambdaInvoke",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "arn:aws:lambda:*:*:function:remit-scout-*OpsPauseControllerFuncti*",
+        "arn:aws:lambda:*:*:function:remit-scout-*OpsPauseControllerFuncti*:*"
+      ]
+    },
+    {
       "Sid": "EcsMigrations",
       "Effect": "Allow",
       "Action": [
+        "ecs:RegisterTaskDefinition",
+        "ecs:DeregisterTaskDefinition",
         "ecs:RunTask",
+        "ecs:ListServices",
         "ecs:DescribeTasks",
+        "ecs:DescribeTaskDefinition",
+        "ecs:DescribeClusters",
         "ecs:DescribeServices",
         "ecs:ListTasks",
         "ecs:UpdateService"
@@ -187,24 +261,28 @@ ensure_role() {
   assume_policy_json "${patterns_json}" > "${assume_file}"
   inline_policy_json > "${policy_file}"
 
-  if AWS_PROFILE="${PROFILE}" aws iam get-role --role-name "${role_name}" >/dev/null 2>&1; then
+  if "${aws_cli[@]}" iam get-role --role-name "${role_name}" >/dev/null 2>&1; then
     echo "Updating role: ${role_name}"
-    AWS_PROFILE="${PROFILE}" aws iam update-assume-role-policy \
+    "${aws_cli[@]}" iam update-assume-role-policy \
       --role-name "${role_name}" \
       --policy-document "file://${assume_file}" >/dev/null
   else
     echo "Creating role: ${role_name}"
-    AWS_PROFILE="${PROFILE}" aws iam create-role \
+    "${aws_cli[@]}" iam create-role \
       --role-name "${role_name}" \
       --assume-role-policy-document "file://${assume_file}" >/dev/null
   fi
 
-  AWS_PROFILE="${PROFILE}" aws iam put-role-policy \
+  "${aws_cli[@]}" iam update-role \
+    --role-name "${role_name}" \
+    --max-session-duration 21600 >/dev/null
+
+  "${aws_cli[@]}" iam put-role-policy \
     --role-name "${role_name}" \
     --policy-name "${role_name}" \
     --policy-document "file://${policy_file}" >/dev/null
 
-  AWS_PROFILE="${PROFILE}" aws iam get-role --role-name "${role_name}" --query 'Role.Arn' --output text
+  "${aws_cli[@]}" iam get-role --role-name "${role_name}" --query 'Role.Arn' --output text
 }
 
 DEV_SUBS="$(
@@ -217,7 +295,7 @@ STAGING_SUBS="$(
   jq -cn \
     --arg repo "repo:${GITHUB_ORG}/${GITHUB_REPO}" \
     --arg repoLower "repo:${GITHUB_ORG_LOWER}/${GITHUB_REPO_LOWER}" \
-    '[ "\($repo):environment:staging", "\($repo):ref:refs/heads/develop", "\($repo):ref:refs/heads/main", "\($repoLower):environment:staging", "\($repoLower):ref:refs/heads/develop", "\($repoLower):ref:refs/heads/main" ] | unique'
+    '[ "\($repo):environment:staging", "\($repo):ref:refs/heads/develop", "\($repo):ref:refs/heads/main", "\($repo):ref:refs/heads/staging", "\($repoLower):environment:staging", "\($repoLower):ref:refs/heads/develop", "\($repoLower):ref:refs/heads/main", "\($repoLower):ref:refs/heads/staging" ] | unique'
 )"
 PROD_SUBS="$(
   jq -cn \
@@ -226,12 +304,30 @@ PROD_SUBS="$(
     '[ "\($repo):environment:prod", "\($repo):ref:refs/tags/v*", "\($repoLower):environment:prod", "\($repoLower):ref:refs/tags/v*" ] | unique'
 )"
 
-DEV_ARN="$(ensure_role remit-scout-gha-deploy-dev "${DEV_SUBS}")"
-STAGING_ARN="$(ensure_role remit-scout-gha-deploy-staging "${STAGING_SUBS}")"
-PROD_ARN="$(ensure_role remit-scout-gha-deploy-prod "${PROD_SUBS}")"
+DEV_ARN=""
+STAGING_ARN=""
+PROD_ARN=""
+
+if should_manage_env dev; then
+  DEV_ARN="$(ensure_role remit-scout-gha-deploy-dev "${DEV_SUBS}")"
+fi
+
+if should_manage_env staging; then
+  STAGING_ARN="$(ensure_role remit-scout-gha-deploy-staging "${STAGING_SUBS}")"
+fi
+
+if should_manage_env prod; then
+  PROD_ARN="$(ensure_role remit-scout-gha-deploy-prod "${PROD_SUBS}")"
+fi
 
 echo ""
 echo "✅ Done"
-echo "dev:     ${DEV_ARN}"
-echo "staging: ${STAGING_ARN}"
-echo "prod:    ${PROD_ARN}"
+if [ -n "${DEV_ARN}" ]; then
+  echo "dev:     ${DEV_ARN}"
+fi
+if [ -n "${STAGING_ARN}" ]; then
+  echo "staging: ${STAGING_ARN}"
+fi
+if [ -n "${PROD_ARN}" ]; then
+  echo "prod:    ${PROD_ARN}"
+fi

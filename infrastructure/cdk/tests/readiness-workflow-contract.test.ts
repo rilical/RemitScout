@@ -79,6 +79,13 @@ test('staging readiness records restored service evidence from the parsed servic
   )
 })
 
+test('staging readiness falls back to live ECS service discovery when staged ops-pause metadata is stale', () => {
+  assert.match(
+    readinessWorkflow,
+    /Resume staging operational services for parity evidence[\s\S]*aws ecs list-services[\s\S]*aws ecs describe-services[\s\S]*resolve_fallback_desired_count\(\)[\s\S]*effective_baseline_json/,
+  )
+})
+
 test('staging readiness applies candidate migrations inside staging ECS runtime', () => {
   assert.match(
     readinessWorkflow,

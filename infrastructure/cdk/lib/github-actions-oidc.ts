@@ -43,12 +43,19 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
 
   const account = Stack.of(scope).account
   const region = Stack.of(scope).region
+  const repoSubjects = Array.from(new Set([
+    `${repoOwner}/${repoName}`,
+    `${repoOwner.toLowerCase()}/${repoName.toLowerCase()}`,
+  ]))
+
   const buildDeployPolicy = (targetEnv: 'dev' | 'staging' | 'prod') => {
     const envPrefix = `remit-scout-${targetEnv}`
     const ecrRepositoryResource = `arn:aws:ecr:${region}:${account}:repository/remit-scout-backend-${targetEnv}`
     const s3FrontendBucketResource = `arn:aws:s3:::remit-scout-frontend-${targetEnv}*`
-    const stackResource = `arn:aws:cloudformation:${region}:${account}:stack/${envPrefix}*/*`
     const ssmResource = `arn:aws:ssm:${region}:${account}:parameter/remit-scout/${targetEnv}/*`
+    const eventRuleResource = `arn:aws:events:${region}:${account}:rule/${envPrefix}*`
+    const lambdaResource = `arn:aws:lambda:${region}:${account}:function:${envPrefix}*OpsPauseControllerFuncti*`
+    const secretResource = `arn:aws:secretsmanager:${region}:${account}:secret:*${targetEnv}*`
 
     return new PolicyDocument({
       statements: [
@@ -66,7 +73,7 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
             'cloudformation:CancelUpdateStack',
             'cloudformation:ContinueUpdateRollback',
           ],
-          resources: [stackResource],
+          resources: ['*'],
         }),
         new PolicyStatement({
           effect: Effect.ALLOW,
@@ -120,7 +127,10 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
         new PolicyStatement({
           effect: Effect.ALLOW,
           actions: [
+            'ecs:RegisterTaskDefinition',
+            'ecs:DeregisterTaskDefinition',
             'ecs:RunTask',
+            'ecs:ListServices',
             'ecs:DescribeTasks',
             'ecs:DescribeTaskDefinition',
             'ecs:ListTasks',
@@ -128,12 +138,7 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
             'ecs:DescribeServices',
             'ecs:UpdateService',
           ],
-          resources: [
-            `arn:aws:ecs:${region}:${account}:cluster/${envPrefix}`,
-            `arn:aws:ecs:${region}:${account}:service/${envPrefix}/*`,
-            `arn:aws:ecs:${region}:${account}:task-definition/${envPrefix}*`,
-            `arn:aws:ecs:${region}:${account}:task/${envPrefix}/*`,
-          ],
+          resources: ['*'],
         }),
         new PolicyStatement({
           effect: Effect.ALLOW,
@@ -153,11 +158,49 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
             `arn:aws:rds:${region}:${account}:cluster:${envPrefix}*`,
           ],
         }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: [
+            'secretsmanager:GetSecretValue',
+            'secretsmanager:DescribeSecret',
+          ],
+          resources: [secretResource],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ['events:ListRules'],
+          resources: ['*'],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ['events:EnableRule', 'events:DisableRule'],
+          resources: [eventRuleResource],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: [
+            'logs:DescribeLogGroups',
+            'logs:DescribeLogStreams',
+            'logs:GetLogEvents',
+            'logs:FilterLogEvents',
+          ],
+          resources: ['*'],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ['lambda:ListFunctions'],
+          resources: ['*'],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ['lambda:InvokeFunction'],
+          resources: [lambdaResource, `${lambdaResource}:*`],
+        }),
       ],
     })
   }
 
-  const makePrincipal = (refPattern: string) =>
+  const makePrincipal = (subjectPatterns: string[]) =>
     new FederatedPrincipal(
       provider.openIdConnectProviderArn,
       {
@@ -165,7 +208,9 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
           'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
         },
         StringLike: {
-          'token.actions.githubusercontent.com:sub': `repo:${repoOwner}/${repoName}:ref:${refPattern}`,
+          'token.actions.githubusercontent.com:sub': subjectPatterns.flatMap((subjectPattern) =>
+            repoSubjects.map((repoSubject) => `repo:${repoSubject}:${subjectPattern}`),
+          ),
         },
       },
       'sts:AssumeRoleWithWebIdentity',
@@ -175,24 +220,35 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
   new Role(scope, 'GithubActionsDeployDevRole', {
     roleName: 'remit-scout-gha-deploy-dev',
     description: `GitHub Actions deploy role (dev) for ${repoOwner}/${repoName}`,
-    assumedBy: makePrincipal('refs/heads/develop'),
+    assumedBy: makePrincipal([
+      'environment:dev',
+      'ref:refs/heads/develop',
+    ]),
     inlinePolicies: { DeployPermissions: buildDeployPolicy('dev') },
-    maxSessionDuration: Duration.hours(3),
+    maxSessionDuration: Duration.hours(6),
   })
 
   new Role(scope, 'GithubActionsDeployStagingRole', {
     roleName: 'remit-scout-gha-deploy-staging',
     description: `GitHub Actions deploy role (staging) for ${repoOwner}/${repoName}`,
-    assumedBy: makePrincipal('refs/heads/staging'),
+    assumedBy: makePrincipal([
+      'environment:staging',
+      'ref:refs/heads/develop',
+      'ref:refs/heads/main',
+      'ref:refs/heads/staging',
+    ]),
     inlinePolicies: { DeployPermissions: buildDeployPolicy('staging') },
-    maxSessionDuration: Duration.hours(3),
+    maxSessionDuration: Duration.hours(6),
   })
 
   new Role(scope, 'GithubActionsDeployProdRole', {
     roleName: 'remit-scout-gha-deploy-prod',
     description: `GitHub Actions deploy role (prod) for ${repoOwner}/${repoName}`,
-    assumedBy: makePrincipal('refs/tags/v*.*.*'),
+    assumedBy: makePrincipal([
+      'environment:prod',
+      'ref:refs/tags/v*.*.*',
+    ]),
     inlinePolicies: { DeployPermissions: buildDeployPolicy('prod') },
-    maxSessionDuration: Duration.hours(3),
+    maxSessionDuration: Duration.hours(6),
   })
 }

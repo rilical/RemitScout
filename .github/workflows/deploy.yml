@@ -1493,34 +1493,62 @@ jobs:
           FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
         run: |
           set -euo pipefail
-          pnpm -C infrastructure/cdk exec -- cdk deploy \
-            -c env="${ENV_NAME}" \
-            -c backendImageTag="${IMAGE_TAG}" \
-            -c importExistingBackendRepository=true \
-            -c minimalInfra=false \
-            -c enableDbProxy=false \
-            -c enableCostGuardrails=false \
-            -c pinpointEnabled=false \
-            -c enableWaf=false \
-            -c planeBDisableTier1=false \
-            -c planeBB2cRefreshServiceEnabled=true \
-            -c planeBFxRateRefreshServiceEnabled=true \
-            -c planeBOpsAlertsMode=off \
-            -c planeBOpsAlertsDesiredCount=0 \
-            -c agentOrchestratorServiceEnabled=false \
-            -c agentOrchestratorDesiredCount=0 \
-            -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
-            -c planeBIngestFanoutMode=queue \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
-            -c quoteRefreshQueueMode=queue \
-            -c fxRateRefreshQueueMode=queue \
-            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
-            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
-            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
-            --require-approval never
+          cluster="remit-scout-${ENV_NAME}"
+          max_deploy_seconds=$((45 * 60))
+          set +e
+          timeout --preserve-status --kill-after=60s "${max_deploy_seconds}s" \
+            pnpm -C infrastructure/cdk exec -- cdk deploy \
+              -c env="${ENV_NAME}" \
+              -c backendImageTag="${IMAGE_TAG}" \
+              -c importExistingBackendRepository=true \
+              -c minimalInfra=false \
+              -c enableDbProxy=false \
+              -c enableCostGuardrails=false \
+              -c pinpointEnabled=false \
+              -c enableWaf=false \
+              -c planeBDisableTier1=false \
+              -c planeBB2cRefreshServiceEnabled=true \
+              -c planeBFxRateRefreshServiceEnabled=true \
+              -c planeBOpsAlertsMode=off \
+              -c planeBOpsAlertsDesiredCount=0 \
+              -c agentOrchestratorServiceEnabled=false \
+              -c agentOrchestratorDesiredCount=0 \
+              -c planeBIngestDesiredCount=1 \
+              -c planeBB2cRefreshDesiredCount=1 \
+              -c planeBFxRateRefreshDesiredCount=1 \
+              -c planeBIngestFanoutMode=queue \
+              -c planeBIngestFanoutTier1DesiredCount=1 \
+              -c planeBIngestFanoutTier2DesiredCount=1 \
+              -c quoteRefreshQueueMode=queue \
+              -c fxRateRefreshQueueMode=queue \
+              -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
+              -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
+              -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
+              --require-approval never
+          deploy_exit=$?
+          set -e
+
+          if [ "${deploy_exit}" -eq 0 ]; then
+            exit 0
+          fi
+
+          if [ "${deploy_exit}" -eq 124 ]; then
+            echo "::error::Staging CDK deploy timed out after ${max_deploy_seconds}s."
+          fi
+
+          service_arns="$(aws ecs list-services --cluster "${cluster}" --query 'serviceArns' --output text 2>/dev/null || true)"
+          if [ -n "${service_arns}" ] && [ "${service_arns}" != "None" ]; then
+            echo "ECS rollout diagnostics:"
+            aws ecs describe-services --cluster "${cluster}" --services ${service_arns} --output json \
+              | jq -r '
+                .services[]
+                | select(any(.deployments[]?; .status == "PRIMARY"))
+                | "SERVICE\t\(.serviceName)\tPRIMARY\t\((.deployments[] | select(.status == "PRIMARY") | .rolloutState // "UNKNOWN"))\tRUNNING\t\((.deployments[] | select(.status == "PRIMARY") | .runningCount // 0))/\((.deployments[] | select(.status == "PRIMARY") | .desiredCount // 0))",
+                  (.events[:5][]? | "EVENT\t\(.serviceName)\t\(.message)")
+              '
+          fi
+
+          exit "${deploy_exit}"
 
       - name: Run Migrations (staging)
         shell: bash

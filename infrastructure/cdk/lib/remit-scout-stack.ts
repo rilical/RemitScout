@@ -1738,6 +1738,8 @@ export class RemitScoutStack extends Stack {
         ? (normalizationWorkerDesiredCount ?? 0)
         : 0
     const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
+    const planeABaseline = 1
+    const planeCBaseline = 1
 
     const managedEcsServiceNames: string[] = []
     const managedEcsBaselines: Record<string, number> = {}
@@ -1748,6 +1750,8 @@ export class RemitScoutStack extends Stack {
       managedEcsBaselines[service.serviceName] = baseline
     }
 
+    addManagedService(ecsServices.planeAService, planeABaseline)
+    addManagedService(ecsServices.planeCService, planeCBaseline)
     addManagedService(ecsServices.planeBIngestService, planeBIngestBaseline)
     addManagedService(ecsServices.b2cRefreshService, b2cRefreshBaseline)
     addManagedService(ecsServices.fxRateRefreshService, fxRateRefreshBaseline)

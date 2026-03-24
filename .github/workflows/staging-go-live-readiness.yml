@@ -805,11 +805,88 @@ jobs:
             | unique
           ' > "${resolved_services_path}"
 
+          live_services_path=".smoke-artifacts/staging-live-service-names.json"
+          live_baseline_path=".smoke-artifacts/staging-live-service-baseline.json"
+          printf '[]' > "${live_services_path}"
+          printf '{}' > "${live_baseline_path}"
+
+          service_arns="$(aws ecs list-services --region "${AWS_REGION}" --cluster "${cluster}" --query 'serviceArns' --output text 2>/dev/null || true)"
+          if [ -n "${service_arns}" ] && [ "${service_arns}" != "None" ]; then
+            live_services_json_path=".smoke-artifacts/staging-live-services.json"
+            aws ecs describe-services \
+              --region "${AWS_REGION}" \
+              --cluster "${cluster}" \
+              --services ${service_arns} \
+              --output json > "${live_services_json_path}"
+            jq -c '[.services[]? | .serviceName // empty | select(length > 0)] | unique' \
+              "${live_services_json_path}" > "${live_services_path}"
+            jq -c '
+              reduce (.services[]? | select(.serviceName != null)) as $service ({};
+                .[$service.serviceName] = ($service.desiredCount // 0)
+              )
+            ' "${live_services_json_path}" > "${live_baseline_path}"
+          fi
+
+          jq -cn --slurpfile configured "${resolved_services_path}" --slurpfile live "${live_services_path}" '
+            (
+              ($configured[0] // [])
+              + ($live[0] // [])
+            )
+            | map(select(type == "string" and length > 0))
+            | unique
+          ' > "${resolved_services_path}"
+
           mapfile -t service_names < <(jq -r '.[]? | strings | select(length > 0)' "${resolved_services_path}")
           if [ "${#service_names[@]}" -eq 0 ]; then
             echo "::error::No staging ECS services were resolved from ${ecs_baseline_param} or ${ecs_services_param}"
             exit 1
           fi
+
+          resolve_fallback_desired_count() {
+            case "$1" in
+              *PlaneAService*) echo 1 ;;
+              *PlaneCService*) echo 1 ;;
+              *PlaneBIngestService*) echo 1 ;;
+              *B2cRefreshWorkerService*) echo 1 ;;
+              *FxRateRefreshWorkerService*) echo 1 ;;
+              *IngestFanoutTier1WorkerService*) echo 1 ;;
+              *IngestFanoutTier2WorkerService*) echo 1 ;;
+              *GoldLiveWorkerService*) echo 1 ;;
+              *NotificationsQueueWorkerService*) echo 1 ;;
+              *OpsAlertsQueueWorkerService*) echo 0 ;;
+              *AlertEvaluationWorkerService*) echo 1 ;;
+              *ExportWorkerService*) echo 1 ;;
+              *AgentOrchestratorService*) echo 0 ;;
+              *StressResponderService*) echo 1 ;;
+              *NormalizationWorkerService*) echo 1 ;;
+              *) echo 0 ;;
+            esac
+          }
+
+          configured_baseline_json="${baseline_json}"
+          live_baseline_json="$(cat "${live_baseline_path}")"
+          effective_baseline_json="${baseline_json}"
+          for service_name in "${service_names[@]}"; do
+            configured_desired="$(jq -r --arg service_name "${service_name}" '.[$service_name] // empty' <<<"${configured_baseline_json}")"
+            if [[ "${configured_desired}" =~ ^[0-9]+$ ]]; then
+              continue
+            fi
+
+            live_desired="$(jq -r --arg service_name "${service_name}" '.[$service_name] // empty' <<<"${live_baseline_json}")"
+            if [[ "${live_desired}" =~ ^[0-9]+$ ]] && [ "${live_desired}" -gt 0 ]; then
+              desired_count="${live_desired}"
+            else
+              desired_count="$(resolve_fallback_desired_count "${service_name}")"
+            fi
+
+            effective_baseline_json="$(
+              jq -c \
+                --arg service_name "${service_name}" \
+                --argjson desired_count "${desired_count}" \
+                '. + {($service_name): $desired_count}' <<<"${effective_baseline_json}"
+            )"
+          done
+          baseline_json="${effective_baseline_json}"
 
           for service_name in "${service_names[@]}"; do
             desired_count="$(jq -r --arg service_name "${service_name}" '.[$service_name] // 0' <<<"${baseline_json}")"
