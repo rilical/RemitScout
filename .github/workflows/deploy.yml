@@ -1,9 +1,6 @@
 name: cd/deploy
 
 on:
-  workflow_run:
-    workflows: ['ci/main']
-    types: [completed]
   push:
     tags:
       - 'v[0-9]*.[0-9]*.[0-9]*'
@@ -40,8 +37,7 @@ permissions:
 jobs:
   deploy-dev:
     if: |
-      (github.event_name == 'workflow_dispatch' && inputs.env == 'dev') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run != null && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop')
+      github.event_name == 'workflow_dispatch' && inputs.env == 'dev'
     concurrency:
       group: deploy-dev
       cancel-in-progress: false
@@ -64,7 +60,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
+          REQUESTED_REF: ${{ inputs.ref != '' && inputs.ref || github.sha }}
         run: |
           set -euo pipefail
           requested="$(echo "${REQUESTED_REF}" | xargs)"
@@ -801,7 +797,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
+          REQUESTED_REF: ${{ inputs.ref != '' && inputs.ref || github.sha }}
         run: |
           set -euo pipefail
           requested="$(echo "${REQUESTED_REF}" | xargs)"
@@ -2164,7 +2160,7 @@ jobs:
           set -euo pipefail
           dispatch_ref="${{ steps.resolve_ref.outputs.requested_ref }}"
           if [[ "${dispatch_ref}" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
-            dispatch_ref="${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}"
+            dispatch_ref="${GITHUB_REF_NAME:-staging}"
           fi
           if [ -z "${dispatch_ref}" ] || [ "${dispatch_ref}" = "HEAD" ]; then
             dispatch_ref="${GITHUB_REF_NAME:-staging}"

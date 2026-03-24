@@ -4,8 +4,8 @@ Feedback source: chat transcript.
 
 ## What this pipeline does
 - PRs run change-based CI (fast).
-- `develop` deploys **dev** (paused by default for cost).
-- `main` deploys **staging** (full deploy: infra + backend image + migrations + frontend + smoke).
+- `deploy.yml` is manual-dispatch only for `dev` and `staging`, so we can validate locally before spending GitHub runner time.
+- `staging` deploys are exact-SHA promotions gated by a successful `ci/main` run and `staging-go-live-readiness`.
 - Prod is intentionally **not** wired in this repo right now.
 
 ## Required GitHub Environments

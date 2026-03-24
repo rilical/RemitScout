@@ -2,7 +2,7 @@ name: ops/uptime-synthetic
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       target_url:
@@ -10,13 +10,17 @@ on:
         required: false
         type: string
 
+concurrency:
+  group: ops-uptime-synthetic
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   uptime-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 3
     steps:
       - name: Resolve target
         id: target
