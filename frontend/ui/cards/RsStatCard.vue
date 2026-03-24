@@ -147,7 +147,10 @@ const sparklinePath = computed(() => {
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
             <slot name="icon">
-              <span v-if="icon" class="text-base">{{ icon }}</span>
+              <span
+v-if="icon"
+class="text-base"
+>{{ icon }}</span>
             </slot>
             <span :class="labelClass">{{ label }}</span>
           </div>

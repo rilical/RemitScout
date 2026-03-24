@@ -68,7 +68,11 @@
           </div>
         </div>
 
-        <ul v-else class="divide-y" :class="variant === 'terminal' ? 'divide-neutral-700' : 'divide-neutral-100'">
+        <ul
+v-else
+class="divide-y"
+:class="variant === 'terminal' ? 'divide-neutral-700' : 'divide-neutral-100'"
+>
           <li
             v-for="(row, index) in top5Rows"
             :key="row.provider"
@@ -142,7 +146,10 @@
           >
             Leader This Period
           </p>
-          <div v-if="leaderRow" class="flex items-center gap-3">
+          <div
+v-if="leaderRow"
+class="flex items-center gap-3"
+>
             <img
               :src="getProviderLogoPath(leaderRow.provider)"
               :alt="leaderRow.provider"
@@ -156,7 +163,9 @@
               <p
                 class="text-body font-semibold truncate"
                 :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
-              >{{ leaderRow.provider }}</p>
+              >
+{{ leaderRow.provider }}
+</p>
               <p
                 class="text-body-sm mt-0.5"
                 :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
@@ -357,8 +366,8 @@ import { usePulseDataSafety } from '~/composables/usePulseDataSafety'
 import {
   getProviderBenchmarkingData,
   getChartsBatch,
-} from '~/lib/pulseApi'
-import type { PulseChartsBatchItem } from '~/lib/pulseApi'
+} from '~/domains/pulse/infrastructure/pulseApi'
+import type { PulseChartsBatchItem } from '~/domains/pulse/infrastructure/pulseApi'
 import {
   buildChartOption,
   buildLeaderChangeFrequencyOption,
@@ -502,9 +511,9 @@ const isHeatmapAvailable = computed(() =>
 
 const winnerTimelinePoints = computed(() => {
   const item = providerWinnerChart.value
-  if (!item?.chart?.series?.length) return [] as Array<{ timestamp: number; provider: string; color: string; detail?: string }>
+  if (!item?.chart?.series?.length) return [] as Array<{ timestamp: number, provider: string, color: string, detail?: string }>
 
-  const timeline = new Map<number, { timestamp: number; provider: string; color: string; detail?: string }>()
+  const timeline = new Map<number, { timestamp: number, provider: string, color: string, detail?: string }>()
   for (const series of item.chart.series) {
     for (const point of series.points) {
       if ((point.v ?? 0) < 0.5) continue
@@ -540,10 +549,10 @@ const leaderChangePoints = computed(() =>
 const heatmapCells = computed(() => {
   const providers = heatmapProviders.value
   const timeline = winnerTimelinePoints.value
-  if (!providers.length || !timeline.length) return [] as Array<{ timestamp: number; provider: string; value: number; detail?: string }>
+  if (!providers.length || !timeline.length) return [] as Array<{ timestamp: number, provider: string, value: number, detail?: string }>
 
-  return timeline.flatMap((point) =>
-    providers.map((provider) => ({
+  return timeline.flatMap(point =>
+    providers.map(provider => ({
       timestamp: point.timestamp,
       provider,
       value: provider === point.provider ? 1 : 0,

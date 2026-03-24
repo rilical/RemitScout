@@ -193,14 +193,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { PulseDensity, PulseFilters } from '~/types/pulse'
-import type { CorridorOption } from '~/types/pulse'
+import type { PulseDensity, PulseFilters, CorridorOption, ChartSeries } from '~/types/pulse'
 import { usePulseStore, type PulseCorridor } from '~/stores/pulse'
 import type { BankComparisonData, CostTrendData, ProviderWithTrueCost } from '~/types/remit'
 import { getProviderLogoPath } from '~/composables/useProviderLogo'
-import { getBankComparisonData, getCostTrendData, getTrueCostBreakdown } from '~/lib/pulseApi'
+import { getBankComparisonData, getCostTrendData, getTrueCostBreakdown } from '~/domains/pulse/infrastructure/pulseApi'
 import { buildBankVsSpecialistTrendOption } from '~/lib/pulseChartBuilders'
-import type { ChartSeries } from '~/types/pulse'
 import RsStatCard from '~/ui/cards/RsStatCard.vue'
 import ChartCard from '~/ui/charts/ChartCard.vue'
 import RsChart from '~/ui/charts/RsChart.vue'

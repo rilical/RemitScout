@@ -221,9 +221,11 @@ const loadFactors = async () => {
   errorMessage.value = null
   try {
     factors.value = await listMfaFactors()
-  } catch (error: unknown) {
+  }
+ catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to load MFA factors. Please try again.'
-  } finally {
+  }
+ finally {
     loading.value = false
   }
 }

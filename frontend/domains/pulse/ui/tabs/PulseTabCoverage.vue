@@ -357,15 +357,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import type { EChartsOption } from 'echarts'
-import type { PulseDensity, PulseFilters, MethodCoverageRow, CorridorOption } from '~/types/pulse'
-import type { PulseCoverageSummary } from '~/types/pulse'
-import type { PulseChartsBatchItem, PulseCoverageByCurrencyRow } from '~/lib/pulseApi'
+import type { PulseDensity, PulseFilters, MethodCoverageRow, CorridorOption, PulseCoverageSummary } from '~/types/pulse'
+import type { PulseChartsBatchItem, PulseCoverageByCurrencyRow } from '~/domains/pulse/infrastructure/pulseApi'
 import {
   getPulseCoverageSummary,
   getMethodCoverage,
   getChartsBatch,
   getCoverageByCurrency,
-} from '~/lib/pulseApi'
+} from '~/domains/pulse/infrastructure/pulseApi'
 import { buildChartOption } from '~/lib/pulseChartBuilders'
 import { getProviderLogoPath } from '~/composables/useProviderLogo'
 import RsSectionHeader from '~/ui/layout/RsSectionHeader.vue'

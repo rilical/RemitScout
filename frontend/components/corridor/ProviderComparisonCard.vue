@@ -8,8 +8,18 @@
       class="text-body-sm flex items-center gap-2 px-5 py-3 font-semibold text-white sm:px-6"
       :class="topRibbonClasses"
     >
-      <svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      <svg
+class="h-4 w-4 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+        <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M5 13l4 4L19 7"
+/>
       </svg>
       <span>{{ highlightLabel }}</span>
     </div>
@@ -146,7 +156,10 @@
           <p class="text-body-lg mt-2 font-bold text-rs-fg">
             {{ row.rate }}
           </p>
-          <p class="text-body-sm mt-3 font-medium" :class="rateComparisonClasses">
+          <p
+class="text-body-sm mt-3 font-medium"
+:class="rateComparisonClasses"
+>
             {{ rateComparisonText }}
           </p>
         </section>
@@ -198,7 +211,10 @@
               </div>
             </li>
           </ul>
-          <p v-else class="text-body-sm mt-3 leading-relaxed text-rs-muted">
+          <p
+v-else
+class="text-body-sm mt-3 leading-relaxed text-rs-muted"
+>
             Check provider checkout for available payout methods.
           </p>
         </section>
@@ -211,8 +227,18 @@
         @click="$emit('outbound')"
       >
         <span>Go to {{ row.provider }}</span>
-        <svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        <svg
+class="h-4 w-4 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+          <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
         </svg>
       </button>
     </div>
@@ -220,181 +246,181 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import ScoreBadge from '~/components/shared/ScoreBadge.vue';
-import ProviderLogo from '~/components/shared/ProviderLogo.vue';
-import type { TrueCostBreakdown } from '~/types/remit';
+import { computed } from 'vue'
+import ScoreBadge from '~/components/shared/ScoreBadge.vue'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+import type { TrueCostBreakdown } from '~/types/remit'
 
 type PromoInfo = {
-  fee: number;
-  rate: number;
-  headline: string;
-  details: string[];
-  newCustomersOnly: boolean;
-};
+  fee: number
+  rate: number
+  headline: string
+  details: string[]
+  newCustomersOnly: boolean
+}
 
-type MethodIconName = 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card' | 'generic';
+type MethodIconName = 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card' | 'generic'
 
 type ProviderComparisonCardRow = {
-  provider: string;
-  score: string;
-  recipientGets: string;
-  rate: string;
-  fee: string;
-  speed: string;
-  speedNote: string;
-  payIn: string;
-  notes: string;
-  warning?: string;
-  isStale?: boolean;
-  hasPromo?: boolean;
-  methods?: string[];
-  promoInfo?: PromoInfo | null;
-  _slug: string | null;
-  _trueCost: TrueCostBreakdown;
-  _rateComparison: { text: string; isBetter: boolean; isWorse: boolean };
-  _recipientGapToBest: number;
-  _staleLabel: string;
-  _methodLabels: string[];
-};
+  provider: string
+  score: string
+  recipientGets: string
+  rate: string
+  fee: string
+  speed: string
+  speedNote: string
+  payIn: string
+  notes: string
+  warning?: string
+  isStale?: boolean
+  hasPromo?: boolean
+  methods?: string[]
+  promoInfo?: PromoInfo | null
+  _slug: string | null
+  _trueCost: TrueCostBreakdown
+  _rateComparison: { text: string, isBetter: boolean, isWorse: boolean }
+  _recipientGapToBest: number
+  _staleLabel: string
+  _methodLabels: string[]
+}
 
 interface Props {
-  row: ProviderComparisonCardRow;
-  isTopRanked?: boolean;
-  highlightLabel?: string;
-  fromCurrencyCode: string;
-  toCurrencyCode: string;
-  midMarketRate?: number | null;
+  row: ProviderComparisonCardRow
+  isTopRanked?: boolean
+  highlightLabel?: string
+  fromCurrencyCode: string
+  toCurrencyCode: string
+  midMarketRate?: number | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isTopRanked: false,
   highlightLabel: '',
   midMarketRate: null,
-});
+})
 
 defineEmits<{
-  openScore: [];
-  outbound: [];
-}>();
+  openScore: []
+  outbound: []
+}>()
 
-const { formatMoney } = useRemittanceApi();
+const { formatMoney } = useRemittanceApi()
 
 const hasMidMarketComparison = computed(() =>
-  Boolean(props.midMarketRate && Number.isFinite(props.row._trueCost.providerRate))
-);
+  Boolean(props.midMarketRate && Number.isFinite(props.row._trueCost.providerRate)),
+)
 
 const cardClasses = computed(() =>
-  props.isTopRanked ? 'border-brand-200 ring-1 ring-brand-100' : 'border-rs-border'
-);
+  props.isTopRanked ? 'border-brand-200 ring-1 ring-brand-100' : 'border-rs-border',
+)
 
-const topRibbonClasses = computed(() => (props.isTopRanked ? 'bg-brand-600' : 'bg-neutral-900'));
+const topRibbonClasses = computed(() => (props.isTopRanked ? 'bg-brand-600' : 'bg-neutral-900'))
 
 const recipientPanelClasses = computed(() =>
   props.isTopRanked
     ? 'border-brand-500 bg-brand-600 shadow-[0_18px_36px_-24px_rgba(37,99,235,0.9)]'
-    : 'border-neutral-900 bg-neutral-900 shadow-[0_18px_36px_-24px_rgba(15,23,42,0.9)]'
-);
+    : 'border-neutral-900 bg-neutral-900 shadow-[0_18px_36px_-24px_rgba(15,23,42,0.9)]',
+)
 
 const recipientDeltaState = computed<'high' | 'same' | 'low'>(() => {
-  if (props.row._recipientGapToBest <= 0.009) return 'high';
-  if (props.row._recipientGapToBest < 1) return 'same';
-  return 'low';
-});
+  if (props.row._recipientGapToBest <= 0.009) return 'high'
+  if (props.row._recipientGapToBest < 1) return 'same'
+  return 'low'
+})
 
 const recipientDeltaLabel = computed(() => {
-  if (recipientDeltaState.value === 'high') return 'Highest recipient outcome';
-  if (recipientDeltaState.value === 'same') return 'In line with the best result';
-  return `${formatRecipientAmount(props.row._recipientGapToBest)} less than best`;
-});
+  if (recipientDeltaState.value === 'high') return 'Highest recipient outcome'
+  if (recipientDeltaState.value === 'same') return 'In line with the best result'
+  return `${formatRecipientAmount(props.row._recipientGapToBest)} less than best`
+})
 
 const recipientAmountClasses = computed(() => {
-  const length = props.row.recipientGets.length;
-  if (length >= 18) return 'text-[clamp(1.6rem,2vw,1.9rem)]';
-  if (length >= 15) return 'text-[clamp(1.8rem,2.25vw,2.1rem)]';
-  return 'text-[clamp(1.95rem,2.6vw,2.3rem)]';
-});
+  const length = props.row.recipientGets.length
+  if (length >= 18) return 'text-[clamp(1.6rem,2vw,1.9rem)]'
+  if (length >= 15) return 'text-[clamp(1.8rem,2.25vw,2.1rem)]'
+  return 'text-[clamp(1.95rem,2.6vw,2.3rem)]'
+})
 
 const rateComparisonText = computed(() => {
-  if (props.row._rateComparison.text) return props.row._rateComparison.text;
+  if (props.row._rateComparison.text) return props.row._rateComparison.text
   return hasMidMarketComparison.value
     ? 'Rate comparison unavailable'
-    : 'Mid-market comparison unavailable';
-});
+    : 'Mid-market comparison unavailable'
+})
 
 const rateComparisonClasses = computed(() => {
-  if (props.row._rateComparison.isBetter) return 'text-success-700';
-  if (props.row._rateComparison.isWorse) return 'text-danger-700';
-  return 'text-rs-muted';
-});
+  if (props.row._rateComparison.isBetter) return 'text-success-700'
+  if (props.row._rateComparison.isWorse) return 'text-danger-700'
+  return 'text-rs-muted'
+})
 
 const totalCostDisplay = computed(() => {
-  if (!hasMidMarketComparison.value) return props.row.fee;
-  return formatMoney(props.row._trueCost.totalCost, props.fromCurrencyCode);
-});
+  if (!hasMidMarketComparison.value) return props.row.fee
+  return formatMoney(props.row._trueCost.totalCost, props.fromCurrencyCode)
+})
 
 const totalCostHelper = computed(() => {
   if (!hasMidMarketComparison.value) {
-    return 'Transfer fee only. Mid-market markup is unavailable for this quote.';
+    return 'Transfer fee only. Mid-market markup is unavailable for this quote.'
   }
 
-  return `${formatMoney(props.row._trueCost.upfrontFee, props.fromCurrencyCode)} fee · ${formatMoney(props.row._trueCost.hiddenMarkup, props.fromCurrencyCode)} FX markup`;
-});
+  return `${formatMoney(props.row._trueCost.upfrontFee, props.fromCurrencyCode)} fee · ${formatMoney(props.row._trueCost.hiddenMarkup, props.fromCurrencyCode)} FX markup`
+})
 
 const methodLabels = computed(() => {
-  if (props.row._methodLabels.length) return props.row._methodLabels;
-  return props.row.payIn ? [props.row.payIn] : [];
-});
+  if (props.row._methodLabels.length) return props.row._methodLabels
+  return props.row.payIn ? [props.row.payIn] : []
+})
 
 const methodItems = computed(() =>
   methodLabels.value.map(label => ({
     label,
     icon: getMethodIconName(label),
-  }))
-);
+  })),
+)
 
 const ctaClasses = computed(() =>
-  props.isTopRanked ? 'bg-brand-600 hover:bg-brand-700' : 'bg-neutral-900 hover:bg-neutral-800'
-);
+  props.isTopRanked ? 'bg-brand-600 hover:bg-brand-700' : 'bg-neutral-900 hover:bg-neutral-800',
+)
 
 function formatRecipientAmount(value: number) {
   return `${new Intl.NumberFormat('en-US', {
     minimumFractionDigits: value % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
-  }).format(value)} ${props.toCurrencyCode}`;
+  }).format(value)} ${props.toCurrencyCode}`
 }
 
 function getMethodIconName(label: string): MethodIconName {
-  const normalized = label.toLowerCase();
+  const normalized = label.toLowerCase()
 
-  if (normalized.includes('bank')) return 'bank';
-  if (normalized.includes('cash')) return 'cash';
-  if (normalized.includes('wallet') || normalized.includes('mobile')) return 'wallet';
-  if (normalized.includes('airtime')) return 'airtime';
-  if (normalized.includes('home')) return 'home';
-  if (normalized.includes('card')) return 'card';
-  return 'generic';
+  if (normalized.includes('bank')) return 'bank'
+  if (normalized.includes('cash')) return 'cash'
+  if (normalized.includes('wallet') || normalized.includes('mobile')) return 'wallet'
+  if (normalized.includes('airtime')) return 'airtime'
+  if (normalized.includes('home')) return 'home'
+  if (normalized.includes('card')) return 'card'
+  return 'generic'
 }
 
 function getMethodIconPath(icon: MethodIconName) {
   if (icon === 'bank') {
-    return 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4';
+    return 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
   }
   if (icon === 'cash') {
-    return 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z';
+    return 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'
   }
   if (icon === 'wallet') {
-    return 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z';
+    return 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z'
   }
   if (icon === 'airtime') {
-    return 'M8 21h8a2 2 0 002-2V6a2 2 0 00-2-2H8a2 2 0 00-2 2v13a2 2 0 002 2zM12 17h.01M7 5h10';
+    return 'M8 21h8a2 2 0 002-2V6a2 2 0 00-2-2H8a2 2 0 00-2 2v13a2 2 0 002 2zM12 17h.01M7 5h10'
   }
   if (icon === 'home') {
-    return 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z';
+    return 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z'
   }
   if (icon === 'card') {
-    return 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z';
+    return 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
   }
-  return 'M12 4v16m8-8H4';
+  return 'M12 4v16m8-8H4'
 }
 </script>

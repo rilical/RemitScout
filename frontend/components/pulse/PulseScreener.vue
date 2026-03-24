@@ -275,7 +275,10 @@ class="text-brand-400"
                 :title="pinnedSet.has(row.corridorId) ? 'Unpin corridor' : 'Pin corridor'"
                 @click="handlePinToggle($event, row)"
               >
-                <Icon name="bookmark" :size="14" />
+                <Icon
+name="bookmark"
+:size="14"
+/>
               </button>
               <span
                 class="inline-flex items-center rounded-lg px-2.5 py-1 text-label"

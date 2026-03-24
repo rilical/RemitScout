@@ -2,7 +2,7 @@ import { ref, watch, type Ref } from 'vue'
 
 export function useNumberTween(
   target: Ref<number>,
-  options?: { duration?: number; easing?: (t: number) => number }
+  options?: { duration?: number, easing?: (t: number) => number },
 ) {
   const display = ref(0)
   const duration = options?.duration ?? 800
@@ -24,7 +24,7 @@ export function useNumberTween(
 
       requestAnimationFrame(tick)
     },
-    { immediate: true }
+    { immediate: true },
   )
 
   return display

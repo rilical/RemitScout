@@ -21,7 +21,13 @@
               <path d="M44 20c6 6 6 18 0 24" />
               <path d="M12 12c-10 10-10 30 0 40" />
               <path d="M52 12c10 10 10 30 0 40" />
-              <circle cx="32" cy="32" r="6" fill="currentColor" stroke="none" />
+              <circle
+cx="32"
+cy="32"
+r="6"
+fill="currentColor"
+stroke="none"
+/>
             </svg>
             <span>Remit-Scout </span>
             <span class="text-brand-500">Pulse</span>
@@ -60,7 +66,7 @@
             store.activeTab === tab.id
               ? 'bg-brand-600 text-white shadow-sm'
               : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900',
-            'whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-colors'
+            'whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-colors',
           ]"
           @click="store.setActiveTab(tab.id)"
         >
@@ -102,8 +108,7 @@ import { usePulseTimeframes } from '~/composables/usePulseTimeframes'
 import { getVisibleTabs } from '~/lib/pulseTabs'
 import type { PulseTab } from '~/lib/pulseTabs'
 import { getCorridors } from '~/domains/pulse/infrastructure/pulseApi'
-import type { CorridorOption } from '~/types/pulse'
-import type { PulseDensity } from '~/types/pulse'
+import type { CorridorOption, PulseDensity } from '~/types/pulse'
 
 // ----- Constants -----
 
@@ -122,12 +127,12 @@ const route = useRoute()
 const visibleTabs = computed(() => getVisibleTabs(pulseLevel.value))
 
 const TAB_COMPONENTS: Record<PulseTab, ReturnType<typeof defineAsyncComponent>> = {
-  snapshot: defineAsyncComponent(() => import('./tabs/PulseTabSnapshot.vue')),
-  dispersion: defineAsyncComponent(() => import('./tabs/PulseTabDispersion.vue')),
-  competition: defineAsyncComponent(() => import('./tabs/PulseTabCompetition.vue')),
+  'snapshot': defineAsyncComponent(() => import('./tabs/PulseTabSnapshot.vue')),
+  'dispersion': defineAsyncComponent(() => import('./tabs/PulseTabDispersion.vue')),
+  'competition': defineAsyncComponent(() => import('./tabs/PulseTabCompetition.vue')),
   'bank-gap': defineAsyncComponent(() => import('./tabs/PulseTabBankGap.vue')),
-  indices: defineAsyncComponent(() => import('./tabs/PulseTabIndices.vue')),
-  coverage: defineAsyncComponent(() => import('./tabs/PulseTabCoverage.vue')),
+  'indices': defineAsyncComponent(() => import('./tabs/PulseTabIndices.vue')),
+  'coverage': defineAsyncComponent(() => import('./tabs/PulseTabCoverage.vue')),
 }
 
 const activeTabComponent = computed(() => TAB_COMPONENTS[store.activeTab])

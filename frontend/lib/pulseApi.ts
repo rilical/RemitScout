@@ -723,9 +723,9 @@ export interface IndicesHeadlineData {
   amountBucket?: number
   methodProfile?: string
   methodologyVersion?: string
-  teer: { value: number; delta7d: number; delta30d: number; confidence: string }
-  rci: { value: number; delta7d: number; delta30d: number }
-  rvi: { value: number; delta7d: number; delta30d: number }
+  teer: { value: number, delta7d: number, delta30d: number, confidence: string }
+  rci: { value: number, delta7d: number, delta30d: number }
+  rvi: { value: number, delta7d: number, delta30d: number }
   lastUpdated: string | null
 }
 

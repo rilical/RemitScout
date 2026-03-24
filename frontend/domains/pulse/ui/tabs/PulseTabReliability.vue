@@ -2,12 +2,21 @@
   <div class="space-y-6">
     <div :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'">
       <h2 class="text-h3 font-bold">Reliability</h2>
-      <p :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-600'" class="text-body-sm mt-1">
+      <p
+:class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-600'"
+class="text-body-sm mt-1"
+>
         Provider uptime and data quality metrics
       </p>
     </div>
-    <div :class="variant === 'terminal' ? 'card-surface' : 'rounded-xl border border-neutral-200 bg-white'" class="p-8 text-center">
-      <p :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'" class="text-body-sm">
+    <div
+:class="variant === 'terminal' ? 'card-surface' : 'rounded-xl border border-neutral-200 bg-white'"
+class="p-8 text-center"
+>
+      <p
+:class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
+class="text-body-sm"
+>
         This tab is being redesigned.
       </p>
     </div>

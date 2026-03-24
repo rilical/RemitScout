@@ -1,5 +1,8 @@
 <template>
-  <div v-if="isValidCorridor" class="min-h-screen bg-neutral-50">
+  <div
+v-if="isValidCorridor"
+class="min-h-screen bg-neutral-50"
+>
     <!-- Corridor Decision Header -->
     <section class="relative overflow-hidden bg-neutral-900 text-white">
       <div class="container relative py-8">
@@ -10,11 +13,15 @@
               <NuxtLink
                 to="/"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors"
-                >Home</NuxtLink
-              >
+                >Home</NuxtLink>
             </li>
             <li class="text-neutral-600">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -27,11 +34,15 @@
               <NuxtLink
                 to="/send-money"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors"
-                >Send Money</NuxtLink
-              >
+                >Send Money</NuxtLink>
             </li>
             <li class="text-neutral-600">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -40,7 +51,10 @@
                 />
               </svg>
             </li>
-            <li class="font-medium text-white" aria-current="page">
+            <li
+class="font-medium text-white"
+aria-current="page"
+>
               {{ content.from }} to {{ content.to }}
             </li>
           </ol>
@@ -122,10 +136,16 @@
               >
                 The spread shows how provider rates differ. Compare the live options below.
               </p>
-              <p v-else-if="hasRecipientQuotes" class="text-body-sm leading-relaxed text-white/80">
+              <p
+v-else-if="hasRecipientQuotes"
+class="text-body-sm leading-relaxed text-white/80"
+>
                 Live ranking reflects your selected route, amount, and delivery method.
               </p>
-              <p v-else class="text-body-sm leading-relaxed text-white/80">
+              <p
+v-else
+class="text-body-sm leading-relaxed text-white/80"
+>
                 Live provider quotes will populate here as soon as the route check completes.
               </p>
             </div>
@@ -248,12 +268,35 @@
                   preserveAspectRatio="xMidYMid meet"
                 >
                   <defs>
-                    <linearGradient id="heroChartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.2" />
-                      <stop offset="100%" stop-color="#2563eb" stop-opacity="0.02" />
+                    <linearGradient
+id="heroChartGradient"
+x1="0%"
+y1="0%"
+x2="0%"
+y2="100%"
+>
+                      <stop
+offset="0%"
+stop-color="#2563eb"
+stop-opacity="0.2"
+/>
+                      <stop
+offset="100%"
+stop-color="#2563eb"
+stop-opacity="0.02"
+/>
                     </linearGradient>
-                    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <filter
+id="glow"
+x="-50%"
+y="-50%"
+width="200%"
+height="200%"
+>
+                      <feGaussianBlur
+stdDeviation="2"
+result="coloredBlur"
+/>
                       <feMerge>
                         <feMergeNode in="coloredBlur" />
                         <feMergeNode in="SourceGraphic" />
@@ -293,7 +336,10 @@
                   </g>
 
                   <!-- Y-axis labels -->
-                  <g v-if="chartStats" font-family="Inter, system-ui, sans-serif">
+                  <g
+v-if="chartStats"
+font-family="Inter, system-ui, sans-serif"
+>
                     <!-- When data has variance, show min/avg/max -->
                     <template v-if="!chartStats?.isFlat">
                       <text
@@ -363,7 +409,11 @@
                   </g>
 
                   <!-- Area fill -->
-                  <path v-if="chartAreaPath" :d="chartAreaPath" fill="url(#heroChartGradient)" />
+                  <path
+v-if="chartAreaPath"
+:d="chartAreaPath"
+fill="url(#heroChartGradient)"
+/>
 
                   <!-- Main line -->
                   <path
@@ -382,9 +432,9 @@
                     <circle
                       v-for="(point, idx) in chartPoints.filter(
                         (_, i) =>
-                          i === 0 ||
-                          i === chartPoints.length - 1 ||
-                          i % Math.ceil(chartPoints.length / 5) === 0
+                          i === 0
+                          || i === chartPoints.length - 1
+                          || i % Math.ceil(chartPoints.length / 5) === 0,
                       )"
                       :key="`point-${idx}`"
                       :cx="point.x"
@@ -452,7 +502,10 @@
                 <div
                   class="absolute bottom-2 left-14 right-2 flex justify-between text-[10px] font-semibold text-neutral-400"
                 >
-                  <template v-for="(label, index) in chartLabels" :key="index">
+                  <template
+v-for="(label, index) in chartLabels"
+:key="index"
+>
                     <span :class="{ 'text-neutral-600': index === chartLabels.length - 1 }">{{
                       label
                     }}</span>
@@ -465,7 +518,12 @@
                 v-if="chartStats?.isFlat && !isSameCurrency"
                 class="text-body-sm mt-3 flex items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-brand-700"
               >
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -477,7 +535,10 @@
               </div>
 
               <!-- Chart Stats Row -->
-              <div v-if="chartStats" class="mt-4 grid grid-cols-3 gap-3">
+              <div
+v-if="chartStats"
+class="mt-4 grid grid-cols-3 gap-3"
+>
                 <div class="rounded-lg bg-neutral-50 p-3 text-center">
                   <p
                     class="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-rs-muted"
@@ -537,7 +598,10 @@
     </section>
 
     <!-- SEO Verdict Block — extractable answer for LLM crawlers -->
-    <section v-if="hasApiQuotes && verdictParagraph" class="bg-brand-600">
+    <section
+v-if="hasApiQuotes && verdictParagraph"
+class="bg-brand-600"
+>
       <div class="container py-6">
         <h2 class="text-h3 mb-3 font-black text-white">
           Best way to send money from {{ content.from }} to {{ content.to }}
@@ -589,7 +653,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in content.table.rows.slice(0, 5)" :key="row.provider">
+            <tr
+v-for="row in content.table.rows.slice(0, 5)"
+:key="row.provider"
+>
               <td>{{ row.provider }}</td>
               <td>{{ row.fee }}</td>
               <td>{{ row.rate }}</td>
@@ -605,7 +672,10 @@
     <CorridorMiniNav :last-updated="mostRecentUpdateLabel" />
 
     <!-- ZONE A: Compare -->
-    <section id="compare" class="scroll-mt-20 bg-surface">
+    <section
+id="compare"
+class="scroll-mt-20 bg-surface"
+>
       <div class="container py-8">
         <!-- Query Builder Card -->
         <div class="mb-8">
@@ -651,11 +721,19 @@
                 together.
               </p>
             </div>
-            <div v-if="hasApiQuotes" class="flex items-center gap-4">
+            <div
+v-if="hasApiQuotes"
+class="flex items-center gap-4"
+>
               <span
                 class="text-body-sm inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1.5 font-medium text-neutral-600"
               >
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -843,7 +921,10 @@
             </EmptyState>
           </div>
 
-          <p v-if="hasApiQuotes" class="text-body-sm mt-4 text-neutral-500">
+          <p
+v-if="hasApiQuotes"
+class="text-body-sm mt-4 text-neutral-500"
+>
             Updated {{ content.lastUpdated }}. Provider pricing moves quickly, so confirm the final
             quote at checkout.
             <span v-if="quotesData?.approximate && quotesData?.bucketUsed">
@@ -871,7 +952,10 @@
           </p>
         </div>
 
-        <div v-if="corridorIndices" class="mb-10">
+        <div
+v-if="corridorIndices"
+class="mb-10"
+>
           <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <!-- TEER Card -->
             <div
@@ -1074,7 +1158,10 @@
           </div>
         </div>
 
-        <p v-if="content.lastUpdated || seoUpdatedLabel" class="text-body-sm mb-6 text-rs-muted">
+        <p
+v-if="content.lastUpdated || seoUpdatedLabel"
+class="text-body-sm mb-6 text-rs-muted"
+>
           Rates last updated: {{ content.lastUpdated || seoUpdatedLabel }}. Comparing
           {{ providerCount }} provider{{ providerCount === 1 ? '' : 's' }} for
           {{ fromCurrencyCode }} {{ displayAmount.toLocaleString('en-US') }} to
@@ -1117,39 +1204,27 @@
             <div class="space-y-3">
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Bank Transfer</span>
-                <span class="font-semibold text-brand-600"
-                  >{{ corridorMethodCounts.bank }} providers</span
-                >
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.bank }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Cash Pickup</span>
-                <span class="font-semibold text-brand-600"
-                  >{{ corridorMethodCounts.cash }} providers</span
-                >
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.cash }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Mobile Wallet</span>
-                <span class="font-semibold text-brand-600"
-                  >{{ corridorMethodCounts.wallet }} providers</span
-                >
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.wallet }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Airtime</span>
-                <span class="font-semibold text-brand-600"
-                  >{{ corridorMethodCounts.airtime }} providers</span
-                >
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.airtime }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Home Delivery</span>
-                <span class="font-semibold text-brand-600"
-                  >{{ corridorMethodCounts.home }} providers</span
-                >
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.home }} providers</span>
               </div>
               <div class="text-body-sm flex items-center justify-between">
                 <span class="text-neutral-600">Card Delivery</span>
-                <span class="font-semibold text-brand-600"
-                  >{{ corridorMethodCounts.card }} providers</span
-                >
+                <span class="font-semibold text-brand-600">{{ corridorMethodCounts.card }} providers</span>
               </div>
             </div>
           </div>
@@ -1158,13 +1233,16 @@
     </section>
 
     <!-- ZONE C: Recommendations -->
-    <section id="how-to-send" class="bg-neutral-50">
+    <section
+id="how-to-send"
+class="bg-neutral-50"
+>
       <div class="container py-10">
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div class="space-y-8 lg:col-span-2">
             <div>
               <h2 class="text-h2 mb-4 break-words font-bold text-neutral-900">
-                Best Money Transfer Providers<br />
+                Best Money Transfer Providers<br>
                 from <span class="text-brand-600">{{ content.from }}</span> to
                 <span class="text-brand-600">{{ content.to }}</span>
               </h2>
@@ -1181,7 +1259,10 @@
                 maximum amount possible.
               </p>
 
-              <div v-if="recommendations.length > 0" class="mb-8">
+              <div
+v-if="recommendations.length > 0"
+class="mb-8"
+>
                 <div class="space-y-3">
                   <div
                     v-for="rec in recommendations"
@@ -1193,8 +1274,8 @@
                       <!-- Star icon for "best rated" (general) -->
                       <svg
                         v-if="
-                          rec.label.toLowerCase().includes('best rated') &&
-                          !rec.label.toLowerCase().includes('bank')
+                          rec.label.toLowerCase().includes('best rated')
+                          && !rec.label.toLowerCase().includes('bank')
                         "
                         class="h-6 w-6 text-brand-600 group-hover:text-brand-700 motion-safe:transition-colors"
                         fill="currentColor"
@@ -1207,8 +1288,8 @@
                       <!-- Credit card icon for "best rated (transfer to a bank account)" -->
                       <svg
                         v-else-if="
-                          rec.label.toLowerCase().includes('best rated') &&
-                          rec.label.toLowerCase().includes('bank')
+                          rec.label.toLowerCase().includes('best rated')
+                          && rec.label.toLowerCase().includes('bank')
                         "
                         class="h-6 w-6 text-brand-600 group-hover:text-brand-700 motion-safe:transition-colors"
                         fill="none"
@@ -1285,14 +1366,21 @@
                         <span class="text-body-lg font-bold text-brand-600">{{
                           rec.provider
                         }}</span>
-                        <span v-if="rec.score" class="text-body-sm font-medium text-neutral-600"
-                          >({{ rec.score }}/10)</span
-                        >
+                        <span
+v-if="rec.score"
+class="text-body-sm font-medium text-neutral-600"
+>({{ rec.score }}/10)</span>
                       </div>
-                      <p v-if="rec.note" class="text-body-sm mb-1 leading-relaxed text-neutral-600">
+                      <p
+v-if="rec.note"
+class="text-body-sm mb-1 leading-relaxed text-neutral-600"
+>
                         {{ rec.note }}
                       </p>
-                      <p v-if="rec.speed" class="text-body-sm font-medium text-neutral-500">
+                      <p
+v-if="rec.speed"
+class="text-body-sm font-medium text-neutral-500"
+>
                         Transfer speed: {{ rec.speed }}
                       </p>
                     </div>
@@ -1315,7 +1403,10 @@
                 </div>
               </div>
 
-              <div v-else-if="!hasApiQuotes" class="mb-8">
+              <div
+v-else-if="!hasApiQuotes"
+class="mb-8"
+>
                 <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-6">
                   <h4 class="text-body-lg mb-3 font-bold leading-relaxed text-white">
                     Recommendations will appear here once we have live quotes from providers for
@@ -1328,12 +1419,19 @@
               </div>
             </div>
 
-            <div v-if="content.steps.length" class="mt-8">
+            <div
+v-if="content.steps.length"
+class="mt-8"
+>
               <h3 class="text-body-lg mb-4 font-bold text-neutral-900">
                 How to Send Money to {{ content.to }}
               </h3>
               <ol class="space-y-3">
-                <li v-for="(step, index) in content.steps" :key="step" class="flex gap-4">
+                <li
+v-for="(step, index) in content.steps"
+:key="step"
+class="flex gap-4"
+>
                   <span
                     class="text-body-sm flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 font-bold text-white"
                   >
@@ -1410,10 +1508,8 @@
                   watchlist corridors ·
                   {{ limits.alerts === 'unlimited' ? '∞' : limits.alerts }} alerts
                 </span>
-                <span v-else
-                  >Free: {{ limits.watchlistItems }} watchlist corridors ·
-                  {{ limits.alerts }} alerts</span
-                >
+                <span v-else>Free: {{ limits.watchlistItems }} watchlist corridors ·
+                  {{ limits.alerts }} alerts</span>
               </p>
             </div>
 
@@ -1444,7 +1540,10 @@
     />
 
     <!-- Ad: Interstitial -->
-    <div v-if="showMonetizedAds" class="container py-6">
+    <div
+v-if="showMonetizedAds"
+class="container py-6"
+>
       <AdPlacement
         placement="corridor_interstitial"
         :corridor-id="corridorId"
@@ -1563,7 +1662,10 @@
     </section>
 
     <!-- Ad: Below FAQ -->
-    <div v-if="showMonetizedAds" class="container py-6">
+    <div
+v-if="showMonetizedAds"
+class="container py-6"
+>
       <AdPlacement
         placement="corridor_below_faq"
         :corridor-id="corridorId"
@@ -1573,12 +1675,18 @@
     </div>
 
     <!-- Provider Reviews -->
-    <section id="providers" class="scroll-mt-20">
+    <section
+id="providers"
+class="scroll-mt-20"
+>
       <FeaturedProvidersDynamic />
     </section>
 
     <!-- Ad: Footer -->
-    <div v-if="showMonetizedAds" class="container py-6">
+    <div
+v-if="showMonetizedAds"
+class="container py-6"
+>
       <AdPlacement
         placement="corridor_footer"
         :corridor-id="corridorId"
@@ -1616,7 +1724,12 @@
               class="text-body-sm mt-3 inline-flex items-center gap-1 font-semibold text-brand-600"
             >
               Read guide
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -1640,9 +1753,10 @@
           <div>
             <p class="text-body-sm text-neutral-300">
               See an issue with this data?
-              <a href="mailto:support@remit-scout.com" class="text-white hover:underline"
-                >Let us know</a
-              >
+              <a
+href="mailto:support@remit-scout.com"
+class="text-white hover:underline"
+>Let us know</a>
             </p>
           </div>
           <div class="flex items-center gap-6">
@@ -1722,7 +1836,10 @@
       :variant="toastVariant"
     />
   </div>
-  <div v-else class="flex min-h-screen items-center justify-center bg-neutral-50">
+  <div
+v-else
+class="flex min-h-screen items-center justify-center bg-neutral-50"
+>
     <div class="text-center">
       <p class="text-body-lg text-neutral-500">Redirecting...</p>
     </div>
@@ -1738,31 +1855,31 @@ import {
   onUnmounted,
   watchEffect,
   defineAsyncComponent,
-} from 'vue';
-import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo';
-import { useStructuredData } from '~/composables/useStructuredData';
-import { useRemittanceApi } from '~/composables/useRemittanceApi';
-import { useApi } from '~/composables/useApi';
-import AdPlacement from '~/components/ads/AdPlacement.vue';
-import SuccessToast from '~/components/shared/SuccessToast.vue';
-import ProviderComparisonCard from '~/components/corridor/ProviderComparisonCard.vue';
-import { normalizeProviderSlug } from '~/composables/useProviderLogo';
-import CorridorMiniNav from '~/components/corridor/CorridorMiniNav.vue';
-import CorridorStickyBar from '~/components/corridor/CorridorStickyBar.vue';
-import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue';
-import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue';
-import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic.vue';
-import FaqSection from '~/components/shared/FaqSection.vue';
-import { formatExchangeRateValue } from '~/lib/exchangeRateFormat';
-import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator';
-import { resolveComparableProviderPricing } from '~/lib/providerPricing';
-import { buildRateHistoryChartPoints } from '~/lib/rateHistoryChart';
-import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit';
-import { useEntitlements } from '~/composables/useEntitlements';
-import { useTelemetry } from '~/composables/useTelemetry';
-import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound';
-import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies';
-import { COUNTRIES, getAvailableCurrencies } from '~/utils/countries-currencies';
+} from 'vue'
+import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+import { useRemittanceApi } from '~/composables/useRemittanceApi'
+import { useApi } from '~/composables/useApi'
+import AdPlacement from '~/components/ads/AdPlacement.vue'
+import SuccessToast from '~/components/shared/SuccessToast.vue'
+import ProviderComparisonCard from '~/components/corridor/ProviderComparisonCard.vue'
+import { normalizeProviderSlug } from '~/composables/useProviderLogo'
+import CorridorMiniNav from '~/components/corridor/CorridorMiniNav.vue'
+import CorridorStickyBar from '~/components/corridor/CorridorStickyBar.vue'
+import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
+import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic.vue'
+import FaqSection from '~/components/shared/FaqSection.vue'
+import { formatExchangeRateValue } from '~/lib/exchangeRateFormat'
+import { buildTrueCostBreakdown } from '~/lib/trueCostCalculator'
+import { resolveComparableProviderPricing } from '~/lib/providerPricing'
+import { buildRateHistoryChartPoints } from '~/lib/rateHistoryChart'
+import type { ProviderQuote, TrueCostBreakdown, Method } from '~/types/remit'
+import { useEntitlements } from '~/composables/useEntitlements'
+import { useTelemetry } from '~/composables/useTelemetry'
+import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound'
+import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
+import { COUNTRIES, getAvailableCurrencies } from '~/utils/countries-currencies'
 import {
   getCorridorUrl,
   getCanonicalSlug,
@@ -1770,431 +1887,431 @@ import {
   getCountryFromSlug,
   getCanonicalCorridorUrl,
   needsCanonicalRedirect,
-} from '~/utils/country-slugs';
+} from '~/utils/country-slugs'
 import {
   formatCurrency,
   getMaxAmount,
   getMinAmount,
   getSuggestedMinAmount,
   sanitizeAmount,
-} from '~/utils/currency-limits';
-import { useWatchlist } from '~/composables/useWatchlist';
-import { useAlerts } from '~/composables/useAlerts';
-import { useAuth } from '~/composables/useAuth';
-import { usePrivacySettings } from '~/composables/usePrivacySettings';
-import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics';
-import { useSaveAlertModal } from '~/composables/useSaveAlertModal';
-import { EmptyState } from '~/ui/states';
+} from '~/utils/currency-limits'
+import { useWatchlist } from '~/composables/useWatchlist'
+import { useAlerts } from '~/composables/useAlerts'
+import { useAuth } from '~/composables/useAuth'
+import { usePrivacySettings } from '~/composables/usePrivacySettings'
+import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
+import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
+import { EmptyState } from '~/ui/states'
 import {
   normalizeProviderMethod,
   orderProviderMethods,
   providerMethodOrder,
   resolvePayoutMethodSelection,
-} from '~/utils/providerMethodSemantics';
+} from '~/utils/providerMethodSemantics'
 
 const ProviderScoreModal = defineAsyncComponent(
-  () => import('~/components/shared/ProviderScoreModal.vue')
-);
+  () => import('~/components/shared/ProviderScoreModal.vue'),
+)
 const AuthPromptModal = defineAsyncComponent(
-  () => import('~/components/shared/AuthPromptModal.vue')
-);
+  () => import('~/components/shared/AuthPromptModal.vue'),
+)
 const LimitReachedModal = defineAsyncComponent(
-  () => import('~/components/shared/LimitReachedModal.vue')
-);
-const ShareModal = defineAsyncComponent(() => import('~/components/shared/ShareModal.vue'));
+  () => import('~/components/shared/LimitReachedModal.vue'),
+)
+const ShareModal = defineAsyncComponent(() => import('~/components/shared/ShareModal.vue'))
 
-const { isPlus, limits } = useEntitlements();
-const { isAuthenticated } = useAuth();
-const watchlist = useWatchlist();
-const alerts = useAlerts();
-const saveAlertModal = useSaveAlertModal();
-const { request } = useApi();
-const { attachRatings, formatMoney, formatRate, getRelativeTime, useProviders } =
-  useRemittanceApi();
-const { trackClick } = useTelemetry();
-const { trackSendMoneyView } = useMarketingAnalytics();
-const currentRoute = useRoute();
-const sendMoneyTracked = ref(false);
+const { isPlus, limits } = useEntitlements()
+const { isAuthenticated } = useAuth()
+const watchlist = useWatchlist()
+const alerts = useAlerts()
+const saveAlertModal = useSaveAlertModal()
+const { request } = useApi()
+const { attachRatings, formatMoney, formatRate, getRelativeTime, useProviders }
+  = useRemittanceApi()
+const { trackClick } = useTelemetry()
+const { trackSendMoneyView } = useMarketingAnalytics()
+const currentRoute = useRoute()
+const sendMoneyTracked = ref(false)
 
 type ProviderHighlight = {
-  label: string;
-  provider: string;
-  score: string;
-  rate: string;
-  fee: string;
-  speed: string;
-  note: string;
-  ctaLabel: string;
-};
+  label: string
+  provider: string
+  score: string
+  rate: string
+  fee: string
+  speed: string
+  note: string
+  ctaLabel: string
+}
 
 type TableRow = {
-  provider: string;
-  score: string;
-  recipientGets: string;
-  recipientGetsAmount?: number;
-  delta: string;
-  fee: string;
-  rate: string;
-  speed: string;
-  speedNote: string;
-  payIn: string;
-  payOut: string;
-  notes: string;
-  badge?: string;
-  warning?: string;
-  isAffiliate?: boolean;
-  providerId?: string;
-  outboundUrl?: string | null;
-  affiliateUrl?: string | null;
-  fxRate?: number;
-  feeAmount?: number;
-  hasPromo?: boolean;
-  methods?: string[];
-  isStale?: boolean;
-  staleAgeSeconds?: number | null;
+  provider: string
+  score: string
+  recipientGets: string
+  recipientGetsAmount?: number
+  delta: string
+  fee: string
+  rate: string
+  speed: string
+  speedNote: string
+  payIn: string
+  payOut: string
+  notes: string
+  badge?: string
+  warning?: string
+  isAffiliate?: boolean
+  providerId?: string
+  outboundUrl?: string | null
+  affiliateUrl?: string | null
+  fxRate?: number
+  feeAmount?: number
+  hasPromo?: boolean
+  methods?: string[]
+  isStale?: boolean
+  staleAgeSeconds?: number | null
   promoInfo?: {
-    fee: number;
-    rate: number;
-    headline: string;
-    details: string[];
-    newCustomersOnly: boolean;
-  } | null;
-};
+    fee: number
+    rate: number
+    headline: string
+    details: string[]
+    newCustomersOnly: boolean
+  } | null
+}
 
 type Insight = {
-  label: string;
-  value: string;
-  helper: string;
-};
+  label: string
+  value: string
+  helper: string
+}
 
 type CorridorIndices = {
-  teer: number | null;
-  rvi_bps: number | null;
-  rci: number | null;
-  providerCount: number;
-  amount: number;
-  midMarketRate: number | null;
-  weights: string;
-  weightConfidence?: number | null;
-  weightWindowDays?: number | null;
-  source?: 'gold' | 'search_estimate';
-  updatedAt?: string | null;
-  indicesBucket?: number;
-  methodProfile?: string;
-  suppressionFlag?: boolean;
-  suppressionReason?: string | null;
-  basisAmount?: number;
-  providerCountUsed?: number;
-  reason?: string | null;
-};
+  teer: number | null
+  rvi_bps: number | null
+  rci: number | null
+  providerCount: number
+  amount: number
+  midMarketRate: number | null
+  weights: string
+  weightConfidence?: number | null
+  weightWindowDays?: number | null
+  source?: 'gold' | 'search_estimate'
+  updatedAt?: string | null
+  indicesBucket?: number
+  methodProfile?: string
+  suppressionFlag?: boolean
+  suppressionReason?: string | null
+  basisAmount?: number
+  providerCountUsed?: number
+  reason?: string | null
+}
 
 type Guide = {
-  title: string;
-  excerpt: string;
-  link: string;
-};
+  title: string
+  excerpt: string
+  link: string
+}
 
 type RateHistoryPoint = {
-  date: string;
-  rate: number;
-  bid?: number | null;
-  ask?: number | null;
-  source?: string | null;
-};
+  date: string
+  rate: number
+  bid?: number | null
+  ask?: number | null
+  source?: string | null
+}
 
 type RateHistoryResponse = {
-  base: string;
-  quote: string;
-  history: RateHistoryPoint[];
-  lastUpdated?: string | null;
-  status?: 'ready' | 'warming' | 'unavailable';
-  message?: string | null;
-  refreshQueued?: boolean;
-  refreshRequestId?: string | null;
-};
+  base: string
+  quote: string
+  history: RateHistoryPoint[]
+  lastUpdated?: string | null
+  status?: 'ready' | 'warming' | 'unavailable'
+  message?: string | null
+  refreshQueued?: boolean
+  refreshRequestId?: string | null
+}
 
 type CorridorContent = {
-  from: string;
-  to: string;
-  fromCode: string;
-  toCode: string;
-  currencyPair: string;
-  lastUpdated: string;
+  from: string
+  to: string
+  fromCode: string
+  toCode: string
+  currencyPair: string
+  lastUpdated: string
   hero: {
-    kicker: string;
-    title: string;
-    subhead: string;
-    chips: string[];
-  };
-  statsBar: Array<{ label: string; value: string; helper: string }>;
-  providerHighlights: ProviderHighlight[];
+    kicker: string
+    title: string
+    subhead: string
+    chips: string[]
+  }
+  statsBar: Array<{ label: string, value: string, helper: string }>
+  providerHighlights: ProviderHighlight[]
   rateWidget: {
-    midMarket: string;
-    asOf: string;
-    source: string;
-    changes: Array<{ label: string; value: string }>;
-  };
+    midMarket: string
+    asOf: string
+    source: string
+    changes: Array<{ label: string, value: string }>
+  }
   table: {
-    title: string;
-    amountExample: string;
-    rows: TableRow[];
-  };
-  insights: Insight[];
-  recommendations: string[];
-  steps: string[];
-  faqs: Array<{ q: string; a: string }>;
-  miniGuides?: Guide[];
+    title: string
+    amountExample: string
+    rows: TableRow[]
+  }
+  insights: Insight[]
+  recommendations: string[]
+  steps: string[]
+  faqs: Array<{ q: string, a: string }>
+  miniGuides?: Guide[]
   disclosures: {
-    advert: string;
-    data: string;
-  };
-  stats?: { providerCount?: string };
-};
+    advert: string
+    data: string
+  }
+  stats?: { providerCount?: string }
+}
 
-const runtimeConfig = useRuntimeConfig();
-const { marketingConsent } = usePrivacySettings();
-const { adsEnabled } = useFeatureFlags();
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com';
-const normalizedSiteUrl =
-  siteUrl && typeof siteUrl === 'string' && siteUrl.endsWith('/')
+const runtimeConfig = useRuntimeConfig()
+const { marketingConsent } = usePrivacySettings()
+const { adsEnabled } = useFeatureFlags()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
+const normalizedSiteUrl
+  = siteUrl && typeof siteUrl === 'string' && siteUrl.endsWith('/')
     ? siteUrl.slice(0, -1)
-    : siteUrl || 'https://Remit-Scout.com';
+    : siteUrl || 'https://Remit-Scout.com'
 const showMonetizedAds = computed(
-  () => !isPlus.value && adsEnabled.value && marketingConsent.value
-);
+  () => !isPlus.value && adsEnabled.value && marketingConsent.value,
+)
 
-const normalizeSlug = (value: string | string[] | undefined) => String(value || '').toLowerCase();
+const normalizeSlug = (value: string | string[] | undefined) => String(value || '').toLowerCase()
 const normalizeCurrencyParam = (value: string | string[] | null | undefined) => {
-  const raw = Array.isArray(value) ? value[0] : value;
-  if (!raw) return '';
-  const upper = String(raw).trim().toUpperCase();
-  if (upper === 'ALL') return '';
-  return /^[A-Z]{3}$/.test(upper) ? upper : '';
-};
+  const raw = Array.isArray(value) ? value[0] : value
+  if (!raw) return ''
+  const upper = String(raw).trim().toUpperCase()
+  if (upper === 'ALL') return ''
+  return /^[A-Z]{3}$/.test(upper) ? upper : ''
+}
 
 const isAllowedCurrency = (slug: string, currency: string) => {
-  const country = getCountryFromSlug(slug);
+  const country = getCountryFromSlug(slug)
   const allowed = new Set(
-    getAvailableCurrencies(country?.code || '').map(code => code.toUpperCase())
-  );
-  return allowed.has(currency);
-};
+    getAvailableCurrencies(country?.code || '').map(code => code.toUpperCase()),
+  )
+  return allowed.has(currency)
+}
 
 const resolveCountryName = (slug: string) => {
-  const country = getCountryFromSlug(slug);
+  const country = getCountryFromSlug(slug)
   return (
-    country?.name ||
-    slug
+    country?.name
+    || slug
       .split('-')
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ')
-  );
-};
+  )
+}
 
 const resolveCurrency = (slug: string) => {
-  const country = getCountryFromSlug(slug);
-  return country?.currency || '';
-};
+  const country = getCountryFromSlug(slug)
+  return country?.currency || ''
+}
 
 const resolveFlag = (slug: string) => {
-  const country = getCountryFromSlug(slug);
-  return country?.flag || '🌐';
-};
+  const country = getCountryFromSlug(slug)
+  return country?.flag || '🌐'
+}
 
-const fromSlug = computed(() => normalizeSlug(currentRoute.params.from));
-const toSlug = computed(() => normalizeSlug(currentRoute.params.to));
-const canonicalFrom = computed(() => getCanonicalSlug(fromSlug.value));
-const canonicalTo = computed(() => getCanonicalSlug(toSlug.value));
+const fromSlug = computed(() => normalizeSlug(currentRoute.params.from))
+const toSlug = computed(() => normalizeSlug(currentRoute.params.to))
+const canonicalFrom = computed(() => getCanonicalSlug(fromSlug.value))
+const canonicalTo = computed(() => getCanonicalSlug(toSlug.value))
 const isValidCorridor = computed(() => {
   return Boolean(getCountryFromSlug(canonicalFrom.value) && getCountryFromSlug(canonicalTo.value))
-});
+})
 const amountParam = computed(() =>
   Array.isArray(currentRoute.query.amount)
     ? currentRoute.query.amount[0]
-    : currentRoute.query.amount
-);
+    : currentRoute.query.amount,
+)
 const methodParam = computed(() =>
   Array.isArray(currentRoute.query.method)
     ? currentRoute.query.method[0]
-    : currentRoute.query.method
-);
+    : currentRoute.query.method,
+)
 const fromCurrencyParam = computed(() =>
   Array.isArray(currentRoute.query.fromCurrency)
     ? currentRoute.query.fromCurrency[0]
-    : currentRoute.query.fromCurrency
-);
+    : currentRoute.query.fromCurrency,
+)
 const toCurrencyParam = computed(() =>
   Array.isArray(currentRoute.query.toCurrency)
     ? currentRoute.query.toCurrency[0]
-    : currentRoute.query.toCurrency
-);
+    : currentRoute.query.toCurrency,
+)
 const fromCurrencyOverride = computed(() => {
-  const candidate = normalizeCurrencyParam(fromCurrencyParam.value);
-  if (!candidate) return '';
-  return isAllowedCurrency(canonicalFrom.value, candidate) ? candidate : '';
-});
+  const candidate = normalizeCurrencyParam(fromCurrencyParam.value)
+  if (!candidate) return ''
+  return isAllowedCurrency(canonicalFrom.value, candidate) ? candidate : ''
+})
 const toCurrencyOverride = computed(() => {
-  const candidate = normalizeCurrencyParam(toCurrencyParam.value);
-  if (!candidate) return '';
-  return isAllowedCurrency(canonicalTo.value, candidate) ? candidate : '';
-});
+  const candidate = normalizeCurrencyParam(toCurrencyParam.value)
+  if (!candidate) return ''
+  return isAllowedCurrency(canonicalTo.value, candidate) ? candidate : ''
+})
 const fromCurrencyCode = computed(() => {
-  if (fromCurrencyOverride.value) return fromCurrencyOverride.value;
-  const fallback = resolveCurrency(canonicalFrom.value) || 'USD';
-  return fallback.toUpperCase();
-});
+  if (fromCurrencyOverride.value) return fromCurrencyOverride.value
+  const fallback = resolveCurrency(canonicalFrom.value) || 'USD'
+  return fallback.toUpperCase()
+})
 const toCurrencyCode = computed(() => {
-  if (toCurrencyOverride.value) return toCurrencyOverride.value;
-  const fallback = resolveCurrency(canonicalTo.value) || 'XXX';
-  return fallback.toUpperCase();
-});
-const initialAmount = computed(() => Number(amountParam.value) || 1000);
-const methodOrder: Method[] = providerMethodOrder;
-const normalizeMethod = normalizeProviderMethod;
+  if (toCurrencyOverride.value) return toCurrencyOverride.value
+  const fallback = resolveCurrency(canonicalTo.value) || 'XXX'
+  return fallback.toUpperCase()
+})
+const initialAmount = computed(() => Number(amountParam.value) || 1000)
+const methodOrder: Method[] = providerMethodOrder
+const normalizeMethod = normalizeProviderMethod
 const initialMethod = computed(() => {
-  const normalized = normalizeMethod(methodParam.value);
-  return normalized && methodOrder.includes(normalized) ? normalized : 'bank';
-});
-const displayAmount = ref(initialAmount.value);
+  const normalized = normalizeMethod(methodParam.value)
+  return normalized && methodOrder.includes(normalized) ? normalized : 'bank'
+})
+const displayAmount = ref(initialAmount.value)
 const amountLimits = computed(() => ({
   minAmount: getMinAmount(fromCurrencyCode.value),
   maxAmount: getMaxAmount(fromCurrencyCode.value),
   strict: true,
-}));
-const suggestedMinAmount = computed(() => getSuggestedMinAmount(fromCurrencyCode.value));
-const payoutMethod = ref<Method>(initialMethod.value);
+}))
+const suggestedMinAmount = computed(() => getSuggestedMinAmount(fromCurrencyCode.value))
+const payoutMethod = ref<Method>(initialMethod.value)
 watch(
   amountParam,
-  value => {
-    const parsed = Number(value);
-    const fallback = Number.isFinite(parsed) && parsed > 0 ? parsed : 1000;
-    const sanitized = sanitizeAmount(fallback, fromCurrencyCode.value, amountLimits.value);
+  (value) => {
+    const parsed = Number(value)
+    const fallback = Number.isFinite(parsed) && parsed > 0 ? parsed : 1000
+    const sanitized = sanitizeAmount(fallback, fromCurrencyCode.value, amountLimits.value)
     if (sanitized !== displayAmount.value) {
-      displayAmount.value = sanitized;
+      displayAmount.value = sanitized
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   methodParam,
-  value => {
-    const normalized = normalizeMethod(value);
-    const nextMethod = normalized && methodOrder.includes(normalized) ? normalized : 'bank';
+  (value) => {
+    const normalized = normalizeMethod(value)
+    const nextMethod = normalized && methodOrder.includes(normalized) ? normalized : 'bank'
     if (nextMethod !== payoutMethod.value) {
-      payoutMethod.value = nextMethod;
+      payoutMethod.value = nextMethod
     }
   },
-  { immediate: true }
-);
-const searchInitiated = ref(false);
-const quoteRefreshPending = ref(false);
-const providersLive = ref(false);
-const lastRefreshKey = ref<string | null>(null);
-const refreshPollTimer = ref<number | null>(null);
-const refreshAttempts = ref(0);
-const refreshStatusPollTimer = ref<number | null>(null);
-const refreshCompletion = ref<{ done: boolean; pending: number; total: number } | null>(null);
-let refreshPollController: AbortController | null = null;
-let refreshStatusController: AbortController | null = null;
-const refreshTimedOut = ref(false);
-const refreshFinalizing = ref(false);
-const refreshGateStartedAt = ref<number | null>(null);
-const refreshGateTimer = ref<number | null>(null);
-const refreshElapsedSeconds = ref(0);
+  { immediate: true },
+)
+const searchInitiated = ref(false)
+const quoteRefreshPending = ref(false)
+const providersLive = ref(false)
+const lastRefreshKey = ref<string | null>(null)
+const refreshPollTimer = ref<number | null>(null)
+const refreshAttempts = ref(0)
+const refreshStatusPollTimer = ref<number | null>(null)
+const refreshCompletion = ref<{ done: boolean, pending: number, total: number } | null>(null)
+let refreshPollController: AbortController | null = null
+let refreshStatusController: AbortController | null = null
+const refreshTimedOut = ref(false)
+const refreshFinalizing = ref(false)
+const refreshGateStartedAt = ref<number | null>(null)
+const refreshGateTimer = ref<number | null>(null)
+const refreshElapsedSeconds = ref(0)
 const refreshStatus = ref<{
-  enqueued: boolean;
-  requestId: string | null;
-  requestIds: string[];
-  providers: string[];
-  requestedAt: string;
-} | null>(null);
-const backgroundRefreshKeys = new Set<string>();
+  enqueued: boolean
+  requestId: string | null
+  requestIds: string[]
+  providers: string[]
+  requestedAt: string
+} | null>(null)
+const backgroundRefreshKeys = new Set<string>()
 const refreshGateActive = computed(() => {
-  if (refreshTimedOut.value) return false;
-  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false;
-  if (!refreshStatus.value?.enqueued) return false;
-  if (!refreshStatus.value.requestIds?.length) return false;
-  if (refreshCompletion.value?.done) return false;
-  return true;
-});
+  if (refreshTimedOut.value) return false
+  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
+  if (!refreshStatus.value?.enqueued) return false
+  if (!refreshStatus.value.requestIds?.length) return false
+  if (refreshCompletion.value?.done) return false
+  return true
+})
 const shouldBlockResults = computed(() => {
-  if (refreshTimedOut.value) return false;
-  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false;
+  if (refreshTimedOut.value) return false
+  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
 
-  const hasRefresh = Boolean(refreshStatus.value?.enqueued);
+  const hasRefresh = Boolean(refreshStatus.value?.enqueued)
   if (hasRefresh) {
     if (!hasApiQuotes.value && refreshCompletion.value && !refreshCompletion.value.done)
-      return true;
-    if (!refreshCompletion.value && !hasApiQuotes.value) return true;
-    if (!hasApiQuotes.value && refreshFinalizing.value) return true;
-    if (!hasApiQuotes.value && quotesPending.value) return true;
-    if (!hasApiQuotes.value) return true;
+      return true
+    if (!refreshCompletion.value && !hasApiQuotes.value) return true
+    if (!hasApiQuotes.value && refreshFinalizing.value) return true
+    if (!hasApiQuotes.value && quotesPending.value) return true
+    if (!hasApiQuotes.value) return true
   }
 
-  if (!hasApiQuotes.value && quoteRefreshPending.value) return true;
-  if (!hasApiQuotes.value && providersLive.value) return true;
-  if (quotesPending.value && !hasApiQuotes.value) return true;
-  if (searchInitiated.value && !hasApiQuotes.value) return true;
-  return false;
-});
-const showRefreshGate = computed(() => shouldBlockResults.value);
+  if (!hasApiQuotes.value && quoteRefreshPending.value) return true
+  if (!hasApiQuotes.value && providersLive.value) return true
+  if (quotesPending.value && !hasApiQuotes.value) return true
+  if (searchInitiated.value && !hasApiQuotes.value) return true
+  return false
+})
+const showRefreshGate = computed(() => shouldBlockResults.value)
 const fromCountryCode = computed(
-  () => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase()
-);
+  () => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase(),
+)
 const toCountryCode = computed(
-  () => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase()
-);
-const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`);
-const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${canonicalTo.value}`);
-const flagFrom = computed(() => resolveFlag(canonicalFrom.value));
-const flagTo = computed(() => resolveFlag(canonicalTo.value));
+  () => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase(),
+)
+const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`)
+const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${canonicalTo.value}`)
+const flagFrom = computed(() => resolveFlag(canonicalFrom.value))
+const flagTo = computed(() => resolveFlag(canonicalTo.value))
 
 const clampDisplayAmount = (value: number) =>
-  sanitizeAmount(value, fromCurrencyCode.value, amountLimits.value);
+  sanitizeAmount(value, fromCurrencyCode.value, amountLimits.value)
 
 watch(
   [fromCurrencyCode, displayAmount],
   () => {
-    const sanitized = clampDisplayAmount(displayAmount.value);
+    const sanitized = clampDisplayAmount(displayAmount.value)
     if (sanitized !== displayAmount.value) {
-      displayAmount.value = sanitized;
+      displayAmount.value = sanitized
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 if (import.meta.client && !isValidCorridor.value) {
   navigateTo('/send-money', { redirectCode: 302 })
 }
 
 if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) {
-  navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 });
+  navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
 }
 
 onMounted(() => {
-  if (!import.meta.client) return;
-  actionControlsReady.value = true;
-  if (hasApiQuotes.value || quotesPending.value) return;
+  if (!import.meta.client) return
+  actionControlsReady.value = true
+  if (hasApiQuotes.value || quotesPending.value) return
   if (
-    hasApiError.value ||
-    corridorUnavailable.value ||
-    corridorUnsupported.value ||
-    quotesUnavailable.value
+    hasApiError.value
+    || corridorUnavailable.value
+    || corridorUnsupported.value
+    || quotesUnavailable.value
   )
-    return;
-  void refreshQuotes();
-});
+    return
+  void refreshQuotes()
+})
 
 onUnmounted(() => {
-  clearRefreshPoll();
-  clearRefreshStatusPoll();
-  clearRefreshGateTimer();
-  providersRequestSignal.value = undefined;
-});
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  providersRequestSignal.value = undefined
+})
 
-const providersRequestSignal = ref<AbortSignal | undefined>(undefined);
-const actionControlsReady = ref(false);
+const providersRequestSignal = ref<AbortSignal | undefined>(undefined)
+const actionControlsReady = ref(false)
 
 const {
   data: quotesData,
@@ -2212,64 +2329,64 @@ const {
   toCurrency: toCurrencyCode,
   live: providersLive,
   signal: providersRequestSignal,
-});
+})
 
-watch(providersLive, isLive => {
-  if (isLive) refreshQuotes();
-});
+watch(providersLive, (isLive) => {
+  if (isLive) refreshQuotes()
+})
 
 const toPositiveMs = (value: unknown, fallback: number) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
-const REFRESH_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMs, 1500);
-const REFRESH_POLL_MAX_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMaxMs, 8000);
-const REFRESH_STATUS_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshStatusPollMs, 750);
-const REFRESH_STATUS_TIMEOUT_MS = 60000;
-const MAX_REFRESH_ATTEMPTS = Math.max(1, Math.ceil(REFRESH_STATUS_TIMEOUT_MS / REFRESH_POLL_MS));
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+const REFRESH_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMs, 1500)
+const REFRESH_POLL_MAX_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMaxMs, 8000)
+const REFRESH_STATUS_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshStatusPollMs, 750)
+const REFRESH_STATUS_TIMEOUT_MS = 60000
+const MAX_REFRESH_ATTEMPTS = Math.max(1, Math.ceil(REFRESH_STATUS_TIMEOUT_MS / REFRESH_POLL_MS))
 const getRefreshPollDelayMs = (attempt: number) => {
-  if (attempt < 3) return REFRESH_POLL_MS;
-  const steppedBackoff = REFRESH_POLL_MS * Math.pow(2, Math.min(3, attempt - 2));
-  return Math.min(REFRESH_POLL_MAX_MS, steppedBackoff);
-};
-const refreshTimeoutSeconds = Math.round(REFRESH_STATUS_TIMEOUT_MS / 1000);
-const MAX_B2C_STALE_MS = 4 * 60 * 60 * 1000;
+  if (attempt < 3) return REFRESH_POLL_MS
+  const steppedBackoff = REFRESH_POLL_MS * Math.pow(2, Math.min(3, attempt - 2))
+  return Math.min(REFRESH_POLL_MAX_MS, steppedBackoff)
+}
+const refreshTimeoutSeconds = Math.round(REFRESH_STATUS_TIMEOUT_MS / 1000)
+const MAX_B2C_STALE_MS = 4 * 60 * 60 * 1000
 const clearRefreshPoll = () => {
-  if (!import.meta.client) return;
-  refreshPollController?.abort();
-  refreshPollController = null;
+  if (!import.meta.client) return
+  refreshPollController?.abort()
+  refreshPollController = null
   if (refreshPollTimer.value !== null) {
-    window.clearTimeout(refreshPollTimer.value);
-    refreshPollTimer.value = null;
+    window.clearTimeout(refreshPollTimer.value)
+    refreshPollTimer.value = null
   }
-};
+}
 
 const clearRefreshGateTimer = () => {
-  if (!import.meta.client) return;
+  if (!import.meta.client) return
   if (refreshGateTimer.value !== null) {
-    window.clearInterval(refreshGateTimer.value);
-    refreshGateTimer.value = null;
+    window.clearInterval(refreshGateTimer.value)
+    refreshGateTimer.value = null
   }
-};
+}
 
 const updateRefreshElapsed = () => {
-  if (!import.meta.client) return;
+  if (!import.meta.client) return
   const startedAt = refreshStatus.value?.requestedAt
     ? Date.parse(refreshStatus.value.requestedAt)
-    : refreshGateStartedAt.value;
+    : refreshGateStartedAt.value
   if (!startedAt || !Number.isFinite(startedAt)) {
-    refreshElapsedSeconds.value = 0;
-    return;
+    refreshElapsedSeconds.value = 0
+    return
   }
-  const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-  refreshElapsedSeconds.value = Math.min(refreshTimeoutSeconds, Math.max(0, elapsed));
-};
+  const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+  refreshElapsedSeconds.value = Math.min(refreshTimeoutSeconds, Math.max(0, elapsed))
+}
 
 const startRefreshGateTimer = () => {
-  updateRefreshElapsed();
-  if (refreshGateTimer.value !== null) return;
-  refreshGateTimer.value = window.setInterval(updateRefreshElapsed, 1000);
-};
+  updateRefreshElapsed()
+  if (refreshGateTimer.value !== null) return
+  refreshGateTimer.value = window.setInterval(updateRefreshElapsed, 1000)
+}
 
 const corridorContent: Record<string, CorridorContent> = {
   'united-states-jordan': {
@@ -2283,7 +2400,7 @@ const corridorContent: Record<string, CorridorContent> = {
       kicker: 'Corridor Guide',
       title: 'Send money from the United States to Jordan',
       subhead:
-        "Today's cheapest money transfer service might not be the cheapest tomorrow. Find the one that's best-suited to your needs by comparing the best performers on Remit-Scout's comparison engine over the past 30 days for transfers from the US to Jordan.",
+        'Today\'s cheapest money transfer service might not be the cheapest tomorrow. Find the one that\'s best-suited to your needs by comparing the best performers on Remit-Scout\'s comparison engine over the past 30 days for transfers from the US to Jordan.',
       chips: [],
     },
     statsBar: [
@@ -2453,7 +2570,7 @@ const corridorContent: Record<string, CorridorContent> = {
       kicker: 'Corridor Guide',
       title: 'Send money from the United States to Brunei',
       subhead:
-        "Today's cheapest money transfer service might not be the cheapest tomorrow. Find the one that's best-suited to your needs by comparing the best performers on Remit-Scout's comparison engine.",
+        'Today\'s cheapest money transfer service might not be the cheapest tomorrow. Find the one that\'s best-suited to your needs by comparing the best performers on Remit-Scout\'s comparison engine.',
       chips: [],
     },
     statsBar: [
@@ -2635,7 +2752,7 @@ const corridorContent: Record<string, CorridorContent> = {
       data: 'Rates shown are illustrative. Live data will show exact fees and timestamps.',
     },
   },
-};
+}
 
 const fallbackContent: CorridorContent = {
   from: resolveCountryName(canonicalFrom.value || 'from'),
@@ -2668,63 +2785,63 @@ const fallbackContent: CorridorContent = {
     advert: 'Affiliate disclosures will appear with live data.',
     data: 'Live rates will populate here.',
   },
-};
+}
 
-const baseContent = computed(() => corridorContent[corridorKey.value] || fallbackContent);
+const baseContent = computed(() => corridorContent[corridorKey.value] || fallbackContent)
 
 const normalizeMethodMap = (
-  value: Record<string, string[]> | null | undefined
+  value: Record<string, string[]> | null | undefined,
 ): Record<string, Method[]> => {
-  if (!value || typeof value !== 'object') return {};
+  if (!value || typeof value !== 'object') return {}
   return Object.fromEntries(
     Object.entries(value)
       .map(([providerId, methods]) => [
         providerId,
         orderProviderMethods(Array.isArray(methods) ? methods : []),
       ])
-      .filter(([, methods]) => methods.length > 0)
-  );
-};
+      .filter(([, methods]) => methods.length > 0),
+  )
+}
 
 const availableMethods = computed<Method[]>(() => {
   const responseMethods = Array.isArray(
-    (quotesData.value as { availableMethods?: string[] } | null)?.availableMethods
+    (quotesData.value as { availableMethods?: string[] } | null)?.availableMethods,
   )
     ? ((quotesData.value as { availableMethods?: string[] }).availableMethods ?? [])
-    : [];
+    : []
   const quoteMethods = (quotesData.value?.data || [])
     .flatMap(quote => (Array.isArray(quote.methods) ? quote.methods : []))
-    .filter((method): method is Method => typeof method === 'string');
+    .filter((method): method is Method => typeof method === 'string')
 
-  return orderProviderMethods([...responseMethods, ...quoteMethods]);
-});
+  return orderProviderMethods([...responseMethods, ...quoteMethods])
+})
 
 const supportedMethods = computed<Method[]>(() => {
   const responseMethods = Array.isArray(
-    (quotesData.value as { supportedMethods?: string[] } | null)?.supportedMethods
+    (quotesData.value as { supportedMethods?: string[] } | null)?.supportedMethods,
   )
     ? ((quotesData.value as { supportedMethods?: string[] }).supportedMethods ?? [])
-    : [];
-  return orderProviderMethods([...responseMethods, ...availableMethods.value]);
-});
+    : []
+  return orderProviderMethods([...responseMethods, ...availableMethods.value])
+})
 
 const methodSelectorMethods = computed<Method[]>(() =>
-  supportedMethods.value.length ? supportedMethods.value : availableMethods.value
-);
+  supportedMethods.value.length ? supportedMethods.value : availableMethods.value,
+)
 
 const availableMethodsByProvider = computed<Record<string, Method[]>>(() =>
   normalizeMethodMap(
     (quotesData.value as { availableMethodsByProvider?: Record<string, string[]> } | null)
-      ?.availableMethodsByProvider
-  )
-);
+      ?.availableMethodsByProvider,
+  ),
+)
 
 const supportedMethodsByProvider = computed<Record<string, Method[]>>(() =>
   normalizeMethodMap(
     (quotesData.value as { supportedMethodsByProvider?: Record<string, string[]> } | null)
-      ?.supportedMethodsByProvider
-  )
-);
+      ?.supportedMethodsByProvider,
+  ),
+)
 
 const corridorMethodCounts = computed<Record<string, number>>(() => {
   const counts = {
@@ -2734,160 +2851,160 @@ const corridorMethodCounts = computed<Record<string, number>>(() => {
     airtime: 0,
     home: 0,
     card: 0,
-  };
+  }
 
-  const providerMethods = Object.values(supportedMethodsByProvider.value);
+  const providerMethods = Object.values(supportedMethodsByProvider.value)
   const source = providerMethods.length
     ? providerMethods
-    : currentRows.value.map(row => (Array.isArray(row.methods) ? row.methods : []));
+    : currentRows.value.map(row => (Array.isArray(row.methods) ? row.methods : []))
 
   for (const rawMethods of source) {
     const normalized = new Set(
-      rawMethods.map(method => normalizeMethod(method) ?? method).filter(Boolean)
-    );
+      rawMethods.map(method => normalizeMethod(method) ?? method).filter(Boolean),
+    )
 
-    if (normalized.has('bank') || normalized.has('bank_deposit')) counts.bank += 1;
-    if (normalized.has('cash') || normalized.has('cash_pickup')) counts.cash += 1;
-    if (normalized.has('wallet') || normalized.has('mobile_wallet')) counts.wallet += 1;
-    if (normalized.has('airtime')) counts.airtime += 1;
-    if (normalized.has('home') || normalized.has('home_delivery')) counts.home += 1;
+    if (normalized.has('bank') || normalized.has('bank_deposit')) counts.bank += 1
+    if (normalized.has('cash') || normalized.has('cash_pickup')) counts.cash += 1
+    if (normalized.has('wallet') || normalized.has('mobile_wallet')) counts.wallet += 1
+    if (normalized.has('airtime')) counts.airtime += 1
+    if (normalized.has('home') || normalized.has('home_delivery')) counts.home += 1
     if (normalized.has('card') || normalized.has('debit_card') || normalized.has('card_delivery'))
-      counts.card += 1;
+      counts.card += 1
   }
 
-  return counts;
-});
+  return counts
+})
 
 const providerQuotes = computed(() => {
   if (refreshGateActive.value) {
-    return [];
+    return []
   }
 
-  const allQuotes = (quotesData.value?.data || []) as ProviderQuote[];
+  const allQuotes = (quotesData.value?.data || []) as ProviderQuote[]
 
   // Filter by selected payout method - only show providers that support this method
-  const selectedMethod = normalizeMethod(payoutMethod.value) ?? payoutMethod.value;
-  const filtered = allQuotes.filter(quote => {
-    const methods = Array.isArray(quote.methods) ? quote.methods : [];
-    if (!methods.length) return true;
-    return methods.some(method => normalizeMethod(method) === selectedMethod);
-  });
-  return filtered.length ? filtered : allQuotes;
-});
+  const selectedMethod = normalizeMethod(payoutMethod.value) ?? payoutMethod.value
+  const filtered = allQuotes.filter((quote) => {
+    const methods = Array.isArray(quote.methods) ? quote.methods : []
+    if (!methods.length) return true
+    return methods.some(method => normalizeMethod(method) === selectedMethod)
+  })
+  return filtered.length ? filtered : allQuotes
+})
 
 const ratedQuotes = computed(
-  () => attachRatings(providerQuotes.value) as Array<ProviderQuote & { score?: number }>
-);
-const apiUpdatedAt = computed(() => quotesData.value?.updatedAt);
+  () => attachRatings(providerQuotes.value) as Array<ProviderQuote & { score?: number }>,
+)
+const apiUpdatedAt = computed(() => quotesData.value?.updatedAt)
 const apiUpdatedAtMs = computed(() => {
-  if (!apiUpdatedAt.value) return null;
-  const ts = new Date(apiUpdatedAt.value).getTime();
-  return Number.isFinite(ts) ? ts : null;
-});
+  if (!apiUpdatedAt.value) return null
+  const ts = new Date(apiUpdatedAt.value).getTime()
+  return Number.isFinite(ts) ? ts : null
+})
 const isQuoteStale = computed(() => {
-  if (!apiUpdatedAtMs.value) return false;
-  return Date.now() - apiUpdatedAtMs.value > MAX_B2C_STALE_MS;
-});
+  if (!apiUpdatedAtMs.value) return false
+  return Date.now() - apiUpdatedAtMs.value > MAX_B2C_STALE_MS
+})
 const apiUpdatedLabel = computed(() =>
-  apiUpdatedAt.value ? getRelativeTime(apiUpdatedAt.value) : ''
-);
-type ProviderError = { code: string; message?: string };
+  apiUpdatedAt.value ? getRelativeTime(apiUpdatedAt.value) : '',
+)
+type ProviderError = { code: string, message?: string }
 const normalizeProviderError = (value: unknown, fallbackMessage?: string): ProviderError | null => {
-  if (!value) return null;
+  if (!value) return null
   if (typeof value === 'string') {
-    return { code: value, message: fallbackMessage };
+    return { code: value, message: fallbackMessage }
   }
   if (typeof value === 'object' && value !== null) {
-    const maybe = value as { code?: string; message?: string };
+    const maybe = value as { code?: string, message?: string }
     if (typeof maybe.code === 'string') {
-      return { code: maybe.code, message: maybe.message ?? fallbackMessage };
+      return { code: maybe.code, message: maybe.message ?? fallbackMessage }
     }
   }
-  return null;
-};
+  return null
+}
 const providerError = computed<ProviderError | null>(() => {
-  const payload = quotesData.value as { error?: unknown; message?: string } | null;
-  const inline = normalizeProviderError(payload?.error, payload?.message);
-  if (inline) return inline;
+  const payload = quotesData.value as { error?: unknown, message?: string } | null
+  const inline = normalizeProviderError(payload?.error, payload?.message)
+  if (inline) return inline
   const requestError = quotesError.value as {
-    data?: { error?: string; message?: string };
-    message?: string;
-  } | null;
+    data?: { error?: string, message?: string }
+    message?: string
+  } | null
   return normalizeProviderError(
     requestError?.data?.error,
-    requestError?.data?.message ?? requestError?.message
-  );
-});
-const corridorUnsupported = computed(() => providerError.value?.code === 'corridor_unsupported');
+    requestError?.data?.message ?? requestError?.message,
+  )
+})
+const corridorUnsupported = computed(() => providerError.value?.code === 'corridor_unsupported')
 const corridorUnavailable = computed(() => {
-  const code = providerError.value?.code;
+  const code = providerError.value?.code
   return (
     code === 'corridor_unavailable' || code === 'rate_unavailable' || code === 'fx_unavailable'
-  );
-});
-const quotesUnavailable = computed(() => providerError.value?.code === 'quotes_unavailable');
+  )
+})
+const quotesUnavailable = computed(() => providerError.value?.code === 'quotes_unavailable')
 const hasApiError = computed(() => {
-  if (!quotesError.value && !providerError.value) return false;
+  if (!quotesError.value && !providerError.value) return false
   if (corridorUnavailable.value || corridorUnsupported.value || quotesUnavailable.value)
-    return false;
-  return true;
-});
+    return false
+  return true
+})
 const corridorId = computed(
   () =>
-    `${fromCountryCode.value}-${toCountryCode.value}-${fromCurrencyCode.value}-${toCurrencyCode.value}`
-);
+    `${fromCountryCode.value}-${toCountryCode.value}-${fromCurrencyCode.value}-${toCurrencyCode.value}`,
+)
 const quoteRefreshKey = computed(
-  () => `${corridorId.value}:${displayAmount.value}:${payoutMethod.value}`
-);
+  () => `${corridorId.value}:${displayAmount.value}:${payoutMethod.value}`,
+)
 
-watch(methodSelectorMethods, methods => {
-  if (quotesPending.value) return;
-  payoutMethod.value = resolvePayoutMethodSelection(payoutMethod.value, methods);
-});
+watch(methodSelectorMethods, (methods) => {
+  if (quotesPending.value) return
+  payoutMethod.value = resolvePayoutMethodSelection(payoutMethod.value, methods)
+})
 
 watch(
   [corridorId, displayAmount],
   () => {
-    backgroundRefreshKeys.clear();
+    backgroundRefreshKeys.clear()
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 useAbortableWatch(
   [methodSelectorMethods, payoutMethod, corridorId, displayAmount],
   async ([available, selectedMethod]: [string[], string, unknown, unknown], signal) => {
-    if (!import.meta.client) return;
-    if (!available.length) return;
+    if (!import.meta.client) return
+    if (!available.length) return
     await Promise.all(
       available
         .filter(method => method !== selectedMethod)
-        .map(method => enqueueBackgroundRefresh(method as Method, signal))
-    );
+        .map(method => enqueueBackgroundRefresh(method as Method, signal)),
+    )
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   corridorId,
-  value => {
-    if (!value || sendMoneyTracked.value) return;
-    sendMoneyTracked.value = true;
-    void trackSendMoneyView({ corridorId: value, pagePath: currentRoute.fullPath });
+  (value) => {
+    if (!value || sendMoneyTracked.value) return
+    sendMoneyTracked.value = true
+    void trackSendMoneyView({ corridorId: value, pagePath: currentRoute.fullPath })
   },
-  { immediate: true }
-);
-const historyRangeDays = 7;
+  { immediate: true },
+)
+const historyRangeDays = 7
 const shouldFetchHistory = computed(() => {
   if (fromCurrencyCode.value === toCurrencyCode.value) {
-    return false;
+    return false
   }
   return (
-    fromCurrencyCode.value.length === 3 &&
-    toCurrencyCode.value.length === 3 &&
-    fromCurrencyCode.value !== 'XXX' &&
-    toCurrencyCode.value !== 'XXX'
-  );
-});
+    fromCurrencyCode.value.length === 3
+    && toCurrencyCode.value.length === 3
+    && fromCurrencyCode.value !== 'XXX'
+    && toCurrencyCode.value !== 'XXX'
+  )
+})
 
 const {
   data: rateHistoryData,
@@ -2905,7 +3022,7 @@ const {
         lastUpdated: null,
         status: 'ready' as const,
         message: null,
-      };
+      }
     }
 
     try {
@@ -2915,45 +3032,46 @@ const {
           quote: toCurrencyCode.value,
           days: historyRangeDays,
         },
-      });
-      if (response?.status) return response;
-      const hasHistory = Array.isArray(response?.history) && response.history.length > 0;
+      })
+      if (response?.status) return response
+      const hasHistory = Array.isArray(response?.history) && response.history.length > 0
       return {
         ...response,
         status: hasHistory ? ('ready' as const) : ('warming' as const),
         message: response?.message ?? (hasHistory ? null : 'Rate history is warming up'),
-      };
-    } catch (error: any) {
+      }
+    }
+ catch (error: any) {
       useLogger('send-money').error('rate history unavailable', {
         error,
         statusCode: error?.statusCode,
         data: error?.data,
         base: fromCurrencyCode.value,
         quote: toCurrencyCode.value,
-      });
-      const statusCode = Number(error?.statusCode ?? 0);
-      const errorCode = typeof error?.data?.error === 'string' ? error.data.error : null;
-      const isInternalFailure = statusCode >= 500 || errorCode === 'internal_error';
-      const isWarmup = statusCode === 404 || errorCode === 'rate_unavailable';
-      const isValidationOrCorridor =
-        statusCode === 400 ||
-        errorCode === 'bad_request' ||
-        errorCode === 'corridor_unsupported' ||
-        errorCode === 'corridor_unavailable';
-      const message =
-        typeof error?.data?.message === 'string'
+      })
+      const statusCode = Number(error?.statusCode ?? 0)
+      const errorCode = typeof error?.data?.error === 'string' ? error.data.error : null
+      const isInternalFailure = statusCode >= 500 || errorCode === 'internal_error'
+      const isWarmup = statusCode === 404 || errorCode === 'rate_unavailable'
+      const isValidationOrCorridor
+        = statusCode === 400
+          || errorCode === 'bad_request'
+          || errorCode === 'corridor_unsupported'
+          || errorCode === 'corridor_unavailable'
+      const message
+        = typeof error?.data?.message === 'string'
           ? error.data.message
           : isInternalFailure
             ? 'Rate history service error'
             : isValidationOrCorridor
               ? 'Rate history unavailable for this corridor'
-              : 'Rate history is warming up';
-      const status =
-        isInternalFailure || isValidationOrCorridor
+              : 'Rate history is warming up'
+      const status
+        = isInternalFailure || isValidationOrCorridor
           ? ('unavailable' as const)
           : isWarmup
             ? ('warming' as const)
-            : ('warming' as const);
+            : ('warming' as const)
       return {
         base: fromCurrencyCode.value,
         quote: toCurrencyCode.value,
@@ -2964,60 +3082,61 @@ const {
         refreshQueued: Boolean(error?.data?.refreshQueued),
         refreshRequestId:
           typeof error?.data?.refreshRequestId === 'string' ? error.data.refreshRequestId : null,
-      };
+      }
     }
   },
-  { watch: [fromCurrencyCode, toCurrencyCode] }
-);
+  { watch: [fromCurrencyCode, toCurrencyCode] },
+)
 
-const RATE_HISTORY_REFRESH_POLL_MS = 2500;
-const RATE_HISTORY_REFRESH_MAX_ATTEMPTS = 8;
-const rateHistoryRefreshAttempts = ref(0);
-const rateHistoryRefreshTimer = ref<number | null>(null);
-const lastRateHistoryRefreshRequestId = ref<string | null>(null);
+const RATE_HISTORY_REFRESH_POLL_MS = 2500
+const RATE_HISTORY_REFRESH_MAX_ATTEMPTS = 8
+const rateHistoryRefreshAttempts = ref(0)
+const rateHistoryRefreshTimer = ref<number | null>(null)
+const lastRateHistoryRefreshRequestId = ref<string | null>(null)
 
 const stopRateHistoryRefreshPoll = () => {
-  if (!import.meta.client) return;
+  if (!import.meta.client) return
   if (rateHistoryRefreshTimer.value !== null) {
-    window.clearTimeout(rateHistoryRefreshTimer.value);
-    rateHistoryRefreshTimer.value = null;
+    window.clearTimeout(rateHistoryRefreshTimer.value)
+    rateHistoryRefreshTimer.value = null
   }
-};
+}
 
 const scheduleRateHistoryRefreshPoll = () => {
-  if (!import.meta.client) return;
-  if (rateHistoryRefreshTimer.value !== null) return;
-  if (rateHistoryRefreshAttempts.value >= RATE_HISTORY_REFRESH_MAX_ATTEMPTS) return;
+  if (!import.meta.client) return
+  if (rateHistoryRefreshTimer.value !== null) return
+  if (rateHistoryRefreshAttempts.value >= RATE_HISTORY_REFRESH_MAX_ATTEMPTS) return
 
-  const snapshot = rateHistoryData.value;
-  const hasHistory = Array.isArray(snapshot?.history) && snapshot.history.length > 0;
-  const hardUnavailable = snapshot?.status === 'unavailable';
-  const canPoll = Boolean(snapshot?.refreshQueued && snapshot?.refreshRequestId);
-  if (hasHistory || hardUnavailable || !canPoll) return;
+  const snapshot = rateHistoryData.value
+  const hasHistory = Array.isArray(snapshot?.history) && snapshot.history.length > 0
+  const hardUnavailable = snapshot?.status === 'unavailable'
+  const canPoll = Boolean(snapshot?.refreshQueued && snapshot?.refreshRequestId)
+  if (hasHistory || hardUnavailable || !canPoll) return
 
   rateHistoryRefreshTimer.value = window.setTimeout(async () => {
-    rateHistoryRefreshTimer.value = null;
-    rateHistoryRefreshAttempts.value += 1;
+    rateHistoryRefreshTimer.value = null
+    rateHistoryRefreshAttempts.value += 1
     try {
-      await refreshRateHistory();
-    } catch (error: any) {
-      if (error?.name === 'AbortError') return;
+      await refreshRateHistory()
+    }
+ catch (error: any) {
+      if (error?.name === 'AbortError') return
     }
 
-    const current = rateHistoryData.value;
-    const hasFreshHistory = Array.isArray(current?.history) && current.history.length > 0;
-    const unavailable = current?.status === 'unavailable';
-    const pollable = Boolean(current?.refreshQueued && current?.refreshRequestId);
+    const current = rateHistoryData.value
+    const hasFreshHistory = Array.isArray(current?.history) && current.history.length > 0
+    const unavailable = current?.status === 'unavailable'
+    const pollable = Boolean(current?.refreshQueued && current?.refreshRequestId)
     if (
-      !hasFreshHistory &&
-      !unavailable &&
-      pollable &&
-      rateHistoryRefreshAttempts.value < RATE_HISTORY_REFRESH_MAX_ATTEMPTS
+      !hasFreshHistory
+      && !unavailable
+      && pollable
+      && rateHistoryRefreshAttempts.value < RATE_HISTORY_REFRESH_MAX_ATTEMPTS
     ) {
-      scheduleRateHistoryRefreshPoll();
+      scheduleRateHistoryRefreshPoll()
     }
-  }, RATE_HISTORY_REFRESH_POLL_MS);
-};
+  }, RATE_HISTORY_REFRESH_POLL_MS)
+}
 
 watch(
   () => ({
@@ -3028,132 +3147,132 @@ watch(
       ? rateHistoryData.value?.history.length
       : 0,
   }),
-  state => {
-    if (!import.meta.client) return;
+  (state) => {
+    if (!import.meta.client) return
     if (state.requestId !== lastRateHistoryRefreshRequestId.value) {
-      lastRateHistoryRefreshRequestId.value = state.requestId;
-      rateHistoryRefreshAttempts.value = 0;
+      lastRateHistoryRefreshRequestId.value = state.requestId
+      rateHistoryRefreshAttempts.value = 0
     }
 
-    const canPoll = Boolean(state.refreshQueued && state.requestId);
-    const hasHistory = state.historyLength > 0;
-    const hardUnavailable = state.status === 'unavailable';
+    const canPoll = Boolean(state.refreshQueued && state.requestId)
+    const hasHistory = state.historyLength > 0
+    const hardUnavailable = state.status === 'unavailable'
     if (!canPoll || hasHistory || hardUnavailable) {
-      stopRateHistoryRefreshPoll();
-      return;
+      stopRateHistoryRefreshPoll()
+      return
     }
 
-    scheduleRateHistoryRefreshPoll();
+    scheduleRateHistoryRefreshPoll()
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 onUnmounted(() => {
-  stopRateHistoryRefreshPoll();
-});
+  stopRateHistoryRefreshPoll()
+})
 
 const rateHistory = computed(() => {
-  const history = rateHistoryData.value?.history || [];
+  const history = rateHistoryData.value?.history || []
   return history
     .map(point => ({ ...point, rate: Number(point.rate) }))
-    .filter(point => Number.isFinite(point.rate));
-});
-const rateHistoryLastUpdated = computed(() => rateHistoryData.value?.lastUpdated || null);
+    .filter(point => Number.isFinite(point.rate))
+})
+const rateHistoryLastUpdated = computed(() => rateHistoryData.value?.lastUpdated || null)
 const rateHistorySource = computed(
-  () => rateHistory.value[rateHistory.value.length - 1]?.source || null
-);
+  () => rateHistory.value[rateHistory.value.length - 1]?.source || null,
+)
 const rateHistoryStatus = computed(() => {
-  if (rateHistoryData.value?.status) return rateHistoryData.value.status;
-  if (rateHistory.value.length > 0) return 'ready' as const;
-  return null;
-});
+  if (rateHistoryData.value?.status) return rateHistoryData.value.status
+  if (rateHistory.value.length > 0) return 'ready' as const
+  return null
+})
 const rateHistoryStatusMessage = computed(() =>
-  typeof rateHistoryData.value?.message === 'string' ? rateHistoryData.value.message : ''
-);
+  typeof rateHistoryData.value?.message === 'string' ? rateHistoryData.value.message : '',
+)
 const latestHistoryRate = computed(() => {
-  const last = rateHistory.value[rateHistory.value.length - 1];
-  return typeof last?.rate === 'number' && Number.isFinite(last.rate) ? last.rate : null;
-});
+  const last = rateHistory.value[rateHistory.value.length - 1]
+  return typeof last?.rate === 'number' && Number.isFinite(last.rate) ? last.rate : null
+})
 
-const isSameCurrency = computed(() => fromCurrencyCode.value === toCurrencyCode.value);
+const isSameCurrency = computed(() => fromCurrencyCode.value === toCurrencyCode.value)
 
 const midMarketRate = computed(() => {
   if (isSameCurrency.value) {
-    return 1.0;
+    return 1.0
   }
-  const rate = quotesData.value?.midMarketRate;
-  return typeof rate === 'number' && Number.isFinite(rate) ? rate : latestHistoryRate.value;
-});
+  const rate = quotesData.value?.midMarketRate
+  return typeof rate === 'number' && Number.isFinite(rate) ? rate : latestHistoryRate.value
+})
 const midMarketSource = computed(() => {
   if (isSameCurrency.value) {
-    return 'Same currency';
+    return 'Same currency'
   }
-  const rawSource = quotesData.value?.midMarketSource || rateHistorySource.value || 'Mid-market';
-  const normalized = String(rawSource).trim();
-  const sourceKey = normalized.toLowerCase();
+  const rawSource = quotesData.value?.midMarketSource || rateHistorySource.value || 'Mid-market'
+  const normalized = String(rawSource).trim()
+  const sourceKey = normalized.toLowerCase()
 
   if (sourceKey === 'oanda' || sourceKey === 'oanda_auth') {
-    return 'OANDA';
+    return 'OANDA'
   }
 
   if (sourceKey === 'xe' || sourceKey.startsWith('xe ')) {
-    return 'XE';
+    return 'XE'
   }
 
   if (sourceKey === 'provider_weighted') {
-    return 'Provider-weighted fallback';
+    return 'Provider-weighted fallback'
   }
 
-  return normalized;
-});
+  return normalized
+})
 const midMarketUpdatedAt = computed(
   () =>
-    quotesData.value?.midMarketUpdatedAt ||
-    rateHistoryLastUpdated.value ||
-    quotesData.value?.updatedAt ||
-    null
-);
+    quotesData.value?.midMarketUpdatedAt
+    || rateHistoryLastUpdated.value
+    || quotesData.value?.updatedAt
+    || null,
+)
 const midMarketLabel = computed(() => {
   if (isSameCurrency.value) {
-    return `1 ${fromCurrencyCode.value} = 1.000 ${toCurrencyCode.value}`;
+    return `1 ${fromCurrencyCode.value} = 1.000 ${toCurrencyCode.value}`
   }
   if (!midMarketRate.value) {
-    return `1 ${fromCurrencyCode.value} = -- ${toCurrencyCode.value}`;
+    return `1 ${fromCurrencyCode.value} = -- ${toCurrencyCode.value}`
   }
-  return `1 ${fromCurrencyCode.value} = ${formatExchangeRateValue(midMarketRate.value)} ${toCurrencyCode.value}`;
-});
+  return `1 ${fromCurrencyCode.value} = ${formatExchangeRateValue(midMarketRate.value)} ${toCurrencyCode.value}`
+})
 const midMarketAsOf = computed(() => {
-  if (!midMarketUpdatedAt.value) return '';
-  return `Updated ${getRelativeTime(midMarketUpdatedAt.value)}`;
-});
+  if (!midMarketUpdatedAt.value) return ''
+  return `Updated ${getRelativeTime(midMarketUpdatedAt.value)}`
+})
 
 const mostRecentUpdate = computed(() => {
   const timestamps = [
     quotesData.value?.updatedAt,
     quotesData.value?.midMarketUpdatedAt,
     rateHistoryLastUpdated.value,
-  ].filter(Boolean) as string[];
+  ].filter(Boolean) as string[]
 
-  if (timestamps.length === 0) return null;
+  if (timestamps.length === 0) return null
 
   return timestamps.reduce((latest, current) => {
-    const latestTime = new Date(latest).getTime();
-    const currentTime = new Date(current).getTime();
-    return currentTime > latestTime ? current : latest;
-  });
-});
+    const latestTime = new Date(latest).getTime()
+    const currentTime = new Date(current).getTime()
+    return currentTime > latestTime ? current : latest
+  })
+})
 
 const mostRecentUpdateLabel = computed(() => {
-  if (!mostRecentUpdate.value) return 'just now';
-  return getRelativeTime(mostRecentUpdate.value);
-});
+  if (!mostRecentUpdate.value) return 'just now'
+  return getRelativeTime(mostRecentUpdate.value)
+})
 
-const chartWidth = 400;
-const chartHeight = 120;
-const chartPadding = 10;
-const chartLeftPadding = 60;
-const chartTopPadding = 15;
-const chartBottomPadding = 25;
+const chartWidth = 400
+const chartHeight = 120
+const chartPadding = 10
+const chartLeftPadding = 60
+const chartTopPadding = 15
+const chartBottomPadding = 25
 
 const chartPoints = computed(() => {
   return buildRateHistoryChartPoints({
@@ -3165,69 +3284,69 @@ const chartPoints = computed(() => {
     chartLeftPadding,
     chartTopPadding,
     chartBottomPadding,
-  });
-});
+  })
+})
 
 // Create smooth bezier curve path
 const chartLinePath = computed(() => {
-  if (!chartPoints.value.length) return '';
+  if (!chartPoints.value.length) return ''
   if (chartPoints.value.length === 1) {
-    return `M ${chartPoints.value[0].x},${chartPoints.value[0].y}`;
+    return `M ${chartPoints.value[0].x},${chartPoints.value[0].y}`
   }
 
-  const points = chartPoints.value;
-  let path = `M ${points[0].x},${points[0].y}`;
+  const points = chartPoints.value
+  let path = `M ${points[0].x},${points[0].y}`
 
   for (let i = 0; i < points.length - 1; i++) {
-    const current = points[i];
-    const next = points[i + 1];
-    const controlPoint1X = current.x + (next.x - current.x) / 3;
-    const controlPoint1Y = current.y;
-    const controlPoint2X = current.x + ((next.x - current.x) * 2) / 3;
-    const controlPoint2Y = next.y;
+    const current = points[i]
+    const next = points[i + 1]
+    const controlPoint1X = current.x + (next.x - current.x) / 3
+    const controlPoint1Y = current.y
+    const controlPoint2X = current.x + ((next.x - current.x) * 2) / 3
+    const controlPoint2Y = next.y
 
-    path += ` C ${controlPoint1X},${controlPoint1Y} ${controlPoint2X},${controlPoint2Y} ${next.x},${next.y}`;
+    path += ` C ${controlPoint1X},${controlPoint1Y} ${controlPoint2X},${controlPoint2Y} ${next.x},${next.y}`
   }
 
-  return path;
-});
+  return path
+})
 
 const chartAreaPath = computed(() => {
-  if (!chartPoints.value.length) return '';
-  const bottomY = chartTopPadding + (chartHeight - chartTopPadding - chartBottomPadding);
+  if (!chartPoints.value.length) return ''
+  const bottomY = chartTopPadding + (chartHeight - chartTopPadding - chartBottomPadding)
 
   if (chartPoints.value.length === 1) {
-    const point = chartPoints.value[0];
-    return `M ${point.x},${point.y} L ${point.x},${bottomY} L ${point.x},${bottomY} Z`;
+    const point = chartPoints.value[0]
+    return `M ${point.x},${point.y} L ${point.x},${bottomY} L ${point.x},${bottomY} Z`
   }
 
-  const points = chartPoints.value;
-  const first = points[0];
-  const last = points[points.length - 1];
+  const points = chartPoints.value
+  const first = points[0]
+  const last = points[points.length - 1]
 
   // Use the same smooth curve path for the area
-  let path = `M ${first.x},${first.y}`;
+  let path = `M ${first.x},${first.y}`
 
   for (let i = 0; i < points.length - 1; i++) {
-    const current = points[i];
-    const next = points[i + 1];
-    const controlPoint1X = current.x + (next.x - current.x) / 3;
-    const controlPoint1Y = current.y;
-    const controlPoint2X = current.x + ((next.x - current.x) * 2) / 3;
-    const controlPoint2Y = next.y;
+    const current = points[i]
+    const next = points[i + 1]
+    const controlPoint1X = current.x + (next.x - current.x) / 3
+    const controlPoint1Y = current.y
+    const controlPoint2X = current.x + ((next.x - current.x) * 2) / 3
+    const controlPoint2Y = next.y
 
-    path += ` C ${controlPoint1X},${controlPoint1Y} ${controlPoint2X},${controlPoint2Y} ${next.x},${next.y}`;
+    path += ` C ${controlPoint1X},${controlPoint1Y} ${controlPoint2X},${controlPoint2Y} ${next.x},${next.y}`
   }
 
   // Close the area
-  path += ` L ${last.x},${bottomY} L ${first.x},${bottomY} Z`;
-  return path;
-});
+  path += ` L ${last.x},${bottomY} L ${first.x},${bottomY} Z`
+  return path
+})
 
 const chartEndPoint = computed(() => {
-  if (!chartPoints.value.length) return null;
-  return chartPoints.value[chartPoints.value.length - 1];
-});
+  if (!chartPoints.value.length) return null
+  return chartPoints.value[chartPoints.value.length - 1]
+})
 
 const chartStats = computed(() => {
   if (isSameCurrency.value) {
@@ -3239,41 +3358,41 @@ const chartStats = computed(() => {
       displayMinRate: 0.99,
       displayMaxRate: 1.01,
       isFlat: true,
-    };
+    }
   }
-  if (!rateHistory.value.length) return null;
+  if (!rateHistory.value.length) return null
 
   // Only use last 7 days of data
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const recentHistory = rateHistory.value.filter(point => {
-    const pointDate = new Date(point.date);
-    return pointDate >= sevenDaysAgo;
-  });
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const recentHistory = rateHistory.value.filter((point) => {
+    const pointDate = new Date(point.date)
+    return pointDate >= sevenDaysAgo
+  })
 
-  const rates =
-    recentHistory.length > 0
+  const rates
+    = recentHistory.length > 0
       ? recentHistory.map(point => point.rate)
-      : rateHistory.value.map(point => point.rate);
+      : rateHistory.value.map(point => point.rate)
 
-  const minRate = Math.min(...rates);
-  const maxRate = Math.max(...rates);
-  const avgRate = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
-  const variance = rates.reduce((sum, rate) => sum + Math.pow(rate - avgRate, 2), 0) / rates.length;
-  const stdev = Math.sqrt(variance);
-  const volatilityPct = avgRate > 0 ? (stdev / avgRate) * 100 : null;
+  const minRate = Math.min(...rates)
+  const maxRate = Math.max(...rates)
+  const avgRate = rates.reduce((sum, rate) => sum + rate, 0) / rates.length
+  const variance = rates.reduce((sum, rate) => sum + Math.pow(rate - avgRate, 2), 0) / rates.length
+  const stdev = Math.sqrt(variance)
+  const volatilityPct = avgRate > 0 ? (stdev / avgRate) * 100 : null
 
   // When data is flat (no variance), add padding to Y-axis for better visualization
-  const range = maxRate - minRate;
-  const isFlat = range < avgRate * 0.001; // Less than 0.1% variance = flat
-  let displayMinRate = minRate;
-  let displayMaxRate = maxRate;
+  const range = maxRate - minRate
+  const isFlat = range < avgRate * 0.001 // Less than 0.1% variance = flat
+  let displayMinRate = minRate
+  let displayMaxRate = maxRate
 
   if (isFlat && avgRate > 0) {
     // Add ~1% padding above and below the flat line
-    const padding = avgRate * 0.01;
-    displayMinRate = avgRate - padding;
-    displayMaxRate = avgRate + padding;
+    const padding = avgRate * 0.01
+    displayMinRate = avgRate - padding
+    displayMaxRate = avgRate + padding
   }
 
   return {
@@ -3284,121 +3403,122 @@ const chartStats = computed(() => {
     displayMinRate,
     displayMaxRate,
     isFlat,
-  };
-});
+  }
+})
 
 const formatChartDate = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
 
 const chartLabels = computed(() => {
   if (isSameCurrency.value) {
-    return [`${historyRangeDays}D`, 'Now'];
+    return [`${historyRangeDays}D`, 'Now']
   }
   if (!rateHistory.value.length) {
-    return [`${historyRangeDays}D`, 'Now'];
+    return [`${historyRangeDays}D`, 'Now']
   }
 
   // Show more intermediate dates - show start, middle points, and end
-  const historyLength = rateHistory.value.length;
+  const historyLength = rateHistory.value.length
   if (historyLength <= 2) {
-    const start = formatChartDate(rateHistory.value[0].date);
-    const end = formatChartDate(rateHistory.value[historyLength - 1].date);
-    return [start || `${historyRangeDays}D`, end || 'Now'];
+    const start = formatChartDate(rateHistory.value[0].date)
+    const end = formatChartDate(rateHistory.value[historyLength - 1].date)
+    return [start || `${historyRangeDays}D`, end || 'Now']
   }
 
   // Calculate indices for evenly spaced labels
-  const indices: number[] = [];
+  const indices: number[] = []
   if (historyLength <= 4) {
     // For short histories, show all points
     for (let i = 0; i < historyLength; i++) {
-      indices.push(i);
+      indices.push(i)
     }
-  } else {
+  }
+ else {
     // Show start, 1/3, 2/3, and end
-    indices.push(0);
-    indices.push(Math.floor(historyLength / 3));
-    indices.push(Math.floor((historyLength * 2) / 3));
-    indices.push(historyLength - 1);
+    indices.push(0)
+    indices.push(Math.floor(historyLength / 3))
+    indices.push(Math.floor((historyLength * 2) / 3))
+    indices.push(historyLength - 1)
   }
 
-  return indices.map(i => formatChartDate(rateHistory.value[i].date));
-});
+  return indices.map(i => formatChartDate(rateHistory.value[i].date))
+})
 
 const chartStatusLabel = computed(() => {
   if (isSameCurrency.value) {
-    return 'Same currency — rate is always 1:1';
+    return 'Same currency — rate is always 1:1'
   }
   if (corridorUnsupported.value) {
-    return 'Unsupported corridor';
+    return 'Unsupported corridor'
   }
   if (corridorUnavailable.value) {
-    return 'Unavailable corridor';
+    return 'Unavailable corridor'
   }
   if (rateHistoryPending.value && !chartPoints.value.length) {
-    return `Loading ${historyRangeDays}D history...`;
+    return `Loading ${historyRangeDays}D history...`
   }
   if (!rateHistoryPending.value && !chartPoints.value.length) {
     if (rateHistoryStatus.value === 'warming') {
-      return rateHistoryStatusMessage.value || 'Rate history is warming up';
+      return rateHistoryStatusMessage.value || 'Rate history is warming up'
     }
     if (rateHistoryStatus.value === 'unavailable') {
-      return rateHistoryStatusMessage.value || 'Rate history is unavailable right now';
+      return rateHistoryStatusMessage.value || 'Rate history is unavailable right now'
     }
-    const error = rateHistoryError.value as any;
+    const error = rateHistoryError.value as any
     if (error?.statusCode === 404 || error?.data?.error === 'rate_unavailable') {
-      return 'Rate history not available (rate sync may be pending)';
+      return 'Rate history not available (rate sync may be pending)'
     }
     if (error?.statusCode === 500 || error?.data?.error === 'internal_error') {
-      return 'Rate history service error';
+      return 'Rate history service error'
     }
-    return 'No rate history yet';
+    return 'No rate history yet'
   }
-  return '';
-});
+  return ''
+})
 
 const getRateForDaysAgo = (daysAgo: number) => {
-  if (!rateHistory.value.length) return null;
-  const latestDate = new Date(rateHistory.value[rateHistory.value.length - 1].date);
-  if (Number.isNaN(latestDate.getTime())) return null;
-  const targetDate = new Date(latestDate);
-  targetDate.setDate(targetDate.getDate() - daysAgo);
+  if (!rateHistory.value.length) return null
+  const latestDate = new Date(rateHistory.value[rateHistory.value.length - 1].date)
+  if (Number.isNaN(latestDate.getTime())) return null
+  const targetDate = new Date(latestDate)
+  targetDate.setDate(targetDate.getDate() - daysAgo)
 
   for (let i = rateHistory.value.length - 1; i >= 0; i -= 1) {
-    const pointDate = new Date(rateHistory.value[i].date);
+    const pointDate = new Date(rateHistory.value[i].date)
     if (!Number.isNaN(pointDate.getTime()) && pointDate <= targetDate) {
-      return rateHistory.value[i].rate;
+      return rateHistory.value[i].rate
     }
   }
-  return null;
-};
+  return null
+}
 
-const formatPercentChange = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+const formatPercentChange = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
 
 const rateChanges = computed(() => {
-  const latest = latestHistoryRate.value;
-  if (latest === null || !Number.isFinite(latest)) return [];
+  const latest = latestHistoryRate.value
+  if (latest === null || !Number.isFinite(latest)) return []
 
-  const changes: Array<{ label: string; value: string }> = [];
-  const weekRate = getRateForDaysAgo(7);
+  const changes: Array<{ label: string, value: string }> = []
+  const weekRate = getRateForDaysAgo(7)
   if (Number.isFinite(weekRate ?? Number.NaN)) {
-    const pct = ((latest - Number(weekRate)) / Number(weekRate)) * 100;
+    const pct = ((latest - Number(weekRate)) / Number(weekRate)) * 100
     if (Number.isFinite(pct)) {
-      changes.push({ label: '7D', value: formatPercentChange(pct) });
+      changes.push({ label: '7D', value: formatPercentChange(pct) })
     }
   }
-  const monthRate = getRateForDaysAgo(30);
+  const monthRate = getRateForDaysAgo(30)
   if (Number.isFinite(monthRate ?? Number.NaN)) {
-    const pct = ((latest - Number(monthRate)) / Number(monthRate)) * 100;
+    const pct = ((latest - Number(monthRate)) / Number(monthRate)) * 100
     if (Number.isFinite(pct)) {
-      changes.push({ label: '30D', value: formatPercentChange(pct) });
+      changes.push({ label: '30D', value: formatPercentChange(pct) })
     }
   }
 
-  return changes;
-});
+  return changes
+})
 
 const methodLabelMap: Record<string, string> = {
   bank: 'Bank',
@@ -3407,23 +3527,23 @@ const methodLabelMap: Record<string, string> = {
   airtime: 'Airtime',
   home: 'Home delivery',
   card: 'Card',
-};
+}
 
 const getMethodLabelList = (methods: string[]) =>
-  methods.map(method => methodLabelMap[method] || method);
+  methods.map(method => methodLabelMap[method] || method)
 
-const formatMethodLabels = (methods: string[]) => getMethodLabelList(methods).join(', ');
+const formatMethodLabels = (methods: string[]) => getMethodLabelList(methods).join(', ')
 
 const getRateComparison = (providerRate: number) => {
   if (!midMarketRate.value || !Number.isFinite(providerRate)) {
-    return { text: '', isBetter: false, isWorse: false };
+    return { text: '', isBetter: false, isWorse: false }
   }
 
-  const midMarket = midMarketRate.value;
-  const difference = ((providerRate - midMarket) / midMarket) * 100;
+  const midMarket = midMarketRate.value
+  const difference = ((providerRate - midMarket) / midMarket) * 100
 
   if (Math.abs(difference) < 0.01) {
-    return { text: 'At mid-market rate', isBetter: false, isWorse: false };
+    return { text: 'At mid-market rate', isBetter: false, isWorse: false }
   }
 
   if (difference > 0) {
@@ -3431,100 +3551,101 @@ const getRateComparison = (providerRate: number) => {
       text: `${difference.toFixed(2)}% better than mid-market`,
       isBetter: true,
       isWorse: false,
-    };
-  } else {
+    }
+  }
+ else {
     return {
       text: `${Math.abs(difference).toFixed(2)}% worse than mid-market`,
       isBetter: false,
       isWorse: true,
-    };
+    }
   }
-};
+}
 
 const getProviderSlug = (row: TableRow): string | null => {
-  if (!row.providerId && !row.provider) return null;
-  return normalizeProviderSlug(row.providerId || row.provider);
-};
+  if (!row.providerId && !row.provider) return null
+  return normalizeProviderSlug(row.providerId || row.provider)
+}
 
 const formatDeliveryTime = (delivery: string): string => {
-  if (!delivery) return 'Standard delivery';
+  if (!delivery) return 'Standard delivery'
 
-  const lower = delivery.toLowerCase();
+  const lower = delivery.toLowerCase()
 
   if (lower.includes('minute') || lower.includes('min')) {
-    const match = delivery.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*(?:min|minute)/i);
+    const match = delivery.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*(?:min|minute)/i)
     if (match) {
-      const min = Number.parseInt(match[1]);
-      const max = Number.parseInt(match[2]);
-      if (max < 60) return `${min}–${max} min`;
-      if (max < 120) return `${min} min–${Math.floor(max / 60)} hr`;
-      return `${Math.floor(min / 60)}–${Math.floor(max / 60)} hr`;
+      const min = Number.parseInt(match[1])
+      const max = Number.parseInt(match[2])
+      if (max < 60) return `${min}–${max} min`
+      if (max < 120) return `${min} min–${Math.floor(max / 60)} hr`
+      return `${Math.floor(min / 60)}–${Math.floor(max / 60)} hr`
     }
-    const singleMatch = delivery.match(/(\d+)\s*(?:min|minute)/i);
+    const singleMatch = delivery.match(/(\d+)\s*(?:min|minute)/i)
     if (singleMatch) {
-      const val = Number.parseInt(singleMatch[1]);
-      if (val < 60) return `${val} min`;
-      return `${Math.floor(val / 60)} hr`;
+      const val = Number.parseInt(singleMatch[1])
+      if (val < 60) return `${val} min`
+      return `${Math.floor(val / 60)} hr`
     }
-    return 'Minutes';
+    return 'Minutes'
   }
 
   if (lower.includes('hour') || lower.includes('hr')) {
-    const match = delivery.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*(?:hour|hr)/i);
+    const match = delivery.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*(?:hour|hr)/i)
     if (match) {
-      const min = Number.parseInt(match[1]);
-      const max = Number.parseInt(match[2]);
-      if (max < 24) return `${min}–${max} hr`;
-      if (max < 48) return `${min} hr–1 day`;
-      return `${Math.floor(min / 24)}–${Math.floor(max / 24)} days`;
+      const min = Number.parseInt(match[1])
+      const max = Number.parseInt(match[2])
+      if (max < 24) return `${min}–${max} hr`
+      if (max < 48) return `${min} hr–1 day`
+      return `${Math.floor(min / 24)}–${Math.floor(max / 24)} days`
     }
-    const singleMatch = delivery.match(/(\d+)\s*(?:hour|hr)/i);
+    const singleMatch = delivery.match(/(\d+)\s*(?:hour|hr)/i)
     if (singleMatch) {
-      const val = Number.parseInt(singleMatch[1]);
-      if (val < 24) return `${val} hr`;
-      if (val < 48) return '1 day';
-      return `${Math.floor(val / 24)} days`;
+      const val = Number.parseInt(singleMatch[1])
+      if (val < 24) return `${val} hr`
+      if (val < 48) return '1 day'
+      return `${Math.floor(val / 24)} days`
     }
-    return 'Hours';
+    return 'Hours'
   }
 
   if (lower.includes('day')) {
-    const match = delivery.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*day/i);
+    const match = delivery.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*day/i)
     if (match) {
-      return `${match[1]}–${match[2]} days`;
+      return `${match[1]}–${match[2]} days`
     }
-    const singleMatch = delivery.match(/(\d+)\s*day/i);
+    const singleMatch = delivery.match(/(\d+)\s*day/i)
     if (singleMatch) {
-      const val = Number.parseInt(singleMatch[1]);
-      return val === 1 ? '1 day' : `${val} days`;
+      const val = Number.parseInt(singleMatch[1])
+      return val === 1 ? '1 day' : `${val} days`
     }
-    if (lower.includes('same day') || lower.includes('same-day')) return 'Same day';
-    return delivery;
+    if (lower.includes('same day') || lower.includes('same-day')) return 'Same day'
+    return delivery
   }
 
-  if (lower.includes('instant') || lower.includes('immediate')) return 'Instant';
-  if (lower.includes('same day') || lower.includes('same-day')) return 'Same day';
+  if (lower.includes('instant') || lower.includes('immediate')) return 'Instant'
+  if (lower.includes('same day') || lower.includes('same-day')) return 'Same day'
 
-  return delivery;
-};
+  return delivery
+}
 
 const apiRows = computed<TableRow[]>(() => {
-  if (!ratedQuotes.value.length) return [];
+  if (!ratedQuotes.value.length) return []
 
   return ratedQuotes.value.map((quote, index) => {
-    const score = Number.isFinite(quote.score) ? Number(quote.score).toFixed(1) : '0.0';
-    const quoteIsStale = quote.isStale === true;
+    const score = Number.isFinite(quote.score) ? Number(quote.score).toFixed(1) : '0.0'
+    const quoteIsStale = quote.isStale === true
     const quoteStaleAgeSeconds = Number.isFinite(quote.staleAgeSeconds)
       ? Number(quote.staleAgeSeconds)
-      : null;
+      : null
 
     const methodsArray = orderProviderMethods(
-      supportedMethodsByProvider.value[normalizeProviderSlug(quote.id)] ||
-        availableMethodsByProvider.value[normalizeProviderSlug(quote.id)] ||
-        quote.methods ||
-        []
-    );
-    const methodsLabel = formatMethodLabels(methodsArray);
+      supportedMethodsByProvider.value[normalizeProviderSlug(quote.id)]
+      || availableMethodsByProvider.value[normalizeProviderSlug(quote.id)]
+      || quote.methods
+      || [],
+    )
+    const methodsLabel = formatMethodLabels(methodsArray)
 
     return {
       provider: quote.name,
@@ -3551,17 +3672,17 @@ const apiRows = computed<TableRow[]>(() => {
       promoInfo: quote.promoInfo ?? null,
       isStale: quoteIsStale,
       staleAgeSeconds: quoteStaleAgeSeconds,
-    };
-  });
-});
+    }
+  })
+})
 
-const hasApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.value);
+const hasApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.value)
 
 const excludedProviders = computed(() => {
   const raw = (
-    quotesData.value as { excludedProviders?: Array<{ provider?: string; reason?: string }> } | null
-  )?.excludedProviders;
-  if (!Array.isArray(raw)) return [];
+    quotesData.value as { excludedProviders?: Array<{ provider?: string, reason?: string }> } | null
+  )?.excludedProviders
+  if (!Array.isArray(raw)) return []
   return raw
     .map(entry => ({
       provider: String(entry?.provider || '')
@@ -3571,146 +3692,146 @@ const excludedProviders = computed(() => {
         .trim()
         .toLowerCase(),
     }))
-    .filter(entry => entry.provider && entry.reason);
-});
+    .filter(entry => entry.provider && entry.reason)
+})
 
 const hasNoQuotesExclusions = computed(() =>
-  excludedProviders.value.some(entry => entry.reason === 'no_quotes')
-);
+  excludedProviders.value.some(entry => entry.reason === 'no_quotes'),
+)
 
-const hasStaleVisibleQuotes = computed(() => apiRows.value.some(row => row.isStale));
+const hasStaleVisibleQuotes = computed(() => apiRows.value.some(row => row.isStale))
 
 const needsCoverageRefresh = computed(
-  () => hasNoQuotesExclusions.value || hasStaleVisibleQuotes.value
-);
+  () => hasNoQuotesExclusions.value || hasStaleVisibleQuotes.value,
+)
 
-const currentRows = computed(() => apiRows.value);
+const currentRows = computed(() => apiRows.value)
 
 const rawIndices = computed(() => {
-  return (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null;
-});
+  return (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null
+})
 
 const corridorIndices = computed(() => {
-  const indices = rawIndices.value;
-  if (!indices) return null;
-  if (indices.suppressionFlag) return null;
-  return indices;
-});
+  const indices = rawIndices.value
+  if (!indices) return null
+  if (indices.suppressionFlag) return null
+  return indices
+})
 
 const indicesReason = computed(() => {
-  return (quotesData.value as { indicesReason?: string | null } | null)?.indicesReason ?? null;
-});
+  return (quotesData.value as { indicesReason?: string | null } | null)?.indicesReason ?? null
+})
 
 const indicesUnavailableMessage = computed(() => {
-  if (corridorIndices.value) return '';
-  const goldCount = rawIndices.value?.providerCount ?? null;
+  if (corridorIndices.value) return ''
+  const goldCount = rawIndices.value?.providerCount ?? null
   switch (indicesReason.value) {
     case 'unsupported_method':
-      return 'Indices are not available for this delivery method yet.';
+      return 'Indices are not available for this delivery method yet.'
     case 'bucket_mismatch':
-      return 'Indices are available for the standard $500 comparison bucket only.';
+      return 'Indices are available for the standard $500 comparison bucket only.'
     case 'gold_indices_unavailable':
-      return 'Market indices for this corridor are still being calculated. Check back soon.';
+      return 'Market indices for this corridor are still being calculated. Check back soon.'
     case 'suppressed':
     case 'insufficient_coverage':
-      return 'Indices are temporarily unavailable due to insufficient coverage.';
+      return 'Indices are temporarily unavailable due to insufficient coverage.'
     case 'insufficient_providers':
       return goldCount !== null
         ? `Rankings aren't available for this corridor yet — only ${goldCount} of the 3+ providers needed to generate a reliable comparison are currently active here.`
-        : "Rankings aren't available for this corridor yet — not enough providers currently support it to generate a reliable comparison.";
+        : 'Rankings aren\'t available for this corridor yet — not enough providers currently support it to generate a reliable comparison.'
     case 'quotes_unavailable':
-      return 'Indices are not yet available for this corridor.';
+      return 'Indices are not yet available for this corridor.'
     default:
-      return 'Indices are not available for this corridor.';
+      return 'Indices are not available for this corridor.'
   }
-});
+})
 
 const formatIndexRate = (value: number | null) => {
-  if (!Number.isFinite(value ?? Number.NaN)) return '—';
-  return Number(value).toFixed(2);
-};
+  if (!Number.isFinite(value ?? Number.NaN)) return '—'
+  return Number(value).toFixed(2)
+}
 
 const formatIndexPercent = (value: number | null) => {
-  if (!Number.isFinite(value ?? Number.NaN)) return '—';
-  return `${(Number(value) * 100).toFixed(2)}%`;
-};
+  if (!Number.isFinite(value ?? Number.NaN)) return '—'
+  return `${(Number(value) * 100).toFixed(2)}%`
+}
 
 const indexRateUnit = computed(() => {
-  if (!fromCurrencyCode.value || !toCurrencyCode.value) return '';
-  return `${toCurrencyCode.value} per ${fromCurrencyCode.value}`;
-});
+  if (!fromCurrencyCode.value || !toCurrencyCode.value) return ''
+  return `${toCurrencyCode.value} per ${fromCurrencyCode.value}`
+})
 
-const teerDisplay = computed(() => formatIndexRate(corridorIndices.value?.teer ?? null));
+const teerDisplay = computed(() => formatIndexRate(corridorIndices.value?.teer ?? null))
 const formatIndexBps = (value: number | null) => {
-  if (!Number.isFinite(value ?? Number.NaN)) return '—';
-  return `${Math.round(Number(value))}`;
-};
+  if (!Number.isFinite(value ?? Number.NaN)) return '—'
+  return `${Math.round(Number(value))}`
+}
 
-const rviDisplay = computed(() => formatIndexBps(corridorIndices.value?.rvi_bps ?? null));
-const rciDisplay = computed(() => formatIndexPercent(corridorIndices.value?.rci ?? null));
+const rviDisplay = computed(() => formatIndexBps(corridorIndices.value?.rvi_bps ?? null))
+const rciDisplay = computed(() => formatIndexPercent(corridorIndices.value?.rci ?? null))
 const indicesBasisAmount = computed(() => {
-  const basis = corridorIndices.value?.basisAmount ?? corridorIndices.value?.indicesBucket ?? 500;
-  const numericBasis = Number(basis);
-  if (!Number.isFinite(numericBasis) || numericBasis <= 0) return 500;
-  return Math.round(numericBasis);
-});
+  const basis = corridorIndices.value?.basisAmount ?? corridorIndices.value?.indicesBucket ?? 500
+  const numericBasis = Number(basis)
+  if (!Number.isFinite(numericBasis) || numericBasis <= 0) return 500
+  return Math.round(numericBasis)
+})
 const indicesSourceLabel = computed(() =>
   corridorIndices.value?.source === 'search_estimate'
     ? 'Live quote-derived estimate'
-    : 'Gold fallback snapshot'
-);
+    : 'Gold fallback snapshot',
+)
 const indicesSourceSummary = computed(() =>
   corridorIndices.value?.source === 'search_estimate'
     ? 'Computed from quotes returned in this search.'
-    : 'Using the latest gold indices snapshot as fallback.'
-);
+    : 'Using the latest gold indices snapshot as fallback.',
+)
 const indicesBasisSummary = computed(() =>
   indicesBasisAmount.value === 500
     ? 'Normalized to $500 equivalent send amount'
-    : `Normalized to $${indicesBasisAmount.value.toLocaleString()} equivalent send amount`
-);
+    : `Normalized to $${indicesBasisAmount.value.toLocaleString()} equivalent send amount`,
+)
 const teerContextDescription = computed(() => {
   if (!corridorIndices.value) {
-    return `${indicesBasisSummary.value}. Real exchange rate after all fees and hidden costs. Higher is better.`;
+    return `${indicesBasisSummary.value}. Real exchange rate after all fees and hidden costs. Higher is better.`
   }
-  const teer = Number(corridorIndices.value.teer);
-  const mid = Number(corridorIndices.value.midMarketRate);
+  const teer = Number(corridorIndices.value.teer)
+  const mid = Number(corridorIndices.value.midMarketRate)
   if (Number.isFinite(teer) && Number.isFinite(mid) && mid > 0) {
-    const deltaPct = ((teer - mid) / mid) * 100;
-    const direction = deltaPct >= 0 ? 'above' : 'below';
-    return `${indicesBasisSummary.value}. TEER is ${Math.abs(deltaPct).toFixed(2)}% ${direction} mid-market after fees and FX markup.`;
+    const deltaPct = ((teer - mid) / mid) * 100
+    const direction = deltaPct >= 0 ? 'above' : 'below'
+    return `${indicesBasisSummary.value}. TEER is ${Math.abs(deltaPct).toFixed(2)}% ${direction} mid-market after fees and FX markup.`
   }
   return corridorIndices.value.source === 'search_estimate'
     ? `${indicesBasisSummary.value}. Estimated from returned quotes after fees and FX markups.`
-    : `${indicesBasisSummary.value}. Real exchange rate after all fees and hidden costs. Higher is better.`;
-});
+    : `${indicesBasisSummary.value}. Real exchange rate after all fees and hidden costs. Higher is better.`
+})
 const rviContextDescription = computed(() => {
-  const rviBps = Number(corridorIndices.value?.rvi_bps);
+  const rviBps = Number(corridorIndices.value?.rvi_bps)
   if (!Number.isFinite(rviBps)) {
-    return `${indicesBasisSummary.value}. How much provider rates vary. Lower means similar deals. Higher means comparing saves money.`;
+    return `${indicesBasisSummary.value}. How much provider rates vary. Lower means similar deals. Higher means comparing saves money.`
   }
   if (rviBps < 50) {
-    return `${indicesBasisSummary.value}. Rates are tightly clustered right now, so speed and reliability may matter more than price.`;
+    return `${indicesBasisSummary.value}. Rates are tightly clustered right now, so speed and reliability may matter more than price.`
   }
   if (rviBps < 120) {
-    return `${indicesBasisSummary.value}. Rates show moderate dispersion right now. Comparing top providers can improve value.`;
+    return `${indicesBasisSummary.value}. Rates show moderate dispersion right now. Comparing top providers can improve value.`
   }
-  return `${indicesBasisSummary.value}. Rates are widely dispersed right now. Comparison shopping can materially improve recipient value.`;
-});
+  return `${indicesBasisSummary.value}. Rates are widely dispersed right now. Comparison shopping can materially improve recipient value.`
+})
 const rciContextDescription = computed(() => {
-  const rci = Number(corridorIndices.value?.rci);
+  const rci = Number(corridorIndices.value?.rci)
   if (!Number.isFinite(rci)) {
-    return `${indicesBasisSummary.value}. Average total cost including fees and hidden markups. Lower is better. Industry average is 2 to 5%.`;
+    return `${indicesBasisSummary.value}. Average total cost including fees and hidden markups. Lower is better. Industry average is 2 to 5%.`
   }
-  return `${indicesBasisSummary.value}. Implied total transfer cost is ${(rci * 100).toFixed(2)}% of send amount. Lower is better.`;
-});
+  return `${indicesBasisSummary.value}. Implied total transfer cost is ${(rci * 100).toFixed(2)}% of send amount. Lower is better.`
+})
 const content = computed(() => {
-  const base = baseContent.value;
+  const base = baseContent.value
   const merged = {
     ...base,
     fromCode: fromCurrencyCode.value || base.fromCode,
     toCode: toCurrencyCode.value || base.toCode,
-  };
+  }
   const rateWidget = {
     ...merged.rateWidget,
     midMarket: midMarketLabel.value || merged.rateWidget.midMarket,
@@ -3719,8 +3840,8 @@ const content = computed(() => {
       : midMarketAsOf.value || apiUpdatedLabel.value || merged.rateWidget.asOf,
     source: midMarketSource.value || merged.rateWidget.source || 'Mid-market',
     changes: rateChanges.value.length ? rateChanges.value : merged.rateWidget.changes,
-  };
-  const tableRows = hasApiQuotes.value ? apiRows.value : [];
+  }
+  const tableRows = hasApiQuotes.value ? apiRows.value : []
   return {
     ...merged,
     lastUpdated: mostRecentUpdateLabel.value || apiUpdatedLabel.value || merged.lastUpdated,
@@ -3733,8 +3854,8 @@ const content = computed(() => {
       providerCount: String(tableRows.length),
     },
     rateWidget,
-  };
-});
+  }
+})
 
 const escapeHtml = (value: string) => {
   return String(value)
@@ -3742,30 +3863,30 @@ const escapeHtml = (value: string) => {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-};
+    .replace(/'/g, '&#39;')
+}
 
-const defaultCorridorFaqs = computed<Array<{ q: string; a: string }>>(() => {
-  const from = content.value.from;
-  const to = content.value.to;
-  const fromCcy = fromCurrencyCode.value;
-  const toCcy = toCurrencyCode.value;
+const defaultCorridorFaqs = computed<Array<{ q: string, a: string }>>(() => {
+  const from = content.value.from
+  const to = content.value.to
+  const fromCcy = fromCurrencyCode.value
+  const toCcy = toCurrencyCode.value
 
-  const bestRateSnippet =
-    bestRateLabel.value && bestQuote.value
+  const bestRateSnippet
+    = bestRateLabel.value && bestQuote.value
       ? ` As of ${seoUpdatedLabel.value}, ${bestQuote.value.name} offers the best exchange rate at ${bestRateLabel.value}.`
-      : '';
+      : ''
 
   const providerCountSnippet = liveProviderCount.value
     ? `We currently have live quotes from ${liveProviderCount.value} providers for this corridor.`
-    : `Multiple providers support transfers from ${from} to ${to}.`;
+    : `Multiple providers support transfers from ${from} to ${to}.`
 
   const cashProviders = content.value.table.rows
     .filter(row => (row.payOut || '').toLowerCase().includes('cash'))
-    .map(row => row.provider);
+    .map(row => row.provider)
   const cashSnippet = cashProviders.length
     ? ` Cash pickup is available through ${cashProviders.slice(0, 3).join(', ')}${cashProviders.length > 3 ? ` and ${cashProviders.length - 3} more` : ''}.`
-    : '';
+    : ''
 
   return [
     {
@@ -3788,62 +3909,62 @@ const defaultCorridorFaqs = computed<Array<{ q: string; a: string }>>(() => {
       q: `What providers and delivery methods are available for ${from} to ${to}?`,
       a: `${providerCountSnippet} Available delivery methods vary by provider and may include bank deposit, cash pickup, mobile wallet, and more.${cashSnippet} Use the comparison tool above to see all options.`,
     },
-  ];
-});
+  ]
+})
 
-const corridorFaqsRaw = computed<Array<{ q: string; a: string }>>(() => {
-  const contentFaqs = content.value.faqs || [];
-  return contentFaqs.length ? contentFaqs : defaultCorridorFaqs.value;
-});
+const corridorFaqsRaw = computed<Array<{ q: string, a: string }>>(() => {
+  const contentFaqs = content.value.faqs || []
+  return contentFaqs.length ? contentFaqs : defaultCorridorFaqs.value
+})
 
 const corridorFaqsAccordion = computed(() =>
   corridorFaqsRaw.value.map(item => ({
     question: item.q,
     answer: `<p>${escapeHtml(item.a)}</p>`,
-  }))
-);
+  })),
+)
 
 const breadcrumbItems = computed(() => [
   { name: 'Home', path: '/' },
   { name: 'Money Transfer Comparison', path: '/send-money' },
   { name: `From ${content.value.from} to ${content.value.to}`, path: canonicalPath.value },
-]);
+])
 
-const providerCount = computed(() => content.value.table.rows.length || 0);
-const liveProviderCount = computed(() => providerQuotes.value.length || 0);
+const providerCount = computed(() => content.value.table.rows.length || 0)
+const liveProviderCount = computed(() => providerQuotes.value.length || 0)
 const bestQuote = computed(() => {
-  if (!providerQuotes.value.length) return null;
-  return [...providerQuotes.value].sort((a, b) => b.recipientGets - a.recipientGets)[0];
-});
+  if (!providerQuotes.value.length) return null
+  return [...providerQuotes.value].sort((a, b) => b.recipientGets - a.recipientGets)[0]
+})
 const topProviders = computed(() => {
   return providerQuotes.value
     .slice(0, 2)
     .map(p => p.name)
-    .join(' and ');
-});
+    .join(' and ')
+})
 const bestRateLabel = computed(() => {
-  if (!bestQuote.value) return '';
-  const fxRate = Number(bestQuote.value.fxRate);
-  if (!Number.isFinite(fxRate)) return '';
-  return `1 ${fromCurrencyCode.value} = ${formatExchangeRateValue(fxRate)} ${toCurrencyCode.value}`;
-});
+  if (!bestQuote.value) return ''
+  const fxRate = Number(bestQuote.value.fxRate)
+  if (!Number.isFinite(fxRate)) return ''
+  return `1 ${fromCurrencyCode.value} = ${formatExchangeRateValue(fxRate)} ${toCurrencyCode.value}`
+})
 const structuredDataUpdatedAt = computed(
-  () => apiUpdatedAt.value || midMarketUpdatedAt.value || null
-);
-const seoUpdatedLabel = computed(() => apiUpdatedLabel.value || 'recently');
+  () => apiUpdatedAt.value || midMarketUpdatedAt.value || null,
+)
+const seoUpdatedLabel = computed(() => apiUpdatedLabel.value || 'recently')
 const seoTitle = computed(() =>
   liveProviderCount.value > 0
     ? `Live ${fromCurrencyCode.value} to ${toCurrencyCode.value} Rates | Remit-Scout`
-    : `Compare ${fromCurrencyCode.value} to ${toCurrencyCode.value} Money Transfers | Remit-Scout`
-);
+    : `Compare ${fromCurrencyCode.value} to ${toCurrencyCode.value} Money Transfers | Remit-Scout`,
+)
 const seoDescription = computed(() => {
   if (!liveProviderCount.value) {
-    return `Compare money transfer options for ${fromCurrencyCode.value} to ${toCurrencyCode.value}. Live availability can vary by amount, provider, and delivery method.`;
+    return `Compare money transfer options for ${fromCurrencyCode.value} to ${toCurrencyCode.value}. Live availability can vary by amount, provider, and delivery method.`
   }
-  const providerLine = topProviders.value ? ` including ${topProviders.value}` : '';
-  const rateLine = bestRateLabel.value ? ` Best live rate: ${bestRateLabel.value}.` : '';
-  return `Compare live quotes from ${liveProviderCount.value} providers${providerLine}.${rateLine} Updated ${seoUpdatedLabel.value}.`;
-});
+  const providerLine = topProviders.value ? ` including ${topProviders.value}` : ''
+  const rateLine = bestRateLabel.value ? ` Best live rate: ${bestRateLabel.value}.` : ''
+  return `Compare live quotes from ${liveProviderCount.value} providers${providerLine}.${rateLine} Updated ${seoUpdatedLabel.value}.`
+})
 
 defineOgImage({
   component: 'OgImageCorridor',
@@ -3853,57 +3974,57 @@ defineOgImage({
     providerCount: liveProviderCount,
     bestRate: computed(() => bestRateLabel.value || '—'),
   },
-});
+})
 
 type Recommendation = {
-  label: string;
-  provider: string;
-  score?: string;
-  note?: string;
-  speed?: string;
-};
+  label: string
+  provider: string
+  score?: string
+  note?: string
+  speed?: string
+}
 
 function parseSpeedToHours(speed: string): number {
-  const lower = speed.toLowerCase();
-  if (lower.includes('instant') || lower.includes('immediate')) return 0;
+  const lower = speed.toLowerCase()
+  if (lower.includes('instant') || lower.includes('immediate')) return 0
   if (lower.includes('minute')) {
-    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*min/i);
-    if (match) return (Number.parseInt(match[1]) + Number.parseInt(match[2])) / 120;
-    const singleMatch = speed.match(/(\d+)\s*min/i);
-    if (singleMatch) return Number.parseInt(singleMatch[1]) / 60;
-    return 0.5;
+    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*min/i)
+    if (match) return (Number.parseInt(match[1]) + Number.parseInt(match[2])) / 120
+    const singleMatch = speed.match(/(\d+)\s*min/i)
+    if (singleMatch) return Number.parseInt(singleMatch[1]) / 60
+    return 0.5
   }
   if (lower.includes('hour') || lower.includes('hr')) {
-    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*(?:hour|hr)/i);
-    if (match) return (Number.parseInt(match[1]) + Number.parseInt(match[2])) / 2;
-    const singleMatch = speed.match(/(\d+)\s*(?:hour|hr)/i);
-    if (singleMatch) return Number.parseInt(singleMatch[1]);
-    return 1;
+    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*(?:hour|hr)/i)
+    if (match) return (Number.parseInt(match[1]) + Number.parseInt(match[2])) / 2
+    const singleMatch = speed.match(/(\d+)\s*(?:hour|hr)/i)
+    if (singleMatch) return Number.parseInt(singleMatch[1])
+    return 1
   }
-  if (lower.includes('same day') || lower.includes('same-day')) return 8;
+  if (lower.includes('same day') || lower.includes('same-day')) return 8
   if (lower.includes('day')) {
-    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*day/i);
-    if (match) return (Number.parseInt(match[1]) + Number.parseInt(match[2])) * 12;
-    const singleMatch = speed.match(/(\d+)\s*day/i);
-    if (singleMatch) return Number.parseInt(singleMatch[1]) * 24;
-    return 24;
+    const match = speed.match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*day/i)
+    if (match) return (Number.parseInt(match[1]) + Number.parseInt(match[2])) * 12
+    const singleMatch = speed.match(/(\d+)\s*day/i)
+    if (singleMatch) return Number.parseInt(singleMatch[1]) * 24
+    return 24
   }
-  return 999;
+  return 999
 }
 
 const recommendations = computed<Recommendation[]>(() => {
-  const rows = apiRows.value;
-  if (!rows.length) return [];
+  const rows = apiRows.value
+  if (!rows.length) return []
 
-  const results: Recommendation[] = [];
+  const results: Recommendation[] = []
 
-  const allRows = rows as Array<TableRow & { methods?: Method[] }>;
+  const allRows = rows as Array<TableRow & { methods?: Method[] }>
 
   const bestRated = [...allRows].sort((a, b) => {
-    const scoreA = Number.parseFloat(a.score || '0');
-    const scoreB = Number.parseFloat(b.score || '0');
-    return scoreB - scoreA;
-  })[0];
+    const scoreA = Number.parseFloat(a.score || '0')
+    const scoreB = Number.parseFloat(b.score || '0')
+    return scoreB - scoreA
+  })[0]
 
   if (bestRated && bestRated.score) {
     results.push({
@@ -3911,16 +4032,16 @@ const recommendations = computed<Recommendation[]>(() => {
       provider: bestRated.provider,
       score: bestRated.score,
       note: bestRated.notes || bestRated.speedNote,
-    });
+    })
   }
 
   const cheapest = [...allRows]
     .filter(row => row.recipientGets)
     .sort((a, b) => {
-      const amountA = Number.parseFloat(a.recipientGets.replace(/[^\d.]/g, '')) || 0;
-      const amountB = Number.parseFloat(b.recipientGets.replace(/[^\d.]/g, '')) || 0;
-      return amountB - amountA;
-    })[0];
+      const amountA = Number.parseFloat(a.recipientGets.replace(/[^\d.]/g, '')) || 0
+      const amountB = Number.parseFloat(b.recipientGets.replace(/[^\d.]/g, '')) || 0
+      return amountB - amountA
+    })[0]
 
   if (cheapest) {
     results.push({
@@ -3928,14 +4049,14 @@ const recommendations = computed<Recommendation[]>(() => {
       provider: cheapest.provider,
       score: cheapest.score,
       note: cheapest.notes || cheapest.speedNote,
-    });
+    })
   }
 
   const fastest = [...allRows].sort((a, b) => {
-    const hoursA = parseSpeedToHours(a.speed);
-    const hoursB = parseSpeedToHours(b.speed);
-    return hoursA - hoursB;
-  })[0];
+    const hoursA = parseSpeedToHours(a.speed)
+    const hoursB = parseSpeedToHours(b.speed)
+    return hoursA - hoursB
+  })[0]
 
   if (fastest) {
     results.push({
@@ -3943,23 +4064,23 @@ const recommendations = computed<Recommendation[]>(() => {
       provider: fastest.provider,
       speed: fastest.speed,
       note: fastest.notes || fastest.speedNote,
-    });
+    })
   }
 
-  const bankRows = allRows.filter(row => {
+  const bankRows = allRows.filter((row) => {
     if (row.methods && Array.isArray(row.methods)) {
-      return row.methods.includes('bank');
+      return row.methods.includes('bank')
     }
-    const payOutLower = (row.payOut || '').toLowerCase();
-    return payOutLower.includes('bank') || payOutLower.includes('account');
-  });
+    const payOutLower = (row.payOut || '').toLowerCase()
+    return payOutLower.includes('bank') || payOutLower.includes('account')
+  })
 
   if (bankRows.length > 0) {
     const bestRatedBank = [...bankRows].sort((a, b) => {
-      const scoreA = Number.parseFloat(a.score || '0');
-      const scoreB = Number.parseFloat(b.score || '0');
-      return scoreB - scoreA;
-    })[0];
+      const scoreA = Number.parseFloat(a.score || '0')
+      const scoreB = Number.parseFloat(b.score || '0')
+      return scoreB - scoreA
+    })[0]
 
     if (bestRatedBank && bestRatedBank.score) {
       results.push({
@@ -3967,16 +4088,16 @@ const recommendations = computed<Recommendation[]>(() => {
         provider: bestRatedBank.provider,
         score: bestRatedBank.score,
         note: bestRatedBank.notes || bestRatedBank.speedNote,
-      });
+      })
     }
 
     const cheapestBank = [...bankRows]
       .filter(row => row.recipientGets)
       .sort((a, b) => {
-        const amountA = Number.parseFloat(a.recipientGets.replace(/[^\d.]/g, '')) || 0;
-        const amountB = Number.parseFloat(b.recipientGets.replace(/[^\d.]/g, '')) || 0;
-        return amountB - amountA;
-      })[0];
+        const amountA = Number.parseFloat(a.recipientGets.replace(/[^\d.]/g, '')) || 0
+        const amountB = Number.parseFloat(b.recipientGets.replace(/[^\d.]/g, '')) || 0
+        return amountB - amountA
+      })[0]
 
     if (cheapestBank) {
       results.push({
@@ -3984,39 +4105,39 @@ const recommendations = computed<Recommendation[]>(() => {
         provider: cheapestBank.provider,
         score: cheapestBank.score,
         note: cheapestBank.notes || cheapestBank.speedNote,
-      });
+      })
     }
   }
 
-  return results;
-});
+  return results
+})
 
 const scrollToProvider = (providerName: string) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return
 
   // Try to scroll to the specific provider element
-  const providerSlug = providerName.toLowerCase().replace(/\s+/g, '-');
-  const providerElement = document.getElementById(`provider-${providerSlug}`);
+  const providerSlug = providerName.toLowerCase().replace(/\s+/g, '-')
+  const providerElement = document.getElementById(`provider-${providerSlug}`)
 
   if (providerElement) {
-    const offset = 120;
-    const top = providerElement.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: 'smooth' });
-    return;
+    const offset = 120
+    const top = providerElement.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top, behavior: 'smooth' })
+    return
   }
 
   // Fallback to compare section
-  const compareSection = document.getElementById('compare');
+  const compareSection = document.getElementById('compare')
   if (compareSection) {
-    const offset = 120;
-    const top = compareSection.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: 'smooth' });
+    const offset = 120
+    const top = compareSection.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top, behavior: 'smooth' })
   }
-};
+}
 
 const handleProviderOutbound = async (row: TableRow) => {
-  const targetUrl = row.outboundUrl ?? row.affiliateUrl;
-  if (!targetUrl || typeof window === 'undefined') return;
+  const targetUrl = row.outboundUrl ?? row.affiliateUrl
+  if (!targetUrl || typeof window === 'undefined') return
 
   if (row.providerId) {
     void trackClick({
@@ -4026,11 +4147,11 @@ const handleProviderOutbound = async (row: TableRow) => {
       quoted_rate: row.fxRate,
       quoted_fee: row.feeAmount,
       is_affiliate: row.isAffiliate ?? false,
-    });
+    })
   }
 
-  const providerId = row.providerId || row.provider;
-  const { payin, payout } = getQuoteRefreshMethods(payoutMethod.value);
+  const providerId = row.providerId || row.provider
+  const { payin, payout } = getQuoteRefreshMethods(payoutMethod.value)
   const outboundUrl = buildOutboundUrl({
     providerId,
     targetUrl,
@@ -4047,25 +4168,25 @@ const handleProviderOutbound = async (row: TableRow) => {
     toCurrency: toCurrencyCode.value,
     source: 'send-money-compare',
     utm: extractUtmParams(currentRoute.query as Record<string, unknown>),
-  });
+  })
 
-  window.open(outboundUrl, '_blank', 'noopener,noreferrer');
-};
+  window.open(outboundUrl, '_blank', 'noopener,noreferrer')
+}
 
 const corridorSchemaProviders = computed(() => {
-  const rows = providerQuotes.value || [];
-  const seen = new Set<string>();
-  const providers: Array<{ name: string; slug: string }> = [];
+  const rows = providerQuotes.value || []
+  const seen = new Set<string>()
+  const providers: Array<{ name: string, slug: string }> = []
 
   for (const row of rows) {
-    const name = row.name;
-    if (!name || seen.has(name)) continue;
-    seen.add(name);
-    providers.push({ name, slug: normalizeProviderSlug(name) });
+    const name = row.name
+    if (!name || seen.has(name)) continue
+    seen.add(name)
+    providers.push({ name, slug: normalizeProviderSlug(name) })
   }
 
-  return providers;
-});
+  return providers
+})
 
 defineOgImage({
   component: 'OgImageCorridor',
@@ -4075,26 +4196,26 @@ defineOgImage({
     providerCount: liveProviderCount,
     bestRate: bestRateLabel,
   },
-});
+})
 
 useServerSeoMeta({
   title: seoTitle,
   description: seoDescription,
-});
+})
 
 setSeo({
   title: seoTitle.value,
   description: seoDescription.value,
   canonical: `${normalizedSiteUrl}${canonicalPath.value}`,
   ogImage: false,
-});
+})
 
 jsonLdBreadcrumb(
-  breadcrumbItems.value.map(item => ({ name: item.name, url: `${normalizedSiteUrl}${item.path}` }))
-);
+  breadcrumbItems.value.map(item => ({ name: item.name, url: `${normalizedSiteUrl}${item.path}` })),
+)
 
 if (corridorFaqsRaw.value.length) {
-  jsonLdFaq(corridorFaqsRaw.value);
+  jsonLdFaq(corridorFaqsRaw.value)
 }
 
 // Add FinancialProduct schema for the best quote
@@ -4103,11 +4224,11 @@ const {
   addRemittanceCorridorSchema,
   addProviderListSchema,
   addExchangeRateSchema,
-} = useStructuredData();
+} = useStructuredData()
 
 watchEffect(() => {
-  if (!liveProviderCount.value) return;
-  if (!bestRateLabel.value) return;
+  if (!liveProviderCount.value) return
+  if (!bestRateLabel.value) return
 
   addRemittanceCorridorSchema({
     from: content.value.from,
@@ -4115,11 +4236,11 @@ watchEffect(() => {
     providers: corridorSchemaProviders.value,
     bestRate: bestRateLabel.value,
     lastUpdated: structuredDataUpdatedAt.value || undefined,
-  });
-});
+  })
+})
 
 if (bestQuote.value && hasApiQuotes.value) {
-  const quote = bestQuote.value;
+  const quote = bestQuote.value
   addFinancialProductSchema({
     name: `Money Transfer from ${content.value.from} to ${content.value.to}`,
     description: `Send ${displayAmount.value} ${fromCurrencyCode.value} to ${content.value.to} with ${quote.name}. Get ${quote.recipientGets.toFixed(2)} ${toCurrencyCode.value} in return.`,
@@ -4130,12 +4251,12 @@ if (bestQuote.value && hasApiQuotes.value) {
     deliveryTime: quote.speed || undefined,
     currency: fromCurrencyCode.value,
     amount: String(displayAmount.value),
-  });
+  })
 }
 
 // Add provider list schema for all live quotes
 watchEffect(() => {
-  if (!ratedQuotes.value.length) return;
+  if (!ratedQuotes.value.length) return
   addProviderListSchema(
     ratedQuotes.value.map(quote => ({
       provider: quote.name,
@@ -4145,100 +4266,100 @@ watchEffect(() => {
       deliveryTime: quote.delivery || undefined,
       exchangeRate: quote.fxRate ? String(quote.fxRate) : undefined,
     })),
-    `Money Transfer Providers: ${content.value.from} to ${content.value.to}`
-  );
-});
+    `Money Transfer Providers: ${content.value.from} to ${content.value.to}`,
+  )
+})
 
 // Add exchange rate schema for mid-market rate
 watchEffect(() => {
-  if (!midMarketRate.value) return;
-  if (!midMarketUpdatedAt.value && !apiUpdatedAt.value) return;
+  if (!midMarketRate.value) return
+  if (!midMarketUpdatedAt.value && !apiUpdatedAt.value) return
   addExchangeRateSchema({
     baseCurrency: fromCurrencyCode.value,
     quoteCurrency: toCurrencyCode.value,
     rate: midMarketRate.value,
     provider: 'Mid-Market',
     lastUpdated: midMarketUpdatedAt.value || apiUpdatedAt.value || undefined,
-  });
-});
+  })
+})
 
-const displayCurrency = ref(toCurrencyCode.value);
+const displayCurrency = ref(toCurrencyCode.value)
 
-watch(toCurrencyCode, value => {
+watch(toCurrencyCode, (value) => {
   if (value && value !== displayCurrency.value) {
-    displayCurrency.value = value;
+    displayCurrency.value = value
   }
-});
-const sortBy = ref('recipient');
+})
+const sortBy = ref('recipient')
 
 const sortLabels: Record<string, string> = {
-  recipient: 'recipient gets',
-  cost: 'total cost',
-  fees: 'lowest fees',
+  'recipient': 'recipient gets',
+  'cost': 'total cost',
+  'fees': 'lowest fees',
   'remit-score': 'remit-score',
-};
+}
 
 const formatStaleAge = (ageSeconds?: number | null) => {
-  if (!Number.isFinite(ageSeconds)) return 'Updated recently';
-  const seconds = Math.max(0, Number(ageSeconds));
-  if (seconds < 60) return 'Updated just now';
-  if (seconds < 3600) return `Updated ${Math.max(1, Math.floor(seconds / 60))}m ago`;
-  if (seconds < 86400) return `Updated ${Math.floor(seconds / 3600)}h ago`;
-  return `Updated ${Math.floor(seconds / 86400)}d ago`;
-};
+  if (!Number.isFinite(ageSeconds)) return 'Updated recently'
+  const seconds = Math.max(0, Number(ageSeconds))
+  if (seconds < 60) return 'Updated just now'
+  if (seconds < 3600) return `Updated ${Math.max(1, Math.floor(seconds / 60))}m ago`
+  if (seconds < 86400) return `Updated ${Math.floor(seconds / 3600)}h ago`
+  return `Updated ${Math.floor(seconds / 86400)}d ago`
+}
 
-const isQuotesLoading = computed(() => quotesPending.value && !hasApiQuotes.value);
+const isQuotesLoading = computed(() => quotesPending.value && !hasApiQuotes.value)
 
 const sortRowsBySelectedMode = (rows: TableRow[]) => {
-  const sorted = [...rows];
+  const sorted = [...rows]
   if (sortBy.value === 'cost') {
     return sorted.sort(
-      (a, b) => getProviderTrueCost(a, 0).totalCost - getProviderTrueCost(b, 0).totalCost
-    );
+      (a, b) => getProviderTrueCost(a, 0).totalCost - getProviderTrueCost(b, 0).totalCost,
+    )
   }
   if (sortBy.value === 'fees') {
     return sorted.sort((a, b) => {
-      const feeA = getProviderTrueCost(a, 0).upfrontFee;
-      const feeB = getProviderTrueCost(b, 0).upfrontFee;
-      return feeA - feeB;
-    });
+      const feeA = getProviderTrueCost(a, 0).upfrontFee
+      const feeB = getProviderTrueCost(b, 0).upfrontFee
+      return feeA - feeB
+    })
   }
   if (sortBy.value === 'remit-score') {
-    return sorted.sort((a, b) => Number.parseFloat(b.score) - Number.parseFloat(a.score));
+    return sorted.sort((a, b) => Number.parseFloat(b.score) - Number.parseFloat(a.score))
   }
-  return sorted;
-};
+  return sorted
+}
 
 const sortedProviders = computed(() => {
-  const rows = [...content.value.table.rows];
-  const freshRows = rows.filter(row => !row.isStale);
-  const staleRows = rows.filter(row => Boolean(row.isStale));
-  return [...sortRowsBySelectedMode(freshRows), ...sortRowsBySelectedMode(staleRows)];
-});
+  const rows = [...content.value.table.rows]
+  const freshRows = rows.filter(row => !row.isStale)
+  const staleRows = rows.filter(row => Boolean(row.isStale))
+  return [...sortRowsBySelectedMode(freshRows), ...sortRowsBySelectedMode(staleRows)]
+})
 
 // Pre-compute expensive row data to avoid repeated calculations in template
 type EnrichedTableRow = TableRow & {
-  _trueCost: TrueCostBreakdown;
-  _rateComparison: { text: string; isBetter: boolean; isWorse: boolean };
-  _slug: string | null;
-  _recipientGapToBest: number;
-  _staleLabel: string;
-  _methodLabels: string[];
-};
+  _trueCost: TrueCostBreakdown
+  _rateComparison: { text: string, isBetter: boolean, isWorse: boolean }
+  _slug: string | null
+  _recipientGapToBest: number
+  _staleLabel: string
+  _methodLabels: string[]
+}
 
 const bestRecipientGetsAmount = computed(() => {
-  const freshRows = sortedProviders.value.filter(row => !row.isStale);
-  const candidateRows = freshRows.length ? freshRows : sortedProviders.value;
-  if (!candidateRows.length) return 0;
-  return Math.max(...candidateRows.map(row => getRecipientGetsAmount(row)));
-});
+  const freshRows = sortedProviders.value.filter(row => !row.isStale)
+  const candidateRows = freshRows.length ? freshRows : sortedProviders.value
+  if (!candidateRows.length) return 0
+  return Math.max(...candidateRows.map(row => getRecipientGetsAmount(row)))
+})
 
 const topProviderLabel = computed(() => {
-  if (sortBy.value === 'cost') return 'Lowest total cost on this route';
-  if (sortBy.value === 'fees') return 'Lowest upfront fee on this route';
-  if (sortBy.value === 'remit-score') return 'Highest Remit-Scout score';
-  return 'Best deal for your recipient';
-});
+  if (sortBy.value === 'cost') return 'Lowest total cost on this route'
+  if (sortBy.value === 'fees') return 'Lowest upfront fee on this route'
+  if (sortBy.value === 'remit-score') return 'Highest Remit-Scout score'
+  return 'Best deal for your recipient'
+})
 
 const enrichedProviders = computed<EnrichedTableRow[]>(() => {
   return sortedProviders.value.map((row, index) => ({
@@ -4249,206 +4370,206 @@ const enrichedProviders = computed<EnrichedTableRow[]>(() => {
     _recipientGapToBest: Math.max(0, bestRecipientGetsAmount.value - getRecipientGetsAmount(row)),
     _staleLabel: formatStaleAge(row.staleAgeSeconds),
     _methodLabels: getMethodLabelList(row.methods || []),
-  }));
-});
+  }))
+})
 
 const recipientRange = computed(() => {
-  const rows = content.value.table.rows;
-  if (!rows.length) return { min: '0', max: '0', minNum: 0, maxNum: 0 };
+  const rows = content.value.table.rows
+  if (!rows.length) return { min: '0', max: '0', minNum: 0, maxNum: 0 }
   const amounts = rows
-    .map(r => {
-      if (!r.recipientGets) return null;
-      const num = Number.parseFloat(r.recipientGets.replace(/[^0-9.]/g, ''));
-      return Number.isFinite(num) && num > 0 ? num : null;
+    .map((r) => {
+      if (!r.recipientGets) return null
+      const num = Number.parseFloat(r.recipientGets.replace(/[^0-9.]/g, ''))
+      return Number.isFinite(num) && num > 0 ? num : null
     })
-    .filter((num): num is number => num !== null);
+    .filter((num): num is number => num !== null)
 
-  if (!amounts.length) return { min: '0', max: '0', minNum: 0, maxNum: 0 };
+  if (!amounts.length) return { min: '0', max: '0', minNum: 0, maxNum: 0 }
 
-  const minNum = Math.min(...amounts);
-  const maxNum = Math.max(...amounts);
+  const minNum = Math.min(...amounts)
+  const maxNum = Math.max(...amounts)
   return {
     min: minNum.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
     max: maxNum.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
     minNum,
     maxNum,
-  };
-});
+  }
+})
 
-const hasRecipientQuotes = computed(() => content.value.table.rows.length > 0);
+const hasRecipientQuotes = computed(() => content.value.table.rows.length > 0)
 
 const isExactRecipientAmount = computed(() => {
-  return hasRecipientQuotes.value && recipientRange.value.minNum === recipientRange.value.maxNum;
-});
+  return hasRecipientQuotes.value && recipientRange.value.minNum === recipientRange.value.maxNum
+})
 
 const corridorWatchTarget = computed(() => ({
   type: 'corridor' as const,
   from: fromCountryCode.value,
   to: toCountryCode.value,
   method: payoutMethod.value,
-}));
+}))
 
 const corridorWatchLabel = computed(
-  () => `${content.value.from}→${content.value.to} • ${payoutMethod.value}`
-);
+  () => `${content.value.from}→${content.value.to} • ${payoutMethod.value}`,
+)
 
-const corridorWatchlistItem = computed(() => watchlist.findByTarget(corridorWatchTarget.value));
+const corridorWatchlistItem = computed(() => watchlist.findByTarget(corridorWatchTarget.value))
 
-const isCorridorSaved = computed(() => Boolean(corridorWatchlistItem.value));
+const isCorridorSaved = computed(() => Boolean(corridorWatchlistItem.value))
 
 const hasCorridorAlerts = computed(() => {
-  if (!corridorWatchlistItem.value) return false;
-  return alerts.listByWatchlistItemId(corridorWatchlistItem.value.id).length > 0;
-});
+  if (!corridorWatchlistItem.value) return false
+  return alerts.listByWatchlistItemId(corridorWatchlistItem.value.id).length > 0
+})
 
 const bestTotalCost = computed(() => {
-  const midMarket = midMarketRate.value;
-  if (!midMarket) return 0;
+  const midMarket = midMarketRate.value
+  if (!midMarket) return 0
   const costs = content.value.table.rows
-    .map(row => {
+    .map((row) => {
       const { providerRate, upfrontFee } = resolveComparableProviderPricing({
         feeAmount: row.feeAmount,
         fxRate: row.fxRate,
         hasPromo: row.hasPromo,
         promoInfo: row.promoInfo,
-      });
+      })
 
-      if (!Number.isFinite(providerRate) || providerRate === 0) return null;
+      if (!Number.isFinite(providerRate) || providerRate === 0) return null
 
       return buildTrueCostBreakdown(
         displayAmount.value,
         upfrontFee,
         midMarket,
         providerRate,
-        0 // Don't pass bestTotalCost here to avoid circular dependency
-      ).totalCost;
+        0, // Don't pass bestTotalCost here to avoid circular dependency
+      ).totalCost
     })
-    .filter((value): value is number => value !== null);
+    .filter((value): value is number => value !== null)
 
-  return costs.length ? Math.min(...costs) : 0;
-});
+  return costs.length ? Math.min(...costs) : 0
+})
 
 // Calculate average and worst costs for relative comparison
 const providerCosts = computed(() => {
-  return sortedProviders.value.map(row => getProviderTrueCost(row, 0).totalCost);
-});
+  return sortedProviders.value.map(row => getProviderTrueCost(row, 0).totalCost)
+})
 
 const averageCost = computed(() => {
-  const costs = providerCosts.value;
-  if (costs.length === 0) return 0;
-  const sum = costs.reduce((a, b) => a + b, 0);
-  return sum / costs.length;
-});
+  const costs = providerCosts.value
+  if (costs.length === 0) return 0
+  const sum = costs.reduce((a, b) => a + b, 0)
+  return sum / costs.length
+})
 
 const worstCost = computed(() => {
-  const costs = providerCosts.value;
-  if (costs.length === 0) return 0;
-  return Math.max(...costs);
-});
+  const costs = providerCosts.value
+  if (costs.length === 0) return 0
+  return Math.max(...costs)
+})
 
 const costSpread = computed(() => {
-  if (providerCosts.value.length === 0) return '—';
-  const best = Math.min(...providerCosts.value);
-  const worst = Math.max(...providerCosts.value);
-  const spread = worst - best;
-  if (spread === 0) return '$0';
-  return `$${spread.toFixed(2)}`;
-});
+  if (providerCosts.value.length === 0) return '—'
+  const best = Math.min(...providerCosts.value)
+  const worst = Math.max(...providerCosts.value)
+  const spread = worst - best
+  if (spread === 0) return '$0'
+  return `$${spread.toFixed(2)}`
+})
 
 const averageCostPercent = computed(() => {
   if (!corridorIndices.value?.rci) {
-    if (providerCosts.value.length === 0) return '—';
-    const avg = (averageCost.value / displayAmount.value) * 100;
-    return `${avg.toFixed(2)}%`;
+    if (providerCosts.value.length === 0) return '—'
+    const avg = (averageCost.value / displayAmount.value) * 100
+    return `${avg.toFixed(2)}%`
   }
-  return rciDisplay.value;
-});
+  return rciDisplay.value
+})
 
 const bestProviderName = computed(() => {
-  if (sortedProviders.value.length === 0) return '—';
-  return sortedProviders.value[0]?.provider || '—';
-});
+  if (sortedProviders.value.length === 0) return '—'
+  return sortedProviders.value[0]?.provider || '—'
+})
 
 const providerConsistency = computed(() => {
-  const rviBps = corridorIndices.value?.rvi_bps;
-  if (!rviBps || !Number.isFinite(rviBps)) return 'unknown';
-  const rviValue = Number(rviBps);
-  if (rviValue < 50) return 'high';
-  return 'low';
-});
+  const rviBps = corridorIndices.value?.rvi_bps
+  if (!rviBps || !Number.isFinite(rviBps)) return 'unknown'
+  const rviValue = Number(rviBps)
+  if (rviValue < 50) return 'high'
+  return 'low'
+})
 
 const costSavingsPotential = computed(() => {
-  if (providerCosts.value.length < 2) return '$0';
-  const best = Math.min(...providerCosts.value);
-  const worst = Math.max(...providerCosts.value);
-  const savings = worst - best;
-  if (savings <= 0) return '$0';
-  return `$${savings.toFixed(2)}`;
-});
+  if (providerCosts.value.length < 2) return '$0'
+  const best = Math.min(...providerCosts.value)
+  const worst = Math.max(...providerCosts.value)
+  const savings = worst - best
+  if (savings <= 0) return '$0'
+  return `$${savings.toFixed(2)}`
+})
 
 const recipientDeltaDisplay = computed(() => {
-  const rows = content.value.table.rows;
-  if (!rows.length || !hasRecipientQuotes.value || !recipientRange.value) return '—';
-  const delta = recipientRange.value.maxNum - recipientRange.value.minNum;
-  if (delta <= 0 || !Number.isFinite(delta) || isNaN(delta)) return '—';
-  const currencyCode =
-    toCurrencyCode.value?.toUpperCase() || content.value.toCode?.toUpperCase() || '';
-  if (!currencyCode) return '—';
-  return `${currencyCode} ${Math.round(delta).toLocaleString('en-US')}`;
-});
+  const rows = content.value.table.rows
+  if (!rows.length || !hasRecipientQuotes.value || !recipientRange.value) return '—'
+  const delta = recipientRange.value.maxNum - recipientRange.value.minNum
+  if (delta <= 0 || !Number.isFinite(delta) || isNaN(delta)) return '—'
+  const currencyCode
+    = toCurrencyCode.value?.toUpperCase() || content.value.toCode?.toUpperCase() || ''
+  if (!currencyCode) return '—'
+  return `${currencyCode} ${Math.round(delta).toLocaleString('en-US')}`
+})
 
 const cheapestProvider = computed(() => {
-  const rows = content.value.table.rows;
-  if (!rows.length) return null;
-  return rows[0]; // Already sorted by best deal (highest recipientGets)
-});
+  const rows = content.value.table.rows
+  if (!rows.length) return null
+  return rows[0] // Already sorted by best deal (highest recipientGets)
+})
 
 const fastestProvider = computed(() => {
-  const rows = content.value.table.rows;
-  if (!rows.length) return null;
-  return [...rows].sort((a, b) => parseSpeedToHours(a.speed) - parseSpeedToHours(b.speed))[0];
-});
+  const rows = content.value.table.rows
+  if (!rows.length) return null
+  return [...rows].sort((a, b) => parseSpeedToHours(a.speed) - parseSpeedToHours(b.speed))[0]
+})
 
-const fastestSpeedDisplay = computed(() => fastestProvider.value?.speed || '—');
+const fastestSpeedDisplay = computed(() => fastestProvider.value?.speed || '—')
 
 const verdictParagraph = computed(() => {
-  if (!hasApiQuotes.value || !cheapestProvider.value) return '';
-  const cheap = cheapestProvider.value;
-  const fast = fastestProvider.value;
-  const count = providerCount.value;
-  const from = content.value.from;
-  const to = content.value.to;
-  const amount = displayAmount.value;
-  const fromCcy = fromCurrencyCode.value;
+  if (!hasApiQuotes.value || !cheapestProvider.value) return ''
+  const cheap = cheapestProvider.value
+  const fast = fastestProvider.value
+  const count = providerCount.value
+  const from = content.value.from
+  const to = content.value.to
+  const amount = displayAmount.value
+  const fromCcy = fromCurrencyCode.value
 
-  let text = `Based on live quotes from ${count} providers, the cheapest way to send ${fromCcy} ${amount.toLocaleString('en-US')} from ${from} to ${to} is ${cheap.provider} at ${cheap.fee} total cost (recipient gets ${cheap.recipientGets}).`;
+  let text = `Based on live quotes from ${count} providers, the cheapest way to send ${fromCcy} ${amount.toLocaleString('en-US')} from ${from} to ${to} is ${cheap.provider} at ${cheap.fee} total cost (recipient gets ${cheap.recipientGets}).`
   if (fast && fast.provider !== cheap.provider) {
-    text += ` The fastest option is ${fast.provider} with delivery in ${fast.speed}.`;
+    text += ` The fastest option is ${fast.provider} with delivery in ${fast.speed}.`
   }
-  return text;
-});
+  return text
+})
 
 const calculatedAverageCost = computed(() => {
   if (corridorIndices.value?.rci && Number.isFinite(corridorIndices.value.rci)) {
-    return formatIndexPercent(corridorIndices.value.rci);
+    return formatIndexPercent(corridorIndices.value.rci)
   }
-  if (providerCosts.value.length === 0) return '—';
-  const avg = (averageCost.value / displayAmount.value) * 100;
-  if (!Number.isFinite(avg)) return '—';
-  return `${avg.toFixed(2)}%`;
-});
+  if (providerCosts.value.length === 0) return '—'
+  const avg = (averageCost.value / displayAmount.value) * 100
+  if (!Number.isFinite(avg)) return '—'
+  return `${avg.toFixed(2)}%`
+})
 
 const getTeerVsMidMarket = computed(() => {
-  if (!corridorIndices.value?.teer || !corridorIndices.value?.midMarketRate) return '';
-  const teer = corridorIndices.value.teer;
-  const midMarket = corridorIndices.value.midMarketRate;
-  if (!Number.isFinite(teer) || !Number.isFinite(midMarket) || midMarket === 0) return '';
-  const diff = ((teer - midMarket) / midMarket) * 100;
-  const diffAbs = Math.abs(diff);
-  if (diffAbs < 0.01) return 'very close to';
-  if (diff > 0) return `${diff.toFixed(2)}% better than`;
-  return `${diffAbs.toFixed(2)}% below`;
-});
+  if (!corridorIndices.value?.teer || !corridorIndices.value?.midMarketRate) return ''
+  const teer = corridorIndices.value.teer
+  const midMarket = corridorIndices.value.midMarketRate
+  if (!Number.isFinite(teer) || !Number.isFinite(midMarket) || midMarket === 0) return ''
+  const diff = ((teer - midMarket) / midMarket) * 100
+  const diffAbs = Math.abs(diff)
+  if (diffAbs < 0.01) return 'very close to'
+  if (diff > 0) return `${diff.toFixed(2)}% better than`
+  return `${diffAbs.toFixed(2)}% below`
+})
 
 function getProviderTrueCost(row: TableRow, _index: number): TrueCostBreakdown {
   const { providerRate, upfrontFee } = resolveComparableProviderPricing({
@@ -4456,55 +4577,55 @@ function getProviderTrueCost(row: TableRow, _index: number): TrueCostBreakdown {
     fxRate: row.fxRate,
     hasPromo: row.hasPromo,
     promoInfo: row.promoInfo,
-  });
+  })
 
   return buildTrueCostBreakdown(
     displayAmount.value,
     upfrontFee,
     midMarketRate.value || 0,
     providerRate,
-    bestTotalCost.value || 0
-  );
+    bestTotalCost.value || 0,
+  )
 }
 
 function getRecipientGetsAmount(row: Pick<TableRow, 'recipientGetsAmount' | 'recipientGets'>) {
-  if (Number.isFinite(row.recipientGetsAmount)) return Number(row.recipientGetsAmount);
-  const parsed = Number.parseFloat(String(row.recipientGets || '').replace(/[^0-9.]/g, ''));
-  return Number.isFinite(parsed) ? parsed : 0;
+  if (Number.isFinite(row.recipientGetsAmount)) return Number(row.recipientGetsAmount)
+  const parsed = Number.parseFloat(String(row.recipientGets || '').replace(/[^0-9.]/g, ''))
+  return Number.isFinite(parsed) ? parsed : 0
 }
 
 function getQuoteRefreshMethods(method: Method) {
   if (method === 'cash') {
-    return { payin: 'bank_transfer', payout: 'cash_pickup' };
+    return { payin: 'bank_transfer', payout: 'cash_pickup' }
   }
   if (method === 'wallet') {
-    return { payin: 'bank_transfer', payout: 'mobile_wallet' };
+    return { payin: 'bank_transfer', payout: 'mobile_wallet' }
   }
   if (method === 'airtime') {
-    return { payin: 'bank_transfer', payout: 'airtime' };
+    return { payin: 'bank_transfer', payout: 'airtime' }
   }
   if (method === 'home') {
-    return { payin: 'bank_transfer', payout: 'home_delivery' };
+    return { payin: 'bank_transfer', payout: 'home_delivery' }
   }
   if (method === 'card') {
-    return { payin: 'debit_card', payout: 'debit_card' };
+    return { payin: 'debit_card', payout: 'debit_card' }
   }
-  return { payin: 'bank_transfer', payout: 'bank_deposit' };
+  return { payin: 'bank_transfer', payout: 'bank_deposit' }
 }
 
 function getBackgroundRefreshKey(method: Method) {
-  return `${corridorId.value}:${displayAmount.value}:${method}`;
+  return `${corridorId.value}:${displayAmount.value}:${method}`
 }
 
 async function enqueueBackgroundRefresh(method: Method, signal?: AbortSignal) {
-  if (!import.meta.client || displayAmount.value <= 0) return;
-  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return;
-  const refreshKey = getBackgroundRefreshKey(method);
-  if (backgroundRefreshKeys.has(refreshKey)) return;
-  backgroundRefreshKeys.add(refreshKey);
+  if (!import.meta.client || displayAmount.value <= 0) return
+  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return
+  const refreshKey = getBackgroundRefreshKey(method)
+  if (backgroundRefreshKeys.has(refreshKey)) return
+  backgroundRefreshKeys.add(refreshKey)
 
   try {
-    const { payin, payout } = getQuoteRefreshMethods(method);
+    const { payin, payout } = getQuoteRefreshMethods(method)
     await request('/quotes/current', {
       query: {
         corridor_id: corridorId.value,
@@ -4515,161 +4636,164 @@ async function enqueueBackgroundRefresh(method: Method, signal?: AbortSignal) {
       },
       retries: 0,
       signal,
-    });
-  } catch (error) {
-    if ((error as any)?.name === 'AbortError') return;
-    useLogger('send-money').warn('background quote refresh unavailable', error);
+    })
+  }
+ catch (error) {
+    if ((error as any)?.name === 'AbortError') return
+    useLogger('send-money').warn('background quote refresh unavailable', error)
   }
 }
 
 type QuoteRefreshResponse = {
   refresh?: {
-    attempted?: boolean;
-    enqueued?: boolean;
-    request_id?: string | null;
-    request_ids?: string[];
-    providers?: string[];
-  };
-};
+    attempted?: boolean
+    enqueued?: boolean
+    request_id?: string | null
+    request_ids?: string[]
+    providers?: string[]
+  }
+}
 
 const scheduleRefreshPoll = () => {
-  if (!import.meta.client) return;
-  if (refreshAttempts.value >= MAX_REFRESH_ATTEMPTS) return;
+  if (!import.meta.client) return
+  if (refreshAttempts.value >= MAX_REFRESH_ATTEMPTS) return
 
-  clearRefreshPoll();
-  const delayMs = getRefreshPollDelayMs(refreshAttempts.value);
-  refreshPollController = new AbortController();
-  const { signal } = refreshPollController;
-  providersRequestSignal.value = signal;
+  clearRefreshPoll()
+  const delayMs = getRefreshPollDelayMs(refreshAttempts.value)
+  refreshPollController = new AbortController()
+  const { signal } = refreshPollController
+  providersRequestSignal.value = signal
   refreshPollTimer.value = window.setTimeout(async () => {
-    if (signal.aborted) return;
-    refreshAttempts.value += 1;
+    if (signal.aborted) return
+    refreshAttempts.value += 1
     try {
-      await refreshQuotes();
-    } catch (error: any) {
-      if (error?.name === 'AbortError') return;
-      useLogger('send-money').warn('refresh poll failed', error);
+      await refreshQuotes()
     }
-    const timedOut = refreshAttempts.value >= MAX_REFRESH_ATTEMPTS;
+ catch (error: any) {
+      if (error?.name === 'AbortError') return
+      useLogger('send-money').warn('refresh poll failed', error)
+    }
+    const timedOut = refreshAttempts.value >= MAX_REFRESH_ATTEMPTS
     if (timedOut && !hasApiQuotes.value && !refreshTimedOut.value) {
-      refreshTimedOut.value = true;
-      searchInitiated.value = false;
-      providersLive.value = false;
-      refreshStatus.value = null;
-      refreshFinalizing.value = false;
-      lastRefreshKey.value = null;
-      clearRefreshStatusPoll();
+      refreshTimedOut.value = true
+      searchInitiated.value = false
+      providersLive.value = false
+      refreshStatus.value = null
+      refreshFinalizing.value = false
+      lastRefreshKey.value = null
+      clearRefreshStatusPoll()
     }
 
-    const shouldContinue =
-      !timedOut &&
-      !hasApiError.value &&
-      !corridorUnavailable.value &&
-      !corridorUnsupported.value &&
-      (!hasApiQuotes.value || needsCoverageRefresh.value) &&
-      !refreshTimedOut.value;
+    const shouldContinue
+      = !timedOut
+        && !hasApiError.value
+        && !corridorUnavailable.value
+        && !corridorUnsupported.value
+        && (!hasApiQuotes.value || needsCoverageRefresh.value)
+        && !refreshTimedOut.value
     if (shouldContinue) {
-      scheduleRefreshPoll();
-      return;
+      scheduleRefreshPoll()
+      return
     }
-    clearRefreshPoll();
-  }, delayMs);
-};
+    clearRefreshPoll()
+  }, delayMs)
+}
 
 const clearRefreshStatusPoll = () => {
-  refreshStatusController?.abort();
-  refreshStatusController = null;
+  refreshStatusController?.abort()
+  refreshStatusController = null
   if (refreshStatusPollTimer.value !== null) {
-    window.clearTimeout(refreshStatusPollTimer.value);
-    refreshStatusPollTimer.value = null;
+    window.clearTimeout(refreshStatusPollTimer.value)
+    refreshStatusPollTimer.value = null
   }
-  refreshCompletion.value = null;
-  refreshFinalizing.value = false;
-};
+  refreshCompletion.value = null
+  refreshFinalizing.value = false
+}
 
 const startRefreshStatusPoll = (requestIds: string[]) => {
-  if (!import.meta.client || !requestIds.length) return;
-  clearRefreshStatusPoll();
-  refreshStatusController = new AbortController();
-  const { signal } = refreshStatusController;
-  refreshTimedOut.value = false;
-  const startedAt = Date.now();
+  if (!import.meta.client || !requestIds.length) return
+  clearRefreshStatusPoll()
+  refreshStatusController = new AbortController()
+  const { signal } = refreshStatusController
+  refreshTimedOut.value = false
+  const startedAt = Date.now()
   refreshCompletion.value = {
     done: false,
     pending: requestIds.length,
     total: requestIds.length,
-  };
+  }
 
   const poll = async () => {
-    if (signal.aborted) return;
-    const elapsed = Date.now() - startedAt;
+    if (signal.aborted) return
+    const elapsed = Date.now() - startedAt
     if (elapsed >= REFRESH_STATUS_TIMEOUT_MS) {
-      refreshTimedOut.value = true;
-      searchInitiated.value = false;
+      refreshTimedOut.value = true
+      searchInitiated.value = false
       refreshCompletion.value = {
         done: true,
         pending: 0,
         total: requestIds.length,
-      };
-      refreshFinalizing.value = false;
-      return;
+      }
+      refreshFinalizing.value = false
+      return
     }
 
     try {
       const status = await request<{
-        done?: boolean;
-        pending?: number;
-        processing?: number;
-        missing?: number;
-        total?: number;
+        done?: boolean
+        pending?: number
+        processing?: number
+        missing?: number
+        total?: number
       }>('/quotes/refresh-status', {
         query: { request_ids: requestIds.join(',') },
         retries: 0,
         timeoutMs: 5000,
         signal,
-      });
-      const pending = Number(status?.pending ?? 0) + Number(status?.processing ?? 0);
-      const missing = Number(status?.missing ?? 0);
-      const remaining = pending + missing;
+      })
+      const pending = Number(status?.pending ?? 0) + Number(status?.processing ?? 0)
+      const missing = Number(status?.missing ?? 0)
+      const remaining = pending + missing
       refreshCompletion.value = {
         done: status?.done || remaining === 0,
         pending: remaining,
         total: Number(status?.total ?? requestIds.length),
-      };
+      }
       if (refreshCompletion.value.done) {
-        refreshFinalizing.value = true;
+        refreshFinalizing.value = true
       }
       if (!refreshCompletion.value.done) {
         if (!signal.aborted)
-          refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS);
-        return;
+          refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS)
+        return
       }
-    } catch (error: any) {
-      if (error?.name === 'AbortError' || signal.aborted) return;
-      refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS);
-      return;
     }
-  };
+ catch (error: any) {
+      if (error?.name === 'AbortError' || signal.aborted) return
+      refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS)
+      return
+    }
+  }
 
-  refreshStatusPollTimer.value = window.setTimeout(poll, 0);
-};
+  refreshStatusPollTimer.value = window.setTimeout(poll, 0)
+}
 
 const requestQuoteRefresh = async (source: 'auto' | 'manual', signal?: AbortSignal) => {
-  if (!import.meta.client || displayAmount.value <= 0) return;
-  if (corridorUnavailable.value || corridorUnsupported.value) return;
-  const refreshKey = quoteRefreshKey.value;
+  if (!import.meta.client || displayAmount.value <= 0) return
+  if (corridorUnavailable.value || corridorUnsupported.value) return
+  const refreshKey = quoteRefreshKey.value
   if (source === 'auto') {
-    if (refreshTimedOut.value) return;
-    if (quoteRefreshPending.value || refreshGateActive.value) return;
-    if (lastRefreshKey.value === refreshKey) return;
+    if (refreshTimedOut.value) return
+    if (quoteRefreshPending.value || refreshGateActive.value) return
+    if (lastRefreshKey.value === refreshKey) return
   }
-  refreshTimedOut.value = false;
-  quoteRefreshPending.value = true;
-  refreshAttempts.value = 0;
-  refreshFinalizing.value = false;
+  refreshTimedOut.value = false
+  quoteRefreshPending.value = true
+  refreshAttempts.value = 0
+  refreshFinalizing.value = false
 
   try {
-    const { payin, payout } = getQuoteRefreshMethods(payoutMethod.value);
+    const { payin, payout } = getQuoteRefreshMethods(payoutMethod.value)
     const response = await request<QuoteRefreshResponse>('/quotes/current', {
       query: {
         corridor_id: corridorId.value,
@@ -4680,15 +4804,15 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual', signal?: AbortSign
       },
       retries: 0,
       signal,
-    });
-    const refreshMeta = response?.refresh;
+    })
+    const refreshMeta = response?.refresh
     if (refreshMeta?.attempted) {
-      const requestIds = Array.isArray(refreshMeta.request_ids) ? refreshMeta.request_ids : [];
+      const requestIds = Array.isArray(refreshMeta.request_ids) ? refreshMeta.request_ids : []
       if (source === 'auto') {
-        lastRefreshKey.value = refreshKey;
+        lastRefreshKey.value = refreshKey
       }
       if (requestIds.length) {
-        providersLive.value = true;
+        providersLive.value = true
       }
       refreshStatus.value = {
         enqueued: Boolean(refreshMeta.enqueued),
@@ -4696,19 +4820,21 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual', signal?: AbortSign
         requestIds,
         providers: refreshMeta.providers ?? [],
         requestedAt: new Date().toISOString(),
-      };
-      if (requestIds.length) {
-        startRefreshStatusPoll(requestIds);
       }
-      scheduleRefreshPoll();
+      if (requestIds.length) {
+        startRefreshStatusPoll(requestIds)
+      }
+      scheduleRefreshPoll()
     }
-  } catch (error) {
-    if ((error as any)?.name === 'AbortError') return;
-    useLogger('send-money').warn('quote refresh unavailable', error);
-  } finally {
-    quoteRefreshPending.value = false;
   }
-};
+ catch (error) {
+    if ((error as any)?.name === 'AbortError') return
+    useLogger('send-money').warn('quote refresh unavailable', error)
+  }
+ finally {
+    quoteRefreshPending.value = false
+  }
+}
 
 const lastRefreshAttempt = ref(0)
 const refreshCooldown = ref(false)
@@ -4718,52 +4844,54 @@ const handleRefreshQuotes = async () => {
   if (now - lastRefreshAttempt.value < 5000) return
   lastRefreshAttempt.value = now
   refreshCooldown.value = true
-  setTimeout(() => { refreshCooldown.value = false }, 5000)
-  await requestQuoteRefresh('manual');
-  await refreshQuotes();
-};
+  setTimeout(() => {
+    refreshCooldown.value = false
+  }, 5000)
+  await requestQuoteRefresh('manual')
+  await refreshQuotes()
+}
 
 const isRefreshQueued = computed(() => {
-  if (corridorUnavailable.value || corridorUnsupported.value) return false;
-  if (refreshTimedOut.value) return false;
-  if (shouldBlockResults.value) return true;
-  if (quoteRefreshPending.value) return true;
-  if (!hasApiQuotes.value && quotesPending.value) return true;
-  return false;
-});
+  if (corridorUnavailable.value || corridorUnsupported.value) return false
+  if (refreshTimedOut.value) return false
+  if (shouldBlockResults.value) return true
+  if (quoteRefreshPending.value) return true
+  if (!hasApiQuotes.value && quotesPending.value) return true
+  return false
+})
 
 watch(
   shouldBlockResults,
-  active => {
-    if (!import.meta.client) return;
+  (active) => {
+    if (!import.meta.client) return
     if (active) {
       if (!refreshGateStartedAt.value) {
-        refreshGateStartedAt.value = Date.now();
+        refreshGateStartedAt.value = Date.now()
       }
-      startRefreshGateTimer();
-      return;
+      startRefreshGateTimer()
+      return
     }
-    clearRefreshGateTimer();
-    refreshGateStartedAt.value = null;
-    refreshElapsedSeconds.value = 0;
+    clearRefreshGateTimer()
+    refreshGateStartedAt.value = null
+    refreshElapsedSeconds.value = 0
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(refreshStatus, () => {
-  if (!shouldBlockResults.value) return;
-  updateRefreshElapsed();
-});
+  if (!shouldBlockResults.value) return
+  updateRefreshElapsed()
+})
 
 watch(
   quotesPending,
-  pending => {
+  (pending) => {
     if (!pending && searchInitiated.value) {
-      searchInitiated.value = false;
+      searchInitiated.value = false
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 useAbortableWatch(
   [
@@ -4779,283 +4907,289 @@ useAbortableWatch(
   ],
   async (
     [, pending, hasError, unavailable, unsupported, timedOut, hasQuotes, stale, coverageRefresh],
-    signal
+    signal,
   ) => {
     if (!import.meta.client || pending || hasError || unavailable || unsupported || timedOut) {
-      return;
+      return
     }
-    const shouldRefresh = !hasQuotes || stale || coverageRefresh;
+    const shouldRefresh = !hasQuotes || stale || coverageRefresh
     if (!shouldRefresh) {
-      return;
+      return
     }
-    await requestQuoteRefresh('auto', signal);
+    await requestQuoteRefresh('auto', signal)
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   [corridorUnavailable, corridorUnsupported, hasApiError],
   ([unavailable, unsupported, hasError]) => {
     if (!unavailable && !unsupported && !hasError) {
-      return;
+      return
     }
-    refreshTimedOut.value = false;
-    refreshFinalizing.value = false;
-    lastRefreshKey.value = null;
-    providersLive.value = false;
-    refreshStatus.value = null;
-    refreshAttempts.value = 0;
-    clearRefreshPoll();
-    clearRefreshStatusPoll();
-    clearRefreshGateTimer();
-    refreshGateStartedAt.value = null;
-    refreshElapsedSeconds.value = 0;
-  }
-);
+    refreshTimedOut.value = false
+    refreshFinalizing.value = false
+    lastRefreshKey.value = null
+    providersLive.value = false
+    refreshStatus.value = null
+    refreshAttempts.value = 0
+    clearRefreshPoll()
+    clearRefreshStatusPoll()
+    clearRefreshGateTimer()
+    refreshGateStartedAt.value = null
+    refreshElapsedSeconds.value = 0
+  },
+)
 
 useAbortableWatch(refreshCompletion, async (completion, signal) => {
-  if (!completion?.done) return;
-  refreshFinalizing.value = true;
-  providersRequestSignal.value = signal;
+  if (!completion?.done) return
+  refreshFinalizing.value = true
+  providersRequestSignal.value = signal
   try {
-    await refreshQuotes();
-  } catch {
+    await refreshQuotes()
+  }
+ catch {
     // Ignore refresh errors; we'll surface API errors in the UI.
-  } finally {
-    refreshFinalizing.value = false;
+  }
+ finally {
+    refreshFinalizing.value = false
   }
   if (hasApiQuotes.value || refreshTimedOut.value) {
-    providersLive.value = false;
-    refreshStatus.value = null;
-    refreshFinalizing.value = false;
-    lastRefreshKey.value = null;
-    refreshAttempts.value = 0;
-    clearRefreshPoll();
-    clearRefreshStatusPoll();
-    clearRefreshGateTimer();
-    refreshGateStartedAt.value = null;
-    refreshElapsedSeconds.value = 0;
+    providersLive.value = false
+    refreshStatus.value = null
+    refreshFinalizing.value = false
+    lastRefreshKey.value = null
+    refreshAttempts.value = 0
+    clearRefreshPoll()
+    clearRefreshStatusPoll()
+    clearRefreshGateTimer()
+    refreshGateStartedAt.value = null
+    refreshElapsedSeconds.value = 0
   }
-});
+})
 
-watch(hasApiQuotes, hasQuotes => {
-  if (!hasQuotes) return;
-  refreshTimedOut.value = false;
-  if (!refreshStatus.value?.enqueued) return;
-  if (refreshCompletion.value) return;
-  providersLive.value = false;
-  refreshStatus.value = null;
-  refreshFinalizing.value = false;
-  lastRefreshKey.value = null;
-  refreshAttempts.value = 0;
-  clearRefreshPoll();
-  clearRefreshStatusPoll();
-  clearRefreshGateTimer();
-  refreshGateStartedAt.value = null;
-  refreshElapsedSeconds.value = 0;
-});
+watch(hasApiQuotes, (hasQuotes) => {
+  if (!hasQuotes) return
+  refreshTimedOut.value = false
+  if (!refreshStatus.value?.enqueued) return
+  if (refreshCompletion.value) return
+  providersLive.value = false
+  refreshStatus.value = null
+  refreshFinalizing.value = false
+  lastRefreshKey.value = null
+  refreshAttempts.value = 0
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  refreshGateStartedAt.value = null
+  refreshElapsedSeconds.value = 0
+})
 
 watch(quoteRefreshKey, () => {
-  refreshAttempts.value = 0;
-  refreshTimedOut.value = false;
-  refreshFinalizing.value = false;
-  lastRefreshKey.value = null;
+  refreshAttempts.value = 0
+  refreshTimedOut.value = false
+  refreshFinalizing.value = false
+  lastRefreshKey.value = null
   // Don't reset providersLive here — useProviders handles the transition
   // via its own pending state. Resetting causes visible "unavailable" flicker.
-  refreshStatus.value = null;
-  clearRefreshPoll();
-  clearRefreshStatusPoll();
-  clearRefreshGateTimer();
-  refreshGateStartedAt.value = null;
-  refreshElapsedSeconds.value = 0;
-});
+  refreshStatus.value = null
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  refreshGateStartedAt.value = null
+  refreshElapsedSeconds.value = 0
+})
 
 useAbortableWatch(payoutMethod, async (_, signal) => {
-  refreshTimedOut.value = false;
-  refreshStatus.value = null;
-  refreshAttempts.value = 0;
-  refreshFinalizing.value = false;
-  clearRefreshPoll();
-  clearRefreshStatusPoll();
-  clearRefreshGateTimer();
-  refreshGateStartedAt.value = null;
-  refreshElapsedSeconds.value = 0;
-  providersRequestSignal.value = signal;
+  refreshTimedOut.value = false
+  refreshStatus.value = null
+  refreshAttempts.value = 0
+  refreshFinalizing.value = false
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  refreshGateStartedAt.value = null
+  refreshElapsedSeconds.value = 0
+  providersRequestSignal.value = signal
   try {
-    await refreshQuotes();
-  } catch {
+    await refreshQuotes()
+  }
+ catch {
     // Ignore refresh errors; the auto refresh queue handles retries.
   }
   if (
-    (!hasApiQuotes.value || isQuoteStale.value) &&
-    !hasApiError.value &&
-    !corridorUnavailable.value &&
-    !corridorUnsupported.value
+    (!hasApiQuotes.value || isQuoteStale.value)
+    && !hasApiError.value
+    && !corridorUnavailable.value
+    && !corridorUnsupported.value
   ) {
-    await requestQuoteRefresh('auto', signal);
+    await requestQuoteRefresh('auto', signal)
   }
-});
+})
 
 const { availableToCurrencies, availableFromCurrencies } = useCorridorCurrencies(
   fromCountryCode,
   toCountryCode,
   computed(() => fromCurrencyCode.value),
-  computed(() => toCurrencyCode.value)
-);
+  computed(() => toCurrencyCode.value),
+)
 
 function handleBarUpdate(data: {
-  amount: number;
-  payoutMethod: string;
-  currency: string;
-  fromCurrency: string;
-  fromCountry?: string;
-  toCountry?: string;
+  amount: number
+  payoutMethod: string
+  currency: string
+  fromCurrency: string
+  fromCountry?: string
+  toCountry?: string
 }) {
-  const currency = data.fromCurrency || fromCurrencyCode.value;
+  const currency = data.fromCurrency || fromCurrencyCode.value
   displayAmount.value = sanitizeAmount(data.amount, currency, {
     minAmount: getMinAmount(currency),
     maxAmount: getMaxAmount(currency),
     strict: true,
-  });
-  payoutMethod.value = data.payoutMethod as Method;
-  displayCurrency.value = data.currency;
+  })
+  payoutMethod.value = data.payoutMethod as Method
+  displayCurrency.value = data.currency
 }
 
 async function handleNewQuery(data: {
-  fromCountry: string;
-  toCountry: string;
-  amount: number;
-  currency: string;
-  fromCurrency: string;
-  payoutMethod: string;
+  fromCountry: string
+  toCountry: string
+  amount: number
+  currency: string
+  fromCurrency: string
+  payoutMethod: string
 }) {
-  searchInitiated.value = true;
+  searchInitiated.value = true
   const resolveCountryCodeFromInput = (inputId: string, fallback: string) => {
-    if (!import.meta.client) return fallback;
-    const input = document.getElementById(inputId) as HTMLInputElement | null;
-    const rawValue = input?.value?.trim().toLowerCase() || '';
-    if (!rawValue) return fallback;
+    if (!import.meta.client) return fallback
+    const input = document.getElementById(inputId) as HTMLInputElement | null
+    const rawValue = input?.value?.trim().toLowerCase() || ''
+    if (!rawValue) return fallback
 
-    const matchedCountry = COUNTRIES.find(country => {
-      const name = country.name.trim().toLowerCase();
-      const code = country.code.trim().toLowerCase();
-      return rawValue === name || rawValue === code;
-    });
+    const matchedCountry = COUNTRIES.find((country) => {
+      const name = country.name.trim().toLowerCase()
+      const code = country.code.trim().toLowerCase()
+      return rawValue === name || rawValue === code
+    })
 
-    return matchedCountry?.code || fallback;
-  };
+    return matchedCountry?.code || fallback
+  }
 
   const resolvedFromCountry = resolveCountryCodeFromInput(
     'corridor-from-country',
-    data.fromCountry
-  );
-  const resolvedToCountry = resolveCountryCodeFromInput('corridor-to-country', data.toCountry);
-  const newUrl = getCorridorUrl(resolvedFromCountry, resolvedToCountry);
+    data.fromCountry,
+  )
+  const resolvedToCountry = resolveCountryCodeFromInput('corridor-to-country', data.toCountry)
+  const newUrl = getCorridorUrl(resolvedFromCountry, resolvedToCountry)
   const sanitizedAmount = sanitizeAmount(data.amount, data.fromCurrency || fromCurrencyCode.value, {
     minAmount: getMinAmount(data.fromCurrency || fromCurrencyCode.value),
     maxAmount: getMaxAmount(data.fromCurrency || fromCurrencyCode.value),
     strict: true,
-  });
-  const params = new URLSearchParams();
-  if (sanitizedAmount !== 1000) params.set('amount', String(sanitizedAmount));
-  if (data.payoutMethod !== 'bank') params.set('method', data.payoutMethod);
-  if (data.fromCurrency) params.set('fromCurrency', data.fromCurrency);
+  })
+  const params = new URLSearchParams()
+  if (sanitizedAmount !== 1000) params.set('amount', String(sanitizedAmount))
+  if (data.payoutMethod !== 'bank') params.set('method', data.payoutMethod)
+  if (data.fromCurrency) params.set('fromCurrency', data.fromCurrency)
   if (data.currency && data.currency !== toCurrencyCode.value)
-    params.set('toCurrency', data.currency);
-  const queryString = params.toString();
-  const fullUrl = `${newUrl}${queryString ? `?${queryString}` : ''}`;
+    params.set('toCurrency', data.currency)
+  const queryString = params.toString()
+  const fullUrl = `${newUrl}${queryString ? `?${queryString}` : ''}`
 
   // Navigate immediately - no waiting for quotes
-  await navigateTo(fullUrl);
+  await navigateTo(fullUrl)
 }
 
 function handleSort(newSort: string) {
-  sortBy.value = newSort;
+  sortBy.value = newSort
 }
 
 async function handleSave() {
   if (!isAuthenticated.value) {
-    authModalFeature.value = 'watchlist';
-    authModalOpen.value = true;
-    return;
+    authModalFeature.value = 'watchlist'
+    authModalOpen.value = true
+    return
   }
   const result = await watchlist.save({
     type: 'corridor',
     from: fromCountryCode.value,
     to: toCountryCode.value,
     method: payoutMethod.value,
-  });
+  })
   if (result.status === 'saved') {
-    toastTitle.value = 'Added to watchlist!';
-    toastMessage.value = `${content.value.from} → ${content.value.to} saved`;
-    toastVariant.value = 'success';
-    successToastRef.value?.show();
-  } else if (result.status === 'already_saved') {
-    toastTitle.value = 'Already saved';
-    toastMessage.value = 'This corridor is already in your watchlist';
-    toastVariant.value = 'success';
-    successToastRef.value?.show();
-  } else if (result.status === 'limit_reached') {
-    limitModalFeature.value = 'watchlist';
-    limitModalLimit.value = result.limit;
-    limitModalOpen.value = true;
-  } else if (result.status === 'error') {
-    toastTitle.value = 'Unable to save';
-    toastMessage.value = result.message;
-    toastVariant.value = 'error';
-    successToastRef.value?.show();
+    toastTitle.value = 'Added to watchlist!'
+    toastMessage.value = `${content.value.from} → ${content.value.to} saved`
+    toastVariant.value = 'success'
+    successToastRef.value?.show()
+  }
+ else if (result.status === 'already_saved') {
+    toastTitle.value = 'Already saved'
+    toastMessage.value = 'This corridor is already in your watchlist'
+    toastVariant.value = 'success'
+    successToastRef.value?.show()
+  }
+ else if (result.status === 'limit_reached') {
+    limitModalFeature.value = 'watchlist'
+    limitModalLimit.value = result.limit
+    limitModalOpen.value = true
+  }
+ else if (result.status === 'error') {
+    toastTitle.value = 'Unable to save'
+    toastMessage.value = result.message
+    toastVariant.value = 'error'
+    successToastRef.value?.show()
   }
 }
 
 async function handleAlert() {
   if (!isAuthenticated.value) {
-    authModalFeature.value = 'alert';
-    authModalOpen.value = true;
-    return;
+    authModalFeature.value = 'alert'
+    authModalOpen.value = true
+    return
   }
   saveAlertModal.open({
     target: corridorWatchTarget.value,
     label: corridorWatchLabel.value,
     source: 'compare',
-  });
+  })
 }
 
 function handleShare() {
-  shareModalOpen.value = true;
+  shareModalOpen.value = true
 }
 
-const scoreModalOpen = ref(false);
-const selectedProvider = ref<{ providerId?: string; providerName: string; score: number } | null>(
-  null
-);
+const scoreModalOpen = ref(false)
+const selectedProvider = ref<{ providerId?: string, providerName: string, score: number } | null>(
+  null,
+)
 
-const authModalOpen = ref(false);
-const authModalFeature = ref<'watchlist' | 'alert'>('watchlist');
-const limitModalOpen = ref(false);
-const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist');
-const limitModalLimit = ref(3);
-const shareModalOpen = ref(false);
-const successToastRef = ref<{ show: () => void; hide: () => void } | null>(null);
-const toastTitle = ref('');
-const toastMessage = ref('');
-const toastVariant = ref<'success' | 'error'>('success');
+const authModalOpen = ref(false)
+const authModalFeature = ref<'watchlist' | 'alert'>('watchlist')
+const limitModalOpen = ref(false)
+const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist')
+const limitModalLimit = ref(3)
+const shareModalOpen = ref(false)
+const successToastRef = ref<{ show: () => void, hide: () => void } | null>(null)
+const toastTitle = ref('')
+const toastMessage = ref('')
+const toastVariant = ref<'success' | 'error'>('success')
 
 const limitModalCount = computed(() => {
-  return limitModalFeature.value === 'watchlist' ? watchlist.count.value : alerts.count.value;
-});
+  return limitModalFeature.value === 'watchlist' ? watchlist.count.value : alerts.count.value
+})
 
 const limitMessage = computed(() => {
   if (limitModalFeature.value === 'watchlist') {
     if (isPlus.value) {
-      return `You've saved ${limitModalCount.value} corridors, the current Plus limit. Remove one to add another.`;
+      return `You've saved ${limitModalCount.value} corridors, the current Plus limit. Remove one to add another.`
     }
-    return `You've saved ${limitModalCount.value} corridors, the maximum for free accounts.`;
+    return `You've saved ${limitModalCount.value} corridors, the maximum for free accounts.`
   }
   if (isPlus.value) {
-    return `You've created ${limitModalCount.value} alerts, the current Plus limit. Remove one to add another.`;
+    return `You've created ${limitModalCount.value} alerts, the current Plus limit. Remove one to add another.`
   }
-  return `You've created ${limitModalCount.value} alerts, the maximum for free accounts.`;
-});
+  return `You've created ${limitModalCount.value} alerts, the maximum for free accounts.`
+})
 
 const metricLabels: Record<string, string> = {
   recipientGets: 'Recipient gets',
@@ -5065,7 +5199,7 @@ const metricLabels: Record<string, string> = {
   rate: 'Rate',
   sendScore: 'Intelligent alert',
   index: 'Index',
-};
+}
 
 const comparatorLabels: Record<string, string> = {
   gt: '>',
@@ -5074,60 +5208,61 @@ const comparatorLabels: Record<string, string> = {
   lte: '≤',
   crosses_above: 'crosses above',
   crosses_below: 'crosses below',
-};
+}
 
 const formatAlertValue = (metric: string, value: number) => {
-  if (!Number.isFinite(value)) return '—';
-  if (metric === 'sendScore') return Math.round(value).toString();
-  if (metric === 'rate' || metric === 'midMarketRate') return value.toFixed(4);
-  return value.toFixed(2);
-};
+  if (!Number.isFinite(value)) return '—'
+  if (metric === 'sendScore') return Math.round(value).toString()
+  if (metric === 'rate' || metric === 'midMarketRate') return value.toFixed(4)
+  return value.toFixed(2)
+}
 
 const limitModalItems = computed(() => {
-  const sliceLimit = limitModalLimit.value || 0;
+  const sliceLimit = limitModalLimit.value || 0
   if (limitModalFeature.value === 'alert') {
-    const items = alerts.alerts.value.map(alert => {
-      const label = watchlist.findById(alert.watchlistItemId)?.label || 'Alert';
-      const metricLabel = metricLabels[alert.rule.metric] || 'Alert';
-      const comparatorLabel = comparatorLabels[alert.rule.comparator] || alert.rule.comparator;
-      const valueLabel = formatAlertValue(alert.rule.metric, alert.rule.value);
-      const currencyLabel = alert.rule.currency ? ` ${alert.rule.currency}` : '';
+    const items = alerts.alerts.value.map((alert) => {
+      const label = watchlist.findById(alert.watchlistItemId)?.label || 'Alert'
+      const metricLabel = metricLabels[alert.rule.metric] || 'Alert'
+      const comparatorLabel = comparatorLabels[alert.rule.comparator] || alert.rule.comparator
+      const valueLabel = formatAlertValue(alert.rule.metric, alert.rule.value)
+      const currencyLabel = alert.rule.currency ? ` ${alert.rule.currency}` : ''
       return {
         id: alert.id,
         label,
         meta: `${metricLabel} ${comparatorLabel} ${valueLabel}${currencyLabel}`.trim(),
-      };
-    });
-    return sliceLimit > 0 ? items.slice(0, sliceLimit) : items;
+      }
+    })
+    return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
   }
 
   const items = watchlist.items.value.map(item => ({
     id: item.id,
     label: item.label,
-  }));
-  return sliceLimit > 0 ? items.slice(0, sliceLimit) : items;
-});
+  }))
+  return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
+})
 
 const handleLimitRemove = async (id: string) => {
   if (limitModalFeature.value === 'watchlist') {
-    await watchlist.remove(id);
-  } else {
-    await alerts.remove(id);
+    await watchlist.remove(id)
+  }
+ else {
+    await alerts.remove(id)
   }
 
   if (limitModalLimit.value > 0 && limitModalCount.value < limitModalLimit.value) {
-    limitModalOpen.value = false;
+    limitModalOpen.value = false
   }
-};
+}
 
 function openScoreModal(row: TableRow | EnrichedTableRow) {
-  const slug = '_slug' in row ? row._slug : getProviderSlug(row);
+  const slug = '_slug' in row ? row._slug : getProviderSlug(row)
   selectedProvider.value = {
     providerId: row.providerId || slug || undefined,
     providerName: row.provider,
     score: Number.parseFloat(row.score),
-  };
-  scoreModalOpen.value = true;
+  }
+  scoreModalOpen.value = true
 }
 </script>
 

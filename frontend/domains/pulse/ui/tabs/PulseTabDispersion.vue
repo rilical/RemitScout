@@ -202,8 +202,8 @@ import EmptyState from '~/ui/states/EmptyState.vue'
 import {
   getChartsBatch,
   getPulseOverview,
-} from '~/lib/pulseApi'
-import type { PulseChartsBatchItem } from '~/lib/pulseApi'
+} from '~/domains/pulse/infrastructure/pulseApi'
+import type { PulseChartsBatchItem } from '~/domains/pulse/infrastructure/pulseApi'
 import { buildChartOption, buildCostMarkupDualAxisOption } from '~/lib/pulseChartBuilders'
 
 // ── Props ─────────────────────────────────────────────────────────────────────

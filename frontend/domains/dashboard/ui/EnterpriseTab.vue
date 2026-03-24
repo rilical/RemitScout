@@ -106,7 +106,7 @@ const exportTypeOptions: Array<{ label: string, value: EnterpriseExportJobType }
   { label: 'Alerts', value: 'alerts' },
   { label: 'All data', value: 'all' },
   { label: 'TEER / RCI / RVI', value: 'indices' },
-] 
+]
 
 const exportFormatOptions: Array<{ label: string, value: EnterpriseExportFormat }> = [
   { label: 'CSV', value: 'csv' },
@@ -783,7 +783,6 @@ function scrollToSection(id: string) {
 }
 </script>
 
-
 <template>
   <div class="space-y-8">
     <!-- ─── Hero ─── -->
@@ -792,7 +791,11 @@ function scrollToSection(id: string) {
         <div class="flex items-start justify-between gap-6">
           <div class="space-y-3">
             <div class="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
-              <Icon name="building-library" :size="14" class="text-current" />
+              <Icon
+name="building-library"
+:size="14"
+class="text-current"
+/>
               Enterprise
             </div>
             <h2 class="text-2xl font-semibold tracking-tight text-white">Data Console</h2>
@@ -803,7 +806,17 @@ function scrollToSection(id: string) {
               to="/docs/enterprise"
               class="mt-1 inline-flex items-center gap-1.5 rounded-md border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
             >
-              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+              <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+/></svg>
               API Documentation
             </NuxtLink>
           </div>
@@ -844,7 +857,17 @@ function scrollToSection(id: string) {
         <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">1</span>
         Create an API key
       </a>
-      <svg class="h-4 w-4 flex-shrink-0 text-neutral-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      <svg
+class="h-4 w-4 flex-shrink-0 text-neutral-300"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+d="M8.25 4.5l7.5 7.5-7.5 7.5"
+/></svg>
       <a
         href="#enterprise-embeds"
         class="inline-flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm font-medium text-rs-fg transition-colors hover:bg-brand-50 hover:text-brand-700"
@@ -853,7 +876,17 @@ function scrollToSection(id: string) {
         <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">2</span>
         Pick a corridor
       </a>
-      <svg class="h-4 w-4 flex-shrink-0 text-neutral-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      <svg
+class="h-4 w-4 flex-shrink-0 text-neutral-300"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+d="M8.25 4.5l7.5 7.5-7.5 7.5"
+/></svg>
       <a
         href="#enterprise-exports"
         class="inline-flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm font-medium text-rs-fg transition-colors hover:bg-brand-50 hover:text-brand-700"
@@ -868,20 +901,37 @@ function scrollToSection(id: string) {
           class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-brand-700"
         >
           Full documentation
-          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+          <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+/></svg>
         </NuxtLink>
       </div>
     </nav>
 
     <!-- ─── Notices ─── -->
-    <div v-if="enterpriseNotices.length > 0" class="space-y-2">
+    <div
+v-if="enterpriseNotices.length > 0"
+class="space-y-2"
+>
       <div
         v-for="notice in enterpriseNotices"
         :key="`${notice.tone}-${notice.title}`"
         class="flex items-start gap-3 rounded-lg border px-4 py-3"
         :class="getNoticeClasses(notice.tone)"
       >
-        <Icon :name="getNoticeIcon(notice.tone)" :size="16" class="mt-0.5 flex-shrink-0 text-current" />
+        <Icon
+:name="getNoticeIcon(notice.tone)"
+:size="16"
+class="mt-0.5 flex-shrink-0 text-current"
+/>
         <div class="min-w-0">
           <div class="text-sm font-medium">{{ notice.title }}</div>
           <p class="mt-0.5 text-sm leading-relaxed opacity-80">{{ notice.body }}</p>
@@ -890,7 +940,10 @@ function scrollToSection(id: string) {
     </div>
 
     <!-- ─── API Access ─── -->
-    <section id="enterprise-api" class="rounded-xl border border-rs-border bg-surface">
+    <section
+id="enterprise-api"
+class="rounded-xl border border-rs-border bg-surface"
+>
       <div class="flex items-center justify-between border-b border-rs-border px-6 py-4">
         <div>
           <h3 class="text-base font-semibold text-rs-fg">API Access</h3>
@@ -902,7 +955,11 @@ function scrollToSection(id: string) {
           :disabled="apiKeysLoading || !apiAccess"
           @click="fetchApiKeys"
         >
-          <Icon name="arrows-right-left" :size="14" class="text-current" />
+          <Icon
+name="arrows-right-left"
+:size="14"
+class="text-current"
+/>
           Refresh
         </button>
       </div>
@@ -921,7 +978,7 @@ function scrollToSection(id: string) {
               type="text"
               placeholder="Key name"
               class="h-10 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            />
+            >
             <div class="grid gap-2 sm:grid-cols-3">
               <label
                 v-for="scope in availableScopes"
@@ -934,10 +991,14 @@ function scrollToSection(id: string) {
                   type="checkbox"
                   :value="scope.value"
                   class="mt-0.5 rounded border-rs-border text-brand-600 focus:ring-brand-200"
-                />
+                >
                 <div class="min-w-0">
                   <div class="flex items-center gap-1.5">
-                    <Icon :name="SCOPE_META[scope.value]?.icon || 'document'" :size="14" class="flex-shrink-0 text-brand-600" />
+                    <Icon
+:name="SCOPE_META[scope.value]?.icon || 'document'"
+:size="14"
+class="flex-shrink-0 text-brand-600"
+/>
                     <span class="text-xs font-semibold text-rs-fg">{{ SCOPE_META[scope.value]?.label || scope.value }}</span>
                   </div>
                   <p class="mt-0.5 text-[11px] leading-snug text-rs-muted">{{ SCOPE_META[scope.value]?.description || scope.value }}</p>
@@ -955,10 +1016,18 @@ function scrollToSection(id: string) {
           </button>
         </div>
 
-        <p v-if="apiKeysError" class="text-sm text-danger-600">{{ apiKeysError }}</p>
+        <p
+v-if="apiKeysError"
+class="text-sm text-danger-600"
+>
+{{ apiKeysError }}
+</p>
 
         <!-- New token banner -->
-        <div v-if="apiKeyToken" class="rounded-lg border border-success-200 bg-success-50 p-4">
+        <div
+v-if="apiKeyToken"
+class="rounded-lg border border-success-200 bg-success-50 p-4"
+>
           <div class="flex items-center justify-between gap-3">
             <div>
               <div class="text-sm font-medium text-success-900">Token created</div>
@@ -975,7 +1044,10 @@ function scrollToSection(id: string) {
           <div class="mt-3 break-all rounded-md border border-success-200 bg-white/70 px-3 py-2.5 font-mono text-xs text-success-900">
             {{ apiKeyToken }}
           </div>
-          <div v-if="apiKeyTokenLabel || apiKeyCopyStatus" class="mt-2 flex items-center gap-3 text-xs text-success-600">
+          <div
+v-if="apiKeyTokenLabel || apiKeyCopyStatus"
+class="mt-2 flex items-center gap-3 text-xs text-success-600"
+>
             <span v-if="apiKeyTokenLabel">Prefix {{ apiKeyTokenLabel }}</span>
             <span v-if="apiKeyCopyStatus">{{ apiKeyCopyStatus }}</span>
           </div>
@@ -1004,10 +1076,18 @@ function scrollToSection(id: string) {
                 :key="scope"
                 class="inline-flex items-center gap-1 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-600"
               >
-                <Icon v-if="SCOPE_META[scope]" :name="SCOPE_META[scope].icon" :size="10" class="text-neutral-400" />
+                <Icon
+v-if="SCOPE_META[scope]"
+:name="SCOPE_META[scope].icon"
+:size="10"
+class="text-neutral-400"
+/>
                 {{ SCOPE_META[scope]?.label || scope }}
               </span>
-              <span v-if="apiKeyFromRow(row).scopes.length === 0" class="text-xs text-rs-muted">—</span>
+              <span
+v-if="apiKeyFromRow(row).scopes.length === 0"
+class="text-xs text-rs-muted"
+>—</span>
             </div>
           </template>
           <template #cell-last_used_at="{ row }">
@@ -1030,14 +1110,18 @@ function scrollToSection(id: string) {
                 class="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
                 :disabled="apiKeysLoading || !apiAccess || Boolean(apiKeyFromRow(row).revoked_at)"
                 @click="rotateEnterpriseApiKey(apiKeyFromRow(row))"
-              >Rotate</button>
+              >
+Rotate
+</button>
               <button
                 v-if="!apiKeyFromRow(row).revoked_at"
                 type="button"
                 class="text-xs font-medium text-danger-600 hover:text-danger-700 disabled:opacity-50"
                 :disabled="apiKeysLoading || !apiAccess"
                 @click="revokeEnterpriseApiKey(apiKeyFromRow(row))"
-              >Revoke</button>
+              >
+Revoke
+</button>
             </div>
           </template>
         </DataTable>
@@ -1050,9 +1134,16 @@ function scrollToSection(id: string) {
             @click="showApiReference = !showApiReference"
           >
             <span>API Reference</span>
-            <Icon :name="showApiReference ? 'chevron-up' : 'chevron-down'" :size="14" class="text-neutral-400" />
+            <Icon
+:name="showApiReference ? 'chevron-up' : 'chevron-down'"
+:size="14"
+class="text-neutral-400"
+/>
           </button>
-          <div v-if="showApiReference" class="space-y-4 border-t border-rs-border px-4 pb-4 pt-4">
+          <div
+v-if="showApiReference"
+class="space-y-4 border-t border-rs-border px-4 pb-4 pt-4"
+>
             <div class="grid gap-3 sm:grid-cols-2">
               <div class="rounded-lg border border-rs-border bg-neutral-50 p-3">
                 <div class="text-xs text-rs-muted">Auth header</div>
@@ -1083,7 +1174,10 @@ function scrollToSection(id: string) {
     </section>
 
     <!-- ─── Static Index Embeds ─── -->
-    <section id="enterprise-embeds" class="rounded-xl border border-rs-border bg-surface">
+    <section
+id="enterprise-embeds"
+class="rounded-xl border border-rs-border bg-surface"
+>
       <div class="flex items-center justify-between border-b border-rs-border px-6 py-4">
         <div>
           <h3 class="text-base font-semibold text-rs-fg">Static Index Embeds</h3>
@@ -1095,7 +1189,11 @@ function scrollToSection(id: string) {
           :disabled="publishedEmbedsLoading"
           @click="fetchPublishedEmbeds"
         >
-          <Icon name="arrows-right-left" :size="14" class="text-current" />
+          <Icon
+name="arrows-right-left"
+:size="14"
+class="text-current"
+/>
           Refresh
         </button>
       </div>
@@ -1129,7 +1227,10 @@ function scrollToSection(id: string) {
                 </div>
               </div>
               <!-- Currency pair selector (when multiple corridors match) -->
-              <div v-if="embedMatchingCorridors.length > 1" class="space-y-1.5">
+              <div
+v-if="embedMatchingCorridors.length > 1"
+class="space-y-1.5"
+>
                 <label class="text-xs font-medium text-neutral-600">Currency pair</label>
                 <div class="flex flex-wrap gap-2">
                   <button
@@ -1139,10 +1240,15 @@ function scrollToSection(id: string) {
                     class="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
                     :class="embedCorridorId === corridor.corridorId ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-rs-border bg-surface text-rs-fg hover:border-brand-300'"
                     @click="selectEmbedCorridor(corridor.corridorId)"
-                  >{{ corridor.sourceCurrency }}/{{ corridor.destCurrency }}</button>
+                  >
+{{ corridor.sourceCurrency }}/{{ corridor.destCurrency }}
+</button>
                 </div>
               </div>
-              <div v-else-if="embedFromCountry && embedToCountry && embedMatchingCorridors.length === 0 && !corridorsLoading" class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-3 text-center text-xs text-rs-muted">
+              <div
+v-else-if="embedFromCountry && embedToCountry && embedMatchingCorridors.length === 0 && !corridorsLoading"
+class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-3 text-center text-xs text-rs-muted"
+>
                 No corridors found for this pair.
               </div>
               <!-- Manual corridor ID fallback -->
@@ -1154,19 +1260,24 @@ function scrollToSection(id: string) {
                   placeholder="e.g. US-PH-USD-PHP"
                   class="mt-2 h-9 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg placeholder:text-neutral-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   @keydown.enter.prevent="commitEmbedSearch"
-                />
+                >
                 <button
                   v-if="manualEmbedCorridorId && (!selectedEmbedCorridor || selectedEmbedCorridor.corridorId !== manualEmbedCorridorId)"
                   type="button"
                   class="mt-2 inline-flex items-center gap-1.5 rounded-md border border-rs-border bg-surface px-2.5 py-1.5 text-xs font-medium text-rs-fg transition-colors hover:border-brand-300"
                   @click="selectEmbedCorridor(manualEmbedCorridorId)"
-                >Use {{ manualEmbedCorridorId }}</button>
+                >
+Use {{ manualEmbedCorridorId }}
+</button>
               </details>
             </div>
 
             <!-- Right: config form -->
             <div class="space-y-3">
-              <div v-if="selectedEmbedCorridor || manualEmbedCorridorId" class="rounded-lg border border-brand-200 bg-brand-50/50 p-3">
+              <div
+v-if="selectedEmbedCorridor || manualEmbedCorridorId"
+class="rounded-lg border border-brand-200 bg-brand-50/50 p-3"
+>
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <div class="text-sm font-medium text-rs-fg">
@@ -1181,7 +1292,9 @@ function scrollToSection(id: string) {
                     type="button"
                     class="text-xs font-medium text-brand-600 hover:text-brand-700"
                     @click="useEmbedCorridorForExport"
-                  >Add to export</button>
+                  >
+Add to export
+</button>
                 </div>
               </div>
 
@@ -1220,7 +1333,9 @@ function scrollToSection(id: string) {
                   class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
                   :disabled="embedPublishedGenerating || !indicesEmbedsEnabled"
                   @click="handlePublishEmbed"
-                >{{ embedPublishedGenerating ? 'Publishing…' : 'Publish embed' }}</button>
+                >
+{{ embedPublishedGenerating ? 'Publishing…' : 'Publish embed' }}
+</button>
                 <div class="flex flex-wrap items-center gap-1.5 text-xs text-rs-muted">
                   <span class="rounded bg-neutral-200/60 px-1.5 py-0.5 text-neutral-600">Bank deposit</span>
                   <span class="text-neutral-300">&middot;</span>
@@ -1235,11 +1350,24 @@ function scrollToSection(id: string) {
           </div>
         </div>
 
-        <p v-if="embedCopyStatus" class="text-sm text-success-600">{{ embedCopyStatus }}</p>
-        <p v-if="effectiveEmbedError" class="text-sm text-danger-600">{{ effectiveEmbedError }}</p>
+        <p
+v-if="embedCopyStatus"
+class="text-sm text-success-600"
+>
+{{ embedCopyStatus }}
+</p>
+        <p
+v-if="effectiveEmbedError"
+class="text-sm text-danger-600"
+>
+{{ effectiveEmbedError }}
+</p>
 
         <!-- Publish success -->
-        <div v-if="embedPublishedId" class="rounded-lg border border-success-200 bg-success-50 p-4">
+        <div
+v-if="embedPublishedId"
+class="rounded-lg border border-success-200 bg-success-50 p-4"
+>
           <div class="text-sm font-medium text-success-900">Bundle published</div>
           <div class="mt-1 text-xs text-success-700">
             ID <span class="font-mono">{{ embedPublishedId }}</span>
@@ -1265,7 +1393,9 @@ function scrollToSection(id: string) {
                   class="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
                   :disabled="!embedCodes[item.key]"
                   @click="copyEmbedCode(item.key)"
-                >Code</button>
+                >
+Code
+</button>
                 <button
                   v-for="format in embedVisualButtons"
                   :key="`${item.key}-${format.value}`"
@@ -1273,22 +1403,33 @@ function scrollToSection(id: string) {
                   class="rounded border border-rs-border px-2 py-0.5 text-[10px] font-medium text-rs-fg transition-colors hover:border-brand-300 hover:text-brand-700 disabled:opacity-50"
                   :disabled="!embedUrls[item.key] || visualExporting"
                   @click="downloadEmbedVisual(item.key, item.label, format.value)"
-                >{{ visualExporting && activeVisualExportKey === item.key && activeVisualExportFormat === format.value ? '…' : format.label }}</button>
+                >
+{{ visualExporting && activeVisualExportKey === item.key && activeVisualExportFormat === format.value ? '…' : format.label }}
+</button>
               </div>
             </div>
-            <div class="overflow-hidden" style="height: 200px">
+            <div
+class="overflow-hidden"
+style="height: 200px"
+>
               <iframe
                 v-if="embedUrls[item.key]"
-                :src="embedUrls[item.key]"
                 :ref="element => setEmbedPreviewFrame(item.key, element)"
+                :src="embedUrls[item.key]"
                 class="h-full w-full"
                 loading="lazy"
               />
-              <div v-else class="flex h-full items-center justify-center text-xs text-rs-muted">
+              <div
+v-else
+class="flex h-full items-center justify-center text-xs text-rs-muted"
+>
                 Publish to preview
               </div>
             </div>
-            <div v-if="embedCodes[item.key]" class="border-t border-rs-border">
+            <div
+v-if="embedCodes[item.key]"
+class="border-t border-rs-border"
+>
               <textarea
                 class="w-full resize-none bg-transparent px-4 py-3 font-mono text-[11px] text-neutral-500 focus:outline-none"
                 rows="3"
@@ -1296,7 +1437,10 @@ function scrollToSection(id: string) {
                 :value="embedCodes[item.key]"
               />
             </div>
-            <p v-if="embedVisualErrors[item.key]" class="border-t border-rs-border px-4 py-2 text-xs text-danger-600">
+            <p
+v-if="embedVisualErrors[item.key]"
+class="border-t border-rs-border px-4 py-2 text-xs text-danger-600"
+>
               {{ embedVisualErrors[item.key] }}
             </p>
           </div>
@@ -1308,13 +1452,22 @@ function scrollToSection(id: string) {
             <h4 class="text-sm font-medium text-rs-fg">Published Bundles</h4>
           </div>
 
-          <div v-if="publishedEmbedsLoading && publishedEmbeds.length === 0" class="rounded-lg border border-rs-border px-4 py-4 text-xs text-rs-muted">
+          <div
+v-if="publishedEmbedsLoading && publishedEmbeds.length === 0"
+class="rounded-lg border border-rs-border px-4 py-4 text-xs text-rs-muted"
+>
             Loading…
           </div>
-          <div v-else-if="publishedEmbeds.length === 0" class="rounded-lg border border-dashed border-rs-border px-4 py-6 text-center text-xs text-rs-muted">
+          <div
+v-else-if="publishedEmbeds.length === 0"
+class="rounded-lg border border-dashed border-rs-border px-4 py-6 text-center text-xs text-rs-muted"
+>
             No published embeds yet.
           </div>
-          <div v-else class="space-y-3">
+          <div
+v-else
+class="space-y-3"
+>
             <div
               v-for="embed in publishedEmbeds"
               :key="embed.id"
@@ -1327,8 +1480,14 @@ function scrollToSection(id: string) {
                     <span class="rounded bg-neutral-100 px-1.5 py-0.5 font-medium">{{ embed.surfaceKind === 'pulse' ? 'Pulse' : 'Indices' }}</span>
                     <span>{{ formatDate(embed.publishedAt) }}</span>
                     <span>{{ embed.theme }}</span>
-                    <span v-if="embed.revokedAt" class="rounded bg-danger-50 px-1.5 py-0.5 font-medium text-danger-600">Revoked</span>
-                    <span v-else class="rounded bg-success-50 px-1.5 py-0.5 font-medium text-success-700">Active</span>
+                    <span
+v-if="embed.revokedAt"
+class="rounded bg-danger-50 px-1.5 py-0.5 font-medium text-danger-600"
+>Revoked</span>
+                    <span
+v-else
+class="rounded bg-success-50 px-1.5 py-0.5 font-medium text-success-700"
+>Active</span>
                   </div>
                 </div>
                 <button
@@ -1337,7 +1496,9 @@ function scrollToSection(id: string) {
                   class="text-xs font-medium text-danger-600 hover:text-danger-700 disabled:opacity-50"
                   :disabled="publishedEmbedsLoading"
                   @click="revokePublishedEmbed(embed.id)"
-                >Revoke</button>
+                >
+Revoke
+</button>
               </div>
               <div class="mt-3 space-y-2">
                 <div
@@ -1355,13 +1516,17 @@ function scrollToSection(id: string) {
                       class="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
                       :disabled="Boolean(embed.revokedAt)"
                       @click="copyPublishedUrl(variant.publicUrl, variant.label)"
-                    >URL</button>
+                    >
+URL
+</button>
                     <button
                       type="button"
                       class="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
                       :disabled="Boolean(embed.revokedAt)"
                       @click="copyPublishedCode(variant.embedCode, variant.label)"
-                    >Embed</button>
+                    >
+Embed
+</button>
                     <a
                       v-if="!embed.revokedAt"
                       :href="variant.publicUrl"
@@ -1379,7 +1544,10 @@ function scrollToSection(id: string) {
     </section>
 
     <!-- ─── Data Exports ─── -->
-    <section id="enterprise-exports" class="rounded-xl border border-rs-border bg-surface">
+    <section
+id="enterprise-exports"
+class="rounded-xl border border-rs-border bg-surface"
+>
       <div class="flex items-center justify-between border-b border-rs-border px-6 py-4">
         <div>
           <h3 class="text-base font-semibold text-rs-fg">Data Exports</h3>
@@ -1391,7 +1559,11 @@ function scrollToSection(id: string) {
           :disabled="exportJobsLoading"
           @click="fetchExportJobs"
         >
-          <Icon name="arrows-right-left" :size="14" class="text-current" />
+          <Icon
+name="arrows-right-left"
+:size="14"
+class="text-current"
+/>
           Refresh
         </button>
       </div>
@@ -1410,7 +1582,10 @@ function scrollToSection(id: string) {
                   @update:model-value="handleExportJobTypeChange"
                 />
               </div>
-              <p v-if="EXPORT_TYPE_DESCRIPTIONS[exportJobType]" class="mt-1 text-[11px] leading-snug text-rs-muted">
+              <p
+v-if="EXPORT_TYPE_DESCRIPTIONS[exportJobType]"
+class="mt-1 text-[11px] leading-snug text-rs-muted"
+>
                 {{ EXPORT_TYPE_DESCRIPTIONS[exportJobType] }}
               </p>
             </div>
@@ -1431,7 +1606,7 @@ function scrollToSection(id: string) {
                 v-model="exportDateFrom"
                 type="date"
                 class="mt-1.5 h-10 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              />
+              >
             </div>
             <div>
               <label class="text-xs font-medium text-neutral-500">To</label>
@@ -1439,7 +1614,7 @@ function scrollToSection(id: string) {
                 v-model="exportDateTo"
                 type="date"
                 class="mt-1.5 h-10 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              />
+              >
             </div>
           </div>
           <button
@@ -1447,11 +1622,16 @@ function scrollToSection(id: string) {
             class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
             :disabled="exportCreating || (exportJobType === 'indices' && !indicesExportsEnabled)"
             @click="handleCreateExport"
-          >{{ exportCreating ? 'Creating…' : 'Create export' }}</button>
+          >
+{{ exportCreating ? 'Creating…' : 'Create export' }}
+</button>
         </div>
 
         <!-- Indices corridor picker -->
-        <div v-if="exportJobType === 'indices'" class="rounded-lg border border-rs-border bg-neutral-50 p-5">
+        <div
+v-if="exportJobType === 'indices'"
+class="rounded-lg border border-rs-border bg-neutral-50 p-5"
+>
           <div class="grid gap-6 lg:grid-cols-2">
             <div class="space-y-3">
               <label class="text-xs font-medium uppercase tracking-wider text-neutral-500">Add corridors</label>
@@ -1477,7 +1657,10 @@ function scrollToSection(id: string) {
                 </div>
               </div>
               <!-- Matching corridors for this pair -->
-              <div v-if="exportMatchingCorridors.length > 0" class="space-y-1.5">
+              <div
+v-if="exportMatchingCorridors.length > 0"
+class="space-y-1.5"
+>
                 <div class="flex flex-wrap gap-2">
                   <button
                     v-for="corridor in exportMatchingCorridors"
@@ -1488,8 +1671,14 @@ function scrollToSection(id: string) {
                     @click="addExportCorridor(corridor.corridorId)"
                   >
                     {{ corridor.sourceCurrency }}/{{ corridor.destCurrency }}
-                    <span v-if="selectedExportCorridorIdSet.has(corridor.corridorId)" class="text-success-600">Added</span>
-                    <span v-else class="text-brand-600">Add</span>
+                    <span
+v-if="selectedExportCorridorIdSet.has(corridor.corridorId)"
+class="text-success-600"
+>Added</span>
+                    <span
+v-else
+class="text-brand-600"
+>Add</span>
                   </button>
                 </div>
                 <button
@@ -1497,9 +1686,14 @@ function scrollToSection(id: string) {
                   type="button"
                   class="text-xs font-medium text-brand-600 hover:text-brand-700"
                   @click="addMatchingExportCorridors"
-                >Add all {{ exportMatchingCorridors.length }} pairs</button>
+                >
+Add all {{ exportMatchingCorridors.length }} pairs
+</button>
               </div>
-              <div v-else-if="exportFromCountry && exportToCountry && !corridorsLoading" class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-3 text-center text-xs text-rs-muted">
+              <div
+v-else-if="exportFromCountry && exportToCountry && !corridorsLoading"
+class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-3 text-center text-xs text-rs-muted"
+>
                 No corridors found for this pair.
               </div>
               <!-- Manual corridor ID fallback -->
@@ -1511,13 +1705,15 @@ function scrollToSection(id: string) {
                   placeholder="e.g. US-PH-USD-PHP"
                   class="mt-2 h-9 w-full rounded-lg border border-rs-border bg-surface px-3 text-sm text-rs-fg placeholder:text-neutral-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   @keydown.enter.prevent="commitExportSearch"
-                />
+                >
                 <button
                   v-if="manualExportCorridorId"
                   type="button"
                   class="mt-2 inline-flex items-center gap-1.5 rounded-md border border-rs-border bg-surface px-2.5 py-1.5 text-xs font-medium text-rs-fg transition-colors hover:border-brand-300"
                   @click="addExportCorridor(manualExportCorridorId)"
-                >Add {{ manualExportCorridorId }}</button>
+                >
+Add {{ manualExportCorridorId }}
+</button>
               </details>
             </div>
 
@@ -1526,10 +1722,16 @@ function scrollToSection(id: string) {
                 <label class="text-xs font-medium uppercase tracking-wider text-neutral-500">Selected</label>
                 <span class="text-xs tabular-nums text-rs-muted">{{ selectedExportCorridorIds.length }}</span>
               </div>
-              <div v-if="selectedExportCorridors.length === 0" class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-6 text-center text-xs text-rs-muted">
+              <div
+v-if="selectedExportCorridors.length === 0"
+class="rounded-lg border border-dashed border-rs-border bg-surface px-3 py-6 text-center text-xs text-rs-muted"
+>
                 Add corridors to export indices data.
               </div>
-              <div v-else class="max-h-52 space-y-2 overflow-auto">
+              <div
+v-else
+class="max-h-52 space-y-2 overflow-auto"
+>
                 <div
                   v-for="corridor in selectedExportCorridors"
                   :key="corridor.corridorId"
@@ -1543,7 +1745,9 @@ function scrollToSection(id: string) {
                     type="button"
                     class="text-xs font-medium text-danger-600 hover:text-danger-700"
                     @click="removeExportCorridor(corridor.corridorId)"
-                  >Remove</button>
+                  >
+Remove
+</button>
                 </div>
               </div>
             </div>
@@ -1562,7 +1766,12 @@ function scrollToSection(id: string) {
           >Delivery delayed</span>
         </div>
 
-        <p v-if="effectiveExportError" class="text-sm text-danger-600">{{ effectiveExportError }}</p>
+        <p
+v-if="effectiveExportError"
+class="text-sm text-danger-600"
+>
+{{ effectiveExportError }}
+</p>
 
         <!-- Export jobs table -->
         <DataTable
@@ -1595,7 +1804,9 @@ function scrollToSection(id: string) {
             <div
               v-if="exportJobFromRow(row).status === 'failed' && exportJobFromRow(row).error"
               class="mt-1 text-xs text-danger-500"
-            >{{ exportJobFromRow(row).error }}</div>
+            >
+{{ exportJobFromRow(row).error }}
+</div>
           </template>
           <template #cell-createdAt="{ row }">
             <div>
@@ -1604,11 +1815,15 @@ function scrollToSection(id: string) {
               <div
                 v-if="exportJobFromRow(row).finishedAt"
                 class="mt-0.5 text-xs text-rs-muted"
-              >Finished {{ formatOptionalRelativeTime(exportJobFromRow(row).finishedAt) }}</div>
+              >
+Finished {{ formatOptionalRelativeTime(exportJobFromRow(row).finishedAt) }}
+</div>
               <div
                 v-if="exportJobFromRow(row).expiresAt"
                 class="mt-0.5 text-[10px] text-neutral-400"
-              >Expires {{ formatOptionalDate(exportJobFromRow(row).expiresAt) }}</div>
+              >
+Expires {{ formatOptionalDate(exportJobFromRow(row).expiresAt) }}
+</div>
             </div>
           </template>
           <template #row-actions="{ row }">
@@ -1617,9 +1832,17 @@ function scrollToSection(id: string) {
               type="button"
               class="text-xs font-medium text-brand-600 hover:text-brand-700"
               @click="downloadExport(exportJobFromRow(row).id)"
-            >Download</button>
-            <span v-else-if="exportJobFromRow(row).status === 'failed'" class="text-xs text-danger-600">Failed</span>
-            <span v-else class="text-xs text-neutral-400">Pending</span>
+            >
+Download
+</button>
+            <span
+v-else-if="exportJobFromRow(row).status === 'failed'"
+class="text-xs text-danger-600"
+>Failed</span>
+            <span
+v-else
+class="text-xs text-neutral-400"
+>Pending</span>
           </template>
         </DataTable>
       </div>

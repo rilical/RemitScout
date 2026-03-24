@@ -19,7 +19,10 @@
             class="flex h-14 w-14 items-center justify-center rounded-2xl"
             :class="variant === 'terminal' ? 'bg-blue-500/15 text-blue-300' : 'bg-blue-600 text-white'"
           >
-            <span class="text-2xl" aria-hidden="true">&#8595;</span>
+            <span
+class="text-2xl"
+aria-hidden="true"
+>&#8595;</span>
           </div>
           <div>
             <p
@@ -43,7 +46,10 @@
               class="flex items-center gap-2"
               :class="variant === 'terminal' ? 'text-neutral-300' : 'text-neutral-700'"
             >
-              <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] text-emerald-500" aria-hidden="true">&#10003;</span>
+              <span
+class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] text-emerald-500"
+aria-hidden="true"
+>&#10003;</span>
               {{ feature }}
             </li>
           </ul>
@@ -87,7 +93,10 @@
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
               :class="variant === 'terminal' ? 'bg-neutral-800 text-neutral-300' : 'bg-neutral-100 text-neutral-600'"
             >
-              <span class="text-lg" aria-hidden="true">&#8595;</span>
+              <span
+class="text-lg"
+aria-hidden="true"
+>&#8595;</span>
             </div>
             <div>
               <p
@@ -111,7 +120,11 @@
               :disabled="csvDownloading || !corridor"
               @click="handleCsvDownload"
             >
-              <span v-if="csvDownloading" class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+              <span
+v-if="csvDownloading"
+class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"
+aria-hidden="true"
+/>
               {{ csvDownloading ? 'Generating...' : 'CSV' }}
             </button>
             <button
@@ -120,11 +133,18 @@
               :disabled="xlsxDownloading || !corridor"
               @click="handleXlsxDownload"
             >
-              <span v-if="xlsxDownloading" class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+              <span
+v-if="xlsxDownloading"
+class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"
+aria-hidden="true"
+/>
               {{ xlsxDownloading ? 'Generating...' : 'XLSX' }}
             </button>
           </div>
-          <p v-if="csvError" class="text-xs text-red-500">
+          <p
+v-if="csvError"
+class="text-xs text-red-500"
+>
             {{ csvError }}
           </p>
         </div>
@@ -135,7 +155,10 @@
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
               :class="variant === 'terminal' ? 'bg-neutral-800 text-neutral-300' : 'bg-neutral-100 text-neutral-600'"
             >
-              <span class="text-lg" aria-hidden="true">&#9645;</span>
+              <span
+class="text-lg"
+aria-hidden="true"
+>&#9645;</span>
             </div>
             <div>
               <p
@@ -159,7 +182,11 @@
               :disabled="visualExporting"
               @click="handleVisualExport('png')"
             >
-              <span v-if="visualExporting && activeVisualFormat === 'png'" class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+              <span
+v-if="visualExporting && activeVisualFormat === 'png'"
+class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"
+aria-hidden="true"
+/>
               PNG
             </button>
             <button
@@ -168,11 +195,18 @@
               :disabled="visualExporting"
               @click="handleVisualExport('svg')"
             >
-              <span v-if="visualExporting && activeVisualFormat === 'svg'" class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+              <span
+v-if="visualExporting && activeVisualFormat === 'svg'"
+class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"
+aria-hidden="true"
+/>
               SVG
             </button>
           </div>
-          <p v-if="visualExportError" class="text-xs text-red-500">
+          <p
+v-if="visualExportError"
+class="text-xs text-red-500"
+>
             {{ visualExportError }}
           </p>
         </div>
@@ -183,7 +217,10 @@
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
               :class="variant === 'terminal' ? 'bg-neutral-800 text-neutral-300' : 'bg-neutral-100 text-neutral-600'"
             >
-              <span class="text-lg" aria-hidden="true">&lt;/&gt;</span>
+              <span
+class="text-lg"
+aria-hidden="true"
+>&lt;/&gt;</span>
             </div>
             <div>
               <p
@@ -264,7 +301,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { CorridorOption, PulseDensity, PulseFilters } from '~/types/pulse'
-import { getMarketSnapshot, getTableData } from '~/lib/pulseApi'
+import { getMarketSnapshot, getTableData } from '~/domains/pulse/infrastructure/pulseApi'
 import { useChartImageExport } from '~/composables/useChartImageExport'
 import RsSectionHeader from '~/ui/layout/RsSectionHeader.vue'
 
@@ -323,7 +360,7 @@ function triggerTextDownload(content: string, filename: string, mimeType: string
   URL.revokeObjectURL(url)
 }
 
-async function fetchSnapshotRows(): Promise<{ headers: string[]; rows: string[][] }> {
+async function fetchSnapshotRows(): Promise<{ headers: string[], rows: string[][] }> {
   if (!props.corridor) {
     throw new Error('No corridor selected.')
   }

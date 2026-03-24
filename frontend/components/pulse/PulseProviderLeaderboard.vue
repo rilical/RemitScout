@@ -66,10 +66,10 @@
               <td
                 class="px-3 py-3 text-left"
                 :class="[
-                  index === 0 ? 'text-emerald-400 font-bold' :
-                  index === 1 ? 'text-blue-400 font-semibold' :
-                  index === 2 ? 'text-amber-400 font-semibold' :
-                  'text-neutral-500'
+                  index === 0 ? 'text-emerald-400 font-bold'
+                  : index === 1 ? 'text-blue-400 font-semibold'
+                  : index === 2 ? 'text-amber-400 font-semibold'
+                  : 'text-neutral-500',
                 ]"
               >
                 #{{ index + 1 }}
@@ -112,8 +112,19 @@
         v-else
         class="flex flex-col items-center justify-center py-12 text-center"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="mb-3 h-10 w-10 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
+        <svg
+xmlns="http://www.w3.org/2000/svg"
+class="mb-3 h-10 w-10 text-neutral-600"
+fill="none"
+viewBox="0 0 24 24"
+stroke="currentColor"
+stroke-width="1.5"
+>
+          <path
+stroke-linecap="round"
+stroke-linejoin="round"
+d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25"
+/>
         </svg>
         <p class="text-body-sm font-medium text-neutral-400">No provider data available</p>
         <p class="mt-1 text-body-sm text-neutral-600">Select a corridor to see the leaderboard</p>

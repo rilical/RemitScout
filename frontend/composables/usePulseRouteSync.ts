@@ -1,5 +1,4 @@
 import { watch } from 'vue'
-import type { PulseTimeframe } from '~/stores/pulse'
 
 export function usePulseRouteSync() {
   const route = useRoute()
@@ -24,26 +23,26 @@ export function usePulseRouteSync() {
     () => {
       const storeParams = store.getQueryParams()
       const query: Record<string, string> = {}
+      const managedKeys = ['corridor', 'corridor_id', 'timeframe', 'mode', 'amount'] as const
 
       // Preserve any existing query params not managed by the store.
       for (const [key, val] of Object.entries(route.query)) {
+        if (managedKeys.includes(key as typeof managedKeys[number])) {
+          continue
+        }
         if (val !== undefined && val !== null && typeof val === 'string') {
           query[key] = val
         }
       }
 
-      // Apply store-managed params (store omits defaults, so clear stale keys).
-      const managedKeys = ['corridor', 'corridor_id', 'timeframe', 'mode', 'amount'] as const
-      for (const key of managedKeys) {
-        delete query[key]
-      }
+      // Apply store-managed params (store omits defaults, so stale managed keys stay cleared).
       for (const [key, val] of Object.entries(storeParams)) {
         query[key] = val
       }
 
       router.replace({ query })
     },
-    { deep: true }
+    { deep: true },
   )
 
   return { initFromRoute }

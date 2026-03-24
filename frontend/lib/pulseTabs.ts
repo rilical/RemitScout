@@ -1,5 +1,5 @@
-export type PulseTab = 'snapshot' | 'dispersion' | 'competition' | 'bank-gap' |
-                       'coverage' | 'indices'
+export type PulseTab = 'snapshot' | 'dispersion' | 'competition' | 'bank-gap'
+  | 'coverage' | 'indices'
 
 export type PulseLevel = 'none' | 'lite' | 'full'
 

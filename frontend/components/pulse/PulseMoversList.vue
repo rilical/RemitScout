@@ -221,7 +221,11 @@ const handleAdd = async (m: PulseTeaserMover) => {
                 {{ formatPct(m.deltaPct) }}
               </div>
 
-              <svg class="h-4 w-12 flex-shrink-0" viewBox="0 0 60 100" preserveAspectRatio="none">
+              <svg
+class="h-4 w-12 flex-shrink-0"
+viewBox="0 0 60 100"
+preserveAspectRatio="none"
+>
                 <polyline
                   :points="generateSparklinePath(index, m.deltaPct > 0 ? 'up' : m.deltaPct < 0 ? 'down' : 'flat')"
                   fill="none"

@@ -69,7 +69,7 @@ const reasonDescription = computed<string | undefined>(() => {
     case 'unauthorized':
       return 'This feature requires a Plus or Enterprise subscription.'
     case 'error':
-      return "We couldn't load this data. Please try refreshing."
+      return 'We couldn\'t load this data. Please try refreshing.'
     case 'loading':
       return 'Loading data, please wait.'
     default:
@@ -81,8 +81,8 @@ const resolvedTitle = computed(() => props.title ?? reasonTitle.value)
 const resolvedDescription = computed(() => props.description ?? props.message ?? reasonDescription.value)
 
 const hasTitle = computed(() => Boolean(resolvedTitle.value))
-const description = computed(() => resolvedDescription.value)
-const hasDescription = computed(() => Boolean(description.value || props.details))
+const descriptionText = computed(() => resolvedDescription.value)
+const hasDescription = computed(() => Boolean(descriptionText.value || props.details))
 
 const modeClass = computed(() => {
   if (props.mode === 'inline') return 'border-0 bg-transparent p-0 rounded-none'
@@ -128,16 +128,16 @@ const contentWrapperClass = computed(() => {
           {{ resolvedTitle }}
         </h3>
         <p
-          v-if="description"
+          v-if="descriptionText"
           :id="descriptionId"
           class="mt-1 text-body-sm"
           :class="props.variant === 'terminal' ? 'text-neutral-300' : 'text-rs-muted'"
         >
-          {{ description }}
+          {{ descriptionText }}
         </p>
         <p
           v-if="props.details"
-          :id="description ? undefined : descriptionId"
+          :id="descriptionText ? undefined : descriptionId"
           class="mt-2 text-body-sm"
           :class="props.variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
         >

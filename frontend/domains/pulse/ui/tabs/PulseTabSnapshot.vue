@@ -271,13 +271,22 @@
             v-if="loadingIndices"
             class="space-y-2"
           >
-            <div class="h-3 w-16 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
-            <div class="h-7 w-24 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+            <div
+class="h-3 w-16 animate-pulse rounded"
+:class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'"
+/>
+            <div
+class="h-7 w-24 animate-pulse rounded"
+:class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'"
+/>
           </div>
           <template v-else-if="indicesHeadline">
             <div class="mb-1 flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-blue-500" />
-              <span class="text-label font-semibold" :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'">TEER</span>
+              <span
+class="text-label font-semibold"
+:class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
+>TEER</span>
               <span
                 class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase"
                 :class="indicesHeadline.teer.confidence === 'HIGH'
@@ -287,7 +296,10 @@
                     : 'bg-red-100 text-red-700'"
               >{{ indicesHeadline.teer.confidence }}</span>
             </div>
-            <p class="text-h3 font-bold tabular-nums" :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'">
+            <p
+class="text-h3 font-bold tabular-nums"
+:class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
+>
               {{ indicesHeadline.teer.value.toFixed(2) }}%
             </p>
             <div class="mt-1 flex gap-3 text-body-sm tabular-nums">
@@ -308,22 +320,40 @@
             v-if="loadingIndices"
             class="space-y-2"
           >
-            <div class="h-3 w-16 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
-            <div class="h-7 w-24 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+            <div
+class="h-3 w-16 animate-pulse rounded"
+:class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'"
+/>
+            <div
+class="h-7 w-24 animate-pulse rounded"
+:class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'"
+/>
           </div>
           <template v-else-if="indicesHeadline">
             <div class="mb-1 flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-emerald-500" />
-              <span class="text-label font-semibold" :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'">RCI</span>
+              <span
+class="text-label font-semibold"
+:class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
+>RCI</span>
             </div>
-            <p class="text-h3 font-bold tabular-nums" :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'">
+            <p
+class="text-h3 font-bold tabular-nums"
+:class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
+>
               {{ indicesHeadline.rci.value.toFixed(1) }}
             </p>
             <div class="mt-1 flex items-center gap-3 text-body-sm">
-              <span :class="indicesHeadline.rci.delta7d > 0 ? 'text-emerald-500' : indicesHeadline.rci.delta7d < 0 ? 'text-red-500' : 'text-neutral-400'" class="tabular-nums">
+              <span
+:class="indicesHeadline.rci.delta7d > 0 ? 'text-emerald-500' : indicesHeadline.rci.delta7d < 0 ? 'text-red-500' : 'text-neutral-400'"
+class="tabular-nums"
+>
                 {{ indicesHeadline.rci.delta7d > 0 ? '+' : '' }}{{ indicesHeadline.rci.delta7d.toFixed(1) }} 7d
               </span>
-              <span :class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'" class="text-xs">
+              <span
+:class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'"
+class="text-xs"
+>
                 {{ indicesHeadline.rci.value >= 90 ? 'highly competitive' : indicesHeadline.rci.value >= 70 ? 'competitive' : 'limited competition' }}
               </span>
             </div>
@@ -337,13 +367,22 @@
             v-if="loadingIndices"
             class="space-y-2"
           >
-            <div class="h-3 w-16 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
-            <div class="h-7 w-24 animate-pulse rounded" :class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'" />
+            <div
+class="h-3 w-16 animate-pulse rounded"
+:class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'"
+/>
+            <div
+class="h-7 w-24 animate-pulse rounded"
+:class="variant === 'terminal' ? 'bg-neutral-700' : 'bg-neutral-200'"
+/>
           </div>
           <template v-else-if="indicesHeadline">
             <div class="mb-1 flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-amber-500" />
-              <span class="text-label font-semibold" :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'">RVI</span>
+              <span
+class="text-label font-semibold"
+:class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
+>RVI</span>
               <span
                 class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase"
                 :class="indicesHeadline.rvi.value < 20
@@ -353,14 +392,23 @@
                     : 'bg-red-100 text-red-700'"
               >{{ indicesHeadline.rvi.value < 20 ? 'LOW' : indicesHeadline.rvi.value < 50 ? 'MODERATE' : 'HIGH' }}</span>
             </div>
-            <p class="text-h3 font-bold tabular-nums" :class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'">
-              {{ Math.round(indicesHeadline.rvi.value) }} <span class="text-body-sm font-normal" :class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'">bps</span>
+            <p
+class="text-h3 font-bold tabular-nums"
+:class="variant === 'terminal' ? 'text-white' : 'text-neutral-900'"
+>
+              {{ Math.round(indicesHeadline.rvi.value) }} <span
+class="text-body-sm font-normal"
+:class="variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
+>bps</span>
             </p>
             <div class="mt-1 flex gap-3 text-body-sm tabular-nums">
               <span :class="indicesHeadline.rvi.delta7d > 0 ? 'text-red-500' : indicesHeadline.rvi.delta7d < 0 ? 'text-emerald-500' : 'text-neutral-400'">
                 {{ indicesHeadline.rvi.delta7d > 0 ? '+' : '' }}{{ Math.round(indicesHeadline.rvi.delta7d) }} 7d
               </span>
-              <span :class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'" class="text-xs">
+              <span
+:class="variant === 'terminal' ? 'text-neutral-500' : 'text-neutral-400'"
+class="text-xs"
+>
                 {{ indicesHeadline.rvi.value < 20 ? 'stable market' : indicesHeadline.rvi.value < 50 ? 'moderate movement' : 'volatile market' }}
               </span>
             </div>
@@ -528,7 +576,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import type { EChartsOption } from 'echarts'
-import type { PulseDensity, PulseFilters, PulseProviderBenchmarkRow, CorridorOption } from '~/types/pulse'
+import type { PulseDensity, PulseFilters, PulseProviderBenchmarkRow, CorridorOption, PulseSnapshotSummary } from '~/types/pulse'
 import type { PulseCorridor } from '~/stores/pulse'
 import type { DataTableSort } from '~/ui/DataTable/types'
 import RsPulseTable from '~/ui/DataTable/RsPulseTable.vue'
@@ -547,15 +595,14 @@ import {
   getMarketSnapshot,
   getProviderBenchmarkingData,
   getIndicesHeadline,
-} from '~/lib/pulseApi'
+} from '~/domains/pulse/infrastructure/pulseApi'
 import type {
   SmartSendData,
   PulseNarrativeData,
   MarketSnapshotData,
   PulseChartsBatchItem,
   IndicesHeadlineData,
-} from '~/lib/pulseApi'
-import type { PulseSnapshotSummary } from '~/types/pulse'
+} from '~/domains/pulse/infrastructure/pulseApi'
 import { buildCostMarkupDualAxisOption, buildGaugeOption, buildLineOption } from '~/lib/pulseChartBuilders'
 import { getProviderLogoPath } from '~/composables/useProviderLogo'
 

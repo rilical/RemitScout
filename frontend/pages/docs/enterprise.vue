@@ -57,10 +57,36 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
     <section class="relative bg-neutral-900 py-14 lg:py-20">
       <div class="relative z-10 mx-auto max-w-page px-page-x">
         <nav class="mb-8 flex items-center gap-1.5 text-xs text-neutral-400">
-          <NuxtLink to="/" class="hover:text-white transition-colors">Home</NuxtLink>
-          <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-          <NuxtLink to="/dashboard?tab=enterprise" class="hover:text-white transition-colors">Enterprise</NuxtLink>
-          <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          <NuxtLink
+to="/"
+class="hover:text-white transition-colors"
+>Home</NuxtLink>
+          <svg
+class="h-3 w-3"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+d="M8.25 4.5l7.5 7.5-7.5 7.5"
+/></svg>
+          <NuxtLink
+to="/dashboard?tab=enterprise"
+class="hover:text-white transition-colors"
+>Enterprise</NuxtLink>
+          <svg
+class="h-3 w-3"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+d="M8.25 4.5l7.5 7.5-7.5 7.5"
+/></svg>
           <span class="text-neutral-200">Documentation</span>
         </nav>
 
@@ -96,7 +122,10 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
         <!-- Main -->
         <main class="min-w-0 flex-1 space-y-16">
           <!-- Getting Started -->
-          <section id="getting-started" class="scroll-mt-24">
+          <section
+id="getting-started"
+class="scroll-mt-24"
+>
             <h2 class="text-xl font-semibold text-neutral-900">Getting Started</h2>
             <p class="mt-3 text-sm leading-relaxed text-neutral-600">
               The Enterprise tier gives you programmatic access to Remit-Scout's proprietary market indices
@@ -110,7 +139,10 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
                   <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">1</span>
                   <span>
                     <strong class="text-neutral-900">Create an API key</strong> in the
-                    <NuxtLink to="/dashboard?tab=enterprise" class="text-brand-600 hover:text-brand-700 underline">Enterprise Console</NuxtLink>.
+                    <NuxtLink
+to="/dashboard?tab=enterprise"
+class="text-brand-600 hover:text-brand-700 underline"
+>Enterprise Console</NuxtLink>.
                     Select the scopes your integration needs.
                   </span>
                 </li>
@@ -141,7 +173,10 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
           </section>
 
           <!-- Authentication -->
-          <section id="authentication" class="scroll-mt-24">
+          <section
+id="authentication"
+class="scroll-mt-24"
+>
             <h2 class="text-xl font-semibold text-neutral-900">Authentication</h2>
             <p class="mt-3 text-sm leading-relaxed text-neutral-600">
               All API requests require an <code class="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-mono text-neutral-800">X-API-Key</code>
@@ -235,7 +270,10 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
           </section>
 
           <!-- Index Reference -->
-          <section id="index-reference" class="scroll-mt-24">
+          <section
+id="index-reference"
+class="scroll-mt-24"
+>
             <h2 class="text-xl font-semibold text-neutral-900">Index Reference</h2>
             <p class="mt-3 text-sm leading-relaxed text-neutral-600">
               Remit-Scout computes three proprietary indices from live provider quotes. All values are derived from
@@ -330,7 +368,10 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
           </section>
 
           <!-- API Endpoints -->
-          <section id="api-endpoints" class="scroll-mt-24">
+          <section
+id="api-endpoints"
+class="scroll-mt-24"
+>
             <h2 class="text-xl font-semibold text-neutral-900">API Endpoints</h2>
             <p class="mt-3 text-sm leading-relaxed text-neutral-600">
               Base URL: <code class="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-mono">https://api.remitscout.com/api/v1</code>
@@ -353,12 +394,14 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
                   <h4 class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Parameters</h4>
                   <div class="mt-2 overflow-hidden rounded border border-neutral-200">
                     <table class="w-full text-xs">
-                      <thead class="bg-neutral-50"><tr>
+                      <thead class="bg-neutral-50">
+<tr>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Name</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">In</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Required</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Description</th>
-                      </tr></thead>
+                      </tr>
+</thead>
                       <tbody class="divide-y divide-neutral-100">
                         <tr><td class="px-3 py-2 font-mono">corridorId</td><td class="px-3 py-2">path</td><td class="px-3 py-2">Yes</td><td class="px-3 py-2 text-neutral-600">e.g. <code>US-MX-USD-MXN</code></td></tr>
                         <tr><td class="px-3 py-2 font-mono">days</td><td class="px-3 py-2">query</td><td class="px-3 py-2">No</td><td class="px-3 py-2 text-neutral-600">Lookback window (default 30)</td></tr>
@@ -423,12 +466,14 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
                   <h4 class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Parameters</h4>
                   <div class="mt-2 overflow-hidden rounded border border-neutral-200">
                     <table class="w-full text-xs">
-                      <thead class="bg-neutral-50"><tr>
+                      <thead class="bg-neutral-50">
+<tr>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Name</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">In</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Required</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Description</th>
-                      </tr></thead>
+                      </tr>
+</thead>
                       <tbody class="divide-y divide-neutral-100">
                         <tr><td class="px-3 py-2 font-mono">corridorId</td><td class="px-3 py-2">path</td><td class="px-3 py-2">Yes</td><td class="px-3 py-2 text-neutral-600">e.g. <code>US-PH-USD-PHP</code></td></tr>
                         <tr><td class="px-3 py-2 font-mono">amount_bucket</td><td class="px-3 py-2">query</td><td class="px-3 py-2">No</td><td class="px-3 py-2 text-neutral-600">Send amount in USD (default 500)</td></tr>
@@ -492,12 +537,14 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
                   <h4 class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Parameters</h4>
                   <div class="mt-2 overflow-hidden rounded border border-neutral-200">
                     <table class="w-full text-xs">
-                      <thead class="bg-neutral-50"><tr>
+                      <thead class="bg-neutral-50">
+<tr>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Name</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">In</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Required</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Description</th>
-                      </tr></thead>
+                      </tr>
+</thead>
                       <tbody class="divide-y divide-neutral-100">
                         <tr><td class="px-3 py-2 font-mono">corridorId</td><td class="px-3 py-2">path</td><td class="px-3 py-2">Yes</td><td class="px-3 py-2 text-neutral-600">e.g. <code>US-IN-USD-INR</code></td></tr>
                         <tr><td class="px-3 py-2 font-mono">amount_bucket</td><td class="px-3 py-2">query</td><td class="px-3 py-2">No</td><td class="px-3 py-2 text-neutral-600">Send amount in USD (default 500)</td></tr>
@@ -554,12 +601,14 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
                   <h4 class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Parameters</h4>
                   <div class="mt-2 overflow-hidden rounded border border-neutral-200">
                     <table class="w-full text-xs">
-                      <thead class="bg-neutral-50"><tr>
+                      <thead class="bg-neutral-50">
+<tr>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Name</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">In</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Required</th>
                         <th class="px-3 py-2 text-left font-medium text-neutral-600">Description</th>
-                      </tr></thead>
+                      </tr>
+</thead>
                       <tbody class="divide-y divide-neutral-100">
                         <tr><td class="px-3 py-2 font-mono">days</td><td class="px-3 py-2">query</td><td class="px-3 py-2">No</td><td class="px-3 py-2 text-neutral-600">Lookback window (default 30, max 90)</td></tr>
                       </tbody>
@@ -619,7 +668,10 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
           </section>
 
           <!-- Data Tiers -->
-          <section id="data-tiers" class="scroll-mt-24">
+          <section
+id="data-tiers"
+class="scroll-mt-24"
+>
             <h2 class="text-xl font-semibold text-neutral-900">Data Tiers</h2>
             <p class="mt-3 text-sm leading-relaxed text-neutral-600">
               Corridors are assigned to collection tiers based on origin country. Tier determines how frequently
@@ -674,7 +726,10 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
           </section>
 
           <!-- Embeds -->
-          <section id="embeds" class="scroll-mt-24">
+          <section
+id="embeds"
+class="scroll-mt-24"
+>
             <h2 class="text-xl font-semibold text-neutral-900">Index Embeds</h2>
             <p class="mt-3 text-sm leading-relaxed text-neutral-600">
               Publish a static TEER, RCI, or RVI chart embed for any corridor. Embeds are generated from the
@@ -718,7 +773,10 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
           </section>
 
           <!-- Support -->
-          <section id="support" class="scroll-mt-24">
+          <section
+id="support"
+class="scroll-mt-24"
+>
             <h2 class="text-xl font-semibold text-neutral-900">Support and Escalation</h2>
             <p class="mt-3 text-sm leading-relaxed text-neutral-600">
               Enterprise clients have priority access to the Remit-Scout data team.
@@ -754,7 +812,17 @@ onBeforeUnmount(() => sectionObserver?.disconnect())
               to="/dashboard?tab=enterprise"
               class="inline-flex items-center gap-2 rounded-lg border border-rs-border bg-surface px-4 py-2 text-sm font-medium text-rs-fg transition-colors hover:bg-neutral-50"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+/></svg>
               Back to Enterprise Console
             </NuxtLink>
           </div>

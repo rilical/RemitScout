@@ -54,12 +54,12 @@ export const shouldUsePulseDevMock = (query: QueryMap): boolean => {
 }
 
 const COLOR_BY_PROVIDER: Record<string, string> = {
-  Wise: PROVIDER_COLORS.wise,
-  Remitly: PROVIDER_COLORS.remitly,
-  WorldRemit: PROVIDER_COLORS.worldremit,
+  'Wise': PROVIDER_COLORS.wise,
+  'Remitly': PROVIDER_COLORS.remitly,
+  'WorldRemit': PROVIDER_COLORS.worldremit,
   'Western Union': PROVIDER_COLORS.westernunion,
-  Xoom: PROVIDER_COLORS.xoom,
-  Paysend: '#8B5CF6',
+  'Xoom': PROVIDER_COLORS.xoom,
+  'Paysend': '#8B5CF6',
 }
 
 const PROVIDER_NAMES = ['Wise', 'Remitly', 'WorldRemit', 'Xoom', 'Western Union', 'Paysend'] as const
@@ -447,11 +447,11 @@ const buildChartsForCorridor = (corridor: MockCorridor, chartId: string, range: 
     case 'provider-winner': {
       return withMetadata(
         chartId,
-        baseRows.map((row) => ({
+        baseRows.map(row => ({
           id: normalizeId(row.provider),
           label: row.provider,
           color: row.color,
-          points: winnerSnapshots.map((snapshot) => ({
+          points: winnerSnapshots.map(snapshot => ({
             t: snapshot.timestamp,
             v: snapshot.winner === row.provider ? 1 : 0,
             label: snapshot.winner === row.provider ? snapshot.detail : undefined,
@@ -468,7 +468,7 @@ const buildChartsForCorridor = (corridor: MockCorridor, chartId: string, range: 
             id: 'leader-flips',
             label: 'Leader changes',
             color: '#2563EB',
-            points: leaderChanges.map((point) => ({
+            points: leaderChanges.map(point => ({
               t: point.timestamp,
               v: point.changed,
             })),
@@ -631,7 +631,7 @@ const buildSnapshotSummary = (corridor: MockCorridor, amount: number): PulseSnap
 const buildMarketSnapshot = (corridor: MockCorridor, amount: number) => {
   const quotes = buildProviderRows(corridor, amount)
   return {
-    quotes: quotes.map((row) => ({
+    quotes: quotes.map(row => ({
       provider: row.provider,
       color: row.color,
       recipientGets: row.recipientGets,
@@ -652,7 +652,7 @@ const buildMarketSnapshot = (corridor: MockCorridor, amount: number) => {
 const buildBenchmarking = (corridor: MockCorridor, amount: number): PulseProviderBenchmarkRow[] =>
   buildProviderRows(corridor, amount)
     .sort((left, right) => right.recipientGets - left.recipientGets)
-    .map((row) => ({
+    .map(row => ({
       provider: row.provider,
       deliveredAmount: row.recipientGets,
       totalCost: row.totalCostPct,
@@ -666,7 +666,7 @@ const buildBenchmarking = (corridor: MockCorridor, amount: number): PulseProvide
 
 const buildHeatmap = (corridor: MockCorridor, amount: number) => {
   const snapshots = buildWinnerSnapshots(corridor, amount, '30d')
-  const providerStats: Record<string, { wins: number; percentage: number }> = {}
+  const providerStats: Record<string, { wins: number, percentage: number }> = {}
 
   const days = snapshots.map((snapshot) => {
     providerStats[snapshot.winner] = providerStats[snapshot.winner] ?? { wins: 0, percentage: 0 }
@@ -1006,7 +1006,7 @@ export const getPulseDevMockResponse = (path: string, query: QueryMap): unknown 
       success: true,
       updatedAt: nowIso(),
       dataAvailable: true,
-      charts: chartIds.map((chartId) => ({
+      charts: chartIds.map(chartId => ({
         id: chartId,
         dataAvailable: true,
         updatedAt: nowIso(),

@@ -6950,7 +6950,9 @@ function handleSetAlert() {
   }
   const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`
   modal.open({ target, label, source: 'dashboard' })
-  nextTick(() => { alertActionPending = false })
+  nextTick(() => {
+    alertActionPending = false
+  })
 }
 
 // Account section state
@@ -7586,7 +7588,8 @@ watch(
     if (isOpen) {
       const range = exportSettings.value.dateRange || '30d'
       setExportDateRange(range)
-    } else {
+    }
+ else {
       clearExportPolling()
     }
   },
@@ -7664,8 +7667,8 @@ async function handleExport() {
       return
     }
 
-    const itemIds =
-      exportSettings.value.dataType === 'history' && selectedExportItems.value.length > 0
+    const itemIds
+      = exportSettings.value.dataType === 'history' && selectedExportItems.value.length > 0
         ? selectedExportItems.value
         : undefined
 
@@ -7760,7 +7763,8 @@ const requestGdprExport = async () => {
         }
         if (jobStatus === 'running') {
           gdprExportStatus.value = 'Export is running...'
-        } else {
+        }
+ else {
           gdprExportStatus.value = 'Export queued...'
         }
         gdprExportPollTimer = setTimeout(pollGdpr, 2500)

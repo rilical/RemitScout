@@ -1,12 +1,12 @@
 import type { CorridorOption } from '~/types/pulse'
 
-export type PulseEmptyReason =
-  | 'no-data'
-  | 'no-corridor'
-  | 'suppressed'
-  | 'warming-up'
-  | 'unauthorized'
-  | 'error'
+export type PulseEmptyReason
+  = | 'no-data'
+    | 'no-corridor'
+    | 'suppressed'
+    | 'warming-up'
+    | 'unauthorized'
+    | 'error'
 
 export function usePulseDataSafety() {
   function isCorridorSafe(corridor: CorridorOption | null): boolean {
@@ -24,7 +24,7 @@ export function usePulseDataSafety() {
   }
 
   function isChartAvailable(
-    chartData: { dataAvailable?: boolean; updatedAt?: string | null; source?: string } | null
+    chartData: { dataAvailable?: boolean, updatedAt?: string | null, source?: string } | null,
   ): boolean {
     if (!chartData) return false
     if (!chartData.dataAvailable) return false
@@ -34,8 +34,8 @@ export function usePulseDataSafety() {
   }
 
   function getChartEmptyReason(
-    chartData: { dataAvailable?: boolean; previewLocked?: boolean } | null,
-    corridor: CorridorOption | null
+    chartData: { dataAvailable?: boolean, previewLocked?: boolean } | null,
+    corridor: CorridorOption | null,
   ): PulseEmptyReason {
     if (!corridor) return 'no-corridor'
     if (chartData?.previewLocked) return 'unauthorized'
@@ -43,7 +43,7 @@ export function usePulseDataSafety() {
     return 'no-data'
   }
 
-  function isLowConfidence(point: { lowConfidence?: boolean; confidence?: number }): boolean {
+  function isLowConfidence(point: { lowConfidence?: boolean, confidence?: number }): boolean {
     return point.lowConfidence === true || (point.confidence !== undefined && point.confidence < 0.5)
   }
 

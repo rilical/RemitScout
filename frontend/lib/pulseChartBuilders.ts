@@ -217,7 +217,7 @@ export function buildLineOption(series: ChartSeriesExtended[], options?: LineOpt
       },
     },
     dataZoom: options?.dataZoom ? [{ type: 'inside' }] : undefined,
-    series: series.map((entry) => ({
+    series: series.map(entry => ({
       name: entry.label,
       type: 'line' as const,
       smooth: options?.smooth ?? true,
@@ -257,12 +257,12 @@ export function buildCostMarkupDualAxisOption(
   costSeries: ChartSeriesExtended[],
   markupSeries: ChartSeriesExtended[],
 ): EChartsOption {
-  const decoratedCost = costSeries.map((series) => ({
+  const decoratedCost = costSeries.map(series => ({
     ...series,
     label: costSeries.length === 1 ? 'All-in cost' : `All-in cost · ${series.label}`,
     color: PULSE_CHART_COLORS.navy,
   }))
-  const decoratedMarkup = markupSeries.map((series) => ({
+  const decoratedMarkup = markupSeries.map(series => ({
     ...series,
     label: markupSeries.length === 1 ? 'FX markup' : `FX markup · ${series.label}`,
     color: PULSE_CHART_COLORS.brand,
@@ -361,7 +361,7 @@ export function buildCostMarkupDualAxisOption(
 
 export function buildBarOption(
   series: ChartSeriesExtended[],
-  options?: { stacked?: boolean; horizontal?: boolean; categories?: string[]; yAxisLabel?: string },
+  options?: { stacked?: boolean, horizontal?: boolean, categories?: string[], yAxisLabel?: string },
 ): EChartsOption {
   const isHorizontal = options?.horizontal
   const formatter = (value: number) => formatAxisValue(value, options?.yAxisLabel)
@@ -411,7 +411,7 @@ export function buildBarOption(
         },
       },
     },
-    series: series.map((entry) => ({
+    series: series.map(entry => ({
       name: entry.label,
       type: 'bar' as const,
       stack: options?.stacked ? 'total' : undefined,
@@ -458,7 +458,7 @@ export function buildScatterOption(series: ChartSeriesExtended[]): EChartsOption
       axisLabel: { color: PULSE_CHART_COLORS.axis },
       splitLine: { lineStyle: { color: PULSE_CHART_COLORS.grid, type: 'dashed' } },
     },
-    series: series.map((entry) => ({
+    series: series.map(entry => ({
       name: entry.label,
       type: 'scatter' as const,
       data: entry.points.map(point => [point.t, point.v]),
@@ -473,7 +473,7 @@ export function buildGaugeOption(
   options?: {
     min?: number
     max?: number
-    thresholds?: Array<{ value: number; color: string; label: string }>
+    thresholds?: Array<{ value: number, color: string, label: string }>
   },
 ): EChartsOption {
   const min = options?.min ?? 0
@@ -604,7 +604,7 @@ export function buildStackedAreaOption(series: ChartSeriesExtended[]): EChartsOp
     color: series.map((entry, index) => entry.color || [PULSE_CHART_COLORS.tint, PULSE_CHART_COLORS.brand, PULSE_CHART_COLORS.navy][index % 3]),
     tooltip: {
       ...baseTooltip,
-      formatter: buildAxisTooltipFormatter((value) => formatBps(value)),
+      formatter: buildAxisTooltipFormatter(value => formatBps(value)),
     },
     legend: series.length > 1 ? baseLegend : undefined,
     grid: baseGrid,
@@ -718,7 +718,7 @@ export function buildRibbonOption(
 }
 
 export function buildTreemapOption(
-  data: Array<{ name: string; value: number; itemStyle?: { color: string } }>,
+  data: Array<{ name: string, value: number, itemStyle?: { color: string } }>,
 ): EChartsOption {
   return {
     series: [{
@@ -750,7 +750,7 @@ export function buildTreemapOption(
 }
 
 export function buildTimelineOption(
-  events: Array<{ timestamp: number; severity: string; count?: number }>,
+  events: Array<{ timestamp: number, severity: string, count?: number }>,
   options?: { colorMap?: Record<string, string> },
 ): EChartsOption {
   const colorMap = options?.colorMap ?? {
@@ -952,7 +952,7 @@ export function buildProviderWinHeatmapOption(
   const dateIndex = new Map(dates.map((date, index) => [date, index]))
 
   return buildHeatmapOption(
-    cells.map((cell) => [
+    cells.map(cell => [
       dateIndex.get(cell.timestamp) ?? 0,
       providerIndex.get(cell.provider) ?? 0,
       cell.value,
@@ -962,7 +962,7 @@ export function buildProviderWinHeatmapOption(
     {
       colorRange: [PULSE_CHART_COLORS.tintSoft, '#7FAEFF', PULSE_CHART_COLORS.navy],
       tooltipFormatter: (xLabel, yLabel, value) => {
-        const match = cells.find((cell) => formatShortDate(cell.timestamp) === xLabel && cell.provider === yLabel)
+        const match = cells.find(cell => formatShortDate(cell.timestamp) === xLabel && cell.provider === yLabel)
         if (!match) return `${yLabel}<br/>${xLabel}: ${value}`
         return [
           `${yLabel}`,
@@ -980,8 +980,8 @@ export function buildBankVsSpecialistTrendOption(
   specialistSeries: ChartSeriesExtended[],
 ): EChartsOption {
   const series = [
-    ...bankSeries.map((entry) => ({ ...entry, color: PULSE_CHART_COLORS.navy, label: entry.label || 'Bank average cost' })),
-    ...specialistSeries.map((entry) => ({ ...entry, color: PULSE_CHART_COLORS.brand, label: entry.label || 'Best specialist cost' })),
+    ...bankSeries.map(entry => ({ ...entry, color: PULSE_CHART_COLORS.navy, label: entry.label || 'Bank average cost' })),
+    ...specialistSeries.map(entry => ({ ...entry, color: PULSE_CHART_COLORS.brand, label: entry.label || 'Best specialist cost' })),
   ]
 
   return {
@@ -989,7 +989,7 @@ export function buildBankVsSpecialistTrendOption(
     color: series.map(entry => entry.color),
     tooltip: {
       ...baseTooltip,
-      formatter: buildAxisTooltipFormatter((value) => formatPercent(value)),
+      formatter: buildAxisTooltipFormatter(value => formatPercent(value)),
     },
     legend: baseLegend,
     grid: baseGrid,
@@ -1038,7 +1038,7 @@ export function buildIndicesMultiLineOption(
   teerSeries: ChartSeriesExtended | null,
   rciSeries: ChartSeriesExtended | null,
   rviSeries: ChartSeriesExtended | null,
-  visibleIndices: { teer: boolean; rci: boolean; rvi: boolean },
+  visibleIndices: { teer: boolean, rci: boolean, rvi: boolean },
 ): EChartsOption {
   const allSeries: EChartsOption['series'] = []
 

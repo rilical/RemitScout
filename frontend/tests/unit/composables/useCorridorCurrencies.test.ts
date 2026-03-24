@@ -3,6 +3,8 @@ import { flushPromises } from '@vue/test-utils'
 import { effectScope, ref } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
+
 const request = vi.fn()
 
 vi.mock('~/composables/useApi', () => ({
@@ -10,8 +12,6 @@ vi.mock('~/composables/useApi', () => ({
     request,
   }),
 }))
-
-import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
 
 describe('useCorridorCurrencies', () => {
   beforeEach(() => {
