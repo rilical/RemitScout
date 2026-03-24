@@ -1668,7 +1668,7 @@ jobs:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
           SEED_BLOCKING: '0'
-          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
           LAUNCH_PASSWORD_DEVELOPER: ${{ secrets.LAUNCH_PASSWORD_DEVELOPER }}
@@ -1947,7 +1947,6 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_EXPECTED_EMAIL: omar@remit-scout.com
-          SMOKE_EXPECTED_IS_ADMIN: '1'
           SMOKE_EXPECTED_APP_ROLE: super_admin
           SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise
           SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'
@@ -3550,7 +3549,7 @@ jobs:
         env:
           ENV_NAME: prod
           STACK_NAME: ${{ vars.STACK_NAME }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
           LAUNCH_PASSWORD_DEVELOPER: ${{ secrets.LAUNCH_PASSWORD_DEVELOPER }}

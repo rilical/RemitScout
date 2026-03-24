@@ -32,3 +32,25 @@ test('staging deploy uses the canonical staging profile for both lean and parity
 test('deploy workflow does not require undefined runtimeMode or costProfile context keys', () => {
   assert.doesNotMatch(deployWorkflow, /actual_runtime_mode|actual_cost_profile/)
 })
+
+test('staging launch-user entitlement smoke matches the documented gate', () => {
+  assert.match(
+    deployWorkflow,
+    /Authenticated Watchlist\/Alerts Smoke \(staging\)[\s\S]*SMOKE_EXPECTED_EMAIL: omar@remit-scout\.com[\s\S]*SMOKE_EXPECTED_APP_ROLE: super_admin[\s\S]*SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise[\s\S]*SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'/,
+  )
+  assert.doesNotMatch(
+    deployWorkflow,
+    /Authenticated Watchlist\/Alerts Smoke \(staging\)[\s\S]*SMOKE_EXPECTED_IS_ADMIN/,
+  )
+})
+
+test('launch-user seeding prefers the public Supabase URL fallback in deploy workflows', () => {
+  assert.match(
+    deployWorkflow,
+    /Seed Launch Users \(staging\)[\s\S]*SUPABASE_URL: \$\{\{ vars\.PUBLIC_SUPABASE_URL \|\| vars\.SUPABASE_URL \|\| secrets\.SUPABASE_URL \}\}/,
+  )
+  assert.match(
+    deployWorkflow,
+    /Seed Launch Users \(prod\)[\s\S]*SUPABASE_URL: \$\{\{ vars\.PUBLIC_SUPABASE_URL \|\| vars\.SUPABASE_URL \|\| secrets\.SUPABASE_URL \}\}/,
+  )
+})
