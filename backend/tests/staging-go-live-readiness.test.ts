@@ -123,6 +123,28 @@ describe('staging go-live readiness policy', () => {
     )
   })
 
+  it('allows the current Plane A CloudFront staging config while surfacing parity gaps as recommendations', () => {
+    const evaluation = evaluateStagingGoLiveReadiness({
+      ...buildBaseEnv(),
+      PUBLIC_API_BASE: 'https://d2y41w4y2l2rad.cloudfront.net/api/v1',
+      PLANE_A_DOMAIN_NAME: '',
+      PLANE_A_CERT_ARN: '',
+      ADMIN_MFA_REQUIRED: '0',
+    })
+
+    expect(evaluation.policyViolations).toEqual([])
+    expect(evaluation.missingRequired).toEqual([])
+    expect(evaluation.missingRecommended).toContain(
+      'PLANE_A_DOMAIN_NAME: Plane A staging custom-domain host (optional until staging API edge is provisioned)',
+    )
+    expect(evaluation.missingRecommended).toContain(
+      'PLANE_A_CERT_ARN: Plane A staging ACM certificate ARN (optional until staging API edge is provisioned)',
+    )
+    expect(evaluation.missingRecommended).toContain(
+      'ADMIN_MFA_REQUIRED: enable admin MFA in staging before enforcing production-parity admin smoke',
+    )
+  })
+
   it('blocks partial Plane A custom-domain configuration', () => {
     const evaluation = evaluateStagingGoLiveReadiness({
       ...buildBaseEnv(),

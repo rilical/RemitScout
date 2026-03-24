@@ -111,6 +111,35 @@ jobs:
             fi
           fi
 
+      - name: Resolve staging Plane A public API base
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STACK_NAME:-}" ]; then
+            exit 0
+          fi
+
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_root=""
+
+          if [ -n "${plane_a_cf:-}" ] && [ "${plane_a_cf}" != "null" ]; then
+            api_root="https://${plane_a_cf}"
+          elif [ -n "${plane_a_api:-}" ] && [ "${plane_a_api}" != "null" ]; then
+            api_root="$(echo "${plane_a_api}" | sed 's:/*$::')"
+          fi
+
+          if [ -z "${api_root:-}" ]; then
+            echo "::warning::Unable to resolve Plane A public API base from stack outputs; falling back to PUBLIC_API_BASE workflow vars."
+            exit 0
+          fi
+
+          echo "PUBLIC_API_BASE=${api_root}/api/v1" >> "${GITHUB_ENV}"
+          echo "Resolved staging PUBLIC_API_BASE=${api_root}/api/v1"
+
       - name: Staging go-live readiness (integrations + policy)
         env:
           ENVIRONMENT: staging
@@ -126,7 +155,7 @@ jobs:
           BRONZE_S3_BUCKET: ${{ vars.BRONZE_S3_BUCKET }}
           EXPORTS_S3_BUCKET: ${{ vars.EXPORTS_S3_BUCKET }}
           PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
-          PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
+          PUBLIC_API_BASE: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
           PLANE_A_DOMAIN_NAME: ${{ vars.PLANE_A_DOMAIN_NAME }}
           PLANE_A_CERT_ARN: ${{ vars.PLANE_A_CERT_ARN }}
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
@@ -348,7 +377,7 @@ jobs:
 
       - name: Public integration smoke (staging)
         env:
-          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_BASE_URL: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
           SMOKE_PROVIDER_STABILIZATION_ATTEMPTS: '18'
           SMOKE_PROVIDER_STABILIZATION_DELAY_MS: '10000'
         run: |
@@ -411,7 +440,7 @@ jobs:
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
           DB_FORCE_IPV4: '1'
           AGENT_HEALTH_LOOKBACK_HOURS: ${{ vars.AGENT_HEALTH_LOOKBACK_HOURS || '6' }}
-          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_BASE_URL: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
           SMOKE_ENV_NAME: staging
           SMOKE_EXPECT_OPS_ACTIVE: '1'
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
@@ -489,7 +518,7 @@ jobs:
 
       - name: Auth surface smoke (staging)
         env:
-          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_BASE_URL: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
           SMOKE_ENV_NAME: staging
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
@@ -522,7 +551,7 @@ jobs:
 
       - name: Authenticated launch-user entitlement smoke (staging)
         env:
-          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_BASE_URL: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           SMOKE_USER_EMAIL: omar@remit-scout.com
@@ -550,7 +579,7 @@ jobs:
 
       - name: Enterprise + triangulation smoke (staging)
         env:
-          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_BASE_URL: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
           SMOKE_ENV_NAME: staging
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
@@ -583,7 +612,7 @@ jobs:
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
           STACK_NAME: ${{ vars.STACK_NAME }}
-          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_BASE_URL: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
           SMOKE_ENV_NAME: staging
           SMOKE_EXPECT_OPS_ACTIVE: '1'
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
@@ -767,7 +796,7 @@ jobs:
 
       - name: Public integration smoke (staging, post-ui)
         env:
-          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_BASE_URL: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
           SMOKE_PROVIDER_STABILIZATION_ATTEMPTS: '12'
           SMOKE_PROVIDER_STABILIZATION_DELAY_MS: '5000'
         run: |

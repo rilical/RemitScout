@@ -209,6 +209,8 @@ const looksLikePlaceholder = (value: string) =>
 
 export const hasStagingMarker = (value: string) => /staging/i.test(value)
 
+const isCloudFrontHost = (value: string) => value.toLowerCase().endsWith('.cloudfront.net')
+
 const isValidDateValue = (value: string) => {
   if (!value) return false
   const parsed = Date.parse(value)
@@ -806,9 +808,6 @@ export const evaluateStagingGoLiveReadiness = (
   }
 
   const publicApiBase = readEnvValue(env, 'PUBLIC_API_BASE')
-  if (publicApiBase && !hasStagingMarker(publicApiBase)) {
-    policyViolations.push('PUBLIC_API_BASE must contain a staging hostname')
-  }
   const publicApiUrl = publicApiBase ? toHttpsUrl(publicApiBase) : null
   if (publicApiBase && !publicApiUrl) {
     policyViolations.push('PUBLIC_API_BASE must be an absolute https URL')
@@ -822,10 +821,20 @@ export const evaluateStagingGoLiveReadiness = (
   if ((planeADomainName && !planeACertArn) || (!planeADomainName && planeACertArn)) {
     policyViolations.push('PLANE_A_DOMAIN_NAME and PLANE_A_CERT_ARN must be configured together')
   }
-  if (publicApiUrl && planeADomainName && publicApiUrl.host.toLowerCase() !== planeADomainName) {
-    policyViolations.push(
-      `PUBLIC_API_BASE host ${publicApiUrl.host.toLowerCase()} must match PLANE_A_DOMAIN_NAME ${planeADomainName}`,
-    )
+  if (publicApiUrl) {
+    const publicApiHost = publicApiUrl.host.toLowerCase()
+
+    if (planeADomainName) {
+      if (publicApiHost !== planeADomainName) {
+        policyViolations.push(
+          `PUBLIC_API_BASE host ${publicApiHost} must match PLANE_A_DOMAIN_NAME ${planeADomainName}`,
+        )
+      }
+    } else if (!hasStagingMarker(publicApiHost) && !isCloudFrontHost(publicApiHost)) {
+      policyViolations.push(
+        'PUBLIC_API_BASE must resolve to a staging/shared hostname or the live Plane A CloudFront domain',
+      )
+    }
   }
 
   const adminMfaRequired = readEnvValue(env, 'ADMIN_MFA_REQUIRED').toLowerCase()

@@ -127,7 +127,7 @@ Execution:
   - Blocker reason mapping is visible in admin observer and triage flow (`provider_onboarding.input_invalid`, `provider_onboarding.scaffold_fail`, `provider_onboarding.probe_timeout`, `provider_onboarding.smoke_fail`, `provider_onboarding.score_below_threshold`, `provider_onboarding.review_blocked`).
 - [ ] Verify frontend staging host + TLS + API base are correct.
   - `PUBLIC_SITE_URL` must resolve to the live staging site the UI smoke hits.
-  - `PUBLIC_API_BASE` must resolve to the live Plane A public API host used by the staging integration/admin smokes.
+  - `PUBLIC_API_BASE` must resolve to the live Plane A public API host used by the staging integration/admin smokes, whether that is a shared staging hostname or the Plane A CloudFront domain.
   - treat `staging-public-ui-smoke.log`, `staging-public-integration-smoke.log`, and `staging-public-integration-post-ui-smoke.log` as the frontend-path evidence; do not substitute `frontend/server/**` local handler checks.
 - [ ] Verify New Relic staging observability:
   - `node ops/newrelic/bootstrap-dashboards.mjs`
