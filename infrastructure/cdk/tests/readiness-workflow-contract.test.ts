@@ -75,7 +75,7 @@ test('staging readiness resumes staging ops directly instead of depending on the
 test('staging readiness records restored service evidence from the parsed service list used for ECS resume', () => {
   assert.match(
     readinessWorkflow,
-    /Resume staging operational services for parity evidence[\s\S]*printf '%s\\n' "\$\{service_names\[@\]\}" \| jq -R \. \| jq -cs 'map\(select\(length > 0\)\)' > "\$\{resolved_services_path\}"[\s\S]*--slurpfile services "\$\{resolved_services_path\}"/,
+    /Resume staging operational services for parity evidence[\s\S]*jq -cn --argjson services "\$\{services_json\}" --argjson baseline "\$\{baseline_json\}"[\s\S]*mapfile -t service_names < <\(jq -r '\.\[\]\? \| strings \| select\(length > 0\)' "\$\{resolved_services_path\}"\)[\s\S]*--slurpfile services "\$\{resolved_services_path\}"/,
   )
 })
 

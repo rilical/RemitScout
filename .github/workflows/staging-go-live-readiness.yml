@@ -791,9 +791,20 @@ jobs:
             echo "No explicit staging opsResumeRuleAllowlist is configured; readiness is restoring pause-state and ECS service baselines without enumerating EventBridge rules."
           fi
 
-          mapfile -t service_names < <(jq -r '.[]? | strings | select(length > 0)' <<<"${services_json}")
+          resolved_services_path=".smoke-artifacts/staging-service-names.json"
+          jq -cn --argjson services "${services_json}" --argjson baseline "${baseline_json}" '
+            (
+              ($baseline | if type == "object" then keys else [] end)
+              +
+              ($services | if type == "array" then map(select(type == "string" and length > 0)) else [] end)
+            )
+            | map(select(type == "string" and length > 0))
+            | unique
+          ' > "${resolved_services_path}"
+
+          mapfile -t service_names < <(jq -r '.[]? | strings | select(length > 0)' "${resolved_services_path}")
           if [ "${#service_names[@]}" -eq 0 ]; then
-            echo "::error::No staging ECS services were resolved from ${ecs_services_param}"
+            echo "::error::No staging ECS services were resolved from ${ecs_baseline_param} or ${ecs_services_param}"
             exit 1
           fi
 
@@ -808,9 +819,6 @@ jobs:
               --service "${service_name}" \
               --desired-count "${desired_count}" >/dev/null
           done
-
-          resolved_services_path=".smoke-artifacts/staging-service-names.json"
-          printf '%s\n' "${service_names[@]}" | jq -R . | jq -cs 'map(select(length > 0))' > "${resolved_services_path}"
 
           restored_services_path=".smoke-artifacts/staging-restored-services.json"
           jq -c --slurpfile services "${resolved_services_path}" --argjson baseline "${baseline_json}" '
