@@ -761,6 +761,9 @@ jobs:
             exit 1
           fi
 
+          services_json="$(jq -c 'fromjson? // .' <<<"${services_json}")"
+          baseline_json="$(jq -c 'fromjson? // .' <<<"${baseline_json}")"
+
           aws ssm put-parameter \
             --region "${AWS_REGION}" \
             --name "${pause_param}" \
