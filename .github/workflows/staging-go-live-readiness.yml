@@ -818,7 +818,10 @@ jobs:
               }
             ]
           ')"
-          enabled_rules_json="$(printf '%s\n' "${rules_to_enable[@]}" | jq -R . | jq -cs '.')"
+          enabled_rules_json='[]'
+          if [ "${#rules_to_enable[@]}" -gt 0 ]; then
+            enabled_rules_json="$(printf '%s\n' "${rules_to_enable[@]}" | jq -R . | jq -cs '.')"
+          fi
           out=".smoke-artifacts/staging-ops-resume.json"
           jq -n \
             --arg cluster "${cluster}" \
