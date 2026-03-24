@@ -4,13 +4,14 @@
 -- in the system — every ingest cycle appends rows to both.  Migration 111
 -- tuned autovacuum on six other hot tables but missed these two because they
 -- are partitioned: settings on the parent do NOT retroactively propagate to
--- existing child partitions.
+-- existing child partitions, and Postgres rejects these storage parameters on
+-- the partitioned parent itself.
 --
 -- Strategy:
---   1. Set aggressive scale factors on the parent tables so *future*
---      partitions inherit them automatically.
---   2. Loop over every existing partition (via pg_inherits + pg_class) and
---      apply the same settings.
+--   Loop over every existing partition (via pg_inherits + pg_class) and apply
+--   the aggressive settings directly. Future partitions must be tuned by the
+--   partition-creation path because the parent relation cannot carry these
+--   storage parameters.
 --
 -- Scale factors chosen:
 --   vacuum_scale_factor  = 0.02   (vacuum after 2% dead tuples)
@@ -20,15 +21,8 @@
 -- lower-write tables, reflecting the much higher write volume here.
 
 -- ============================================================
--- silver.observation — parent table
+-- silver.observation — existing partitions
 -- ============================================================
-
-ALTER TABLE silver.observation SET (
-  autovacuum_vacuum_scale_factor = 0.02,
-  autovacuum_analyze_scale_factor = 0.01
-);
-
--- ── Propagate to existing partitions ─────────────────────────
 DO $$
 DECLARE
   v_partition TEXT;
@@ -50,15 +44,8 @@ END;
 $$;
 
 -- ============================================================
--- silver.quote_record — parent table
+-- silver.quote_record — existing partitions
 -- ============================================================
-
-ALTER TABLE silver.quote_record SET (
-  autovacuum_vacuum_scale_factor = 0.02,
-  autovacuum_analyze_scale_factor = 0.01
-);
-
--- ── Propagate to existing partitions ─────────────────────────
 DO $$
 DECLARE
   v_partition TEXT;

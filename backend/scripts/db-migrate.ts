@@ -66,6 +66,21 @@ export function extractVersion(filename: string): number {
   return parseInt(match[1], 10)
 }
 
+const splitNonTransactionalStatements = (sql: string): string[] =>
+  sql
+    .split(/;\s*(?:\r?\n|$)/)
+    .map((statement) => statement.trim())
+    .filter((statement) => statement.replace(/--.*$/gm, '').trim().length > 0)
+
+const runNonTransactionalSql = async (
+  db: { query: (sql: string, params?: unknown[]) => Promise<unknown> },
+  sql: string,
+): Promise<void> => {
+  for (const statement of splitNonTransactionalStatements(sql)) {
+    await db.query(statement)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Connection helpers (unchanged)
 // ---------------------------------------------------------------------------
@@ -281,7 +296,7 @@ export const rollbackMigrations = async (
           throw error
         }
       } else {
-        await db.query(parsed.rollbackSql!)
+        await runNonTransactionalSql(db, parsed.rollbackSql!)
         await db.query('DELETE FROM public.schema_migrations WHERE id = $1', [file])
         logger.info('migration_rolled_back', { target: target.label, file })
         rolledBack++
@@ -366,7 +381,7 @@ export const applyMigrations = async (
           throw error
         }
       } else {
-        await db.query(parsed.forwardSql)
+        await runNonTransactionalSql(db, parsed.forwardSql)
         await db.query('INSERT INTO public.schema_migrations (id) VALUES ($1)', [file])
         logger.info('migration_applied', { target: target.label, file })
         appliedCount++
