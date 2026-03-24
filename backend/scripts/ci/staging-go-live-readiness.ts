@@ -2,6 +2,7 @@ import { access, readdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { constants as fsConstants } from 'node:fs'
 
+import { resolveDatabaseUrl as resolveAwsDatabaseUrl } from '../../shared/aws-params'
 import { createPool } from '../../shared/db'
 import { resolveDbConnectionStringForIpv4 } from '../../shared/db-ipv4'
 
@@ -254,6 +255,42 @@ const resolveDatabaseUrl = (env: NodeJS.ProcessEnv): string =>
   || readEnvValue(env, 'DATABASE_URL_PLANE_B')
   || readEnvValue(env, 'DATABASE_URL')
 
+const resolveReadinessDatabaseUrls = async (env: NodeJS.ProcessEnv = process.env) => {
+  if (env !== process.env) {
+    return
+  }
+
+  await resolveAwsDatabaseUrl({
+    envVar: 'DATABASE_URL_PLANE_B_MIGRATOR',
+    secretArnEnv: 'PLANE_B_DB_MIGRATOR_SECRET_ARN',
+    ssmNameEnv: 'PLANE_B_DB_MIGRATOR_SSM_NAME',
+    hostEnv: 'PLANE_B_DB_MIGRATOR_HOST',
+    portEnv: 'PLANE_B_DB_MIGRATOR_PORT',
+    nameEnv: 'PLANE_B_DB_MIGRATOR_NAME',
+    usernameEnv: 'PLANE_B_DB_MIGRATOR_USERNAME',
+    passwordEnv: 'PLANE_B_DB_MIGRATOR_PASSWORD',
+    requireJson: true,
+    required: false,
+    sslModeEnv: 'PGSSLMODE',
+    jsonKeys: ['url', 'DATABASE_URL_PLANE_B_MIGRATOR', 'database_url'],
+  })
+
+  await resolveAwsDatabaseUrl({
+    envVar: 'DATABASE_URL_PLANE_B',
+    secretArnEnv: 'PLANE_B_DB_SECRET_ARN',
+    ssmNameEnv: 'PLANE_B_DB_SSM_NAME',
+    hostEnv: 'PLANE_B_DB_HOST',
+    portEnv: 'PLANE_B_DB_PORT',
+    nameEnv: 'PLANE_B_DB_NAME',
+    usernameEnv: 'PLANE_B_DB_USERNAME',
+    passwordEnv: 'PLANE_B_DB_PASSWORD',
+    requireJson: true,
+    required: false,
+    sslModeEnv: 'PGSSLMODE',
+    jsonKeys: ['url', 'DATABASE_URL_PLANE_B', 'database_url'],
+  })
+}
+
 const resolveCliOption = (args: string[], flag: string): string | undefined => {
   const index = args.indexOf(flag)
   if (index === -1 || index === args.length - 1) return undefined
@@ -341,6 +378,15 @@ export const readMigrationSync = async (
       repoMigrations,
       appliedMigrations: appliedResult.rows.map(row => row.id),
     })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (/tenant or user not found/i.test(message)) {
+      throw new Error(
+        'Migration sync could not connect with the current Plane B database credentials. ' +
+        'Provide DATABASE_URL_PLANE_B_MIGRATOR or PLANE_B_DB_MIGRATOR_SECRET_ARN for hosted readiness.',
+      )
+    }
+    throw error
   } finally {
     await pool.end()
   }
@@ -642,6 +688,7 @@ export const buildReleaseEvidenceManifest = async ({
   env?: NodeJS.ProcessEnv
   migrationsDir?: string
 }): Promise<ReleaseEvidenceManifest> => {
+  await resolveReadinessDatabaseUrls(env)
   const databaseUrl = resolveDatabaseUrl(env)
   const migrations = databaseUrl
     ? await readMigrationSync(databaseUrl, migrationsDir)
@@ -1077,6 +1124,7 @@ export const evaluateAndPrintMigrationSync = async (
   env: NodeJS.ProcessEnv = process.env,
   label = 'staging',
 ): Promise<MigrationSyncEvaluation | null> => {
+  await resolveReadinessDatabaseUrls(env)
   const databaseUrl = resolveDatabaseUrl(env)
   if (!databaseUrl) {
     return null

@@ -140,6 +140,38 @@ jobs:
           echo "PUBLIC_API_BASE=${api_root}/api/v1" >> "${GITHUB_ENV}"
           echo "Resolved staging PUBLIC_API_BASE=${api_root}/api/v1"
 
+      - name: Resolve staging Plane B migrator secret
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STACK_NAME:-}" ]; then
+            exit 0
+          fi
+
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          if [ -z "${task_def:-}" ] || [ "${task_def}" = "null" ]; then
+            echo "::warning::Unable to resolve DbMigrateTaskDefinitionArn from stack outputs; readiness will fall back to the GitHub environment DB URL."
+            exit 0
+          fi
+
+          migrator_secret_arn="$(
+            aws ecs describe-task-definition \
+              --task-definition "${task_def}" \
+              --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].environment[?name==`PLANE_B_DB_MIGRATOR_SECRET_ARN`].value | [0][0]' \
+              --output text 2>/dev/null || true
+          )"
+
+          if [ -z "${migrator_secret_arn:-}" ] || [ "${migrator_secret_arn}" = "None" ] || [ "${migrator_secret_arn}" = "null" ]; then
+            echo "::warning::DbMigrateContainer does not expose PLANE_B_DB_MIGRATOR_SECRET_ARN; readiness will fall back to the GitHub environment DB URL."
+            exit 0
+          fi
+
+          echo "PLANE_B_DB_MIGRATOR_SECRET_ARN=${migrator_secret_arn}" >> "${GITHUB_ENV}"
+          echo "Resolved PLANE_B_DB_MIGRATOR_SECRET_ARN for staging readiness"
+
       - name: Staging go-live readiness (integrations + policy)
         env:
           ENVIRONMENT: staging
