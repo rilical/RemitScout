@@ -1,6 +1,15 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
-import { evaluateStagingGoLiveReadiness } from '../scripts/ci/staging-go-live-readiness'
+import {
+  buildReleaseEvidenceManifest,
+  evaluateMigrationSync,
+  evaluateStagingGoLiveReadiness,
+  validateReleaseEvidenceManifest,
+} from '../scripts/ci/staging-go-live-readiness'
 
 const buildBaseEnv = (): NodeJS.ProcessEnv => ({
   ENVIRONMENT: 'staging',
@@ -55,7 +64,7 @@ const buildBaseEnv = (): NodeJS.ProcessEnv => ({
   TRACING_EXPORTER: 'otlp',
   OTEL_EXPORTER_OTLP_ENDPOINT: 'https://otlp.nr-data.net',
   OTEL_EXPORTER_OTLP_HEADERS: 'api-key=nr_ingest_staging_key',
-  NEW_RELIC_LOGS_ENABLED: '0',
+  NEW_RELIC_LOGS_ENABLED: '1',
   ADMIN_IP_ALLOWLIST: '203.0.113.10/32',
   READ_ONLY_MODE: '0',
   ADMIN_MFA_REQUIRED: '1',
@@ -132,14 +141,53 @@ describe('staging go-live readiness policy', () => {
       NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: '',
     })
 
+    expect(evaluation.missingRequired).toEqual([])
     expect(evaluation.policyViolations).toEqual([])
   })
 
-  it('blocks drifted New Relic cost-control settings', () => {
+  it('defaults omitted New Relic mode flags to the staging deploy contract', () => {
+    const env = buildBaseEnv()
+    delete env.NEW_RELIC_STAGING_AWS_MODE
+    delete env.NEW_RELIC_PROD_AWS_MODE
+    delete env.NEW_RELIC_LOGS_ENABLED
+
+    const evaluation = evaluateStagingGoLiveReadiness(env)
+
+    expect(evaluation.missingRequired).toEqual([])
+    expect(evaluation.policyViolations).toEqual([])
+  })
+
+  it('blocks attempts to disable New Relic hard gates in staging readiness', () => {
+    const evaluation = evaluateStagingGoLiveReadiness({
+      ...buildBaseEnv(),
+      REQUIRE_NEW_RELIC_GATES: '0',
+    })
+
+    expect(evaluation.policyViolations).toContain(
+      'REQUIRE_NEW_RELIC_GATES must stay enabled for staging readiness evidence',
+    )
+  })
+
+  it('blocks New Relic account-pinning drift across staging and prod', () => {
+    const evaluation = evaluateStagingGoLiveReadiness({
+      ...buildBaseEnv(),
+      NEW_RELIC_PROD_AWS_ACCOUNT_ID: '123456789012',
+      NEW_RELIC_PROD_AWS_ROLE_ARN: 'arn:aws:iam::999999999999:role/new-relic-prod',
+    })
+
+    expect(evaluation.policyViolations).toContain(
+      'NEW_RELIC_STAGING_AWS_ACCOUNT_ID and NEW_RELIC_PROD_AWS_ACCOUNT_ID must differ to preserve env account pinning',
+    )
+    expect(evaluation.policyViolations).toContain(
+      'NEW_RELIC_PROD_AWS_ROLE_ARN must belong to NEW_RELIC_PROD_AWS_ACCOUNT_ID',
+    )
+  })
+
+  it('blocks drifted New Relic staging policy settings', () => {
     const evaluation = evaluateStagingGoLiveReadiness({
       ...buildBaseEnv(),
       NEW_RELIC_STAGING_AWS_MODE: 'push_pull',
-      NEW_RELIC_LOGS_ENABLED: '1',
+      NEW_RELIC_LOGS_ENABLED: '0',
       NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: '1',
       NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: 'AWS/SQS,AWS/ECS',
     })
@@ -148,7 +196,7 @@ describe('staging go-live readiness policy', () => {
       'NEW_RELIC_STAGING_AWS_MODE must be "push_only" in staging',
     )
     expect(evaluation.policyViolations).toContain(
-      'NEW_RELIC_LOGS_ENABLED must be "0" in staging to keep CloudWatch as source of truth',
+      'NEW_RELIC_LOGS_ENABLED must be "1" in staging so deploy/readiness gates stay aligned',
     )
     expect(evaluation.policyViolations).toContain(
       'NEW_RELIC_AWS_LOG_FORWARDING_ENABLED must be "0" in staging',
@@ -156,5 +204,482 @@ describe('staging go-live readiness policy', () => {
     expect(evaluation.policyViolations).toContain(
       'NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES must be exactly AWS/SQS, AWS/ECS, AWS/Lambda, AWS/Events',
     )
+  })
+
+  it('detects pending repo migrations and unexpected applied migrations', () => {
+    const evaluation = evaluateMigrationSync({
+      repoMigrations: ['001_init.sql', '002_add_quotes.sql', '003_add_exports.sql'],
+      appliedMigrations: ['001_init.sql', '099_manual_hotfix.sql'],
+    })
+
+    expect(evaluation.missingSchemaMigrationsTable).toBe(false)
+    expect(evaluation.pendingRepoMigrations).toEqual(['002_add_quotes.sql', '003_add_exports.sql'])
+    expect(evaluation.unexpectedAppliedMigrations).toEqual(['099_manual_hotfix.sql'])
+  })
+
+  it('treats legacy-applied migration ids as equivalent to the canonical renumbered files', () => {
+    const evaluation = evaluateMigrationSync({
+      repoMigrations: [
+        '104_observation_module_registry_triangulation_hardening.sql',
+        '105_provider_reliability_control_plane.sql',
+        '108_rights_matrix_audit_tracking.sql',
+        '109_launch_user_roles.sql',
+      ],
+      appliedMigrations: [
+        '104_observation_module_registry_triangulation_hardening.sql',
+        '105_provider_reliability_control_plane.sql',
+        '104_rights_matrix_audit_tracking.sql',
+        '105_launch_user_roles.sql',
+      ],
+    })
+
+    expect(evaluation.missingSchemaMigrationsTable).toBe(false)
+    expect(evaluation.pendingRepoMigrations).toEqual([])
+    expect(evaluation.unexpectedAppliedMigrations).toEqual([])
+  })
+
+  it('fails release evidence validation when required logs or SHA binding are missing', () => {
+    const violations = validateReleaseEvidenceManifest(
+      {
+        schemaVersion: 'staging-go-live-release-evidence@v1',
+        status: 'fail',
+        generatedAt: '2026-03-17T12:00:00.000Z',
+        git: {
+          requestedDeploySha: 'deadbeef',
+          actualHeadSha: 'deadbeef',
+        },
+        workflow: {
+          runId: '123',
+          runAttempt: '1',
+        },
+        migrations: {
+          missingSchemaMigrationsTable: false,
+          pendingRepoMigrations: ['117_new_gate.sql'],
+          unexpectedAppliedMigrations: [],
+        },
+        artifacts: {
+          requiredFiles: ['staging-admin-surface-smoke.log'],
+          presentFiles: [],
+          missingFiles: ['staging-admin-surface-smoke.log'],
+          misleadingFiles: [],
+        },
+        violations: [
+          'pending repo migrations detected: 117_new_gate.sql',
+          'missing release evidence files: staging-admin-surface-smoke.log',
+        ],
+      },
+      'cafebabe',
+    )
+
+    expect(violations).toContain('release evidence manifest status is fail')
+    expect(violations).toContain('pending repo migrations detected: 117_new_gate.sql')
+    expect(violations).toContain('missing release evidence files: staging-admin-surface-smoke.log')
+    expect(violations).toContain(
+      'release evidence requested SHA deadbeef does not match expected SHA cafebabe',
+    )
+    expect(violations).toContain(
+      'release evidence actual HEAD SHA deadbeef does not match expected SHA cafebabe',
+    )
+  })
+
+  it('builds a passing release evidence manifest when logs are present and clean', async () => {
+    const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
+    const migrationsDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-migrations-'))
+
+    try {
+      await writeFile(path.join(migrationsDir, '001_init.sql'), '-- migration\n', 'utf8')
+      await writeFile(path.join(migrationsDir, '002_gate.sql'), '-- migration\n', 'utf8')
+
+      await Promise.all([
+        writeFile(path.join(artifactDir, 'staging-public-integration-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-agent-pipeline-health.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-surface-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-omar-entitlement-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-enterprise-triangulation-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-worker-resilience-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-surface-smoke.log'), 'observer exercised\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-ui-smoke.log'), 'grant revoke complete\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-integration-post-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-observability-business-gate.log'), 'Observability business gate passed.\n', 'utf8'),
+        writeFile(
+          path.join(artifactDir, 'staging-sentry-release-scope.json'),
+          `${JSON.stringify({
+            schemaVersion: 'staging-sentry-release-scope@v1',
+            status: 'pass',
+            release: 'readiness-scope-check-123-2',
+            checkedAt: '2026-03-17T12:00:00.000Z',
+            workflow: {
+              runId: '123',
+              runAttempt: '2',
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-notifications-evidence.json'),
+          `${JSON.stringify({
+            verification: {
+              passed: true,
+              mirrorPoliciesRequired: true,
+            },
+            workflows: {
+              staging: { matchedPolicyNames: ['Remit-Scout STAGING CloudWatch Mirror'] },
+              prod: { matchedPolicyNames: ['Remit-Scout PROD CloudWatch Mirror'] },
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-verify-signals.json'),
+          `${JSON.stringify({
+            results: [
+              {
+                envName: 'staging',
+                awsMode: 'push_only',
+                failures: [],
+                checks: {
+                  metricCount: 12,
+                  logCount: 8,
+                  spanCount: 5,
+                  sqsMetricCount: 3,
+                  customMetricCount: 7,
+                  customMetricFamilies: {
+                    core_slo_indices: 4,
+                  },
+                },
+              },
+            ],
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+      ])
+
+      const manifest = await buildReleaseEvidenceManifest({
+        artifactDir,
+        migrationsDir,
+        env: {
+          READINESS_DEPLOY_SHA: 'cafebabe',
+          GITHUB_SHA: 'cafebabe',
+          GITHUB_RUN_ID: '123',
+          GITHUB_RUN_ATTEMPT: '2',
+        },
+      })
+
+      manifest.migrations = {
+        missingSchemaMigrationsTable: false,
+        pendingRepoMigrations: [],
+        unexpectedAppliedMigrations: [],
+      }
+      manifest.violations = []
+      manifest.status = 'pass'
+
+      expect(validateReleaseEvidenceManifest(manifest, 'cafebabe')).toEqual([])
+    } finally {
+      await rm(artifactDir, { recursive: true, force: true })
+      await rm(migrationsDir, { recursive: true, force: true })
+    }
+  })
+
+  it('fails release evidence validation when New Relic proof is missing or false-green', async () => {
+    const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
+    const migrationsDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-migrations-'))
+
+    try {
+      await writeFile(path.join(migrationsDir, '001_init.sql'), '-- migration\n', 'utf8')
+
+      await Promise.all([
+        writeFile(path.join(artifactDir, 'staging-public-integration-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-agent-pipeline-health.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-surface-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-omar-entitlement-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-enterprise-triangulation-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-worker-resilience-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-surface-smoke.log'), 'observer exercised\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-ui-smoke.log'), 'grant revoke complete\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-integration-post-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-observability-business-gate.log'), 'Observability business gate passed.\n', 'utf8'),
+        writeFile(
+          path.join(artifactDir, 'staging-sentry-release-scope.json'),
+          `${JSON.stringify({
+            schemaVersion: 'staging-sentry-release-scope@v1',
+            status: 'pass',
+            release: 'readiness-scope-check-123-2',
+            checkedAt: '2026-03-17T12:00:00.000Z',
+            workflow: {
+              runId: '123',
+              runAttempt: '2',
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-notifications-evidence.json'),
+          `${JSON.stringify({
+            verification: {
+              passed: false,
+              mirrorPoliciesRequired: false,
+            },
+            workflows: {
+              staging: { matchedPolicyNames: [] },
+              prod: { matchedPolicyNames: [] },
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-verify-signals.json'),
+          `${JSON.stringify({
+            results: [
+              {
+                envName: 'staging',
+                awsMode: 'push_only',
+                failures: ['logCount'],
+                checks: {
+                  metricCount: 1,
+                  logCount: 0,
+                  spanCount: 2,
+                  sqsMetricCount: 1,
+                  customMetricCount: 0,
+                  customMetricFamilies: {
+                    core_slo_indices: 0,
+                  },
+                },
+              },
+            ],
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+      ])
+
+      const manifest = await buildReleaseEvidenceManifest({
+        artifactDir,
+        migrationsDir,
+        env: {
+          READINESS_DEPLOY_SHA: 'cafebabe',
+          GITHUB_SHA: 'cafebabe',
+          GITHUB_RUN_ID: '123',
+          GITHUB_RUN_ATTEMPT: '2',
+        },
+      })
+
+      expect(manifest.status).toBe('fail')
+      expect(manifest.violations).toContain(
+        'misleading evidence in staging-newrelic-notifications-evidence.json: New Relic notifications evidence did not pass verification',
+      )
+      expect(manifest.violations).toContain(
+        'misleading evidence in staging-newrelic-verify-signals.json: New Relic verify-signals evidence reported missing signal groups',
+      )
+      expect(manifest.violations).toContain(
+        'misleading evidence in staging-newrelic-verify-signals.json: New Relic verify-signals evidence must show non-zero customMetricCount',
+      )
+    } finally {
+      await rm(artifactDir, { recursive: true, force: true })
+      await rm(migrationsDir, { recursive: true, force: true })
+    }
+  })
+
+  it('fails release evidence validation when Sentry release-scope proof is malformed', async () => {
+    const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
+    const migrationsDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-migrations-'))
+
+    try {
+      await writeFile(path.join(migrationsDir, '001_init.sql'), '-- migration\n', 'utf8')
+
+      await Promise.all([
+        writeFile(path.join(artifactDir, 'staging-public-integration-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-agent-pipeline-health.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-surface-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-omar-entitlement-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-enterprise-triangulation-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-worker-resilience-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-surface-smoke.log'), 'observer exercised\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-ui-smoke.log'), 'grant revoke complete\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-integration-post-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-observability-business-gate.log'), 'Observability business gate passed.\n', 'utf8'),
+        writeFile(
+          path.join(artifactDir, 'staging-sentry-release-scope.json'),
+          `${JSON.stringify({
+            schemaVersion: 'staging-sentry-release-scope@v1',
+            status: 'fail',
+            release: '',
+            checkedAt: 'not-a-date',
+            workflow: {
+              runId: '',
+              runAttempt: '',
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-notifications-evidence.json'),
+          `${JSON.stringify({
+            verification: {
+              passed: true,
+              mirrorPoliciesRequired: true,
+            },
+            workflows: {
+              staging: { matchedPolicyNames: ['Remit-Scout STAGING CloudWatch Mirror'] },
+              prod: { matchedPolicyNames: ['Remit-Scout PROD CloudWatch Mirror'] },
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-verify-signals.json'),
+          `${JSON.stringify({
+            results: [
+              {
+                envName: 'staging',
+                awsMode: 'push_only',
+                failures: [],
+                checks: {
+                  metricCount: 12,
+                  logCount: 8,
+                  spanCount: 5,
+                  sqsMetricCount: 3,
+                  customMetricCount: 7,
+                  customMetricFamilies: {
+                    core_slo_indices: 4,
+                  },
+                },
+              },
+            ],
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+      ])
+
+      const manifest = await buildReleaseEvidenceManifest({
+        artifactDir,
+        migrationsDir,
+        env: {
+          READINESS_DEPLOY_SHA: 'cafebabe',
+          GITHUB_SHA: 'cafebabe',
+          GITHUB_RUN_ID: '123',
+          GITHUB_RUN_ATTEMPT: '2',
+        },
+      })
+
+      expect(manifest.status).toBe('fail')
+      expect(manifest.violations).toContain(
+        'misleading evidence in staging-sentry-release-scope.json: Sentry release scope evidence did not record a passing scope check',
+      )
+      expect(manifest.violations).toContain(
+        'misleading evidence in staging-sentry-release-scope.json: Sentry release scope evidence must record the readiness scope-check release id',
+      )
+      expect(manifest.violations).toContain(
+        'misleading evidence in staging-sentry-release-scope.json: Sentry release scope evidence must record a valid checkedAt timestamp',
+      )
+    } finally {
+      await rm(artifactDir, { recursive: true, force: true })
+      await rm(migrationsDir, { recursive: true, force: true })
+    }
+  })
+
+  it('fails release evidence validation when the observability business gate log does not prove a pass', async () => {
+    const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
+    const migrationsDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-migrations-'))
+
+    try {
+      await writeFile(path.join(migrationsDir, '001_init.sql'), '-- migration\n', 'utf8')
+
+      await Promise.all([
+        writeFile(path.join(artifactDir, 'staging-public-integration-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-agent-pipeline-health.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-surface-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-omar-entitlement-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-enterprise-triangulation-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-worker-resilience-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-surface-smoke.log'), 'observer exercised\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-ui-smoke.log'), 'grant revoke complete\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-integration-post-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(
+          path.join(artifactDir, 'staging-observability-business-gate.log'),
+          'Observability business gate failed: 2 checks failed\n',
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-sentry-release-scope.json'),
+          `${JSON.stringify({
+            schemaVersion: 'staging-sentry-release-scope@v1',
+            status: 'pass',
+            release: 'readiness-scope-check-123-2',
+            checkedAt: '2026-03-17T12:00:00.000Z',
+            workflow: {
+              runId: '123',
+              runAttempt: '2',
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-notifications-evidence.json'),
+          `${JSON.stringify({
+            verification: {
+              passed: true,
+              mirrorPoliciesRequired: true,
+            },
+            workflows: {
+              staging: { matchedPolicyNames: ['Remit-Scout STAGING CloudWatch Mirror'] },
+              prod: { matchedPolicyNames: ['Remit-Scout PROD CloudWatch Mirror'] },
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-verify-signals.json'),
+          `${JSON.stringify({
+            results: [
+              {
+                envName: 'staging',
+                awsMode: 'push_only',
+                failures: [],
+                checks: {
+                  metricCount: 12,
+                  logCount: 8,
+                  spanCount: 5,
+                  sqsMetricCount: 3,
+                  customMetricCount: 7,
+                  customMetricFamilies: {
+                    core_slo_indices: 4,
+                  },
+                },
+              },
+            ],
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+      ])
+
+      const manifest = await buildReleaseEvidenceManifest({
+        artifactDir,
+        migrationsDir,
+        env: {
+          READINESS_DEPLOY_SHA: 'cafebabe',
+          GITHUB_SHA: 'cafebabe',
+          GITHUB_RUN_ID: '123',
+          GITHUB_RUN_ATTEMPT: '2',
+        },
+      })
+
+      expect(manifest.status).toBe('fail')
+      expect(manifest.violations).toContain(
+        'misleading evidence in staging-observability-business-gate.log: Observability business gate log contains failure marker: Observability business gate failed',
+      )
+      expect(manifest.violations).toContain(
+        'misleading evidence in staging-observability-business-gate.log: Observability business gate log must contain pass marker: Observability business gate passed.',
+      )
+    } finally {
+      await rm(artifactDir, { recursive: true, force: true })
+      await rm(migrationsDir, { recursive: true, force: true })
+    }
   })
 })

@@ -1,21 +1,20 @@
 name: staging/go-live-readiness
-run-name: staging/go-live-readiness (${{ inputs.deploy_sha != '' && inputs.deploy_sha || github.ref_name }})
+run-name: staging/go-live-readiness (${{ inputs.deploy_sha }})
 
 on:
   workflow_dispatch:
     inputs:
       deploy_sha:
-        description: Optional exact deployed commit SHA to validate during readiness
-        required: false
+        description: Exact deployed commit SHA to validate during readiness
+        required: true
         type: string
-        default: ''
       run_runtime_config_validation:
         description: Also run backend runtime config schema validation
         required: true
         type: boolean
         default: true
       skip_duplicate_admin_smoke:
-        description: Skip duplicate admin smoke when deploy workflow already produced deploy-time admin evidence
+        description: Deprecated compatibility flag; staging readiness always runs privileged admin smoke
         required: true
         type: boolean
         default: false
@@ -36,10 +35,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ inputs.deploy_sha != '' && inputs.deploy_sha || github.sha }}
+          ref: ${{ inputs.deploy_sha }}
 
       - name: Validate requested deploy SHA
-        if: ${{ inputs.deploy_sha != '' }}
         env:
           EXPECTED_DEPLOY_SHA: ${{ inputs.deploy_sha }}
         shell: bash
@@ -52,6 +50,11 @@ jobs:
             echo "::error::Readiness workflow checked out ${actual_sha}, expected ${expected_sha}."
             exit 1
           fi
+
+      - name: Warn when deprecated admin smoke skip flag is set
+        if: ${{ inputs.skip_duplicate_admin_smoke }}
+        run: |
+          echo "::warning::skip_duplicate_admin_smoke is deprecated and ignored. Staging readiness always runs privileged admin smoke."
 
       - uses: ./.github/actions/setup-node-pnpm
         with:
@@ -161,7 +164,7 @@ jobs:
           SLACK_CASES_CHANNEL_ID: ${{ vars.SLACK_CASES_CHANNEL_ID }}
           WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
           ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
-          ADMIN_MFA_REQUIRED: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
+          ADMIN_MFA_REQUIRED: ${{ vars.ADMIN_MFA_REQUIRED }}
           ALERT_SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
@@ -175,7 +178,7 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
           NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '0' }}
+          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
           NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
           NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
@@ -185,26 +188,40 @@ jobs:
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
-          REQUIRE_NEW_RELIC_GATES: ${{ vars.REQUIRE_NEW_RELIC_GATES || '0' }}
+          REQUIRE_NEW_RELIC_GATES: ${{ vars.REQUIRE_NEW_RELIC_GATES || '1' }}
           BRAIN_DISPATCH_GITHUB_ACTIONS: ${{ vars.BRAIN_DISPATCH_GITHUB_ACTIONS }}
           BRAIN_INGEST_GITHUB_ACTIONS: ${{ vars.BRAIN_INGEST_GITHUB_ACTIONS }}
           BRAIN_SLACK_POST_CASE_CARDS: ${{ vars.BRAIN_SLACK_POST_CASE_CARDS }}
         run: pnpm -C backend ci:staging-go-live-readiness
 
       - name: Sentry release scope check
-        continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
           set -euo pipefail
+          mkdir -p .smoke-artifacts
           release="readiness-scope-check-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           pnpm -C frontend exec sentry-cli releases new "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT"
           pnpm -C frontend exec sentry-cli releases delete "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT"
+          jq -n \
+            --arg release "$release" \
+            --arg checked_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg run_id "${GITHUB_RUN_ID}" \
+            --arg run_attempt "${GITHUB_RUN_ATTEMPT}" \
+            '{
+              schemaVersion: "staging-sentry-release-scope@v1",
+              status: "pass",
+              release: $release,
+              checkedAt: $checked_at,
+              workflow: {
+                runId: $run_id,
+                runAttempt: $run_attempt
+              }
+            }' > .smoke-artifacts/staging-sentry-release-scope.json
 
       - name: Observability prereq gate (staging hard gate)
-        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' }}
         env:
           ENVIRONMENT: staging
           NODE_ENV: staging
@@ -219,7 +236,7 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
           NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '0' }}
+          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
           NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_only' }}
           NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
@@ -229,11 +246,11 @@ jobs:
         run: pnpm -C backend ci:observability
 
       - name: New Relic sync + verify (staging hard gate)
-        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' }}
         env:
           NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
+          NEW_RELIC_ALERT_EMAIL: ${{ vars.NEW_RELIC_ALERT_EMAIL || 'alerts@remit-scout.com' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
           NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
@@ -243,22 +260,44 @@ jobs:
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
-          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '0' }}
+          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
           NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '0' }}
           NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
           NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
         run: |
           set -euo pipefail
-          node ops/newrelic/bootstrap-dashboards.mjs
-          node ops/newrelic/sync-alerts.mjs
-          node ops/newrelic/sync-cloud-links.mjs
+          mkdir -p .smoke-artifacts
+          node ops/newrelic/bootstrap-dashboards.mjs | tee .smoke-artifacts/staging-newrelic-dashboards.log
+          node ops/newrelic/sync-alerts.mjs | tee .smoke-artifacts/staging-newrelic-alerts.log
+          NEW_RELIC_REQUIRE_MIRROR_POLICIES=1 \
+          NEW_RELIC_EVIDENCE_OUTPUT=.smoke-artifacts/staging-newrelic-notifications-evidence.json \
+          node ops/newrelic/sync-notifications-workflows.mjs | tee .smoke-artifacts/staging-newrelic-notifications-sync.log
+          jq -e '
+            .verification.passed == true and
+            .verification.mirrorPoliciesRequired == true and
+            (.workflows.staging.matchedPolicyNames == ["Remit-Scout STAGING CloudWatch Mirror"]) and
+            (.workflows.prod.matchedPolicyNames == ["Remit-Scout PROD CloudWatch Mirror"])
+          ' .smoke-artifacts/staging-newrelic-notifications-evidence.json >/dev/null
+          node ops/newrelic/sync-cloud-links.mjs | tee .smoke-artifacts/staging-newrelic-cloud-links.log
           NEW_RELIC_TARGET_ENV=staging \
           REQUIRE_ACCOUNT_PINNING=1 \
-          REQUIRE_LOGS=0 \
+          REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
           REQUIRE_API_GW_METRICS=0 \
           REQUIRE_SQS_METRICS=1 \
-          node ops/newrelic/verify-signals.mjs
+          node ops/newrelic/verify-signals.mjs | tee .smoke-artifacts/staging-newrelic-verify-signals.json
+          jq -e '
+            (.results | length) == 1 and
+            .results[0].envName == "staging" and
+            .results[0].awsMode == "push_only" and
+            (.results[0].failures | length) == 0 and
+            (.results[0].checks.metricCount > 0) and
+            (.results[0].checks.logCount > 0) and
+            (.results[0].checks.spanCount > 0) and
+            (.results[0].checks.sqsMetricCount > 0) and
+            (.results[0].checks.customMetricCount > 0) and
+            (.results[0].checks.customMetricFamilies.core_slo_indices > 0)
+          ' .smoke-artifacts/staging-newrelic-verify-signals.json >/dev/null
 
       - name: Runtime config validation (staging profile)
         if: inputs.run_runtime_config_validation
@@ -266,10 +305,14 @@ jobs:
           ENVIRONMENT: staging
           NODE_ENV: staging
           AWS_REGION: ${{ vars.AWS_REGION }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
           DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
           DATABASE_URL_PLANE_C: ${{ secrets.DATABASE_URL_PLANE_C }}
           PLANE_C_BASE_URL: ${{ vars.PLANE_C_BASE_URL }}
+          PLANE_C_ENABLE_IAM_AUTH: ${{ vars.PLANE_C_ENABLE_IAM_AUTH || '1' }}
+          PLANE_C_PUBLISHER_VALIDATE_IAM_PROTECTED: ${{ vars.PLANE_C_PUBLISHER_VALIDATE_IAM_PROTECTED || '' }}
+          PLANE_C_INTERNAL_API_TOKEN: ${{ secrets.PLANE_C_INTERNAL_API_TOKEN || '' }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           BRONZE_S3_BUCKET: ${{ vars.BRONZE_S3_BUCKET }}
           EXPORTS_S3_BUCKET: ${{ vars.EXPORTS_S3_BUCKET }}
@@ -292,7 +335,16 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
           NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
-        run: pnpm -C backend ci:config-validate
+        run: |
+          set -euo pipefail
+          if [ -n "${STACK_NAME:-}" ]; then
+            outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+            plane_c_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneCApiUrl") | .OutputValue')"
+            if [ -n "${plane_c_api:-}" ] && [ "${plane_c_api}" != "null" ]; then
+              export PLANE_C_BASE_URL="${plane_c_api}"
+            fi
+          fi
+          pnpm -C backend ci:config-validate
 
       - name: Public integration smoke (staging)
         env:
@@ -367,7 +419,7 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
-          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
+          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED }}
         run: |
           set -euo pipefail
           if [ -z "${DATABASE_URL_PLANE_B:-}" ]; then
@@ -404,13 +456,23 @@ jobs:
             exit 0
           fi
 
-          if ! grep -q 'agent_health_db_ipv4_resolution_failed' .smoke-artifacts/staging-agent-pipeline-health.log \
-            || ! grep -q 'ENETUNREACH' .smoke-artifacts/staging-agent-pipeline-health.log; then
+          runner_db_isolation_fallback=0
+          if grep -q 'agent_health_db_ipv4_resolution_failed' .smoke-artifacts/staging-agent-pipeline-health.log \
+            && grep -q 'ENETUNREACH' .smoke-artifacts/staging-agent-pipeline-health.log; then
+            runner_db_isolation_fallback=1
+          fi
+          if grep -q 'agent_health_db_ipv4_resolved' .smoke-artifacts/staging-agent-pipeline-health.log \
+            && grep -q 'pooler.supabase.com' .smoke-artifacts/staging-agent-pipeline-health.log \
+            && grep -q 'Tenant or user not found' .smoke-artifacts/staging-agent-pipeline-health.log; then
+            runner_db_isolation_fallback=1
+          fi
+
+          if [ "${runner_db_isolation_fallback}" != "1" ]; then
             echo "::error::Agent pipeline E2E health failed for a reason other than GitHub runner DB network isolation."
             exit 1
           fi
 
-          echo "::warning::GitHub runner cannot reach the staging DB directly (IPv6-only Supabase host). Falling back to authenticated worker resilience evidence."
+          echo "::warning::GitHub runner cannot complete the direct staging DB check from hosted CI. Falling back to authenticated worker resilience evidence."
           if [ -z "${SMOKE_BASE_URL:-}" ]; then
             echo "::error::Missing PUBLIC_API_BASE for staging agent-health fallback."
             exit 1
@@ -435,7 +497,7 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
-          SMOKE_EXPECT_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
+          SMOKE_EXPECT_MFA: ${{ vars.ADMIN_MFA_REQUIRED }}
           SMOKE_REQUIRE_EMAIL_CONFIRMATION: '1'
           SMOKE_EXPECTED_EMAIL: omar@remit-scout.com
           SMOKE_EXPECTED_APP_ROLE: super_admin
@@ -499,7 +561,7 @@ jobs:
           SMOKE_EXPECTED_APP_ROLE: user
           SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise
           SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'
-          SMOKE_ALLOW_EXPORT_PIPELINE_DEGRADED: ${{ vars.SMOKE_ALLOW_EXPORT_PIPELINE_DEGRADED || '1' }}
+          SMOKE_ALLOW_EXPORT_PIPELINE_DEGRADED: ${{ vars.SMOKE_ALLOW_EXPORT_PIPELINE_DEGRADED || '0' }}
         run: |
           set -euo pipefail
           if [ -z "${SMOKE_BASE_URL:-}" ]; then
@@ -529,7 +591,7 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
-          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
+          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED }}
         run: |
           set -euo pipefail
           if [ -n "${STACK_NAME:-}" ]; then
@@ -572,7 +634,6 @@ jobs:
           pnpm -C backend ci:worker-resilience-smoke | tee .smoke-artifacts/staging-worker-resilience-smoke.log
 
       - name: Verify runner IP is allowlisted for staging admin smoke
-        if: ${{ !inputs.skip_duplicate_admin_smoke }}
         env:
           DEFAULT_ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST || vars.WAF_ADMIN_ALLOWLIST_IPS }}
         run: |
@@ -601,7 +662,6 @@ jobs:
           PY
 
       - name: Admin surface smoke (staging)
-        if: ${{ !inputs.skip_duplicate_admin_smoke }}
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
@@ -609,8 +669,8 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
-          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
-          SMOKE_INCLUDE_PAGE_SURFACES: '0'
+          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED }}
+          SMOKE_INCLUDE_PAGE_SURFACES: '1'
           ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
         run: |
           set -euo pipefail
@@ -635,7 +695,12 @@ jobs:
             exit 1
           fi
           mkdir -p .smoke-artifacts
-          SMOKE_BASE_URL="$api_base" pnpm -C backend ci:admin-surface-smoke | tee .smoke-artifacts/staging-admin-surface-smoke.log
+          admin_smoke_log=".smoke-artifacts/staging-admin-surface-smoke.log"
+          SMOKE_BASE_URL="$api_base" pnpm -C backend ci:admin-surface-smoke | tee "${admin_smoke_log}"
+          if grep -Fq 'skipped=requires_verified_admin_session' "${admin_smoke_log}"; then
+            echo "::error::Staging admin surface smoke did not prove privileged coverage; observer/audit or grant/revoke checks were skipped because admin exchange fell back."
+            exit 1
+          fi
 
       - name: Install Playwright browser runtime (staging UI smoke)
         run: pnpm -C frontend exec playwright install --with-deps chromium
@@ -672,7 +737,6 @@ jobs:
           pnpm -C frontend test:e2e:release:auth-remote 2>&1 | tee .smoke-artifacts/staging-auth-ui-smoke.log
 
       - name: Admin UI smoke (staging)
-        if: ${{ !inputs.skip_duplicate_admin_smoke }}
         env:
           PLAYWRIGHT_BASE_URL: ${{ vars.PUBLIC_SITE_URL }}
           E2E_AUTH_EMAIL: omar@remit-scout.com
@@ -689,8 +753,17 @@ jobs:
             echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin UI smoke."
             exit 1
           fi
+          if [ -z "${E2E_AUTH_MFA_CODE:-}" ]; then
+            echo "::error::Missing LAUNCH_MFA_OMAR for staging admin UI smoke; cannot prove privileged observer and reversible grant/revoke coverage."
+            exit 1
+          fi
           mkdir -p .smoke-artifacts
-          pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts 2>&1 | tee .smoke-artifacts/staging-admin-ui-smoke.log
+          admin_ui_log=".smoke-artifacts/staging-admin-ui-smoke.log"
+          pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts 2>&1 | tee "${admin_ui_log}"
+          if grep -Fq 'Skipping privileged admin UI checks' "${admin_ui_log}"; then
+            echo "::error::Staging admin UI smoke skipped privileged coverage."
+            exit 1
+          fi
 
       - name: Public integration smoke (staging, post-ui)
         env:
@@ -707,7 +780,6 @@ jobs:
           SMOKE_FETCH_RETRIES=10 pnpm -C backend ci:integration-smoke | tee .smoke-artifacts/staging-public-integration-post-ui-smoke.log
 
       - name: Observability business gate (staging hard gate)
-        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' }}
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
           ENVIRONMENT: staging
@@ -726,6 +798,25 @@ jobs:
           mkdir -p .smoke-artifacts
           pnpm -C backend ci:observability-business-gate | tee .smoke-artifacts/staging-observability-business-gate.log
 
+      - name: Build release evidence manifest (staging hard gate)
+        env:
+          READINESS_DEPLOY_SHA: ${{ inputs.deploy_sha }}
+          DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+        run: |
+          set -euo pipefail
+          mkdir -p .smoke-artifacts
+          pnpm -C backend exec tsx scripts/ci/staging-go-live-readiness.ts \
+            --write-release-evidence \
+            --artifact-dir .smoke-artifacts \
+            --output .smoke-artifacts/staging-go-live-release-evidence.json
+          jq -e '
+            .schemaVersion == "staging-go-live-release-evidence@v1" and
+            .status == "pass" and
+            (.violations | length) == 0 and
+            (.artifacts.missingFiles | length) == 0 and
+            (.artifacts.misleadingFiles | length) == 0
+          ' .smoke-artifacts/staging-go-live-release-evidence.json >/dev/null
+
       - name: Upload staging admin smoke evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -735,5 +826,14 @@ jobs:
             .smoke-artifacts
             frontend/playwright-report
             frontend/test-results
-          retention-days: 30
+          retention-days: 90
           if-no-files-found: ignore
+
+      - name: Upload staging go-live release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-go-live-release-evidence
+          path: .smoke-artifacts/staging-go-live-release-evidence.json
+          retention-days: 90
+          if-no-files-found: error

@@ -1,6 +1,56 @@
+import { access, readdir, readFile, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import { constants as fsConstants } from 'node:fs'
+
+import { createPool } from '../../shared/db'
+import { resolveDbConnectionStringForIpv4 } from '../../shared/db-ipv4'
+
 type Requirement = {
   key: string
   description: string
+}
+
+type MigrationSyncEvaluation = {
+  missingSchemaMigrationsTable: boolean
+  pendingRepoMigrations: string[]
+  unexpectedAppliedMigrations: string[]
+}
+
+type MisleadingEvidence = {
+  file: string
+  reason: string
+}
+
+type ReleaseEvidenceFilesEvaluation = {
+  requiredFiles: string[]
+  presentFiles: string[]
+  missingFiles: string[]
+  misleadingFiles: MisleadingEvidence[]
+}
+
+// Historical staging deploys applied these migrations before later insertions
+// shifted the canonical numbering in-repo. Treat them as equivalent so the
+// release gate detects real schema drift instead of legacy filename churn.
+const MIGRATION_ID_ALIASES: Record<string, string> = {
+  '104_rights_matrix_audit_tracking.sql': '108_rights_matrix_audit_tracking.sql',
+  '105_launch_user_roles.sql': '109_launch_user_roles.sql',
+}
+
+export type ReleaseEvidenceManifest = {
+  schemaVersion: 'staging-go-live-release-evidence@v1'
+  status: 'pass' | 'fail'
+  generatedAt: string
+  git: {
+    requestedDeploySha: string
+    actualHeadSha: string
+  }
+  workflow: {
+    runId: string
+    runAttempt: string
+  }
+  migrations: MigrationSyncEvaluation
+  artifacts: ReleaseEvidenceFilesEvaluation
+  violations: string[]
 }
 
 export type StagingReadinessEvaluation = {
@@ -9,6 +59,46 @@ export type StagingReadinessEvaluation = {
   placeholderViolations: string[]
   policyViolations: string[]
 }
+
+const DEFAULT_MIGRATIONS_DIR = path.resolve(__dirname, '../../db/migrations')
+const RELEASE_EVIDENCE_SCHEMA_VERSION = 'staging-go-live-release-evidence@v1' as const
+const DEFAULT_REQUIRED_EVIDENCE_FILES = [
+  'staging-public-integration-smoke.log',
+  'staging-agent-pipeline-health.log',
+  'staging-auth-surface-smoke.log',
+  'staging-omar-entitlement-smoke.log',
+  'staging-enterprise-triangulation-smoke.log',
+  'staging-worker-resilience-smoke.log',
+  'staging-admin-surface-smoke.log',
+  'staging-public-ui-smoke.log',
+  'staging-auth-ui-smoke.log',
+  'staging-admin-ui-smoke.log',
+  'staging-public-integration-post-ui-smoke.log',
+  'staging-observability-business-gate.log',
+  'staging-sentry-release-scope.json',
+  'staging-newrelic-notifications-evidence.json',
+  'staging-newrelic-verify-signals.json',
+] as const
+const SENTRY_RELEASE_SCOPE_SCHEMA_VERSION = 'staging-sentry-release-scope@v1' as const
+const NEW_RELIC_STAGING_MIRROR_POLICY = 'Remit-Scout STAGING CloudWatch Mirror'
+const NEW_RELIC_PROD_MIRROR_POLICY = 'Remit-Scout PROD CloudWatch Mirror'
+const OBSERVABILITY_BUSINESS_GATE_PASS_MARKER = 'Observability business gate passed.'
+const OBSERVABILITY_BUSINESS_GATE_FAILURE_MARKERS = [
+  'Observability business gate failed',
+  'Observability business gate crashed',
+]
+const MISLEADING_EVIDENCE_RULES: Array<{ file: string; pattern: RegExp; reason: string }> = [
+  {
+    file: 'staging-admin-surface-smoke.log',
+    pattern: /skipped=requires_verified_admin_session/,
+    reason: 'admin surface smoke fell back instead of proving verified admin-session coverage',
+  },
+  {
+    file: 'staging-admin-ui-smoke.log',
+    pattern: /Skipping privileged admin UI checks/,
+    reason: 'admin UI smoke skipped privileged observer or reversible grant/revoke coverage',
+  },
+]
 
 const REQUIRED_KEYS: Requirement[] = [
   { key: 'ENVIRONMENT', description: 'Runtime environment selector' },
@@ -88,8 +178,17 @@ const NEW_RELIC_GATE_KEYS = new Set([
   'NEW_RELIC_PROD_AWS_ROLE_ARN',
 ])
 const FALSE_VALUES = new Set(['0', 'false', 'off', 'no'])
+const DEFAULT_ENV_VALUES: Record<string, string> = {
+  NEW_RELIC_STAGING_AWS_MODE: 'push_only',
+  NEW_RELIC_PROD_AWS_MODE: 'otlp_only',
+  NEW_RELIC_LOGS_ENABLED: '1',
+}
 
-const readEnvValue = (env: NodeJS.ProcessEnv, key: string) => String(env[key] || '').trim()
+const readEnvValue = (env: NodeJS.ProcessEnv, key: string) => {
+  const value = String(env[key] || '').trim()
+  if (value) return value
+  return DEFAULT_ENV_VALUES[key] || ''
+}
 
 const isMissing = (value: string) => value.length === 0
 
@@ -148,6 +247,467 @@ const printGroup = (title: string, lines: string[]) => {
   for (const line of lines) console.log(`- ${line}`)
 }
 
+const resolveDatabaseUrl = (env: NodeJS.ProcessEnv): string =>
+  readEnvValue(env, 'DATABASE_URL_PLANE_B_MIGRATOR')
+  || readEnvValue(env, 'DATABASE_URL_PLANE_B')
+  || readEnvValue(env, 'DATABASE_URL')
+
+const resolveCliOption = (args: string[], flag: string): string | undefined => {
+  const index = args.indexOf(flag)
+  if (index === -1 || index === args.length - 1) return undefined
+  return args[index + 1]
+}
+
+const hasCliFlag = (args: string[], flag: string): boolean => args.includes(flag)
+
+const pathExists = async (targetPath: string) => {
+  try {
+    await access(targetPath, fsConstants.F_OK)
+    return true
+  } catch {
+    return false
+  }
+}
+
+const safeJsonParse = (value: string): unknown | null => {
+  try {
+    return JSON.parse(value) as unknown
+  } catch {
+    return null
+  }
+}
+
+const hasExactStringArray = (value: unknown, expected: readonly string[]) => {
+  if (!Array.isArray(value) || value.length !== expected.length) return false
+  return value.every((item, index) => item === expected[index])
+}
+
+const isPositiveNumber = (value: unknown): boolean =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0
+
+const listRepoMigrationFiles = async (migrationsDir = DEFAULT_MIGRATIONS_DIR): Promise<string[]> => {
+  const files = await readdir(migrationsDir)
+  return files
+    .filter(file => file.endsWith('.sql') && file !== 'TEMPLATE.sql' && file !== 'TEMPLATE.sql.example')
+    .sort()
+}
+
+export const evaluateMigrationSync = ({
+  repoMigrations,
+  appliedMigrations,
+}: {
+  repoMigrations: string[]
+  appliedMigrations: string[]
+}): MigrationSyncEvaluation => {
+  const canonicalizeMigrationId = (file: string) => MIGRATION_ID_ALIASES[file] || file
+  const repoSet = new Set(repoMigrations.map(canonicalizeMigrationId))
+  const appliedSet = new Set(appliedMigrations.map(canonicalizeMigrationId))
+
+  return {
+    missingSchemaMigrationsTable: false,
+    pendingRepoMigrations: repoMigrations.filter(file => !appliedSet.has(canonicalizeMigrationId(file))),
+    unexpectedAppliedMigrations: appliedMigrations
+      .filter(file => !repoSet.has(canonicalizeMigrationId(file)))
+      .sort(),
+  }
+}
+
+export const readMigrationSync = async (
+  databaseUrl: string,
+  migrationsDir = DEFAULT_MIGRATIONS_DIR,
+): Promise<MigrationSyncEvaluation> => {
+  const repoMigrations = await listRepoMigrationFiles(migrationsDir)
+  const resolvedDatabaseUrl = await resolveDbConnectionStringForIpv4(databaseUrl)
+  const pool = createPool(resolvedDatabaseUrl)
+
+  try {
+    const existsResult = await pool.query<{ relation: string | null }>(
+      "SELECT to_regclass('public.schema_migrations') AS relation",
+    )
+    if (!existsResult.rows[0]?.relation) {
+      return {
+        missingSchemaMigrationsTable: true,
+        pendingRepoMigrations: repoMigrations,
+        unexpectedAppliedMigrations: [],
+      }
+    }
+
+    const appliedResult = await pool.query<{ id: string }>(
+      'SELECT id FROM public.schema_migrations ORDER BY id ASC',
+    )
+    return evaluateMigrationSync({
+      repoMigrations,
+      appliedMigrations: appliedResult.rows.map(row => row.id),
+    })
+  } finally {
+    await pool.end()
+  }
+}
+
+export const evaluateReleaseEvidenceFiles = (
+  files: Record<string, string>,
+  requiredFiles: readonly string[] = DEFAULT_REQUIRED_EVIDENCE_FILES,
+): ReleaseEvidenceFilesEvaluation => {
+  const presentFiles = Object.keys(files).sort()
+  const missingFiles = requiredFiles.filter(file => !(file in files))
+  const misleadingFiles = MISLEADING_EVIDENCE_RULES.flatMap(rule => {
+    const content = files[rule.file]
+    if (!content || !rule.pattern.test(content)) return []
+    return [{ file: rule.file, reason: rule.reason }]
+  })
+
+  const notificationsEvidenceRaw = files['staging-newrelic-notifications-evidence.json']
+  if (notificationsEvidenceRaw) {
+    const parsed = safeJsonParse(notificationsEvidenceRaw) as {
+      verification?: { passed?: unknown; mirrorPoliciesRequired?: unknown }
+      workflows?: {
+        staging?: { matchedPolicyNames?: unknown }
+        prod?: { matchedPolicyNames?: unknown }
+      }
+    } | null
+    if (!parsed) {
+      misleadingFiles.push({
+        file: 'staging-newrelic-notifications-evidence.json',
+        reason: 'New Relic notifications evidence is not valid JSON',
+      })
+    } else {
+      if (parsed.verification?.passed !== true) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-notifications-evidence.json',
+          reason: 'New Relic notifications evidence did not pass verification',
+        })
+      }
+      if (parsed.verification?.mirrorPoliciesRequired !== true) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-notifications-evidence.json',
+          reason: 'New Relic notifications evidence did not require mirrored CloudWatch policies',
+        })
+      }
+      if (
+        !hasExactStringArray(
+          parsed.workflows?.staging?.matchedPolicyNames,
+          [NEW_RELIC_STAGING_MIRROR_POLICY],
+        )
+      ) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-notifications-evidence.json',
+          reason: `New Relic staging workflow evidence must match only ${NEW_RELIC_STAGING_MIRROR_POLICY}`,
+        })
+      }
+      if (
+        !hasExactStringArray(
+          parsed.workflows?.prod?.matchedPolicyNames,
+          [NEW_RELIC_PROD_MIRROR_POLICY],
+        )
+      ) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-notifications-evidence.json',
+          reason: `New Relic prod workflow evidence must match only ${NEW_RELIC_PROD_MIRROR_POLICY}`,
+        })
+      }
+    }
+  }
+
+  const sentryReleaseScopeEvidenceRaw = files['staging-sentry-release-scope.json']
+  if (sentryReleaseScopeEvidenceRaw) {
+    const parsed = safeJsonParse(sentryReleaseScopeEvidenceRaw) as {
+      schemaVersion?: unknown
+      status?: unknown
+      release?: unknown
+      checkedAt?: unknown
+      workflow?: {
+        runId?: unknown
+        runAttempt?: unknown
+      }
+    } | null
+    if (!parsed) {
+      misleadingFiles.push({
+        file: 'staging-sentry-release-scope.json',
+        reason: 'Sentry release scope evidence is not valid JSON',
+      })
+    } else {
+      if (parsed.schemaVersion !== SENTRY_RELEASE_SCOPE_SCHEMA_VERSION) {
+        misleadingFiles.push({
+          file: 'staging-sentry-release-scope.json',
+          reason: `Sentry release scope evidence must use schema ${SENTRY_RELEASE_SCOPE_SCHEMA_VERSION}`,
+        })
+      }
+      if (parsed.status !== 'pass') {
+        misleadingFiles.push({
+          file: 'staging-sentry-release-scope.json',
+          reason: 'Sentry release scope evidence did not record a passing scope check',
+        })
+      }
+      if (typeof parsed.release !== 'string' || !parsed.release.startsWith('readiness-scope-check-')) {
+        misleadingFiles.push({
+          file: 'staging-sentry-release-scope.json',
+          reason: 'Sentry release scope evidence must record the readiness scope-check release id',
+        })
+      }
+      if (typeof parsed.checkedAt !== 'string' || !isValidDateValue(parsed.checkedAt)) {
+        misleadingFiles.push({
+          file: 'staging-sentry-release-scope.json',
+          reason: 'Sentry release scope evidence must record a valid checkedAt timestamp',
+        })
+      }
+      if (typeof parsed.workflow?.runId !== 'string' || parsed.workflow.runId.trim().length === 0) {
+        misleadingFiles.push({
+          file: 'staging-sentry-release-scope.json',
+          reason: 'Sentry release scope evidence must record the workflow run id',
+        })
+      }
+      if (typeof parsed.workflow?.runAttempt !== 'string' || parsed.workflow.runAttempt.trim().length === 0) {
+        misleadingFiles.push({
+          file: 'staging-sentry-release-scope.json',
+          reason: 'Sentry release scope evidence must record the workflow run attempt',
+        })
+      }
+    }
+  }
+
+  const observabilityBusinessGateLog = files['staging-observability-business-gate.log']
+  if (observabilityBusinessGateLog) {
+    for (const marker of OBSERVABILITY_BUSINESS_GATE_FAILURE_MARKERS) {
+      if (observabilityBusinessGateLog.includes(marker)) {
+        misleadingFiles.push({
+          file: 'staging-observability-business-gate.log',
+          reason: `Observability business gate log contains failure marker: ${marker}`,
+        })
+      }
+    }
+    if (!observabilityBusinessGateLog.includes(OBSERVABILITY_BUSINESS_GATE_PASS_MARKER)) {
+      misleadingFiles.push({
+        file: 'staging-observability-business-gate.log',
+        reason: `Observability business gate log must contain pass marker: ${OBSERVABILITY_BUSINESS_GATE_PASS_MARKER}`,
+      })
+    }
+  }
+
+  const verifySignalsEvidenceRaw = files['staging-newrelic-verify-signals.json']
+  if (verifySignalsEvidenceRaw) {
+    const parsed = safeJsonParse(verifySignalsEvidenceRaw) as {
+      results?: Array<{
+        envName?: unknown
+        awsMode?: unknown
+        failures?: unknown
+        checks?: {
+          metricCount?: unknown
+          logCount?: unknown
+          spanCount?: unknown
+          sqsMetricCount?: unknown
+          customMetricCount?: unknown
+          customMetricFamilies?: { core_slo_indices?: unknown }
+        }
+      }>
+    } | null
+    const result = parsed?.results?.[0]
+    const failures = Array.isArray(result?.failures) ? result?.failures : null
+    if (!parsed) {
+      misleadingFiles.push({
+        file: 'staging-newrelic-verify-signals.json',
+        reason: 'New Relic verify-signals evidence is not valid JSON',
+      })
+    } else if (!Array.isArray(parsed.results) || parsed.results.length !== 1) {
+      misleadingFiles.push({
+        file: 'staging-newrelic-verify-signals.json',
+        reason: 'New Relic verify-signals evidence must contain exactly one staging result',
+      })
+    } else {
+      if (result?.envName !== 'staging') {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence must target staging',
+        })
+      }
+      if (result?.awsMode !== 'push_only') {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence must record staging awsMode=push_only',
+        })
+      }
+      if (!failures || failures.length > 0) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence reported missing signal groups',
+        })
+      }
+      if (!isPositiveNumber(result?.checks?.metricCount)) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence must show non-zero metricCount',
+        })
+      }
+      if (!isPositiveNumber(result?.checks?.logCount)) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence must show non-zero logCount',
+        })
+      }
+      if (!isPositiveNumber(result?.checks?.spanCount)) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence must show non-zero spanCount',
+        })
+      }
+      if (!isPositiveNumber(result?.checks?.sqsMetricCount)) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence must show non-zero sqsMetricCount for staging push_only mode',
+        })
+      }
+      if (!isPositiveNumber(result?.checks?.customMetricCount)) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence must show non-zero customMetricCount',
+        })
+      }
+      if (!isPositiveNumber(result?.checks?.customMetricFamilies?.core_slo_indices)) {
+        misleadingFiles.push({
+          file: 'staging-newrelic-verify-signals.json',
+          reason: 'New Relic verify-signals evidence must show core_slo_indices delivery',
+        })
+      }
+    }
+  }
+
+  return {
+    requiredFiles: [...requiredFiles],
+    presentFiles,
+    missingFiles,
+    misleadingFiles,
+  }
+}
+
+const loadReleaseEvidenceFiles = async (
+  artifactDir: string,
+  requiredFiles: readonly string[] = DEFAULT_REQUIRED_EVIDENCE_FILES,
+): Promise<Record<string, string>> => {
+  const result: Record<string, string> = {}
+  for (const file of requiredFiles) {
+    const target = path.join(artifactDir, file)
+    if (!(await pathExists(target))) continue
+    result[file] = await readFile(target, 'utf8')
+  }
+  return result
+}
+
+const collectReleaseEvidenceViolations = (
+  manifest: Pick<ReleaseEvidenceManifest, 'git' | 'migrations' | 'artifacts'>,
+): string[] => {
+  const violations: string[] = []
+  const requestedDeploySha = manifest.git.requestedDeploySha.trim()
+  const actualHeadSha = manifest.git.actualHeadSha.trim()
+
+  if (!requestedDeploySha) {
+    violations.push('requested deploy SHA is missing; readiness evidence must be tied to an exact commit')
+  }
+  if (!actualHeadSha) {
+    violations.push('actual checked-out HEAD SHA is missing from readiness evidence')
+  }
+  if (requestedDeploySha && actualHeadSha && requestedDeploySha !== actualHeadSha) {
+    violations.push(
+      `requested deploy SHA ${requestedDeploySha} does not match checked-out HEAD SHA ${actualHeadSha}`,
+    )
+  }
+  if (manifest.migrations.missingSchemaMigrationsTable) {
+    violations.push('public.schema_migrations is missing in the target database')
+  }
+  if (manifest.migrations.pendingRepoMigrations.length > 0) {
+    violations.push(
+      `pending repo migrations detected: ${manifest.migrations.pendingRepoMigrations.join(', ')}`,
+    )
+  }
+  if (manifest.migrations.unexpectedAppliedMigrations.length > 0) {
+    violations.push(
+      `database contains applied migrations not present in this repo checkout: ${manifest.migrations.unexpectedAppliedMigrations.join(', ')}`,
+    )
+  }
+  if (manifest.artifacts.missingFiles.length > 0) {
+    violations.push(`missing release evidence files: ${manifest.artifacts.missingFiles.join(', ')}`)
+  }
+  for (const item of manifest.artifacts.misleadingFiles) {
+    violations.push(`misleading evidence in ${item.file}: ${item.reason}`)
+  }
+  return violations
+}
+
+export const buildReleaseEvidenceManifest = async ({
+  artifactDir,
+  env = process.env,
+  migrationsDir = DEFAULT_MIGRATIONS_DIR,
+}: {
+  artifactDir: string
+  env?: NodeJS.ProcessEnv
+  migrationsDir?: string
+}): Promise<ReleaseEvidenceManifest> => {
+  const databaseUrl = resolveDatabaseUrl(env)
+  const migrations = databaseUrl
+    ? await readMigrationSync(databaseUrl, migrationsDir)
+    : {
+        missingSchemaMigrationsTable: true,
+        pendingRepoMigrations: await listRepoMigrationFiles(migrationsDir),
+        unexpectedAppliedMigrations: [],
+      }
+  const artifacts = evaluateReleaseEvidenceFiles(await loadReleaseEvidenceFiles(artifactDir))
+  const manifestBase = {
+    git: {
+      requestedDeploySha: readEnvValue(env, 'READINESS_DEPLOY_SHA'),
+      actualHeadSha: readEnvValue(env, 'GITHUB_SHA'),
+    },
+    migrations,
+    artifacts,
+  }
+  const violations = collectReleaseEvidenceViolations(manifestBase)
+
+  return {
+    schemaVersion: RELEASE_EVIDENCE_SCHEMA_VERSION,
+    status: violations.length === 0 ? 'pass' : 'fail',
+    generatedAt: new Date().toISOString(),
+    git: manifestBase.git,
+    workflow: {
+      runId: readEnvValue(env, 'GITHUB_RUN_ID'),
+      runAttempt: readEnvValue(env, 'GITHUB_RUN_ATTEMPT'),
+    },
+    migrations,
+    artifacts,
+    violations,
+  }
+}
+
+export const validateReleaseEvidenceManifest = (
+  manifest: ReleaseEvidenceManifest,
+  expectedSha?: string,
+): string[] => {
+  const violations: string[] = collectReleaseEvidenceViolations(manifest)
+
+  if (manifest.schemaVersion !== RELEASE_EVIDENCE_SCHEMA_VERSION) {
+    violations.push(
+      `unsupported release-evidence schema version ${manifest.schemaVersion}; expected ${RELEASE_EVIDENCE_SCHEMA_VERSION}`,
+    )
+  }
+  if (manifest.status !== 'pass') {
+    violations.push(`release evidence manifest status is ${manifest.status}`)
+  }
+  if (manifest.violations.length > 0) {
+    violations.push(...manifest.violations)
+  }
+  if (expectedSha) {
+    const normalizedExpected = expectedSha.trim()
+    if (manifest.git.requestedDeploySha !== normalizedExpected) {
+      violations.push(
+        `release evidence requested SHA ${manifest.git.requestedDeploySha || '<empty>'} does not match expected SHA ${normalizedExpected}`,
+      )
+    }
+    if (manifest.git.actualHeadSha !== normalizedExpected) {
+      violations.push(
+        `release evidence actual HEAD SHA ${manifest.git.actualHeadSha || '<empty>'} does not match expected SHA ${normalizedExpected}`,
+      )
+    }
+  }
+
+  return [...new Set(violations)]
+}
+
 export const evaluateStagingGoLiveReadiness = (
   env: NodeJS.ProcessEnv = process.env,
 ): StagingReadinessEvaluation => {
@@ -159,9 +719,13 @@ export const evaluateStagingGoLiveReadiness = (
   const requireNewRelicGates = !FALSE_VALUES.has(readEnvValue(env, 'REQUIRE_NEW_RELIC_GATES').toLowerCase())
   const stagingNewRelicAwsMode = normalizeNewRelicAwsMode(readEnvValue(env, 'NEW_RELIC_STAGING_AWS_MODE'))
   const prodNewRelicAwsMode = normalizeNewRelicAwsMode(readEnvValue(env, 'NEW_RELIC_PROD_AWS_MODE'))
+  const metricStreamEnabled = readEnvValue(env, 'NEW_RELIC_AWS_METRIC_STREAM_ENABLED').toLowerCase()
   const shouldSoftenNewRelicRequirement = (key: string) => {
     if (key === 'NEW_RELIC_USER_API_KEY') {
       return !requireNewRelicGates
+    }
+    if (key === 'NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES') {
+      return FALSE_VALUES.has(metricStreamEnabled)
     }
     if (key === 'NEW_RELIC_STAGING_AWS_ACCOUNT_ID' || key === 'NEW_RELIC_STAGING_AWS_ROLE_ARN') {
       return !requireNewRelicGates || stagingNewRelicAwsMode === 'otlp_only'
@@ -223,6 +787,9 @@ export const evaluateStagingGoLiveReadiness = (
   }
   if (nodeEnv !== 'staging') {
     policyViolations.push(`NODE_ENV must be "staging" (received "${nodeEnv || '<empty>'}")`)
+  }
+  if (!requireNewRelicGates) {
+    policyViolations.push('REQUIRE_NEW_RELIC_GATES must stay enabled for staging readiness evidence')
   }
 
   const stackName = readEnvValue(env, 'STACK_NAME')
@@ -383,12 +950,30 @@ export const evaluateStagingGoLiveReadiness = (
     policyViolations.push('NEW_RELIC_PROD_AWS_MODE must be "otlp_only" in staging readiness')
   }
 
-  const logsEnabled = readEnvValue(env, 'NEW_RELIC_LOGS_ENABLED').toLowerCase()
-  if (!logsEnabled || !FALSE_VALUES.has(logsEnabled)) {
-    policyViolations.push('NEW_RELIC_LOGS_ENABLED must be "0" in staging to keep CloudWatch as source of truth')
+  const stagingAwsAccountId = readEnvValue(env, 'NEW_RELIC_STAGING_AWS_ACCOUNT_ID')
+  const prodAwsAccountId = readEnvValue(env, 'NEW_RELIC_PROD_AWS_ACCOUNT_ID')
+  const stagingAwsRoleArn = readEnvValue(env, 'NEW_RELIC_STAGING_AWS_ROLE_ARN')
+  const prodAwsRoleArn = readEnvValue(env, 'NEW_RELIC_PROD_AWS_ROLE_ARN')
+  if (stagingAwsAccountId && prodAwsAccountId && stagingAwsAccountId === prodAwsAccountId) {
+    policyViolations.push(
+      'NEW_RELIC_STAGING_AWS_ACCOUNT_ID and NEW_RELIC_PROD_AWS_ACCOUNT_ID must differ to preserve env account pinning',
+    )
+  }
+  if (stagingAwsAccountId && stagingAwsRoleArn && !stagingAwsRoleArn.includes(`:${stagingAwsAccountId}:`)) {
+    policyViolations.push(
+      'NEW_RELIC_STAGING_AWS_ROLE_ARN must belong to NEW_RELIC_STAGING_AWS_ACCOUNT_ID',
+    )
+  }
+  if (prodAwsAccountId && prodAwsRoleArn && !prodAwsRoleArn.includes(`:${prodAwsAccountId}:`)) {
+    policyViolations.push(
+      'NEW_RELIC_PROD_AWS_ROLE_ARN must belong to NEW_RELIC_PROD_AWS_ACCOUNT_ID',
+    )
   }
 
-  const metricStreamEnabled = readEnvValue(env, 'NEW_RELIC_AWS_METRIC_STREAM_ENABLED').toLowerCase()
+  const logsEnabled = readEnvValue(env, 'NEW_RELIC_LOGS_ENABLED').toLowerCase()
+  if (!logsEnabled || FALSE_VALUES.has(logsEnabled)) {
+    policyViolations.push('NEW_RELIC_LOGS_ENABLED must be "1" in staging so deploy/readiness gates stay aligned')
+  }
 
   const logForwardingEnabled = readEnvValue(env, 'NEW_RELIC_AWS_LOG_FORWARDING_ENABLED').toLowerCase()
   if (!logForwardingEnabled || !FALSE_VALUES.has(logForwardingEnabled)) {
@@ -479,7 +1064,58 @@ export const evaluateStagingGoLiveReadiness = (
   }
 }
 
-export const run = (env: NodeJS.ProcessEnv = process.env) => {
+export const evaluateAndPrintMigrationSync = async (
+  env: NodeJS.ProcessEnv = process.env,
+  label = 'staging',
+): Promise<MigrationSyncEvaluation | null> => {
+  const databaseUrl = resolveDatabaseUrl(env)
+  if (!databaseUrl) {
+    return null
+  }
+
+  const migrationSync = await readMigrationSync(databaseUrl)
+  const migrationViolations: string[] = []
+  if (migrationSync.missingSchemaMigrationsTable) {
+    migrationViolations.push('public.schema_migrations table is missing')
+  }
+  if (migrationSync.pendingRepoMigrations.length > 0) {
+    migrationViolations.push(
+      `pending repo migrations: ${migrationSync.pendingRepoMigrations.join(', ')}`,
+    )
+  }
+  if (migrationSync.unexpectedAppliedMigrations.length > 0) {
+    migrationViolations.push(
+      `unexpected applied migrations: ${migrationSync.unexpectedAppliedMigrations.join(', ')}`,
+    )
+  }
+
+  printGroup(`Migration sync violations (${label})`, migrationViolations)
+
+  if (migrationViolations.length === 0) {
+    console.log(`\n✅ Migration sync check passed (${label})`)
+  }
+
+  return migrationSync
+}
+
+export const runMigrationSyncCheck = async (
+  env: NodeJS.ProcessEnv = process.env,
+  label = 'release-gate',
+): Promise<void> => {
+  const migrationSync = await evaluateAndPrintMigrationSync(env, label)
+  if (!migrationSync) {
+    throw new Error('Missing DATABASE_URL_PLANE_B for migration sync check')
+  }
+  if (
+    migrationSync.missingSchemaMigrationsTable
+    || migrationSync.pendingRepoMigrations.length
+    || migrationSync.unexpectedAppliedMigrations.length
+  ) {
+    throw new Error(`Migration sync check failed (${label})`)
+  }
+}
+
+export const run = async (env: NodeJS.ProcessEnv = process.env) => {
   const evaluation = evaluateStagingGoLiveReadiness(env)
 
   printGroup('Missing required keys', evaluation.missingRequired)
@@ -487,10 +1123,25 @@ export const run = (env: NodeJS.ProcessEnv = process.env) => {
   printGroup('Policy violations', evaluation.policyViolations)
   printGroup('Missing recommended keys (non-blocking)', evaluation.missingRecommended)
 
+  const migrationSync = await evaluateAndPrintMigrationSync(env)
+  const migrationViolations =
+    migrationSync
+      ? [
+          ...(migrationSync.missingSchemaMigrationsTable ? ['public.schema_migrations table is missing'] : []),
+          ...(migrationSync.pendingRepoMigrations.length
+            ? [`pending repo migrations: ${migrationSync.pendingRepoMigrations.join(', ')}`]
+            : []),
+          ...(migrationSync.unexpectedAppliedMigrations.length
+            ? [`unexpected applied migrations: ${migrationSync.unexpectedAppliedMigrations.join(', ')}`]
+            : []),
+        ]
+      : []
+
   if (
     evaluation.missingRequired.length
     || evaluation.placeholderViolations.length
     || evaluation.policyViolations.length
+    || migrationViolations.length
   ) {
     throw new Error('Staging go-live readiness failed')
   }
@@ -501,12 +1152,55 @@ export const run = (env: NodeJS.ProcessEnv = process.env) => {
 const isDirectExecution = /(^|[/\\])staging-go-live-readiness\.(ts|js)$/.test(process.argv[1] || '')
 
 if (isDirectExecution) {
-  try {
-    run()
-  } catch (error) {
+  const main = async () => {
+    const args = process.argv.slice(2)
+    if (hasCliFlag(args, '--check-migration-sync')) {
+      const label = resolveCliOption(args, '--label') || 'release-gate'
+      await runMigrationSyncCheck(process.env, label)
+      return
+    }
+
+    if (hasCliFlag(args, '--write-release-evidence')) {
+      const artifactDir = resolveCliOption(args, '--artifact-dir')
+      const outputPath = resolveCliOption(args, '--output')
+      if (!artifactDir || !outputPath) {
+        throw new Error('--write-release-evidence requires --artifact-dir and --output')
+      }
+
+      const manifest = await buildReleaseEvidenceManifest({ artifactDir })
+      await writeFile(outputPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8')
+      printGroup('Release evidence violations', manifest.violations)
+      if (manifest.status !== 'pass') {
+        throw new Error('Release evidence validation failed')
+      }
+      console.log(`\n✅ Release evidence manifest written to ${outputPath}`)
+      return
+    }
+
+    if (hasCliFlag(args, '--verify-release-evidence')) {
+      const manifestPath = resolveCliOption(args, '--manifest')
+      const expectedSha = resolveCliOption(args, '--expected-sha')
+      if (!manifestPath) {
+        throw new Error('--verify-release-evidence requires --manifest')
+      }
+
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as ReleaseEvidenceManifest
+      const violations = validateReleaseEvidenceManifest(manifest, expectedSha)
+      printGroup('Release evidence verification failures', violations)
+      if (violations.length > 0) {
+        throw new Error('Release evidence verification failed')
+      }
+      console.log(`\n✅ Release evidence verified for ${expectedSha || manifest.git.actualHeadSha}`)
+      return
+    }
+
+    await run()
+  }
+
+  main().catch(error => {
     console.error(
       error instanceof Error ? error.message : 'Staging go-live readiness failed',
     )
     process.exit(1)
-  }
+  })
 }
