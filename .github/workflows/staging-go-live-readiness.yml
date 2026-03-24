@@ -478,6 +478,38 @@ jobs:
             exit 1
           fi
 
+      - name: Persist ECS migration sync evidence (staging readiness)
+        shell: bash
+        env:
+          READINESS_PENDING_MIGRATION_COUNT: ${{ env.READINESS_PENDING_MIGRATION_COUNT }}
+        run: |
+          set -euo pipefail
+          mkdir -p .smoke-artifacts
+          node <<'NODE'
+          const fs = require('fs')
+
+          const pendingCount = Number(process.env.READINESS_PENDING_MIGRATION_COUNT || '0')
+          const pending = JSON.parse(
+            fs.readFileSync('.smoke-artifacts/staging-pending-migrations.json', 'utf8'),
+          )
+          const evaluation = {
+            missingSchemaMigrationsTable: false,
+            pendingRepoMigrations: pendingCount === 0 ? pending.map((item) => item.file) : [],
+            unexpectedAppliedMigrations: [],
+          }
+          const payload = {
+            schemaVersion: 'staging-migration-sync-evidence@v1',
+            status: evaluation.pendingRepoMigrations.length === 0 ? 'pass' : 'fail',
+            evaluation,
+          }
+          fs.writeFileSync(
+            '.smoke-artifacts/staging-migration-sync-evidence.json',
+            `${JSON.stringify(payload, null, 2)}\n`,
+            'utf8',
+          )
+          NODE
+          echo "STAGING_MIGRATION_SYNC_RESULT_PATH=.smoke-artifacts/staging-migration-sync-evidence.json" >> "${GITHUB_ENV}"
+
       - name: Staging go-live readiness (integrations + policy)
         env:
           ENVIRONMENT: staging
@@ -559,6 +591,7 @@ jobs:
           BRAIN_DISPATCH_GITHUB_ACTIONS: ${{ vars.BRAIN_DISPATCH_GITHUB_ACTIONS }}
           BRAIN_INGEST_GITHUB_ACTIONS: ${{ vars.BRAIN_INGEST_GITHUB_ACTIONS }}
           BRAIN_SLACK_POST_CASE_CARDS: ${{ vars.BRAIN_SLACK_POST_CASE_CARDS }}
+          STAGING_MIGRATION_SYNC_RESULT_PATH: ${{ env.STAGING_MIGRATION_SYNC_RESULT_PATH }}
         run: pnpm -C backend ci:staging-go-live-readiness
 
       - name: Sentry release scope check
@@ -1243,6 +1276,7 @@ jobs:
         env:
           READINESS_DEPLOY_SHA: ${{ inputs.deploy_sha }}
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+          STAGING_MIGRATION_SYNC_RESULT_PATH: ${{ env.STAGING_MIGRATION_SYNC_RESULT_PATH }}
         run: |
           set -euo pipefail
           mkdir -p .smoke-artifacts

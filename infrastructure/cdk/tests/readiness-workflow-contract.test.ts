@@ -57,7 +57,7 @@ test('staging readiness resumes operational services before export-dependent par
 test('staging readiness applies candidate migrations inside staging ECS runtime', () => {
   assert.match(
     readinessWorkflow,
-    /Resolve staging DbMigrate ECS runtime[\s\S]*Resolve current staging migration version via ECS[\s\S]*READINESS_CURRENT_MIGRATION_VERSION[\s\S]*Build pending exact-SHA migration payload \(staging readiness\)[\s\S]*READINESS_PENDING_MIGRATIONS_B64[\s\S]*Apply repo migrations from exact SHA via ECS \(staging readiness\)[\s\S]*READINESS_PENDING_MIGRATIONS_B64[\s\S]*aws ecs run-task/,
+    /Resolve staging DbMigrate ECS runtime[\s\S]*Resolve current staging migration version via ECS[\s\S]*READINESS_CURRENT_MIGRATION_VERSION[\s\S]*Build pending exact-SHA migration payload \(staging readiness\)[\s\S]*READINESS_PENDING_MIGRATIONS_B64[\s\S]*Apply repo migrations from exact SHA via ECS \(staging readiness\)[\s\S]*aws ecs run-task[\s\S]*Persist ECS migration sync evidence \(staging readiness\)[\s\S]*STAGING_MIGRATION_SYNC_RESULT_PATH/,
   )
 })
 

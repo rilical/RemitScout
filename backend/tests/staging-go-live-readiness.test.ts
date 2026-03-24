@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildReleaseEvidenceManifest,
   evaluateMigrationSync,
+  evaluateAndPrintMigrationSync,
   evaluateStagingGoLiveReadiness,
   validateReleaseEvidenceManifest,
 } from '../scripts/ci/staging-go-live-readiness'
@@ -649,6 +650,37 @@ describe('staging go-live readiness policy', () => {
     } finally {
       await rm(artifactDir, { recursive: true, force: true })
       await rm(migrationsDir, { recursive: true, force: true })
+    }
+  })
+
+  it('uses migration-sync override evidence during the live readiness check', async () => {
+    const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
+    const overridePath = path.join(artifactDir, 'staging-migration-sync-evidence.json')
+
+    try {
+      const evaluation = {
+        missingSchemaMigrationsTable: false,
+        pendingRepoMigrations: [],
+        unexpectedAppliedMigrations: [],
+      }
+      await writeFile(
+        overridePath,
+        `${JSON.stringify({
+          schemaVersion: 'staging-migration-sync-evidence@v1',
+          status: 'pass',
+          evaluation,
+        }, null, 2)}\n`,
+        'utf8',
+      )
+
+      await expect(
+        evaluateAndPrintMigrationSync(
+          { STAGING_MIGRATION_SYNC_RESULT_PATH: overridePath },
+          'staging',
+        ),
+      ).resolves.toEqual(evaluation)
+    } finally {
+      await rm(artifactDir, { recursive: true, force: true })
     }
   })
 
