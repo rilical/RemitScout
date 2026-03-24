@@ -208,6 +208,7 @@ jobs:
           ENVIRONMENT: staging
           NODE_ENV: staging
           AWS_REGION: ${{ vars.AWS_REGION }}
+          SENTRY_DSN: ${{ secrets.NUXT_PUBLIC_SENTRY_DSN }}
           ALLOW_DB_MIGRATOR_URL: '1'
         run: |
           set -euo pipefail

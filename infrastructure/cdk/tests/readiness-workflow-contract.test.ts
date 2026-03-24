@@ -54,6 +54,13 @@ test('staging readiness resumes operational services before export-dependent par
   )
 })
 
+test('staging readiness candidate migration apply inherits staging sentry wiring', () => {
+  assert.match(
+    readinessWorkflow,
+    /Apply repo migrations from exact SHA \(staging readiness\)[\s\S]*SENTRY_DSN:\s+\$\{\{\s*secrets\.NUXT_PUBLIC_SENTRY_DSN\s*\}\}/,
+  )
+})
+
 test('staging readiness evidence artifacts keep 90-day retention', () => {
   const matches = readinessWorkflow.match(/retention-days: 90/g) ?? []
   assert.equal(matches.length >= 2, true)
