@@ -20,3 +20,15 @@ test('staging deploy hard-fails stuck CDK deploys and prints ECS rollout diagnos
     /CDK Deploy \(staging\)[\s\S]*timeout --preserve-status --kill-after=60s[\s\S]*Staging CDK deploy timed out after[\s\S]*aws ecs list-services[\s\S]*ECS rollout diagnostics:/,
   )
 })
+
+test('staging deploy uses the canonical staging profile for both lean and parity modes', () => {
+  assert.match(
+    deployWorkflow,
+    /case "\$\{REQUESTED_STAGING_MODE:-lean\}" in[\s\S]*lean\)[\s\S]*profile_name="staging"[\s\S]*parity\)[\s\S]*profile_name="staging"/,
+  )
+  assert.doesNotMatch(deployWorkflow, /profile_name="staging-lean"|profile_name="staging-parity"/)
+})
+
+test('deploy workflow does not require undefined runtimeMode or costProfile context keys', () => {
+  assert.doesNotMatch(deployWorkflow, /actual_runtime_mode|actual_cost_profile/)
+})

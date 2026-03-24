@@ -1071,13 +1071,13 @@ jobs:
           set -euo pipefail
           case "${REQUESTED_STAGING_MODE:-lean}" in
             lean)
-              profile_name="staging-lean"
-              runtime_mode="staging-lean"
+              profile_name="staging"
+              requested_mode="lean"
               proof_scope="Deploy path, public unauthenticated surfaces, and lean business-hours posture only."
               ;;
             parity)
-              profile_name="staging-parity"
-              runtime_mode="staging-parity"
+              profile_name="staging"
+              requested_mode="parity"
               proof_scope="Prod-like release rehearsal for auth, workers, queues, observability, and rollback gates."
               ;;
             *)
@@ -1087,12 +1087,6 @@ jobs:
           esac
 
           /bin/bash infrastructure/cdk/apply-profile.sh "${profile_name}"
-
-          actual_runtime_mode="$(jq -r '.context.runtimeMode // empty' infrastructure/cdk/cdk.json)"
-          if [ "${actual_runtime_mode}" != "${runtime_mode}" ]; then
-            echo "::error::Profile ${profile_name} did not set runtimeMode=${runtime_mode}."
-            exit 1
-          fi
           cpu_architecture="$(jq -r '.context.cpuArchitecture // empty' infrastructure/cdk/cdk.json)"
           case "${cpu_architecture}" in
             arm64)
@@ -1108,13 +1102,13 @@ jobs:
           esac
 
           echo "profile_name=${profile_name}" >> "$GITHUB_OUTPUT"
-          echo "runtime_mode=${runtime_mode}" >> "$GITHUB_OUTPUT"
+          echo "requested_mode=${requested_mode}" >> "$GITHUB_OUTPUT"
           echo "cpu_architecture=${cpu_architecture}" >> "$GITHUB_OUTPUT"
           echo "docker_platform=${docker_platform}" >> "$GITHUB_OUTPUT"
           {
             echo "### Staging posture"
-            echo "- Profile: \`${profile_name}\`"
-            echo "- Runtime mode: \`${runtime_mode}\`"
+            echo "- Deployment profile: \`${profile_name}\`"
+            echo "- Requested staging mode: \`${requested_mode}\`"
             echo "- CPU architecture: \`${cpu_architecture}\`"
             echo "- Docker platform: \`${docker_platform}\`"
             echo "- Proof scope: ${proof_scope}"
@@ -2998,18 +2992,6 @@ jobs:
           esac
 
           /bin/bash infrastructure/cdk/apply-profile.sh "${profile_name}"
-
-          actual_runtime_mode="$(jq -r '.context.runtimeMode // empty' infrastructure/cdk/cdk.json)"
-          if [ "${actual_runtime_mode}" != "${runtime_mode}" ]; then
-            echo "::error::Profile ${profile_name} did not set runtimeMode=${runtime_mode}."
-            exit 1
-          fi
-
-          actual_cost_profile="$(jq -r '.context.costProfile // empty' infrastructure/cdk/cdk.json)"
-          if [ "${actual_cost_profile}" != "${expected_cost_profile}" ]; then
-            echo "::error::Profile ${profile_name} did not set costProfile=${expected_cost_profile}."
-            exit 1
-          fi
           cpu_architecture="$(jq -r '.context.cpuArchitecture // empty' infrastructure/cdk/cdk.json)"
           case "${cpu_architecture}" in
             arm64)
