@@ -769,6 +769,7 @@ jobs:
             --overwrite >/dev/null
 
           rules_to_enable=()
+          rule_restore_mode="skipped"
           if [ -f "${staging_profile}" ]; then
             mapfile -t rules_to_enable < <(
               jq -r --arg prefix "${rule_prefix}" '
@@ -780,33 +781,14 @@ jobs:
             )
           fi
 
-          if [ "${#rules_to_enable[@]}" -eq 0 ]; then
-            mapfile -t rules_to_enable < <(
-              aws events list-rules \
-                --region "${AWS_REGION}" \
-                --name-prefix "${rule_prefix}" \
-                --output json | jq -r '.Rules[]? | .Name // empty'
-            )
-          else
-            mapfile -t all_rules < <(
-              aws events list-rules \
-                --region "${AWS_REGION}" \
-                --name-prefix "${rule_prefix}" \
-                --output json | jq -r '.Rules[]? | .Name // empty'
-            )
-            if [ "${#all_rules[@]}" -gt 0 ]; then
-              for rule_name in "${all_rules[@]}"; do
-                [ -n "${rule_name}" ] || continue
-                aws events disable-rule --region "${AWS_REGION}" --name "${rule_name}" >/dev/null
-              done
-            fi
-          fi
-
           if [ "${#rules_to_enable[@]}" -gt 0 ]; then
+            rule_restore_mode="allowlist"
             for rule_name in "${rules_to_enable[@]}"; do
               [ -n "${rule_name}" ] || continue
               aws events enable-rule --region "${AWS_REGION}" --name "${rule_name}" >/dev/null
             done
+          else
+            echo "No explicit staging opsResumeRuleAllowlist is configured; readiness is restoring pause-state and ECS service baselines without enumerating EventBridge rules."
           fi
 
           mapfile -t service_names < <(jq -r '.[]? | strings | select(length > 0)' <<<"${services_json}")
@@ -841,12 +823,14 @@ jobs:
           jq -n \
             --arg cluster "${cluster}" \
             --arg pauseParam "${pause_param}" \
+            --arg ruleRestoreMode "${rule_restore_mode}" \
             --argjson restoredServices "${restored_services_json}" \
             --argjson enabledRules "${enabled_rules_json}" \
             '{
               paused: false,
               cluster: $cluster,
               pauseParam: $pauseParam,
+              ruleRestoreMode: $ruleRestoreMode,
               restoredServices: $restoredServices,
               enabledRules: $enabledRules,
               resumeController: "workflow-direct-ssm-eventbridge-ecs"
