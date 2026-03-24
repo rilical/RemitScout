@@ -727,6 +727,51 @@ jobs:
           fi
           pnpm -C backend ci:config-validate
 
+      - name: Resume staging operational services for parity evidence
+        shell: bash
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          set -euo pipefail
+          mkdir -p .smoke-artifacts
+          fn_prefix="${OPS_PAUSE_FN_PREFIX_OVERRIDE:-remit-scout-staging-OpsPauseControllerFunction}"
+          fn="$(aws lambda list-functions \
+            --region "${AWS_REGION}" \
+            --output json | jq -r --arg prefix "${fn_prefix}" '.Functions[]? | .FunctionName // empty | select(startswith($prefix))' | head -n1)"
+          if [ -z "${fn}" ] || [ "${fn}" = "None" ]; then
+            fn="$(aws lambda list-functions \
+              --region "${AWS_REGION}" \
+              --output json | jq -r '.Functions[]? | .FunctionName // empty | select(contains("remit-scout-staging") and contains("OpsPauseControllerFuncti"))' | head -n1)"
+          fi
+          if [ -z "${fn}" ] || [ "${fn}" = "None" ]; then
+            echo "::error::OpsPause controller Lambda not found for staging."
+            exit 1
+          fi
+
+          out=".smoke-artifacts/staging-ops-resume.json"
+          aws lambda invoke \
+            --cli-connect-timeout 10 \
+            --cli-read-timeout 300 \
+            --region "${AWS_REGION}" \
+            --cli-binary-format raw-in-base64-out \
+            --function-name "${fn}" \
+            --payload '{"paused": false}' \
+            "${out}" >/dev/null
+
+          cat "${out}"
+          jq -e '.paused == false' "${out}" >/dev/null
+
+      - name: Wait for staging critical services after ops resume
+        shell: bash
+        env:
+          ENVIRONMENT: staging
+          NODE_ENV: staging
+          WAIT_TIMEOUT_SECONDS: '900'
+          WAIT_INTERVAL_SECONDS: '15'
+        run: |
+          set -euo pipefail
+          pnpm -C backend exec tsx scripts/ci/wait-aws-ops-health.ts
+
       - name: Public integration smoke (staging)
         env:
           SMOKE_BASE_URL: ${{ env.PUBLIC_API_BASE || vars.PUBLIC_API_BASE }}
@@ -928,51 +973,6 @@ jobs:
           fi
           mkdir -p .smoke-artifacts
           pnpm -C backend ci:alerts-watchlists-smoke | tee .smoke-artifacts/staging-omar-entitlement-smoke.log
-
-      - name: Resume staging operational services for parity evidence
-        shell: bash
-        env:
-          AWS_REGION: ${{ vars.AWS_REGION }}
-        run: |
-          set -euo pipefail
-          mkdir -p .smoke-artifacts
-          fn_prefix="${OPS_PAUSE_FN_PREFIX_OVERRIDE:-remit-scout-staging-OpsPauseControllerFunction}"
-          fn="$(aws lambda list-functions \
-            --region "${AWS_REGION}" \
-            --output json | jq -r --arg prefix "${fn_prefix}" '.Functions[]? | .FunctionName // empty | select(startswith($prefix))' | head -n1)"
-          if [ -z "${fn}" ] || [ "${fn}" = "None" ]; then
-            fn="$(aws lambda list-functions \
-              --region "${AWS_REGION}" \
-              --output json | jq -r '.Functions[]? | .FunctionName // empty | select(contains("remit-scout-staging") and contains("OpsPauseControllerFuncti"))' | head -n1)"
-          fi
-          if [ -z "${fn}" ] || [ "${fn}" = "None" ]; then
-            echo "::error::OpsPause controller Lambda not found for staging."
-            exit 1
-          fi
-
-          out=".smoke-artifacts/staging-ops-resume.json"
-          aws lambda invoke \
-            --cli-connect-timeout 10 \
-            --cli-read-timeout 300 \
-            --region "${AWS_REGION}" \
-            --cli-binary-format raw-in-base64-out \
-            --function-name "${fn}" \
-            --payload '{"paused": false}' \
-            "${out}" >/dev/null
-
-          cat "${out}"
-          jq -e '.paused == false' "${out}" >/dev/null
-
-      - name: Wait for staging critical services after ops resume
-        shell: bash
-        env:
-          ENVIRONMENT: staging
-          NODE_ENV: staging
-          WAIT_TIMEOUT_SECONDS: '900'
-          WAIT_INTERVAL_SECONDS: '15'
-        run: |
-          set -euo pipefail
-          pnpm -C backend exec tsx scripts/ci/wait-aws-ops-health.ts
 
       - name: Enterprise + triangulation smoke (staging)
         env:

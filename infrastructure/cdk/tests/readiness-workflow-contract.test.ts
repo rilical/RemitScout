@@ -47,6 +47,13 @@ test('staging readiness runs New Relic span verification after traffic-generatin
   )
 })
 
+test('staging readiness resumes operational services before quote-dependent public corridor smoke', () => {
+  assert.match(
+    readinessWorkflow,
+    /Resume staging operational services for parity evidence[\s\S]*Wait for staging critical services after ops resume[\s\S]*Public integration smoke \(staging\)/,
+  )
+})
+
 test('staging readiness resumes operational services before export-dependent parity smoke', () => {
   assert.match(
     readinessWorkflow,
