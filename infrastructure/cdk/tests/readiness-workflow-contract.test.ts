@@ -54,17 +54,10 @@ test('staging readiness resumes operational services before export-dependent par
   )
 })
 
-test('staging readiness candidate migration apply inherits staging sentry wiring', () => {
+test('staging readiness applies candidate migrations inside staging ECS runtime', () => {
   assert.match(
     readinessWorkflow,
-    /Apply repo migrations from exact SHA \(staging readiness\)[\s\S]*SENTRY_DSN:\s+\$\{\{\s*secrets\.NUXT_PUBLIC_SENTRY_DSN\s*\}\}/,
-  )
-})
-
-test('staging readiness candidate migration apply uses direct staging DB URLs instead of task-secret IAM', () => {
-  assert.match(
-    readinessWorkflow,
-    /Apply repo migrations from exact SHA \(staging readiness\)[\s\S]*DATABASE_URL_PLANE_B:\s+\$\{\{\s*secrets\.DATABASE_URL_PLANE_B\s*\}\}[\s\S]*DATABASE_URL_PLANE_B_MIGRATOR:\s+\$\{\{\s*secrets\.DATABASE_URL_PLANE_B_MIGRATOR\s*\|\|\s*secrets\.DATABASE_URL_PLANE_B\s*\}\}[\s\S]*unset PLANE_B_DB_SECRET_ARN PLANE_B_DB_SSM_NAME[\s\S]*unset PLANE_B_DB_MIGRATOR_SECRET_ARN PLANE_B_DB_MIGRATOR_SSM_NAME/,
+    /Resolve staging DbMigrate ECS runtime[\s\S]*DB_MIGRATE_TASK_DEF_ARN[\s\S]*docker\/setup-buildx-action@v3[\s\S]*Build \+ push candidate DbMigrate image \(staging readiness\)[\s\S]*file:\s+backend\/Dockerfile\.migrate[\s\S]*Apply repo migrations from exact SHA via ECS \(staging readiness\)[\s\S]*aws ecs register-task-definition[\s\S]*aws ecs run-task/,
   )
 })
 
