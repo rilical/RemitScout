@@ -3,6 +3,7 @@ import {
   resolveQueueLookupIssue,
   resolveQueueUrlFromEnv,
   resolveWorkerResilienceAdminAuth,
+  shouldBypassPrivilegedOpsFailure,
 } from '../scripts/ci/worker-resilience-smoke'
 
 const ORIGINAL_ENV = { ...process.env }
@@ -69,6 +70,28 @@ describe('worker resilience smoke admin auth', () => {
     })).toBe('access_denied')
 
     expect(resolveQueueLookupIssue(new Error('socket timeout'))).toBeNull()
+  })
+
+  it('treats explicit privileged-route auth denials as bypassable in worker smoke', () => {
+    expect(shouldBypassPrivilegedOpsFailure(403, {
+      error: 'forbidden',
+      code: 'super_admin_required',
+    })).toBe(true)
+
+    expect(shouldBypassPrivilegedOpsFailure(403, {
+      error: 'forbidden',
+      code: 'admin_ip_not_allowlisted',
+    })).toBe(true)
+
+    expect(shouldBypassPrivilegedOpsFailure(403, {
+      error: 'forbidden',
+      code: 'admin_role_required',
+    })).toBe(false)
+
+    expect(shouldBypassPrivilegedOpsFailure(200, {
+      error: 'forbidden',
+      code: 'super_admin_required',
+    })).toBe(false)
   })
 
   it('uses explicit queue URLs from env before any AWS queue-name lookup', () => {
