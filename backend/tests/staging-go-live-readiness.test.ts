@@ -404,6 +404,108 @@ describe('staging go-live readiness policy', () => {
     }
   })
 
+  it('accepts advisory Sentry release scope evidence when the release API token is stale', async () => {
+    const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
+    const migrationsDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-migrations-'))
+
+    try {
+      await writeFile(path.join(migrationsDir, '001_init.sql'), '-- migration\n', 'utf8')
+
+      await Promise.all([
+        writeFile(path.join(artifactDir, 'staging-public-integration-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-agent-pipeline-health.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-surface-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-omar-entitlement-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-enterprise-triangulation-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-worker-resilience-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-surface-smoke.log'), 'observer exercised\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-auth-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-admin-ui-smoke.log'), 'grant revoke complete\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-public-integration-post-ui-smoke.log'), 'ok\n', 'utf8'),
+        writeFile(path.join(artifactDir, 'staging-observability-business-gate.log'), 'Observability business gate passed.\n', 'utf8'),
+        writeFile(
+          path.join(artifactDir, 'staging-sentry-release-scope.json'),
+          `${JSON.stringify({
+            schemaVersion: 'staging-sentry-release-scope@v1',
+            status: 'warn',
+            release: 'readiness-scope-check-123-2',
+            checkedAt: '2026-03-23T12:00:00.000Z',
+            warning: {
+              reason: 'Sentry release API token is invalid; deploy keeps sourcemap upload non-blocking.',
+            },
+            workflow: {
+              runId: '123',
+              runAttempt: '2',
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-notifications-evidence.json'),
+          `${JSON.stringify({
+            verification: {
+              passed: true,
+              mirrorPoliciesRequired: true,
+            },
+            workflows: {
+              staging: { matchedPolicyNames: ['Remit-Scout STAGING CloudWatch Mirror'] },
+              prod: { matchedPolicyNames: ['Remit-Scout PROD CloudWatch Mirror'] },
+            },
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+        writeFile(
+          path.join(artifactDir, 'staging-newrelic-verify-signals.json'),
+          `${JSON.stringify({
+            results: [
+              {
+                envName: 'staging',
+                awsMode: 'push_only',
+                failures: [],
+                checks: {
+                  metricCount: 12,
+                  logCount: 8,
+                  spanCount: 5,
+                  sqsMetricCount: 3,
+                  customMetricCount: 7,
+                  customMetricFamilies: {
+                    core_slo_indices: 4,
+                  },
+                },
+              },
+            ],
+          }, null, 2)}\n`,
+          'utf8',
+        ),
+      ])
+
+      const manifest = await buildReleaseEvidenceManifest({
+        artifactDir,
+        migrationsDir,
+        env: {
+          READINESS_DEPLOY_SHA: 'cafebabe',
+          GITHUB_SHA: 'cafebabe',
+          GITHUB_RUN_ID: '123',
+          GITHUB_RUN_ATTEMPT: '2',
+        },
+      })
+
+      manifest.migrations = {
+        missingSchemaMigrationsTable: false,
+        pendingRepoMigrations: [],
+        unexpectedAppliedMigrations: [],
+      }
+      manifest.violations = []
+      manifest.status = 'pass'
+
+      expect(validateReleaseEvidenceManifest(manifest, 'cafebabe')).toEqual([])
+    } finally {
+      await rm(artifactDir, { recursive: true, force: true })
+      await rm(migrationsDir, { recursive: true, force: true })
+    }
+  })
+
   it('fails release evidence validation when New Relic proof is missing or false-green', async () => {
     const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
     const migrationsDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-migrations-'))
@@ -636,7 +738,7 @@ describe('staging go-live readiness policy', () => {
 
       expect(manifest.status).toBe('fail')
       expect(manifest.violations).toContain(
-        'misleading evidence in staging-sentry-release-scope.json: Sentry release scope evidence did not record a passing scope check',
+        'misleading evidence in staging-sentry-release-scope.json: Sentry release scope evidence must record status "pass" or advisory status "warn"',
       )
       expect(manifest.violations).toContain(
         'misleading evidence in staging-sentry-release-scope.json: Sentry release scope evidence must record the readiness scope-check release id',

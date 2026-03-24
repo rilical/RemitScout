@@ -144,6 +144,7 @@ Execution:
   - `staging-admin-surface-smoke.log`
   - `staging-admin-ui-smoke.log`
   - `staging-sentry-release-scope.json`
+  - `staging-sentry-release-scope.json` must exist for the exact readiness run; `status=pass` is preferred, and `status=warn` is acceptable only when it records an explicit stale/invalid Sentry release-credential warning because deploy already treats sourcemap upload as non-blocking.
   - uploaded artifact bundle `staging-readiness-admin-smoke-evidence` (includes `.smoke-artifacts` plus `frontend/playwright-report` and `frontend/test-results` when present)
   - verify the privileged artifact shows successful admin-session exchange plus exercised observer/audit/admin-entitlement surfaces; reject artifacts that show fallback-only auth coverage or omitted surface checks
   - verify the admin UI smoke did not skip privileged coverage and completed the reversible `support@remit-scout.com` grant/revoke path

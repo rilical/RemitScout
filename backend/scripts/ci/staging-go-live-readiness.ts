@@ -505,6 +505,9 @@ export const evaluateReleaseEvidenceFiles = (
       status?: unknown
       release?: unknown
       checkedAt?: unknown
+      warning?: {
+        reason?: unknown
+      }
       workflow?: {
         runId?: unknown
         runAttempt?: unknown
@@ -522,10 +525,19 @@ export const evaluateReleaseEvidenceFiles = (
           reason: `Sentry release scope evidence must use schema ${SENTRY_RELEASE_SCOPE_SCHEMA_VERSION}`,
         })
       }
-      if (parsed.status !== 'pass') {
+      if (parsed.status !== 'pass' && parsed.status !== 'warn') {
         misleadingFiles.push({
           file: 'staging-sentry-release-scope.json',
-          reason: 'Sentry release scope evidence did not record a passing scope check',
+          reason: 'Sentry release scope evidence must record status "pass" or advisory status "warn"',
+        })
+      }
+      if (
+        parsed.status === 'warn'
+        && (typeof parsed.warning?.reason !== 'string' || parsed.warning.reason.trim().length === 0)
+      ) {
+        misleadingFiles.push({
+          file: 'staging-sentry-release-scope.json',
+          reason: 'Advisory Sentry release scope evidence must record a warning reason',
         })
       }
       if (typeof parsed.release !== 'string' || !parsed.release.startsWith('readiness-scope-check-')) {

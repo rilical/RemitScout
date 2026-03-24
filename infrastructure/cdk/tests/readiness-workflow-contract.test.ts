@@ -26,6 +26,13 @@ test('staging readiness workflow hard-fails when the release evidence manifest i
   )
 })
 
+test('staging readiness records advisory Sentry scope evidence instead of failing the whole job on stale release credentials', () => {
+  assert.match(
+    readinessWorkflow,
+    /Sentry release scope check[\s\S]*status="warn"[\s\S]*warning_reason="Sentry release scope check could not create and delete a test release;/,
+  )
+})
+
 test('staging readiness evidence artifacts keep 90-day retention', () => {
   const matches = readinessWorkflow.match(/retention-days: 90/g) ?? []
   assert.equal(matches.length >= 2, true)

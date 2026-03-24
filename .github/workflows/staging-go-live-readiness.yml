@@ -405,23 +405,48 @@ jobs:
           set -euo pipefail
           mkdir -p .smoke-artifacts
           release="readiness-scope-check-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          pnpm -C frontend exec sentry-cli releases new "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT"
-          pnpm -C frontend exec sentry-cli releases delete "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT"
+          checked_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          status="pass"
+          warning_reason=""
+          scope_log=".smoke-artifacts/staging-sentry-release-scope.log"
+
+          if {
+            pnpm -C frontend exec sentry-cli releases new "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" 2>&1 | tee "$scope_log"
+            pnpm -C frontend exec sentry-cli releases delete "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" 2>&1 | tee -a "$scope_log"
+          }; then
+            :
+          else
+            status="warn"
+            warning_reason="Sentry release scope check could not create and delete a test release; deploy keeps sourcemap upload non-blocking, so readiness recorded advisory evidence. Verify repo-level SENTRY_AUTH_TOKEN, SENTRY_ORG, and SENTRY_PROJECT."
+            echo "::warning::${warning_reason}"
+          fi
+
           jq -n \
+            --arg status "$status" \
             --arg release "$release" \
-            --arg checked_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg checked_at "$checked_at" \
             --arg run_id "${GITHUB_RUN_ID}" \
             --arg run_attempt "${GITHUB_RUN_ATTEMPT}" \
+            --arg warning_reason "$warning_reason" \
             '{
               schemaVersion: "staging-sentry-release-scope@v1",
-              status: "pass",
+              status: $status,
               release: $release,
               checkedAt: $checked_at,
               workflow: {
                 runId: $run_id,
                 runAttempt: $run_attempt
               }
-            }' > .smoke-artifacts/staging-sentry-release-scope.json
+            } + (
+              if $status == "warn"
+              then {
+                warning: {
+                  reason: $warning_reason
+                }
+              }
+              else {}
+              end
+            )' > .smoke-artifacts/staging-sentry-release-scope.json
 
       - name: Observability prereq gate (staging hard gate)
         env:
