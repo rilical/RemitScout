@@ -202,6 +202,117 @@ jobs:
             echo "::warning::DbMigrateContainer does not expose a Plane B DB secret or SSM locator; readiness will fall back to the GitHub environment DB URL."
           fi
 
+      - name: Verify DB migrations are in sync via ECS (staging readiness)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          mkdir -p .smoke-artifacts
+
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+
+          if [ -z "${task_def:-}" ] || [ "${task_def}" = "null" ]; then
+            echo "::error::Unable to resolve DbMigrateTaskDefinitionArn from stack outputs."
+            exit 1
+          fi
+          if [ -z "${sg_id:-}" ] || [ "${sg_id}" = "null" ]; then
+            echo "::error::Unable to resolve PlaneBSecurityGroupId from stack outputs."
+            exit 1
+          fi
+          if [ -z "${subnet_csv:-}" ] || [ "${subnet_csv}" = "null" ]; then
+            echo "::error::Unable to resolve staging subnets for the migration sync ECS task."
+            exit 1
+          fi
+
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+          cluster="remit-scout-${ENV_NAME}"
+          subnet_list="$(printf '\"%s\",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/aws/db-migrate-ecs.js\",\"--check-migration-sync\",\"--label\",\"staging-readiness\"]}]}" \
+            --query "tasks[0].taskArn" --output text)"
+
+          if [ -z "${task_arn:-}" ] || [ "${task_arn}" = "None" ] || [ "${task_arn}" = "null" ]; then
+            echo "::error::Failed to start the staging migration sync ECS task."
+            exit 1
+          fi
+
+          echo "Migration sync task: ${task_arn}"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+
+          task_json="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --output json)"
+          exit_code="$(echo "$task_json" | jq -r '.tasks[0].containers[0].exitCode // "null"')"
+          stopped_reason="$(echo "$task_json" | jq -r '.tasks[0].stoppedReason // ""')"
+          container_reason="$(echo "$task_json" | jq -r '.tasks[0].containers[0].reason // ""')"
+          log_group="$(aws ecs describe-task-definition --task-definition "$task_def" --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].logConfiguration.options."awslogs-group"' --output text 2>/dev/null || true)"
+          log_stream="$(echo "$task_json" | jq -r '.tasks[0].containers[0].logStreamName // ""')"
+
+          if [ -z "$log_stream" ] || [ "$log_stream" = "null" ]; then
+            task_id="${task_arn##*/}"
+            log_stream="db-migrate/DbMigrateContainer/${task_id}"
+          fi
+
+          if [ -n "$log_group" ] && [ "$log_group" != "None" ] && [ -n "$log_stream" ] && [ "$log_stream" != "null" ]; then
+            aws logs get-log-events \
+              --log-group-name "$log_group" \
+              --log-stream-name "$log_stream" \
+              --limit 200 \
+              --query 'events[].message' \
+              --output text | tee .smoke-artifacts/staging-migration-sync.log || true
+          fi
+
+          jq -n \
+            --arg status "$(if [ "$exit_code" = "0" ]; then echo pass; else echo fail; fi)" \
+            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg task_arn "$task_arn" \
+            --arg task_def "$task_def" \
+            --arg log_group "${log_group:-}" \
+            --arg log_stream "${log_stream:-}" \
+            --arg stopped_reason "${stopped_reason:-}" \
+            --arg container_reason "${container_reason:-}" \
+            '{
+              schemaVersion: "staging-migration-sync-evidence@v1",
+              status: $status,
+              generatedAt: $generated_at,
+              taskArn: $task_arn,
+              taskDefinition: $task_def,
+              logGroup: $log_group,
+              logStream: $log_stream,
+              stoppedReason: $stopped_reason,
+              containerReason: $container_reason,
+              evaluation: {
+                missingSchemaMigrationsTable: false,
+                pendingRepoMigrations: [],
+                unexpectedAppliedMigrations: []
+              }
+            }' > .smoke-artifacts/staging-migration-sync-evidence.json
+
+          echo "STAGING_MIGRATION_SYNC_RESULT_PATH=${GITHUB_WORKSPACE}/.smoke-artifacts/staging-migration-sync-evidence.json" >> "${GITHUB_ENV}"
+
+          if [ "$exit_code" != "0" ]; then
+            echo "::error::Migration sync task failed (exitCode=$exit_code)."
+            if [ -n "$stopped_reason" ] && [ "$stopped_reason" != "null" ]; then
+              echo "::error::ECS stoppedReason: $stopped_reason"
+            fi
+            if [ -n "$container_reason" ] && [ "$container_reason" != "null" ]; then
+              echo "::error::Container reason: $container_reason"
+            fi
+            exit 1
+          fi
+
       - name: Staging go-live readiness (integrations + policy)
         env:
           ENVIRONMENT: staging

@@ -504,6 +504,52 @@ describe('staging go-live readiness policy', () => {
     }
   })
 
+  it('uses migration-sync override evidence when the runner cannot query the database directly', async () => {
+    const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
+    const migrationsDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-migrations-'))
+    const overridePath = path.join(artifactDir, 'staging-migration-sync-evidence.json')
+
+    try {
+      await writeFile(path.join(migrationsDir, '001_init.sql'), '-- migration\n', 'utf8')
+      await writeFile(
+        overridePath,
+        `${JSON.stringify({
+          schemaVersion: 'staging-migration-sync-evidence@v1',
+          status: 'pass',
+          evaluation: {
+            missingSchemaMigrationsTable: false,
+            pendingRepoMigrations: [],
+            unexpectedAppliedMigrations: [],
+          },
+        }, null, 2)}\n`,
+        'utf8',
+      )
+
+      const manifest = await buildReleaseEvidenceManifest({
+        artifactDir,
+        migrationsDir,
+        env: {
+          READINESS_DEPLOY_SHA: 'cafebabe',
+          GITHUB_SHA: 'cafebabe',
+          GITHUB_RUN_ID: '123',
+          GITHUB_RUN_ATTEMPT: '2',
+          STAGING_MIGRATION_SYNC_RESULT_PATH: overridePath,
+        },
+      })
+
+      expect(manifest.migrations).toEqual({
+        missingSchemaMigrationsTable: false,
+        pendingRepoMigrations: [],
+        unexpectedAppliedMigrations: [],
+      })
+      expect(manifest.violations.some(item => item.includes('pending repo migrations'))).toBe(false)
+      expect(manifest.violations.some(item => item.includes('public.schema_migrations'))).toBe(false)
+    } finally {
+      await rm(artifactDir, { recursive: true, force: true })
+      await rm(migrationsDir, { recursive: true, force: true })
+    }
+  })
+
   it('fails release evidence validation when Sentry release-scope proof is malformed', async () => {
     const artifactDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-artifacts-'))
     const migrationsDir = await mkdtemp(path.join(os.tmpdir(), 'staging-readiness-migrations-'))

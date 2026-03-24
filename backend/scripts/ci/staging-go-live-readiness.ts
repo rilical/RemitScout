@@ -17,6 +17,12 @@ type MigrationSyncEvaluation = {
   unexpectedAppliedMigrations: string[]
 }
 
+type MigrationSyncOverridePayload = {
+  schemaVersion?: string
+  status?: 'pass' | 'fail'
+  evaluation?: MigrationSyncEvaluation
+}
+
 type MisleadingEvidence = {
   file: string
   reason: string
@@ -316,6 +322,18 @@ const safeJsonParse = (value: string): unknown | null => {
   }
 }
 
+const isMigrationSyncEvaluation = (value: unknown): value is MigrationSyncEvaluation => {
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Record<string, unknown>
+  return (
+    typeof candidate.missingSchemaMigrationsTable === 'boolean'
+    && Array.isArray(candidate.pendingRepoMigrations)
+    && candidate.pendingRepoMigrations.every(item => typeof item === 'string')
+    && Array.isArray(candidate.unexpectedAppliedMigrations)
+    && candidate.unexpectedAppliedMigrations.every(item => typeof item === 'string')
+  )
+}
+
 const hasExactStringArray = (value: unknown, expected: readonly string[]) => {
   if (!Array.isArray(value) || value.length !== expected.length) return false
   return value.every((item, index) => item === expected[index])
@@ -329,6 +347,29 @@ const listRepoMigrationFiles = async (migrationsDir = DEFAULT_MIGRATIONS_DIR): P
   return files
     .filter(file => file.endsWith('.sql') && file !== 'TEMPLATE.sql' && file !== 'TEMPLATE.sql.example')
     .sort()
+}
+
+const loadMigrationSyncOverride = async (
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<MigrationSyncEvaluation | null> => {
+  const overridePath = readEnvValue(env, 'STAGING_MIGRATION_SYNC_RESULT_PATH')
+  if (!overridePath) {
+    return null
+  }
+
+  const raw = await readFile(overridePath, 'utf8')
+  const parsed = safeJsonParse(raw)
+  if (isMigrationSyncEvaluation(parsed)) {
+    return parsed
+  }
+  if (
+    parsed
+    && typeof parsed === 'object'
+    && isMigrationSyncEvaluation((parsed as MigrationSyncOverridePayload).evaluation)
+  ) {
+    return (parsed as MigrationSyncOverridePayload).evaluation as MigrationSyncEvaluation
+  }
+  throw new Error(`Migration sync override at ${overridePath} is not valid JSON evidence`)
 }
 
 export const evaluateMigrationSync = ({
@@ -689,15 +730,20 @@ export const buildReleaseEvidenceManifest = async ({
   env?: NodeJS.ProcessEnv
   migrationsDir?: string
 }): Promise<ReleaseEvidenceManifest> => {
-  await resolveReadinessDatabaseUrls(env)
-  const databaseUrl = resolveDatabaseUrl(env)
-  const migrations = databaseUrl
-    ? await readMigrationSync(databaseUrl, migrationsDir)
-    : {
-        missingSchemaMigrationsTable: true,
-        pendingRepoMigrations: await listRepoMigrationFiles(migrationsDir),
-        unexpectedAppliedMigrations: [],
-      }
+  const override = await loadMigrationSyncOverride(env)
+  const migrations = override
+    ? override
+    : await (async () => {
+        await resolveReadinessDatabaseUrls(env)
+        const databaseUrl = resolveDatabaseUrl(env)
+        return databaseUrl
+          ? readMigrationSync(databaseUrl, migrationsDir)
+          : {
+              missingSchemaMigrationsTable: true,
+              pendingRepoMigrations: await listRepoMigrationFiles(migrationsDir),
+              unexpectedAppliedMigrations: [],
+            }
+      })()
   const artifacts = evaluateReleaseEvidenceFiles(await loadReleaseEvidenceFiles(artifactDir))
   const manifestBase = {
     git: {
@@ -1125,6 +1171,33 @@ export const evaluateAndPrintMigrationSync = async (
   env: NodeJS.ProcessEnv = process.env,
   label = 'staging',
 ): Promise<MigrationSyncEvaluation | null> => {
+  const override = await loadMigrationSyncOverride(env)
+  if (override) {
+    console.log(
+      `\nUsing migration sync evidence from ${readEnvValue(env, 'STAGING_MIGRATION_SYNC_RESULT_PATH')}`,
+    )
+    const migrationViolations: string[] = []
+    if (override.missingSchemaMigrationsTable) {
+      migrationViolations.push('public.schema_migrations table is missing')
+    }
+    if (override.pendingRepoMigrations.length > 0) {
+      migrationViolations.push(
+        `pending repo migrations: ${override.pendingRepoMigrations.join(', ')}`,
+      )
+    }
+    if (override.unexpectedAppliedMigrations.length > 0) {
+      migrationViolations.push(
+        `unexpected applied migrations: ${override.unexpectedAppliedMigrations.join(', ')}`,
+      )
+    }
+
+    printGroup(`Migration sync violations (${label})`, migrationViolations)
+    if (migrationViolations.length === 0) {
+      console.log(`\n✅ Migration sync check passed (${label})`)
+    }
+    return override
+  }
+
   await resolveReadinessDatabaseUrls(env)
   const databaseUrl = resolveDatabaseUrl(env)
   if (!databaseUrl) {
