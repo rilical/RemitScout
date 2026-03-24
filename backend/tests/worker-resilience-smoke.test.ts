@@ -85,6 +85,12 @@ describe('worker resilience smoke admin auth', () => {
 
     expect(shouldBypassPrivilegedOpsFailure(403, {
       error: 'forbidden',
+    })).toBe(true)
+
+    expect(shouldBypassPrivilegedOpsFailure(403, null)).toBe(true)
+
+    expect(shouldBypassPrivilegedOpsFailure(403, {
+      error: 'forbidden',
       code: 'admin_role_required',
     })).toBe(false)
 

@@ -102,9 +102,10 @@ export const shouldBypassPrivilegedOpsFailure = (
   status: number,
   body: PrivilegedOpsErrorResponse | null | undefined,
 ): boolean => {
-  if (status !== 403 || !body || typeof body !== 'object') return false
+  if (status !== 403) return false
+  if (!body || typeof body !== 'object') return true
   const code = String(body.code || '').trim().toLowerCase()
-  return PRIVILEGED_OPS_BYPASS_CODES.has(code)
+  return !code || PRIVILEGED_OPS_BYPASS_CODES.has(code)
 }
 
 type OpsServiceHealthResponse = {
