@@ -809,33 +809,36 @@ jobs:
               --desired-count "${desired_count}" >/dev/null
           done
 
-          restored_services_json="$(jq -c --argjson services "${services_json}" --argjson baseline "${baseline_json}" '
+          restored_services_path=".smoke-artifacts/staging-restored-services.json"
+          jq -c --argjson services "${services_json}" --argjson baseline "${baseline_json}" '
             [
               $services[]? |
               {
                 serviceName: .,
-                desiredCount: ($baseline[.] // 0),
+                desiredCount: ($baseline[.] // 0)
               }
             ]
-          ')"
-          enabled_rules_json='[]'
+          ' > "${restored_services_path}"
+
+          enabled_rules_path=".smoke-artifacts/staging-enabled-rules.json"
+          printf '[]' > "${enabled_rules_path}"
           if [ "${#rules_to_enable[@]}" -gt 0 ]; then
-            enabled_rules_json="$(printf '%s\n' "${rules_to_enable[@]}" | jq -R . | jq -cs '.')"
+            printf '%s\n' "${rules_to_enable[@]}" | jq -R . | jq -cs '.' > "${enabled_rules_path}"
           fi
           out=".smoke-artifacts/staging-ops-resume.json"
           jq -n \
             --arg cluster "${cluster}" \
             --arg pauseParam "${pause_param}" \
             --arg ruleRestoreMode "${rule_restore_mode}" \
-            --argjson restoredServices "${restored_services_json}" \
-            --argjson enabledRules "${enabled_rules_json}" \
+            --slurpfile restoredServices "${restored_services_path}" \
+            --slurpfile enabledRules "${enabled_rules_path}" \
             '{
               paused: false,
               cluster: $cluster,
               pauseParam: $pauseParam,
               ruleRestoreMode: $ruleRestoreMode,
-              restoredServices: $restoredServices,
-              enabledRules: $enabledRules,
+              restoredServices: ($restoredServices[0] // []),
+              enabledRules: ($enabledRules[0] // []),
               resumeController: "workflow-direct-ssm-eventbridge-ecs"
             }' > "${out}"
 
