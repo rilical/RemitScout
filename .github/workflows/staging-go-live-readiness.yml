@@ -209,7 +209,7 @@ jobs:
           read_version_cmd="$(cat <<'EOF'
           node - <<'NODE'
           const { resolveDatabaseUrl } = require('./backend/dist/shared/aws-params.js')
-          const { Client } = require('pg')
+          const { createPool } = require('./backend/dist/shared/db.js')
 
           const resolveUrls = async () => {
             await resolveDatabaseUrl({
@@ -245,20 +245,19 @@ jobs:
           ;(async () => {
             await resolveUrls()
             const url = process.env.DATABASE_URL_PLANE_B_MIGRATOR || process.env.DATABASE_URL_PLANE_B
-            const client = new Client({ connectionString: url })
-            await client.connect()
-            await client.query(`
+            const pool = createPool(url)
+            await pool.query(`
               CREATE TABLE IF NOT EXISTS public.schema_migrations (
                 id TEXT PRIMARY KEY,
                 applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
               )
             `)
-            const result = await client.query(`
+            const result = await pool.query(`
               SELECT COALESCE(MAX(id), '000_noop.sql') AS id
               FROM public.schema_migrations
             `)
             process.stdout.write(String(result.rows[0]?.id || '000_noop.sql'))
-            await client.end()
+            await pool.end()
           })().catch((error) => {
             console.error(error instanceof Error ? error.stack || error.message : String(error))
             process.exit(1)
@@ -369,7 +368,7 @@ jobs:
           apply_cmd="$(cat <<'EOF'
           node - <<'NODE'
           const { resolveDatabaseUrl } = require('./backend/dist/shared/aws-params.js')
-          const { Client } = require('pg')
+          const { createPool } = require('./backend/dist/shared/db.js')
 
           const resolveUrls = async () => {
             await resolveDatabaseUrl({
@@ -406,35 +405,34 @@ jobs:
             const payload = JSON.parse(Buffer.from(process.env.READINESS_PENDING_MIGRATIONS_B64, 'base64').toString('utf8'))
             await resolveUrls()
             const url = process.env.DATABASE_URL_PLANE_B_MIGRATOR || process.env.DATABASE_URL_PLANE_B
-            const client = new Client({ connectionString: url })
-            await client.connect()
-            await client.query(`
+            const pool = createPool(url)
+            await pool.query(`
               CREATE TABLE IF NOT EXISTS public.schema_migrations (
                 id TEXT PRIMARY KEY,
                 applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
               )
             `)
-            const applied = new Set((await client.query('SELECT id FROM public.schema_migrations')).rows.map((row) => row.id))
+            const applied = new Set((await pool.query('SELECT id FROM public.schema_migrations')).rows.map((row) => row.id))
             for (const migration of payload) {
               if (applied.has(migration.file)) {
                 console.log(`skip ${migration.file}`)
                 continue
               }
-              await client.query('BEGIN')
+              await pool.query('BEGIN')
               try {
-                await client.query(migration.forwardSql)
-                await client.query(
+                await pool.query(migration.forwardSql)
+                await pool.query(
                   'INSERT INTO public.schema_migrations (id) VALUES ($1) ON CONFLICT (id) DO NOTHING',
                   [migration.file],
                 )
-                await client.query('COMMIT')
+                await pool.query('COMMIT')
                 console.log(`applied ${migration.file}`)
               } catch (error) {
-                await client.query('ROLLBACK')
+                await pool.query('ROLLBACK')
                 throw error
               }
             }
-            await client.end()
+            await pool.end()
           })().catch((error) => {
             console.error(error instanceof Error ? error.stack || error.message : String(error))
             process.exit(1)
