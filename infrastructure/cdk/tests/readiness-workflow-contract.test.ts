@@ -33,6 +33,13 @@ test('staging readiness records advisory Sentry scope evidence instead of failin
   )
 })
 
+test('staging readiness observability gate exports the staging New Relic cloud-link role', () => {
+  assert.match(
+    readinessWorkflow,
+    /Observability prereq gate \(staging hard gate\)[\s\S]*NEW_RELIC_STAGING_AWS_ROLE_ARN:\s+\$\{\{\s*vars\.NEW_RELIC_STAGING_AWS_ROLE_ARN\s*\}\}/,
+  )
+})
+
 test('staging readiness evidence artifacts keep 90-day retention', () => {
   const matches = readinessWorkflow.match(/retention-days: 90/g) ?? []
   assert.equal(matches.length >= 2, true)

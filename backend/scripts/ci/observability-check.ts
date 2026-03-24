@@ -140,8 +140,8 @@ if (isStrictEnv) {
   )
 
   if (runtimeEnv === 'staging') {
-    if (logsEnabled) {
-      missing.push('NEW_RELIC_LOGS_ENABLED (must be 0 in staging)')
+    if (!logsEnabled) {
+      missing.push('NEW_RELIC_LOGS_ENABLED (must be enabled in staging)')
     }
     if (awsLogForwardingEnabled) {
       missing.push('NEW_RELIC_AWS_LOG_FORWARDING_ENABLED (must be 0 in staging)')

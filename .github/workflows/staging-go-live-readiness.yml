@@ -470,6 +470,9 @@ jobs:
           NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_NAMESPACES || '' }}
           NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '0' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
+          NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
+          NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
+          NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: pnpm -C backend ci:observability
 
       - name: New Relic sync + verify (staging hard gate)
