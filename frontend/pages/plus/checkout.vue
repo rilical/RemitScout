@@ -318,6 +318,10 @@ const signInRedirectTarget = { path: '/sign-in', query: { redirect: '/plus/check
 
 const billingInterval = useState<'month' | 'year'>('billingInterval', () => 'month')
 
+onMounted(() => {
+  interactionReady.value = true
+})
+
 type BillingPricingResponse = {
   success: true
   configured: boolean
@@ -361,10 +365,6 @@ const billedAnnuallyMonthlyDisplay = computed(() => {
 })
 const billingIntervalLabel = computed(() => (billingInterval.value === 'year' ? 'Annual' : 'Monthly'))
 const totalDueToday = computed(() => priceDisplay.value)
-
-onMounted(() => {
-  interactionReady.value = true
-})
 
 async function handleCheckout() {
   if (processing.value) return
