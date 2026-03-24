@@ -482,11 +482,13 @@ jobs:
         shell: bash
         env:
           READINESS_PENDING_MIGRATION_COUNT: ${{ env.READINESS_PENDING_MIGRATION_COUNT }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         run: |
           set -euo pipefail
           mkdir -p .smoke-artifacts
           node <<'NODE'
           const fs = require('fs')
+          const path = require('path')
 
           const pendingCount = Number(process.env.READINESS_PENDING_MIGRATION_COUNT || '0')
           const pending = JSON.parse(
@@ -502,13 +504,18 @@ jobs:
             status: evaluation.pendingRepoMigrations.length === 0 ? 'pass' : 'fail',
             evaluation,
           }
+          const outputPath = path.join(
+            process.env.GITHUB_WORKSPACE,
+            '.smoke-artifacts',
+            'staging-migration-sync-evidence.json',
+          )
           fs.writeFileSync(
-            '.smoke-artifacts/staging-migration-sync-evidence.json',
+            outputPath,
             `${JSON.stringify(payload, null, 2)}\n`,
             'utf8',
           )
           NODE
-          echo "STAGING_MIGRATION_SYNC_RESULT_PATH=.smoke-artifacts/staging-migration-sync-evidence.json" >> "${GITHUB_ENV}"
+          echo "STAGING_MIGRATION_SYNC_RESULT_PATH=${GITHUB_WORKSPACE}/.smoke-artifacts/staging-migration-sync-evidence.json" >> "${GITHUB_ENV}"
 
       - name: Staging go-live readiness (integrations + policy)
         env:
@@ -1277,20 +1284,22 @@ jobs:
           READINESS_DEPLOY_SHA: ${{ inputs.deploy_sha }}
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
           STAGING_MIGRATION_SYNC_RESULT_PATH: ${{ env.STAGING_MIGRATION_SYNC_RESULT_PATH }}
+          RELEASE_ARTIFACT_DIR: ${{ github.workspace }}/.smoke-artifacts
+          RELEASE_EVIDENCE_PATH: ${{ github.workspace }}/.smoke-artifacts/staging-go-live-release-evidence.json
         run: |
           set -euo pipefail
           mkdir -p .smoke-artifacts
           pnpm -C backend exec tsx scripts/ci/staging-go-live-readiness.ts \
             --write-release-evidence \
-            --artifact-dir .smoke-artifacts \
-            --output .smoke-artifacts/staging-go-live-release-evidence.json
+            --artifact-dir "${RELEASE_ARTIFACT_DIR}" \
+            --output "${RELEASE_EVIDENCE_PATH}"
           jq -e '
             .schemaVersion == "staging-go-live-release-evidence@v1" and
             .status == "pass" and
             (.violations | length) == 0 and
             (.artifacts.missingFiles | length) == 0 and
             (.artifacts.misleadingFiles | length) == 0
-          ' .smoke-artifacts/staging-go-live-release-evidence.json >/dev/null
+          ' "${RELEASE_EVIDENCE_PATH}" >/dev/null
 
       - name: Upload staging admin smoke evidence
         if: always()
