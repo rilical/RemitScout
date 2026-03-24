@@ -140,7 +140,7 @@ jobs:
           echo "PUBLIC_API_BASE=${api_root}/api/v1" >> "${GITHUB_ENV}"
           echo "Resolved staging PUBLIC_API_BASE=${api_root}/api/v1"
 
-      - name: Resolve staging Plane B migrator secret
+      - name: Resolve staging Plane B database locator
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
@@ -157,20 +157,50 @@ jobs:
             exit 0
           fi
 
-          migrator_secret_arn="$(
+          container_json="$(
             aws ecs describe-task-definition \
               --task-definition "${task_def}" \
-              --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].environment[?name==`PLANE_B_DB_MIGRATOR_SECRET_ARN`].value | [0][0]' \
-              --output text 2>/dev/null || true
+              --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`] | [0]' \
+              --output json 2>/dev/null || true
           )"
 
-          if [ -z "${migrator_secret_arn:-}" ] || [ "${migrator_secret_arn}" = "None" ] || [ "${migrator_secret_arn}" = "null" ]; then
-            echo "::warning::DbMigrateContainer does not expose PLANE_B_DB_MIGRATOR_SECRET_ARN; readiness will fall back to the GitHub environment DB URL."
+          if [ -z "${container_json:-}" ] || [ "${container_json}" = "null" ]; then
+            echo "::warning::Unable to resolve DbMigrateContainer definition; readiness will fall back to the GitHub environment DB URL."
             exit 0
           fi
 
-          echo "PLANE_B_DB_MIGRATOR_SECRET_ARN=${migrator_secret_arn}" >> "${GITHUB_ENV}"
-          echo "Resolved PLANE_B_DB_MIGRATOR_SECRET_ARN for staging readiness"
+          resolve_locator() {
+            local key="$1"
+            printf '%s' "${container_json}" | jq -r --arg key "${key}" '
+              (
+                (.environment // [])
+                + ((.secrets // []) | map({name, value: .valueFrom}))
+              )
+              | map(select(.name == $key))
+              | .[0].value // empty
+            '
+          }
+
+          export_locator() {
+            local key="$1"
+            local value="$2"
+            if [ -z "${value:-}" ] || [ "${value}" = "None" ] || [ "${value}" = "null" ]; then
+              return 1
+            fi
+            echo "${key}=${value}" >> "${GITHUB_ENV}"
+            echo "Resolved ${key} for staging readiness"
+            return 0
+          }
+
+          found_locator=0
+          export_locator "PLANE_B_DB_MIGRATOR_SECRET_ARN" "$(resolve_locator PLANE_B_DB_MIGRATOR_SECRET_ARN)" && found_locator=1 || true
+          export_locator "PLANE_B_DB_MIGRATOR_SSM_NAME" "$(resolve_locator PLANE_B_DB_MIGRATOR_SSM_NAME)" && found_locator=1 || true
+          export_locator "PLANE_B_DB_SECRET_ARN" "$(resolve_locator PLANE_B_DB_SECRET_ARN)" && found_locator=1 || true
+          export_locator "PLANE_B_DB_SSM_NAME" "$(resolve_locator PLANE_B_DB_SSM_NAME)" && found_locator=1 || true
+
+          if [ "${found_locator}" != "1" ]; then
+            echo "::warning::DbMigrateContainer does not expose a Plane B DB secret or SSM locator; readiness will fall back to the GitHub environment DB URL."
+          fi
 
       - name: Staging go-live readiness (integrations + policy)
         env:

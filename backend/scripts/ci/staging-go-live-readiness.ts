@@ -383,7 +383,8 @@ export const readMigrationSync = async (
     if (/tenant or user not found/i.test(message)) {
       throw new Error(
         'Migration sync could not connect with the current Plane B database credentials. ' +
-        'Provide DATABASE_URL_PLANE_B_MIGRATOR or PLANE_B_DB_MIGRATOR_SECRET_ARN for hosted readiness.',
+        'Provide DATABASE_URL_PLANE_B_MIGRATOR, PLANE_B_DB_MIGRATOR_SECRET_ARN, ' +
+        'PLANE_B_DB_MIGRATOR_SSM_NAME, PLANE_B_DB_SECRET_ARN, or PLANE_B_DB_SSM_NAME for hosted readiness.',
       )
     }
     throw error
