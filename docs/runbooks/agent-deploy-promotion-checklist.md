@@ -71,6 +71,9 @@ Execution:
 - [ ] Wait for workflow completion and capture run URL.
 - [ ] Confirm deploy completed (infra/backend/frontend steps succeeded).
   - frontend evidence here means the build/generate + S3/CloudFront publish path completed; it does not mean `frontend/server/**` was deployed into staging/prod.
+- [ ] Treat a green staging deploy as deploy/public-smoke evidence only when privileged admin proof is skipped because the GitHub-hosted runner IP is outside `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`.
+  - That advisory is acceptable for staging-minimal deploy mechanics.
+  - It is non-evidence for staging-full readiness or production promotion.
 - [ ] Confirm public route checks passed (no 401 on:
   - `/api/v1/quotes/refresh-status`
   - `/api/v1/sessions/track`
@@ -115,7 +118,9 @@ Execution:
   - treat the privileged smoke as passing only when the verified admin session is established and those admin page/API surfaces are exercised successfully; a plain Supabase login or any run that skips those surface checks is non-evidence for staging/prod promotion
   - treat Redis/revocation-store availability as part of admin auth readiness in prod-like envs; with fail-closed revocation active, store failure blocks privileged admin bootstrap/refresh
   - admin gating works for allowlisted admin users and allowlisted runner IPs
-  - the GitHub-hosted runner must already be present in `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`; readiness/deploy smoke proves real reachability and does not self-whitelist or bypass the network control
+  - any workflow run used as privileged admin evidence must already be present in `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`
+  - the staging deploy workflow may continue with an advisory when the runner IP is not allowlisted, but that advisory is non-evidence for staging-full readiness or production promotion
+  - the staging readiness workflow remains the strict gate for privileged admin proof; it does not self-whitelist or bypass the network control
 - [ ] Verify queue workers and refresh paths are operational:
   - corridor/provider data returns non-empty for known supported lanes
   - no sustained queue backlog or DLQ growth

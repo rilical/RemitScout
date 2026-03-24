@@ -58,3 +58,22 @@ test('launch-user seeding prefers the public Supabase URL fallback in deploy wor
 test('deploy workflow avoids head-induced pipefail when resolving GitHub Actions run ids', () => {
   assert.doesNotMatch(deployWorkflow, /gh run list[\s\S]*\|\s*head -n1/)
 })
+
+test('staging deploy treats non-allowlisted admin runner IPs as deploy advisories while keeping readiness strict', () => {
+  assert.match(
+    deployWorkflow,
+    /Verify runner IP is allowlisted for staging admin smoke[\s\S]*id: admin_runner_check[\s\S]*echo "allowlisted=false" >> "\$GITHUB_OUTPUT"[\s\S]*Staging deploy can continue, but privileged admin proof is skipped and go-live readiness remains pending\./,
+  )
+  assert.match(
+    deployWorkflow,
+    /Admin surface smoke \(staging\)[\s\S]*if: steps\.admin_runner_check\.outputs\.allowlisted == 'true'/,
+  )
+  assert.match(
+    deployWorkflow,
+    /Admin UI smoke[\s\S]*if: steps\.admin_runner_check\.outputs\.allowlisted == 'true'/,
+  )
+  assert.match(
+    deployWorkflow,
+    /Staging Go-live Readiness Gate[\s\S]*if: steps\.admin_runner_check\.outputs\.allowlisted == 'true'/,
+  )
+})

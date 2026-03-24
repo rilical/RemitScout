@@ -116,13 +116,16 @@ Source template:
 ## 9) Readiness and deployment gates
 - [ ] Run workflow: `.github/workflows/staging-go-live-readiness.yml` (PASS).
 - [ ] Run workflow: `.github/workflows/deploy.yml` with `env=staging` (PASS).
+- [ ] Treat deploy workflow success plus an admin-runner-IP advisory as deploy/public-smoke evidence only.
+  - That advisory means privileged admin proof was skipped because the GitHub-hosted runner was outside `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`.
+  - Do not count that as staging-full readiness or production-promotion evidence.
 - [ ] Runtime config validation passes (`ci:config-validate` in staging profile).
 - [ ] Public integration smoke passes (`pnpm -C backend ci:integration-smoke`) against `PUBLIC_API_BASE`.
 - [ ] Authenticated watchlist/alerts smoke passes (`pnpm -C backend ci:alerts-watchlists-smoke` in deploy pipeline).
 - [ ] Authenticated smoke for `omar@remit-scout.com` confirms `/api/v1/me` returns `app_role=super_admin` and enterprise entitlements.
 - [ ] Enterprise + triangulation smoke passes (`pnpm -C backend ci:enterprise-triangulation-smoke`) and leaves artifact logs in workflow evidence.
 - [ ] Admin surface smoke passes (`pnpm -C backend ci:admin-surface-smoke`) and leaves artifact logs in workflow evidence.
-- [ ] Current GitHub runner IP is inside `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`; admin smoke must not bypass network controls.
+- [ ] Any workflow run used as privileged admin evidence has a GitHub runner IP inside `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`; admin smoke must not bypass network controls.
 - [ ] Agent pipeline E2E health passes (`backend/scripts/e2e-agent-health-check.ts`) with recent detection cycles and dispatch activity.
 - [ ] For enterprise-mode staging (`PLANE_A_REQUIRE_API_KEY=1`), SOC 2 report state is allowed (`in_progress`/`audited`) and not expired/revoked in readiness checks.
 
