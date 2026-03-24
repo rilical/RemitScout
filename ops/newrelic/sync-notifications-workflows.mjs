@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+import { mkdirSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 /**
  * Upserts Remit-Scout notification destination/channels and incident workflows.
  *
@@ -15,21 +19,14 @@ const NEW_RELIC_USER_API_KEY = process.env.NEW_RELIC_USER_API_KEY || ''
 const NEW_RELIC_ACCOUNT_ID = Number.parseInt(process.env.NEW_RELIC_ACCOUNT_ID || '', 10)
 const NEW_RELIC_REGION = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
 const NEW_RELIC_ALERT_EMAIL = (process.env.NEW_RELIC_ALERT_EMAIL || '').trim()
-
-if (!NEW_RELIC_USER_API_KEY) {
-  console.error('Missing NEW_RELIC_USER_API_KEY')
-  process.exit(1)
-}
-
-if (!Number.isFinite(NEW_RELIC_ACCOUNT_ID)) {
-  console.error('Missing/invalid NEW_RELIC_ACCOUNT_ID')
-  process.exit(1)
-}
-
-if (!NEW_RELIC_ALERT_EMAIL) {
-  console.error('Missing NEW_RELIC_ALERT_EMAIL')
-  process.exit(1)
-}
+const NEW_RELIC_EVIDENCE_OUTPUT = (process.env.NEW_RELIC_EVIDENCE_OUTPUT || '').trim()
+const REQUIRE_MIRROR_POLICIES = ['1', 'true', 'yes', 'on'].includes(
+  (process.env.NEW_RELIC_REQUIRE_MIRROR_POLICIES || '').trim().toLowerCase(),
+)
+const STAGING_WORKFLOW_NAME = 'Remit-Scout STAGING Incident Workflow'
+const PROD_WORKFLOW_NAME = 'Remit-Scout PROD Incident Workflow'
+const STAGING_POLICY_NAME = 'Remit-Scout STAGING CloudWatch Mirror'
+const PROD_POLICY_NAME = 'Remit-Scout PROD CloudWatch Mirror'
 
 const ENDPOINT =
   NEW_RELIC_REGION === 'EU'
@@ -496,7 +493,77 @@ const ensureWorkflow = async ({
   console.log(`UPDATED workflow: ${updated.workflow.name} (${updated.workflow.id})`)
 }
 
+const workflowMatchesPolicy = (workflow, policyNeedle) => {
+  const predicates = workflow?.issuesFilter?.predicates
+  if (!Array.isArray(predicates)) {
+    return false
+  }
+  return predicates.some(predicate =>
+    predicate?.attribute === 'accumulations.policyName'
+    && predicate?.operator === 'CONTAINS'
+    && Array.isArray(predicate?.values)
+    && predicate.values.includes(policyNeedle),
+  )
+}
+
+export const buildNotificationEvidence = (
+  state,
+  {
+    requireMirrorPolicies = REQUIRE_MIRROR_POLICIES,
+    generatedAt = new Date().toISOString(),
+  } = {},
+) => {
+  const stagingWorkflow = state.workflows.find(workflow => workflow.name === STAGING_WORKFLOW_NAME)
+  const prodWorkflow = state.workflows.find(workflow => workflow.name === PROD_WORKFLOW_NAME)
+
+  const stagingMatchedPolicyNames = workflowMatchesPolicy(stagingWorkflow, 'STAGING')
+    ? [STAGING_POLICY_NAME]
+    : []
+  const prodMatchedPolicyNames = workflowMatchesPolicy(prodWorkflow, 'PROD')
+    ? [PROD_POLICY_NAME]
+    : []
+  const passed = stagingMatchedPolicyNames.length === 1 && prodMatchedPolicyNames.length === 1
+
+  return {
+    schemaVersion: 'newrelic-notifications-evidence@v1',
+    generatedAt,
+    verification: {
+      passed,
+      mirrorPoliciesRequired: requireMirrorPolicies,
+    },
+    workflows: {
+      staging: {
+        workflowName: STAGING_WORKFLOW_NAME,
+        matchedPolicyNames: stagingMatchedPolicyNames,
+      },
+      prod: {
+        workflowName: PROD_WORKFLOW_NAME,
+        matchedPolicyNames: prodMatchedPolicyNames,
+      },
+    },
+  }
+}
+
+const writeEvidence = (payload) => {
+  if (!NEW_RELIC_EVIDENCE_OUTPUT) {
+    return
+  }
+  mkdirSync(path.dirname(NEW_RELIC_EVIDENCE_OUTPUT), { recursive: true })
+  writeFileSync(NEW_RELIC_EVIDENCE_OUTPUT, `${JSON.stringify(payload, null, 2)}\n`, 'utf8')
+  console.log(`WROTE evidence: ${NEW_RELIC_EVIDENCE_OUTPUT}`)
+}
+
 const main = async () => {
+  if (!NEW_RELIC_USER_API_KEY) {
+    throw new Error('Missing NEW_RELIC_USER_API_KEY')
+  }
+  if (!Number.isFinite(NEW_RELIC_ACCOUNT_ID)) {
+    throw new Error('Missing/invalid NEW_RELIC_ACCOUNT_ID')
+  }
+  if (!NEW_RELIC_ALERT_EMAIL) {
+    throw new Error('Missing NEW_RELIC_ALERT_EMAIL')
+  }
+
   let state = await listState()
 
   const destination = await ensureDestination(state)
@@ -520,7 +587,7 @@ const main = async () => {
   state = await listState()
   await ensureWorkflow({
     state,
-    workflowName: 'Remit-Scout STAGING Incident Workflow',
+    workflowName: STAGING_WORKFLOW_NAME,
     filterName: 'Remit-Scout STAGING Filter',
     policyNameContains: 'STAGING',
     channelId: stagingChannel.id,
@@ -530,15 +597,26 @@ const main = async () => {
   state = await listState()
   await ensureWorkflow({
     state,
-    workflowName: 'Remit-Scout PROD Incident Workflow',
+    workflowName: PROD_WORKFLOW_NAME,
     filterName: 'Remit-Scout PROD Filter',
     policyNameContains: 'PROD',
     channelId: prodChannel.id,
     notificationTriggers: ['ACTIVATED', 'CLOSED', 'PRIORITY_CHANGED'],
   })
+
+  state = await listState()
+  const evidence = buildNotificationEvidence(state)
+  writeEvidence(evidence)
+  if (REQUIRE_MIRROR_POLICIES && !evidence.verification.passed) {
+    throw new Error('New Relic notification workflow evidence did not match the required mirror policies')
+  }
 }
 
-main().catch((error) => {
-  console.error(error.message || String(error))
-  process.exit(1)
-})
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+
+if (isMain) {
+  main().catch((error) => {
+    console.error(error.message || String(error))
+    process.exit(1)
+  })
+}
