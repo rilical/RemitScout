@@ -734,32 +734,126 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p .smoke-artifacts
-          fn_prefix="${OPS_PAUSE_FN_PREFIX_OVERRIDE:-remit-scout-staging-OpsPauseControllerFunction}"
-          fn="$(aws lambda list-functions \
+          cluster="remit-scout-staging"
+          pause_param="/remit-scout/staging/ops/paused"
+          ecs_services_param="/remit-scout/staging/ops/pause/ecs-services"
+          ecs_baseline_param="/remit-scout/staging/ops/pause/ecs-baseline"
+          rule_prefix="remit-scout-staging-"
+          staging_profile="infrastructure/cdk/profiles/staging.json"
+
+          services_json="$(aws ssm get-parameter \
             --region "${AWS_REGION}" \
-            --output json | jq -r --arg prefix "${fn_prefix}" '.Functions[]? | .FunctionName // empty | select(startswith($prefix))' | head -n1)"
-          if [ -z "${fn}" ] || [ "${fn}" = "None" ]; then
-            fn="$(aws lambda list-functions \
-              --region "${AWS_REGION}" \
-              --output json | jq -r '.Functions[]? | .FunctionName // empty | select(contains("remit-scout-staging") and contains("OpsPauseControllerFuncti"))' | head -n1)"
+            --name "${ecs_services_param}" \
+            --query 'Parameter.Value' \
+            --output text)"
+          baseline_json="$(aws ssm get-parameter \
+            --region "${AWS_REGION}" \
+            --name "${ecs_baseline_param}" \
+            --query 'Parameter.Value' \
+            --output text)"
+
+          if [ -z "${services_json:-}" ] || [ "${services_json}" = "None" ]; then
+            echo "::error::Missing staging ops ECS services parameter: ${ecs_services_param}"
+            exit 1
           fi
-          if [ -z "${fn}" ] || [ "${fn}" = "None" ]; then
-            echo "::error::OpsPause controller Lambda not found for staging."
+          if [ -z "${baseline_json:-}" ] || [ "${baseline_json}" = "None" ]; then
+            echo "::error::Missing staging ops ECS baseline parameter: ${ecs_baseline_param}"
             exit 1
           fi
 
-          out=".smoke-artifacts/staging-ops-resume.json"
-          aws lambda invoke \
-            --cli-connect-timeout 10 \
-            --cli-read-timeout 300 \
+          aws ssm put-parameter \
             --region "${AWS_REGION}" \
-            --cli-binary-format raw-in-base64-out \
-            --function-name "${fn}" \
-            --payload '{"paused": false}' \
-            "${out}" >/dev/null
+            --name "${pause_param}" \
+            --type String \
+            --value "false" \
+            --overwrite >/dev/null
+
+          rules_to_enable=()
+          if [ -f "${staging_profile}" ]; then
+            mapfile -t rules_to_enable < <(
+              jq -r --arg prefix "${rule_prefix}" '
+                (.opsResumeRuleAllowlist // [])[]? |
+                strings |
+                select(length > 0) |
+                if startswith($prefix) then . else ($prefix + .) end
+              ' "${staging_profile}"
+            )
+          fi
+
+          if [ "${#rules_to_enable[@]}" -eq 0 ]; then
+            mapfile -t rules_to_enable < <(
+              aws events list-rules \
+                --region "${AWS_REGION}" \
+                --name-prefix "${rule_prefix}" \
+                --output json | jq -r '.Rules[]? | .Name // empty'
+            )
+          else
+            mapfile -t all_rules < <(
+              aws events list-rules \
+                --region "${AWS_REGION}" \
+                --name-prefix "${rule_prefix}" \
+                --output json | jq -r '.Rules[]? | .Name // empty'
+            )
+            if [ "${#all_rules[@]}" -gt 0 ]; then
+              for rule_name in "${all_rules[@]}"; do
+                [ -n "${rule_name}" ] || continue
+                aws events disable-rule --region "${AWS_REGION}" --name "${rule_name}" >/dev/null
+              done
+            fi
+          fi
+
+          if [ "${#rules_to_enable[@]}" -gt 0 ]; then
+            for rule_name in "${rules_to_enable[@]}"; do
+              [ -n "${rule_name}" ] || continue
+              aws events enable-rule --region "${AWS_REGION}" --name "${rule_name}" >/dev/null
+            done
+          fi
+
+          mapfile -t service_names < <(jq -r '.[]? | strings | select(length > 0)' <<<"${services_json}")
+          if [ "${#service_names[@]}" -eq 0 ]; then
+            echo "::error::No staging ECS services were resolved from ${ecs_services_param}"
+            exit 1
+          fi
+
+          for service_name in "${service_names[@]}"; do
+            desired_count="$(jq -r --arg service_name "${service_name}" '.[$service_name] // 0' <<<"${baseline_json}")"
+            if ! [[ "${desired_count}" =~ ^[0-9]+$ ]]; then
+              desired_count="0"
+            fi
+            aws ecs update-service \
+              --region "${AWS_REGION}" \
+              --cluster "${cluster}" \
+              --service "${service_name}" \
+              --desired-count "${desired_count}" >/dev/null
+          done
+
+          restored_services_json="$(jq -c --argjson services "${services_json}" --argjson baseline "${baseline_json}" '
+            [
+              $services[]? |
+              {
+                serviceName: .,
+                desiredCount: ($baseline[.] // 0),
+              }
+            ]
+          ')"
+          enabled_rules_json="$(printf '%s\n' "${rules_to_enable[@]}" | jq -R . | jq -cs '.')"
+          out=".smoke-artifacts/staging-ops-resume.json"
+          jq -n \
+            --arg cluster "${cluster}" \
+            --arg pauseParam "${pause_param}" \
+            --argjson restoredServices "${restored_services_json}" \
+            --argjson enabledRules "${enabled_rules_json}" \
+            '{
+              paused: false,
+              cluster: $cluster,
+              pauseParam: $pauseParam,
+              restoredServices: $restoredServices,
+              enabledRules: $enabledRules,
+              resumeController: "workflow-direct-ssm-eventbridge-ecs"
+            }' > "${out}"
 
           cat "${out}"
-          jq -e '.paused == false' "${out}" >/dev/null
+          jq -e '.paused == false and (.restoredServices | length) > 0' "${out}" >/dev/null
 
       - name: Wait for staging critical services after ops resume
         shell: bash

@@ -61,6 +61,17 @@ test('staging readiness resumes operational services before export-dependent par
   )
 })
 
+test('staging readiness resumes staging ops directly instead of depending on the deployed controller Lambda', () => {
+  assert.match(
+    readinessWorkflow,
+    /Resume staging operational services for parity evidence[\s\S]*aws ssm put-parameter[\s\S]*aws ecs update-service/,
+  )
+  assert.doesNotMatch(
+    readinessWorkflow,
+    /Resume staging operational services for parity evidence[\s\S]*aws lambda invoke/,
+  )
+})
+
 test('staging readiness applies candidate migrations inside staging ECS runtime', () => {
   assert.match(
     readinessWorkflow,

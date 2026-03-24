@@ -97,6 +97,7 @@ Execution:
   - `gh workflow run staging-go-live-readiness.yml --ref "<ref-containing-sha>" -f deploy_sha="<sha>" -f run_runtime_config_validation=true`
   - The readiness workflow is responsible for resolving the current staging migration tip, applying the exact-SHA pending SQL migrations inside the staging ECS/VPC DbMigrate runtime, exporting that migration-parity proof via `STAGING_MIGRATION_SYNC_RESULT_PATH`, and proving post-migration tip sync before smoke evidence is accepted.
   - The readiness workflow is also responsible for resuming staging operational services before quote-dependent public corridor smoke and before export-dependent enterprise and worker evidence is accepted.
+  - That readiness resume must act directly on staging SSM/EventBridge/ECS state instead of depending on the previously deployed `OpsPause` Lambda build; pre-deploy readiness cannot rely on stale controller code from the old staging release.
 - [ ] Confirm readiness run conclusion is `success`.
 - [ ] Confirm the readiness run title/logs show the exact `deploy_sha` under validation; do not accept branch-head readiness for a different resolved commit.
 - [ ] Confirm the readiness run published both required artifacts before accepting it as promotion evidence:
