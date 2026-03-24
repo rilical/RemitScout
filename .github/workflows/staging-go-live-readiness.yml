@@ -809,10 +809,13 @@ jobs:
               --desired-count "${desired_count}" >/dev/null
           done
 
+          resolved_services_path=".smoke-artifacts/staging-service-names.json"
+          printf '%s\n' "${service_names[@]}" | jq -R . | jq -cs 'map(select(length > 0))' > "${resolved_services_path}"
+
           restored_services_path=".smoke-artifacts/staging-restored-services.json"
-          jq -c --argjson services "${services_json}" --argjson baseline "${baseline_json}" '
+          jq -c --slurpfile services "${resolved_services_path}" --argjson baseline "${baseline_json}" '
             [
-              $services[]? |
+              ($services[0] // [])[]? |
               {
                 serviceName: .,
                 desiredCount: ($baseline[.] // 0)
