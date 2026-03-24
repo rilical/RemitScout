@@ -47,6 +47,13 @@ test('staging readiness runs New Relic span verification after traffic-generatin
   )
 })
 
+test('staging readiness resumes operational services before export-dependent parity smoke', () => {
+  assert.match(
+    readinessWorkflow,
+    /Resume staging operational services for parity evidence[\s\S]*Wait for staging critical services after ops resume[\s\S]*Enterprise \+ triangulation smoke \(staging\)/,
+  )
+})
+
 test('staging readiness evidence artifacts keep 90-day retention', () => {
   const matches = readinessWorkflow.match(/retention-days: 90/g) ?? []
   assert.equal(matches.length >= 2, true)
