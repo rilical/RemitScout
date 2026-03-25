@@ -215,6 +215,9 @@ jobs:
     timeout-minutes: 15
     needs: changes
     if: needs.changes.outputs.infra == 'true'
+    env:
+      CDK_DEFAULT_ACCOUNT: "000000000000"
+      CDK_DEFAULT_REGION: us-east-1
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
