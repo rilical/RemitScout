@@ -15,6 +15,6 @@ permissions:
 jobs:
   core:
     name: ci/main
-    uses: ./.github/workflows/ci-new.yml
+    uses: ./.github/workflows/ci.yml
     with:
       mode: main

@@ -11,6 +11,6 @@ permissions:
 jobs:
   core:
     name: ci/pr
-    uses: ./.github/workflows/ci-new.yml
+    uses: ./.github/workflows/ci.yml
     with:
       mode: pr
