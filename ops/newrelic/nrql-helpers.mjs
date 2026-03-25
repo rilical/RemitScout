@@ -88,9 +88,17 @@ export const getEnvTokens = (nameToken, envName) => {
 export const buildEnvironmentFilter = (envName) => {
   const normalized = normalizeEnvName(envName)
   if (normalized === 'prod') {
-    return `(environment = 'prod' OR environment = 'production')`
+    return `(
+      environment = 'prod'
+      OR environment = 'production'
+      OR \`deployment.environment\` = 'prod'
+      OR \`deployment.environment\` = 'production'
+    )`
   }
-  return `environment = '${escapeNrqlValue(normalized)}'`
+  return `(
+    environment = '${escapeNrqlValue(normalized)}'
+    OR \`deployment.environment\` = '${escapeNrqlValue(normalized)}'
+  )`
 }
 
 export const buildEnvScopeClause = ({ envName, nameToken, awsAccountId, allowMissingAwsAccount = true }) => {
