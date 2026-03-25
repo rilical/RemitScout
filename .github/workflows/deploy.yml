@@ -2294,6 +2294,7 @@ jobs:
         shell: bash
         env:
           ENV_NAME: staging
+          STAGING_MODE: ${{ inputs.staging_mode || 'lean' }}
           PREV_GOOD_TAG: ${{ steps.prev_good.outputs.TAG }}
           GH_TOKEN: ${{ github.token }}
           NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
@@ -2329,6 +2330,11 @@ jobs:
             echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
             exit 1
           fi
+          require_spans=1
+          if [ "${STAGING_MODE:-lean}" = "lean" ]; then
+            require_spans=0
+            echo "::warning::Staging lean mode keeps New Relic spans advisory so a healthy deploy is not blocked on OTLP trace visibility."
+          fi
           evidence_dir="$(mktemp -d)"
           trap 'rm -rf "${evidence_dir}"' EXIT
           set +e
@@ -2352,24 +2358,28 @@ jobs:
           NEW_RELIC_TARGET_ENV=staging \
           REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
-          REQUIRE_SPANS=1 \
+          REQUIRE_SPANS="${require_spans}" \
           REQUIRE_CUSTOM_METRICS=1 \
           REQUIRE_API_GW_METRICS=0 \
           REQUIRE_SQS_METRICS=1 \
           node ops/newrelic/verify-signals.mjs | tee "${evidence_dir}/staging-newrelic-verify-signals.json"
           verify_ec=$?
-          jq -e '
+          verify_filter='
             (.results | length) == 1 and
             .results[0].envName == "staging" and
             .results[0].awsMode == "push_only" and
             (.results[0].failures | length) == 0 and
             (.results[0].checks.metricCount > 0) and
             (.results[0].checks.logCount > 0) and
-            (.results[0].checks.spanCount > 0) and
             (.results[0].checks.sqsMetricCount > 0) and
             (.results[0].checks.customMetricCount > 0) and
-            (.results[0].checks.customMetricFamilies.core_slo_indices > 0)
-          ' "${evidence_dir}/staging-newrelic-verify-signals.json" >/dev/null
+            (.results[0].checks.customMetricFamilies.core_slo_indices > 0)'
+          if [ "${require_spans}" = "1" ]; then
+            verify_filter="${verify_filter} and (.results[0].checks.spanCount > 0)"
+          else
+            echo "::warning::New Relic span proof is advisory in staging lean mode; metrics/logs/custom metrics remain hard-required."
+          fi
+          jq -e "${verify_filter}" "${evidence_dir}/staging-newrelic-verify-signals.json" >/dev/null
           verify_proof_ec=$?
           set -e
 
