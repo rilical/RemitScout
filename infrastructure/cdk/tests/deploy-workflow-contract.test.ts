@@ -77,3 +77,14 @@ test('staging deploy treats non-allowlisted admin runner IPs as deploy advisorie
     /Staging Go-live Readiness Gate[\s\S]*if: steps\.admin_runner_check\.outputs\.allowlisted == 'true'/,
   )
 })
+
+test('staging deploy keeps span verification advisory in lean mode and hard in parity mode', () => {
+  assert.match(
+    deployWorkflow,
+    /New Relic observability gate \(staging\)[\s\S]*STAGING_MODE: \$\{\{\s*inputs\.staging_mode \|\| 'lean'\s*\}\}[\s\S]*require_spans=1[\s\S]*if \[ "\$\{STAGING_MODE:-lean\}" = "lean" \]; then[\s\S]*require_spans=0[\s\S]*REQUIRE_SPANS="\$\{require_spans\}"/,
+  )
+  assert.match(
+    deployWorkflow,
+    /if \[ "\$\{require_spans\}" = "1" \]; then[\s\S]*spanCount > 0[\s\S]*else[\s\S]*span proof is advisory in staging lean mode/,
+  )
+})
