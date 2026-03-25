@@ -565,7 +565,7 @@ export const createEcsTasks = (
     AGENT_LLM_MAX_TOKENS: agentLlmMaxTokens,
     AGENT_LLM_TEMPERATURE: agentLlmTemperature,
     AGENT_LLM_PROMPT_VERSION: agentLlmPromptVersion,
-    LOG_LEVEL: process.env.LOG_LEVEL || (isProd ? 'warn' : 'info'),
+    LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   }
   Object.assign(sharedEnv, collectOandaThrottleEnv(), collectPlaneBProviderThrottleEnv())
   const planeBDbPoolMax = options.planeBDbPoolMax ?? '2'
