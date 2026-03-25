@@ -5,6 +5,7 @@ const helpersModule = await import('../../ops/newrelic/nrql-helpers.mjs')
 const {
   buildAwsIntegrationScopeClause,
   buildEnvScopeClause,
+  buildEnvironmentFilter,
   buildMetricNameFilter,
   buildMetricNamesFilter,
   buildAwsMetricLikeFilter,
@@ -26,9 +27,16 @@ describe('newrelic nrql helpers', () => {
     })
 
     expect(clause).toContain("environment = 'staging'")
+    expect(clause).toContain("`deployment.environment` = 'staging'")
     expect(clause).toContain("LIKE '%remit-scout-staging%'")
     expect(clause).toContain("LIKE '%remitscoutstaging%'")
     expect(clause).toContain("aws.accountId = '010630709504'")
+  })
+
+  it('builds environment filters that match OpenTelemetry deployment attributes', () => {
+    expect(buildEnvironmentFilter('staging')).toContain("`deployment.environment` = 'staging'")
+    expect(buildEnvironmentFilter('prod')).toContain("`deployment.environment` = 'prod'")
+    expect(buildEnvironmentFilter('prod')).toContain("`deployment.environment` = 'production'")
   })
 
   it('builds aws integration scope pinned to account id', () => {
