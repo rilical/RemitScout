@@ -332,7 +332,7 @@ export class RemitScoutStack extends Stack {
         )
       : undefined
     const interfaceEndpointMode: InterfaceEndpointMode = envName === 'staging'
-      ? (stagingInterfaceEndpointsMode ?? 'minimal')
+      ? (stagingInterfaceEndpointsMode ?? 'none')
       : envName === 'prod'
         ? (prodInterfaceEndpointsMode ?? 'all')
         : 'none'
@@ -977,7 +977,7 @@ export class RemitScoutStack extends Stack {
     const enableWaf = toOptionalBool(
       this.node.tryGetContext('enableWaf') ??
         process.env.ENABLE_WAF,
-    ) ?? (envName !== 'dev')
+    ) ?? (envName === 'prod')
     const enablePlaneAJwtAuth = toOptionalBool(
       this.node.tryGetContext('enablePlaneAJwtAuth') ??
         process.env.PLANE_A_ENABLE_JWT_AUTH,
@@ -2443,10 +2443,12 @@ export class RemitScoutStack extends Stack {
       }
     }
     if (monitoring) {
-      new CfnOutput(this, 'CloudWatchDashboardName', {
-        value: monitoring.dashboard.dashboardName,
-        description: 'CloudWatch dashboard name',
-      })
+      if (monitoring.dashboard) {
+        new CfnOutput(this, 'CloudWatchDashboardName', {
+          value: monitoring.dashboard.dashboardName,
+          description: 'CloudWatch dashboard name',
+        })
+      }
       new CfnOutput(this, 'CloudWatchAlertsTopicArn', {
         value: monitoring.criticalTopic.topicArn,
         description: 'SNS topic for CloudWatch alarms',

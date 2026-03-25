@@ -44,7 +44,7 @@ const loadProviderCatalog = (): ProviderCatalogFile => {
 }
 
 export type MonitoringResources = {
-  dashboard: Dashboard
+  dashboard: Dashboard | undefined
   criticalTopic: Topic
   warningTopic: Topic
   opsTopic: Topic
@@ -79,9 +79,11 @@ export const createMonitoring = (
     .map((p) => p.provider_id)
   const collectionProviders = providerCatalog.providers.map((p) => p.provider_id)
 
-  const dashboard = new Dashboard(scope, 'RemitScoutDashboard', {
-    dashboardName: `remit-scout-${options.envName}`,
-  })
+  const dashboard = isProd
+    ? new Dashboard(scope, 'RemitScoutDashboard', {
+        dashboardName: `remit-scout-${options.envName}`,
+      })
+    : undefined
 
   const queueDepthWidget = new GraphWidget({
     title: 'SQS Queue Depth',
@@ -394,7 +396,7 @@ export const createMonitoring = (
     period: Duration.minutes(5),
   })
 
-  dashboard.addWidgets(
+  dashboard?.addWidgets(
     queueDepthWidget,
     dlqDepthWidget,
     queueAgeWidget,
@@ -1138,58 +1140,65 @@ export const createMonitoring = (
   })
 
   // Provider Probe Failure Alarms (providers sourced from `.remit-scout/providers/catalog.json`)
-  const probeFailureAlarms = probeProviders.map((providerId) =>
-    new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeFailureAlarm`, {
-      alarmName: `remit-scout-${options.envName}-${providerId}-probe-failure`,
-      metric: new Metric({
-        namespace: 'RemitScout/Probes',
-        metricName: 'probe_result',
-        statistic: 'Sum',
-        period: Duration.minutes(5),
-        dimensionsMap: {
-          ProviderId: providerId,
-          Status: 'failure',
-          environment: options.envName,
-        },
+  // Suppressed in staging/dev — 24 per-provider alarms generate noise without business value outside prod.
+  if (isProd) {
+    const probeFailureAlarms = probeProviders.map((providerId) =>
+      new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeFailureAlarm`, {
+        alarmName: `remit-scout-${options.envName}-${providerId}-probe-failure`,
+        metric: new Metric({
+          namespace: 'RemitScout/Probes',
+          metricName: 'probe_result',
+          statistic: 'Sum',
+          period: Duration.minutes(5),
+          dimensionsMap: {
+            ProviderId: providerId,
+            Status: 'failure',
+            environment: options.envName,
+          },
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: TreatMissingData.NOT_BREACHING,
+        alarmDescription: `${providerId} provider probe failure detected`,
       }),
-      threshold: 1,
-      evaluationPeriods: 1,
-      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-      treatMissingData: TreatMissingData.NOT_BREACHING,
-      alarmDescription: `${providerId} provider probe failure detected`,
-    }),
-  )
+    )
 
-  for (const alarm of probeFailureAlarms) {
-    alarm.addAlarmAction(warningAction)
+    for (const alarm of probeFailureAlarms) {
+      alarm.addAlarmAction(warningAction)
+    }
   }
 
-  // Dev probes run every 30 min vs 5 min in staging/prod. Use 3 eval periods
-  // (45 min window) in dev to avoid false positives between probe runs.
-  const probeHeartbeatEvalPeriods = isDev ? 3 : 1
-  const probeHeartbeatAlarms = probeProviders.map((providerId) =>
-    new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeHeartbeatAlarm`, {
-      alarmName: `remit-scout-${options.envName}-${providerId}-probe-heartbeat`,
-      metric: new Metric({
-        namespace: 'RemitScout/Probes',
-        metricName: 'probe_run_total',
-        statistic: 'Sum',
-        period: Duration.minutes(15),
-        dimensionsMap: {
-          ProviderId: providerId,
-          environment: options.envName,
-        },
+  // Per-provider probe heartbeat alarms suppressed in staging/dev — 24 individual heartbeat
+  // alarms add noise outside prod. The aggregate burst alarm below covers non-prod environments.
+  if (isProd) {
+    // Dev probes run every 30 min vs 5 min in staging/prod. Use 3 eval periods
+    // (45 min window) in dev to avoid false positives between probe runs.
+    const probeHeartbeatEvalPeriods = isDev ? 3 : 1
+    const probeHeartbeatAlarms = probeProviders.map((providerId) =>
+      new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeHeartbeatAlarm`, {
+        alarmName: `remit-scout-${options.envName}-${providerId}-probe-heartbeat`,
+        metric: new Metric({
+          namespace: 'RemitScout/Probes',
+          metricName: 'probe_run_total',
+          statistic: 'Sum',
+          period: Duration.minutes(15),
+          dimensionsMap: {
+            ProviderId: providerId,
+            environment: options.envName,
+          },
+        }),
+        threshold: 1,
+        evaluationPeriods: probeHeartbeatEvalPeriods,
+        comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
+        treatMissingData: TreatMissingData.BREACHING,
+        alarmDescription: `${providerId} probe heartbeat missing`,
       }),
-      threshold: 1,
-      evaluationPeriods: probeHeartbeatEvalPeriods,
-      comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
-      treatMissingData: TreatMissingData.BREACHING,
-      alarmDescription: `${providerId} probe heartbeat missing`,
-    }),
-  )
+    )
 
-  for (const alarm of probeHeartbeatAlarms) {
-    alarm.addAlarmAction(isProd ? opsAction : warningAction)
+    for (const alarm of probeHeartbeatAlarms) {
+      alarm.addAlarmAction(opsAction)
+    }
   }
 
   // Aggregate probe failure signal: pages ops when multiple providers fail at once.
@@ -1349,54 +1358,57 @@ export const createMonitoring = (
   })
   apiEndpointDownAlarm.addAlarmAction(criticalAction)
 
-  // Per-provider collection quality alarm:
-  // Trigger when any provider has at least 10 failures in 5 minutes and a
-  // failure rate above 50% over the same interval.
-  const providerFailureRateAlarms = collectionProviders.map((providerId) => {
-    const failures = new Metric({
-      namespace: 'RemitScout',
-      metricName: 'provider_collection_failure_by_provider_total',
-      statistic: 'Sum',
-      period: Duration.minutes(5),
-      dimensionsMap: {
-        provider_id: providerId,
-        environment: options.envName,
-      },
+  // Per-provider collection quality alarms suppressed in staging/dev — 24 per-provider alarms
+  // add significant CloudWatch alarm cost and noise. Aggregate SLO alarms cover non-prod.
+  if (isProd) {
+    // Trigger when any provider has at least 10 failures in 5 minutes and a
+    // failure rate above 50% over the same interval.
+    const providerFailureRateAlarms = collectionProviders.map((providerId) => {
+      const failures = new Metric({
+        namespace: 'RemitScout',
+        metricName: 'provider_collection_failure_by_provider_total',
+        statistic: 'Sum',
+        period: Duration.minutes(5),
+        dimensionsMap: {
+          provider_id: providerId,
+          environment: options.envName,
+        },
+      })
+      const successes = new Metric({
+        namespace: 'RemitScout',
+        metricName: 'provider_collection_success_by_provider_total',
+        statistic: 'Sum',
+        period: Duration.minutes(5),
+        dimensionsMap: {
+          provider_id: providerId,
+          environment: options.envName,
+        },
+      })
+      const failureRateWhenFailureVolumeHigh = new MathExpression({
+        expression: 'IF(f>=10, IF((f+s)>0, f/(f+s), 0), 0)',
+        usingMetrics: {
+          f: failures,
+          s: successes,
+        },
+        period: Duration.minutes(5),
+        label: `${providerId} collection failure rate`,
+      })
+      return new Alarm(scope, `ProviderCollectionFailureRate-${providerId}`, {
+        alarmName: useExplicitAlarmNames
+          ? `remit-scout-${options.envName}-provider-${providerId}-failure-rate`
+          : undefined,
+        metric: failureRateWhenFailureVolumeHigh,
+        threshold: 0.5,
+        evaluationPeriods: 1,
+        comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: TreatMissingData.NOT_BREACHING,
+        alarmDescription: `${providerId} has >=10 failures in 5m and failure ratio above 50%`,
+      })
     })
-    const successes = new Metric({
-      namespace: 'RemitScout',
-      metricName: 'provider_collection_success_by_provider_total',
-      statistic: 'Sum',
-      period: Duration.minutes(5),
-      dimensionsMap: {
-        provider_id: providerId,
-        environment: options.envName,
-      },
-    })
-    const failureRateWhenFailureVolumeHigh = new MathExpression({
-      expression: 'IF(f>=10, IF((f+s)>0, f/(f+s), 0), 0)',
-      usingMetrics: {
-        f: failures,
-        s: successes,
-      },
-      period: Duration.minutes(5),
-      label: `${providerId} collection failure rate`,
-    })
-    return new Alarm(scope, `ProviderCollectionFailureRate-${providerId}`, {
-      alarmName: useExplicitAlarmNames
-        ? `remit-scout-${options.envName}-provider-${providerId}-failure-rate`
-        : undefined,
-      metric: failureRateWhenFailureVolumeHigh,
-      threshold: 0.5,
-      evaluationPeriods: 1,
-      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-      treatMissingData: TreatMissingData.NOT_BREACHING,
-      alarmDescription: `${providerId} has >=10 failures in 5m and failure ratio above 50%`,
-    })
-  })
 
-  for (const alarm of providerFailureRateAlarms) {
-    alarm.addAlarmAction(opsAction)
+    for (const alarm of providerFailureRateAlarms) {
+      alarm.addAlarmAction(opsAction)
+    }
   }
 
   // Backpressure alarm (custom metric emitted by Plane B / scheduler)
@@ -2087,7 +2099,7 @@ export const createMonitoring = (
   })
   infraDegradedAlarm.addAlarmAction(criticalAction)
 
-  dashboard.addWidgets(
+  dashboard?.addWidgets(
     dataFreshnessWidget,
     quoteSuccessRateWidget,
     providerCoverageWidget,

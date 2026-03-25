@@ -439,6 +439,7 @@ export const createEcsServices = (
     assignPublicIp: usePublicSubnets,
     vpcSubnets: { subnetType },
     securityGroups: [options.planeBSecurityGroup],
+    capacityProviderStrategies: spotCapacityProviderStrategies,
     enableExecuteCommand,
     circuitBreaker,
     minHealthyPercent,
@@ -490,7 +491,9 @@ export const createEcsServices = (
         assignPublicIp: usePublicSubnets,
         vpcSubnets: { subnetType },
         securityGroups: [options.planeBSecurityGroup],
-        capacityProviderStrategies: [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }],
+        capacityProviderStrategies: isProd
+          ? [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }]
+          : spotCapacityProviderStrategies,
         enableExecuteCommand,
         circuitBreaker,
         minHealthyPercent,

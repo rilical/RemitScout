@@ -557,7 +557,7 @@ export const createEcsTasks = (
     NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
-    CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
+    CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: isProd ? '30000' : '60000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: isProd ? '1' : '0',
     AGENT_LLM_CONNECTOR: agentLlmConnector,
     AGENT_LLM_PROVIDER: agentLlmConnector,
@@ -565,7 +565,7 @@ export const createEcsTasks = (
     AGENT_LLM_MAX_TOKENS: agentLlmMaxTokens,
     AGENT_LLM_TEMPERATURE: agentLlmTemperature,
     AGENT_LLM_PROMPT_VERSION: agentLlmPromptVersion,
-    LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+    LOG_LEVEL: process.env.LOG_LEVEL || (isProd ? 'warn' : 'info'),
   }
   Object.assign(sharedEnv, collectOandaThrottleEnv(), collectPlaneBProviderThrottleEnv())
   const planeBDbPoolMax = options.planeBDbPoolMax ?? '2'

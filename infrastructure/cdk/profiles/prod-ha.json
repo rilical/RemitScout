@@ -5,7 +5,7 @@
   "enableWaf": true,
   "wafEnableBotControl": true,
   "enableCloudFront": true,
-  "enableDbProxy": true,
+  "enableDbProxy": false,
   "prodNatGateways": 2,
   "prodInterfaceEndpointsMode": "all",
   "providerProbeMode": "fan_in",

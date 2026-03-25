@@ -86,13 +86,13 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     }),
     credentials: Credentials.fromSecret(credentialsSecret),
     defaultDatabaseName: 'remit_scout',
-    backup: { retention: Duration.days(isProd ? 14 : (isDev ? 3 : 7)) },
+    backup: { retention: Duration.days(isProd ? 7 : (isDev ? 1 : 3)) },
     storageEncrypted: true,
     storageEncryptionKey: encryptionKey,
     deletionProtection: isProtectedEnv,
     parameterGroup,
     cloudwatchLogsExports: ['postgresql'],
-    cloudwatchLogsRetention: isProd ? RetentionDays.ONE_YEAR : RetentionDays.ONE_MONTH,
+    cloudwatchLogsRetention: isProd ? RetentionDays.THREE_MONTHS : RetentionDays.ONE_WEEK,
     removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   }
 
