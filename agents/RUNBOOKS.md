@@ -52,6 +52,6 @@ Preferred evidence:
 
 ## On-call + Status Page References
 - Escalation policy: PagerDuty primary + secondary rotation (configured via SNS integration in CDK).
-- External uptime monitor: `.github/workflows/uptime-synthetic.yml` and CDK synthetics alarms.
+- External uptime monitor: CDK synthetics alarms (uptime-synthetic workflow has been archived to `.github/workflows-archive/`).
 - Public status updates: maintain customer-facing status page links in incident comms templates.
 - Reference: `docs/ops/status-page-and-escalation.md`.

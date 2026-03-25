@@ -51,6 +51,7 @@ export type RightsMatrixCountrySupportInput = {
   providerId: string
   sourceCountries: string[]
   destinationCountries: string[]
+  changeSource?: string
 }
 
 export type RightsMatrixIndexPermissionsInput = {

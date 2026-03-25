@@ -50,10 +50,14 @@ vi.mock('../shared/config', async () => {
   }
 })
 
-vi.mock('../shared/macro-corridors', () => ({
-  isMacroCorridor: (corridorId: string) => mockIsMacroCorridor(corridorId),
-  getMacroCorridors: vi.fn().mockReturnValue([]),
-}))
+vi.mock('../shared/macro-corridors', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../shared/macro-corridors')>()
+  return {
+    ...actual,
+    isMacroCorridor: (corridorId: string) => mockIsMacroCorridor(corridorId),
+    getMacroCorridors: vi.fn().mockReturnValue([]),
+  }
+})
 
 vi.mock('../plane-a/src/services/user-plan', () => ({
   getUserPlan: (...args: any[]) => mockGetUserPlan(...args),

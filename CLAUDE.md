@@ -217,14 +217,12 @@ Co-Authored-By: ...
 
 ## CI/CD
 
-35+ GitHub Actions workflows in `.github/workflows/`:
-- `ci-main.yml` / `ci-pr.yml` — main CI pipeline
-- `deploy.yml` — deployment with environment gates
-- `security-scan.yml` / `secret-scanning.yml` — security checks
-- `infra-synth.yml` — CDK synthesis validation
-- `staging-go-live-readiness.yml` — pre-production gate
-- `evidence-*.yml` — SLO evidence collection (freshness, latency, health)
-- `rollback.yml` — production rollback procedure
+5 GitHub Actions workflows in `.github/workflows/` (old workflows archived to `.github/workflows-archive/`):
+- `ci.yml` — reusable core CI (lint, typecheck, tests, migration dry-run, CDK synth)
+- `ci-main.yml` — thin wrapper, triggers on push to main/develop/staging
+- `ci-pr.yml` — thin wrapper, triggers on pull_request
+- `deploy.yml` — manual dispatch deployment (dev/staging)
+- `security.yml` — gitleaks on PR/push + weekly dependency audit
 
 ## OpenAPI Spec
 

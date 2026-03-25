@@ -237,11 +237,31 @@ export const runRightsMatrixCapabilityDelta = async (): Promise<void> => {
           `UPDATE silver.rights_matrix
            SET source_countries = $2::text[],
                destination_countries = $3::text[],
+               last_audited_at = NOW(),
                updated_at = NOW()
            WHERE provider_id = $1`,
           [delta.providerId, delta.proposedSourceCountries, delta.proposedDestinationCountries],
           pool,
         )
+        // Audit log for country array changes
+        if (JSON.stringify(delta.existingSourceCountries) !== JSON.stringify(delta.proposedSourceCountries)) {
+          await query(
+            `INSERT INTO silver.rights_matrix_audit_log
+               (provider_id, field_changed, previous_value, new_value, change_source, approved_by)
+             VALUES ($1, 'source_countries', $2, $3, 'capability_delta', 'system:capability-delta')`,
+            [delta.providerId, JSON.stringify(delta.existingSourceCountries), JSON.stringify(delta.proposedSourceCountries)],
+            pool,
+          )
+        }
+        if (JSON.stringify(delta.existingDestinationCountries) !== JSON.stringify(delta.proposedDestinationCountries)) {
+          await query(
+            `INSERT INTO silver.rights_matrix_audit_log
+               (provider_id, field_changed, previous_value, new_value, change_source, approved_by)
+             VALUES ($1, 'destination_countries', $2, $3, 'capability_delta', 'system:capability-delta')`,
+            [delta.providerId, JSON.stringify(delta.existingDestinationCountries), JSON.stringify(delta.proposedDestinationCountries)],
+            pool,
+          )
+        }
         applied += 1
       }
     }

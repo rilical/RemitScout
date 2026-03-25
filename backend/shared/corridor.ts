@@ -1,3 +1,5 @@
+import { getMacroRepresentative } from './macro-corridors'
+
 export type ParsedCorridorId = {
   sourceCountry: string
   destCountry: string
@@ -37,6 +39,19 @@ export const normalizeCorridorIds = (corridorIds: Array<string | null | undefine
         .map((corridor) => corridor.toUpperCase()),
     ),
   )
+}
+
+/**
+ * Remap a corridor_id to use a macro-corridor representative source country.
+ * E.g., AT-IN-EUR-INR → DE-IN-EUR-INR (Austria remaps to Germany for EUR corridors).
+ * Returns the input unchanged if no remap is needed or the input is invalid.
+ */
+export const remapToMacroCorridor = (corridorId: string): string => {
+  const parsed = parseCorridorId(corridorId)
+  if (!parsed) return corridorId
+  const rep = getMacroRepresentative(parsed.sourceCountry, parsed.sourceCurrency)
+  if (!rep) return corridorId
+  return formatCorridorId({ ...parsed, sourceCountry: rep })
 }
 
 export const HUB_CURRENCY = 'USD' as const

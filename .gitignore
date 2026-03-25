@@ -119,3 +119,12 @@ codex-aarch64-apple-darwin.dmg
 # Ralph orchestrator config is tracked (project source-of-truth).
 # If you need local overrides, use a separate local file.
 .worktrees/
+.gstack/
+
+# Local AI agent tooling (gstack skills, Codex agents, Claude skills)
+.agents/
+.claude/skills/
+.context/
+
+# Archived CI/CD workflows (kept for reference, not active)
+.github/workflows-archive/

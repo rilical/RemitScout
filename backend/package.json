@@ -137,6 +137,7 @@
     "provider:certification": "tsx scripts/provider-certification.ts",
     "rights:bootstrap-dev": "tsx scripts/rights-matrix-dev-bootstrap.ts",
     "rights:sync-countries": "tsx scripts/rights-matrix-sync-countries.ts",
+    "rights:quality-metrics": "tsx scripts/rights-matrix-quality-metrics-job.ts",
     "provider:onboarding-orchestrator": "tsx scripts/provider-onboarding-orchestrator.ts",
     "ci:api-smoke": "tsx scripts/ci/api-smoke.ts",
     "ci:integration-smoke": "tsx scripts/ci/integration-smoke.ts",

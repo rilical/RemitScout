@@ -98,6 +98,7 @@ export type ScheduledJobsResources = {
   b2cQueueCleanupRule?: Rule
   stoplistAutoResumeRule?: Rule
   rightsMatrixSyncCountriesRule?: Rule
+  rightsMatrixQualityMetricsRule?: Rule
   b2cRefreshRule?: Rule
   fxRateRefreshRule?: Rule
   b2bSweepSchedulerRule: Rule
@@ -2208,6 +2209,33 @@ export const createScheduledJobs = (
     planeBDbName,
   })
 
+  const rightsMatrixQualityMetricsRule = createPlaneBLambdaJob({
+    scope,
+    options,
+    id: 'RightsMatrixQualityMetricsJob',
+    jobName: 'rights-matrix-quality-metrics',
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'rights-matrix-quality-metrics-lambda.ts',
+    ),
+    schedule: Schedule.rate(Duration.hours(6)),
+    enabled: rulesEnabled,
+    logRetention,
+    otelLambdaLayer,
+    lambdaNetworking: planeBLambdaNetworking,
+    planeBDbSecretArn,
+    planeBDbSsmName,
+    planeBDbHost,
+    planeBDbPort,
+    planeBDbName,
+  })
+
   const b2cRefreshIntervalMinutes = options.envName === 'dev' ? 1 : 2
   const b2cRefreshRule = new Rule(scope, 'B2cRefreshWorkerSchedule', {
     ruleName: ruleName('b2c-refresh-worker'),
@@ -2627,6 +2655,7 @@ export const createScheduledJobs = (
     b2cQueueCleanupRule,
     stoplistAutoResumeRule,
     rightsMatrixSyncCountriesRule,
+    rightsMatrixQualityMetricsRule,
     b2cRefreshRule,
     fxRateRefreshRule,
     b2bSweepSchedulerRule,

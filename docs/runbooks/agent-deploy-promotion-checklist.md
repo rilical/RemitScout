@@ -1,6 +1,11 @@
 # Agent Deploy Promotion Checklist (Develop -> Staging Minimal -> Staging Full -> Prod)
 
-Last updated: 2026-03-23
+Last updated: 2026-03-25
+
+> **Note:** The staging readiness workflow (`staging-go-live-readiness.yml`) has been archived
+> to `.github/workflows-archive/`. Only 5 workflows remain active: `ci.yml`, `ci-main.yml`,
+> `ci-pr.yml`, `deploy.yml`, `security.yml`. Staging readiness checks that were previously
+> run by that workflow should now be performed manually or integrated into the deploy workflow.
 
 Purpose:
 - This is the canonical promotion checklist for agents.
@@ -9,8 +14,6 @@ Purpose:
 
 ## Source of truth
 - Deploy workflow: `.github/workflows/deploy.yml`
-- Readiness workflow: `.github/workflows/staging-go-live-readiness.yml`
-- Runtime readiness checks: `backend/scripts/ci/staging-go-live-readiness.ts`
 - Runtime config validation: `backend/scripts/ci/validate-runtime-config.ts`
 - Architecture invariants: `ARCHITECTURE.md`
 - Nested-stack migration runbook: `docs/runbooks/cdk-nested-stack-migration.md`
@@ -96,16 +99,12 @@ Definition:
 - This is the required state before production promotion.
 
 Execution:
-- [ ] Run staging readiness gate (must be green):
-  - `gh workflow run staging-go-live-readiness.yml --ref "<ref-containing-sha>" -f deploy_sha="<sha>" -f run_runtime_config_validation=true`
-  - The readiness workflow is responsible for resolving the current staging migration tip, applying the exact-SHA pending SQL migrations inside the staging ECS/VPC DbMigrate runtime, exporting that migration-parity proof via `STAGING_MIGRATION_SYNC_RESULT_PATH`, and proving post-migration tip sync before smoke evidence is accepted.
-  - The readiness workflow is also responsible for resuming staging operational services before quote-dependent public corridor smoke and before export-dependent enterprise and worker evidence is accepted.
-  - That readiness resume must act directly on staging SSM/EventBridge/ECS state instead of depending on the previously deployed `OpsPause` Lambda build; pre-deploy readiness cannot rely on stale controller code from the old staging release.
-- [ ] Confirm readiness run conclusion is `success`.
-- [ ] Confirm the readiness run title/logs show the exact `deploy_sha` under validation; do not accept branch-head readiness for a different resolved commit.
-- [ ] Confirm the readiness run published both required artifacts before accepting it as promotion evidence:
-  - `staging-readiness-admin-smoke-evidence`
-  - `staging-go-live-release-evidence`
+- [ ] Run staging readiness checks manually (the `staging-go-live-readiness.yml` workflow has been archived):
+  - Resolve the current staging migration tip and apply pending SQL migrations inside the staging ECS/VPC DbMigrate runtime.
+  - Export migration-parity proof via `STAGING_MIGRATION_SYNC_RESULT_PATH` and confirm post-migration tip sync.
+  - Resume staging operational services before quote-dependent public corridor smoke and before export-dependent enterprise and worker evidence is accepted.
+  - Resume must act directly on staging SSM/EventBridge/ECS state instead of depending on the previously deployed `OpsPause` Lambda build; pre-deploy readiness cannot rely on stale controller code from the old staging release.
+- [ ] Confirm readiness checks pass for the exact `deploy_sha` under validation; do not accept branch-head readiness for a different resolved commit.
 - [ ] Run/confirm DB migrations for staging:
   - `make db-migrate-staging` (or equivalent controlled migration path) only when you are rerunning migrations outside the readiness/deploy workflows.
 - [ ] Seed/verify launch users and roles:
@@ -120,7 +119,7 @@ Execution:
   - admin gating works for allowlisted admin users and allowlisted runner IPs
   - any workflow run used as privileged admin evidence must already be present in `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`
   - the staging deploy workflow may continue with an advisory when the runner IP is not allowlisted, but that advisory is non-evidence for staging-full readiness or production promotion
-  - the staging readiness workflow remains the strict gate for privileged admin proof; it does not self-whitelist or bypass the network control
+  - staging readiness checks remain the strict gate for privileged admin proof; the verification must not self-whitelist or bypass the network control
 - [ ] Verify queue workers and refresh paths are operational:
   - corridor/provider data returns non-empty for known supported lanes
   - no sustained queue backlog or DLQ growth
@@ -168,7 +167,7 @@ Exit criteria:
 
 Execution:
 - [ ] Ensure staging full passed on exact commit SHA to be promoted.
-- [ ] Verify successful `staging-go-live-readiness` run exists for that same SHA.
+- [ ] Verify staging readiness checks passed for that same SHA (run manually; the readiness workflow has been archived).
 - [ ] Confirm the production promotion decision still matches the deployed frontend topology:
   - CloudFront is serving the public site/assets.
   - `/api*` evidence is coming from the Plane A public API path, not `frontend/server/**`.

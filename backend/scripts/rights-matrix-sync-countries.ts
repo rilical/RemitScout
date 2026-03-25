@@ -46,6 +46,8 @@ import {
 } from '../plane-b/src/providers/orbitremit/supported-corridors'
 import { SINGX_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/singx/supported-corridors'
 import { PLACID_SUPPORTED_CORRIDORS } from '../plane-b/src/providers/placid/supported-corridors'
+import { createLogger } from '../shared/logger'
+const logger = createLogger('script.rights-matrix-sync-countries')
 
 initTracing('rights-matrix-sync-countries')
 
@@ -164,7 +166,7 @@ export const runRightsMatrixSyncCountries = async (): Promise<void> => {
 
     const valid = results.filter((entry) => {
       if (entry.sourceCountries.length && entry.destinationCountries.length) return true
-      console.warn('[rights-matrix] skipping empty support list', {
+      logger.warn('rights_matrix_skip_empty_support', {
         provider_id: entry.providerId,
         source_count: entry.sourceCountries.length,
         destination_count: entry.destinationCountries.length,
@@ -173,6 +175,18 @@ export const runRightsMatrixSyncCountries = async (): Promise<void> => {
     })
 
     if (valid.length > 0) {
+      // Fetch existing country arrays for audit comparison
+      const existingResult = await query<{ provider_id: string; source_countries: string[] | null; destination_countries: string[] | null }>(
+        `SELECT provider_id, source_countries, destination_countries
+         FROM silver.rights_matrix
+         WHERE provider_id = ANY($1::text[])`,
+        [valid.map((e) => e.providerId)],
+        pool,
+      )
+      const existingByProvider = new Map(
+        existingResult.rows.map((row) => [row.provider_id, row]),
+      )
+
       // NOTE: pg's array encoding for nested arrays is inconsistent across runtime/build configs.
       // A simple per-provider upsert is deterministic and fast enough (~24 providers).
       for (const entry of valid) {
@@ -182,15 +196,37 @@ export const runRightsMatrixSyncCountries = async (): Promise<void> => {
            ON CONFLICT (provider_id) DO UPDATE SET
              source_countries = EXCLUDED.source_countries,
              destination_countries = EXCLUDED.destination_countries,
+             last_audited_at = NOW(),
              updated_at = NOW()`,
           [entry.providerId, entry.sourceCountries, entry.destinationCountries],
           pool,
         )
+        const prev = existingByProvider.get(entry.providerId)
+        const prevSrc = prev?.source_countries ?? []
+        const prevDst = prev?.destination_countries ?? []
+        if (JSON.stringify(prevSrc) !== JSON.stringify(entry.sourceCountries)) {
+          await query(
+            `INSERT INTO silver.rights_matrix_audit_log
+               (provider_id, field_changed, previous_value, new_value, change_source, approved_by)
+             VALUES ($1, 'source_countries', $2, $3, 'sync_countries', 'system:sync-countries')`,
+            [entry.providerId, JSON.stringify(prevSrc), JSON.stringify(entry.sourceCountries)],
+            pool,
+          )
+        }
+        if (JSON.stringify(prevDst) !== JSON.stringify(entry.destinationCountries)) {
+          await query(
+            `INSERT INTO silver.rights_matrix_audit_log
+               (provider_id, field_changed, previous_value, new_value, change_source, approved_by)
+             VALUES ($1, 'destination_countries', $2, $3, 'sync_countries', 'system:sync-countries')`,
+            [entry.providerId, JSON.stringify(prevDst), JSON.stringify(entry.destinationCountries)],
+            pool,
+          )
+        }
       }
     }
 
     for (const entry of valid) {
-      console.log('[rights-matrix] updated country support', {
+      logger.info('rights_matrix_country_support_updated', {
         provider_id: entry.providerId,
         source_count: entry.sourceCountries.length,
         destination_count: entry.destinationCountries.length,
@@ -213,7 +249,7 @@ export const runRightsMatrixSyncCountries = async (): Promise<void> => {
     )
 
     if (activeB2cEmptyCountrySet.rows.length > 0) {
-      console.warn('[rights-matrix] active b2c providers with empty country sets', {
+      logger.warn('rights_matrix_active_b2c_empty_countries', {
         count: activeB2cEmptyCountrySet.rows.length,
         providers: activeB2cEmptyCountrySet.rows.map((row) => row.provider_id),
       })
@@ -237,7 +273,7 @@ if (require.main === module) {
       process.exit(0)
     })
     .catch((error) => {
-      console.error('[rights-matrix] country support sync failed', error)
+      logger.error('rights_matrix_sync_failed', { error: error instanceof Error ? { message: error.message, stack: error.stack } : String(error) })
       process.exit(1)
     })
 }

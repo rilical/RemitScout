@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getSendCountries, generateMacroCorridors } from '../shared/macro-corridors'
+import { getSendCountries, generateMacroCorridors, getMacroRepresentative } from '../shared/macro-corridors'
 import { isUsdOriginCorridor } from '../shared/corridor-tiers'
 
 describe('macro-corridors', () => {
@@ -23,14 +23,20 @@ describe('macro-corridors', () => {
       expect(countries).not.toContain('VI')
     })
 
-    it('still returns all EUR countries (no override)', () => {
+    it('returns only DE and FR for EUR (override collapses 31 eurozone countries)', () => {
       const countries = getSendCountries()
-      // EUR countries should still be present (no override for EUR)
-      // At minimum the major eurozone countries should appear
+      // EUR override limits send countries to DE and FR
       expect(countries).toContain('DE')
       expect(countries).toContain('FR')
-      expect(countries).toContain('IT')
-      expect(countries).toContain('ES')
+      // Other eurozone countries should be excluded by the override
+      expect(countries).not.toContain('IT')
+      expect(countries).not.toContain('ES')
+      expect(countries).not.toContain('AT')
+      expect(countries).not.toContain('BE')
+      expect(countries).not.toContain('NL')
+      expect(countries).not.toContain('PT')
+      expect(countries).not.toContain('IE')
+      expect(countries).not.toContain('GR')
     })
   })
 
@@ -55,6 +61,32 @@ describe('macro-corridors', () => {
 
     it('returns false for EC-PH-USD-PHP', () => {
       expect(isUsdOriginCorridor('EC-PH-USD-PHP')).toBe(false)
+    })
+  })
+
+  describe('getMacroRepresentative', () => {
+    it('remaps Austria (AT) to Germany (DE) for EUR', () => {
+      expect(getMacroRepresentative('AT', 'EUR')).toBe('DE')
+    })
+
+    it('returns null for Germany (already a EUR representative)', () => {
+      expect(getMacroRepresentative('DE', 'EUR')).toBeNull()
+    })
+
+    it('returns null for France (already a EUR representative)', () => {
+      expect(getMacroRepresentative('FR', 'EUR')).toBeNull()
+    })
+
+    it('returns null for US (already a USD representative)', () => {
+      expect(getMacroRepresentative('US', 'USD')).toBeNull()
+    })
+
+    it('returns null for GBP (no override defined)', () => {
+      expect(getMacroRepresentative('GB', 'GBP')).toBeNull()
+    })
+
+    it('remaps Spain (ES) to Germany (DE) for EUR', () => {
+      expect(getMacroRepresentative('ES', 'EUR')).toBe('DE')
     })
   })
 })

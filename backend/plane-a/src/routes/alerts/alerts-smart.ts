@@ -4,7 +4,7 @@ import { config } from '../../../../shared/config'
 import { recordRequest } from '../../../../shared/api-metrics'
 import { getCountryByCode } from '../../../../shared/countries-currencies'
 import { getMacroCorridors, isMacroCorridor } from '../../../../shared/macro-corridors'
-import { parseCorridorId } from '../../../../shared/corridor'
+import { parseCorridorId, remapToMacroCorridor } from '../../../../shared/corridor'
 import {
   SMART_ALERT_MIN_CONFIDENCE,
   SMART_ALERT_MIN_SAMPLE_DAYS,
@@ -45,7 +45,7 @@ export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
     let corridorId: string | null = null
 
     if (queryParams.corridorId) {
-      corridorId = queryParams.corridorId.toUpperCase()
+      corridorId = remapToMacroCorridor(queryParams.corridorId.toUpperCase())
     } else if (queryParams.from && queryParams.to) {
       const from = queryParams.from.toUpperCase()
       const to = queryParams.to.toUpperCase()
@@ -57,7 +57,7 @@ export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
         ?? null
 
       if (fromCurrency && toCurrency) {
-        corridorId = `${from}-${to}-${fromCurrency}-${toCurrency}`
+        corridorId = remapToMacroCorridor(`${from}-${to}-${fromCurrency}-${toCurrency}`)
       }
     }
 

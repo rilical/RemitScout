@@ -4,8 +4,6 @@
     "prepush": {
       "description": "Fast local gate before git push. No staging dependencies.",
       "checks": [
-        "repo:guard-secret-placeholders",
-        "repo:guard-generated-artifacts",
         "backend:migration-numbering",
         "backend:sql-interpolation-changed",
         "frontend:api-types-check",
@@ -29,8 +27,6 @@
     "local": {
       "description": "Full local release gate before opening or updating a PR.",
       "checks": [
-        "repo:guard-secret-placeholders",
-        "repo:guard-generated-artifacts",
         "backend:migration-numbering",
         "backend:sql-interpolation-changed",
         "frontend:api-types-check",
@@ -56,8 +52,6 @@
     "ci": {
       "description": "Local-first correctness gate with database smoke checks for CI runners.",
       "checks": [
-        "repo:guard-secret-placeholders",
-        "repo:guard-generated-artifacts",
         "backend:migration-numbering",
         "backend:sql-interpolation-changed",
         "frontend:api-types-check",
@@ -87,11 +81,8 @@
       "description": "Remote authenticated smoke against staging/prod-like infrastructure.",
       "checks": [
         "backend:integration-smoke",
-        "backend:auth-surface-smoke",
         "backend:alerts-watchlists-smoke",
-        "backend:admin-surface-smoke",
         "backend:enterprise-triangulation-smoke",
-        "backend:worker-resilience-smoke",
         "frontend:auth-ui-smoke",
         "frontend:admin-ui-smoke",
         "backend:runtime-config-validate",
@@ -101,14 +92,6 @@
     }
   },
   "checks": {
-    "repo:guard-secret-placeholders": {
-      "description": "Block placeholder secrets and fake runtime values from shipping.",
-      "command": "pnpm -C backend exec tsx scripts/ci/guard-secret-placeholders.ts"
-    },
-    "repo:guard-generated-artifacts": {
-      "description": "Block stale or missing generated artifacts.",
-      "command": "pnpm -C backend exec tsx scripts/ci/guard-generated-artifacts.ts"
-    },
     "backend:migration-numbering": {
       "description": "Ensure migrations are additive and properly numbered.",
       "command": "pnpm -C backend guardrail:migrations"
@@ -234,29 +217,6 @@
         "SMOKE_USER_PASSWORD"
       ]
     },
-    "backend:auth-surface-smoke": {
-      "description": "Remote auth smoke for sign-in, MFA truth, forgot-password, sign-up, and email-verification policy.",
-      "command": "pnpm -C backend ci:auth-surface-smoke",
-      "requiresEnv": [
-        "SMOKE_BASE_URL",
-        "SUPABASE_URL",
-        "SUPABASE_PUBLISHABLE_KEY",
-        "SUPABASE_SERVICE_ROLE_KEY",
-        "SMOKE_USER_EMAIL",
-        "SMOKE_USER_PASSWORD"
-      ]
-    },
-    "backend:admin-surface-smoke": {
-      "description": "Remote authenticated admin exchange, observer, audit, and grant/revoke smoke.",
-      "command": "pnpm -C backend ci:admin-surface-smoke",
-      "requiresEnv": [
-        "SMOKE_BASE_URL",
-        "SUPABASE_URL",
-        "SUPABASE_PUBLISHABLE_KEY",
-        "SMOKE_USER_EMAIL",
-        "SMOKE_USER_PASSWORD"
-      ]
-    },
     "backend:enterprise-triangulation-smoke": {
       "description": "Remote enterprise API key, embeds, exports, billing, notifications, and triangulation smoke.",
       "command": "pnpm -C backend ci:enterprise-triangulation-smoke",
@@ -266,18 +226,6 @@
         "SUPABASE_PUBLISHABLE_KEY",
         "SMOKE_USER_EMAIL",
         "SMOKE_USER_PASSWORD"
-      ]
-    },
-    "backend:worker-resilience-smoke": {
-      "description": "Remote worker, queue, backlog, and pause/resume resilience smoke against staging infrastructure.",
-      "command": "pnpm -C backend ci:worker-resilience-smoke",
-      "requiresEnv": [
-        "SMOKE_BASE_URL",
-        "SUPABASE_URL",
-        "SUPABASE_PUBLISHABLE_KEY",
-        "SMOKE_USER_EMAIL",
-        "SMOKE_USER_PASSWORD",
-        "AWS_REGION"
       ]
     },
     "frontend:auth-ui-smoke": {

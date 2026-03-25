@@ -19,7 +19,7 @@ import { createLogger } from '../../../shared/logger'
 import { AppError, ValidationError } from '../../../shared/errors'
 import { computeBucketSelection, DEFAULT_AMOUNT_BUCKETS } from '../../../shared/amount-bucket'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
-import { parseCorridorId } from '../../../shared/corridor'
+import { parseCorridorId, remapToMacroCorridor } from '../../../shared/corridor'
 import { getCorridorTier, getTierSloMinutes } from '../../../shared/corridor-tiers'
 import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
@@ -229,7 +229,8 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       throw new ValidationError('Invalid query parameters', { details: parsed.error.issues })
     }
 
-    const { corridor_id } = parsed.data
+    const { corridor_id: raw_corridor_id } = parsed.data
+    const corridor_id = remapToMacroCorridor(raw_corridor_id)
     const payin = normalizePayinMethod(parsed.data.payin)
     const payout = normalizePayoutMethod(parsed.data.payout)
     if (!payin) {

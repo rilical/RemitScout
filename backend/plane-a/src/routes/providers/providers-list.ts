@@ -5,7 +5,7 @@ import { query } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { computeBucketSelection, DEFAULT_AMOUNT_BUCKETS } from '../../../../shared/amount-bucket'
-import { parseCorridorId } from '../../../../shared/corridor'
+import { parseCorridorId, remapToMacroCorridor } from '../../../../shared/corridor'
 import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../../shared/countries-currencies'
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../../shared/provider-currencies'
 import { getMaxAmount, getMinAmount } from '../../../../shared/currency-limits'
@@ -1211,7 +1211,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
     const comparisonId = randomUUID()
     const start = new Date().toISOString()
 
-    let corridorId = corridor_id
+    let corridorId = corridor_id ? remapToMacroCorridor(corridor_id) : corridor_id
     let amountBucket = amount_bucket
     let requestedAmount = amount
     let approximate = false
@@ -1256,7 +1256,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
 
       const sourceCurrency = normalizedFromCurrency ?? sourceCountry.currency
       const destCurrency = normalizedToCurrency ?? destCountry.currency
-      corridorId = `${from.toUpperCase()}-${to.toUpperCase()}-${sourceCurrency}-${destCurrency}`
+      corridorId = remapToMacroCorridor(`${from.toUpperCase()}-${to.toUpperCase()}-${sourceCurrency}-${destCurrency}`)
 
       if (!Number.isFinite(amount) || amount <= 0) {
                 throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'amount must be a positive number' }] } })

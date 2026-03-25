@@ -21,6 +21,40 @@ const RIGHTS_MATRIX_LOAD_LIMIT = 10000
 export class RightsMatrixRepository implements IRightsMatrixRepository {
   constructor(private readonly pool: Pool) {}
 
+  private async writeAuditLog(
+    providerId: string,
+    fieldChanged: string,
+    previousValue: unknown,
+    newValue: unknown,
+    changeSource: string,
+    approvedBy?: string | null,
+    discoveryScanId?: number | null,
+  ): Promise<void> {
+    await query(
+      `INSERT INTO silver.rights_matrix_audit_log
+         (provider_id, field_changed, previous_value, new_value, change_source, approved_by, discovery_scan_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        providerId,
+        fieldChanged,
+        JSON.stringify(previousValue),
+        JSON.stringify(newValue),
+        changeSource,
+        approvedBy ?? null,
+        discoveryScanId ?? null,
+      ],
+      this.pool,
+    )
+  }
+
+  private async touchLastAuditedAt(providerId: string): Promise<void> {
+    await query(
+      `UPDATE silver.rights_matrix SET last_audited_at = NOW() WHERE provider_id = $1`,
+      [providerId],
+      this.pool,
+    )
+  }
+
   async pauseProvider(providerId: string, notes: string): Promise<void> {
     await query(
       `INSERT INTO silver.rights_matrix
@@ -123,6 +157,15 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
   }
 
   async upsertProviderCountrySupport(input: RightsMatrixCountrySupportInput): Promise<void> {
+    // Fetch previous values for audit
+    const prev = await query<{ source_countries: string[] | null; destination_countries: string[] | null }>(
+      `SELECT source_countries, destination_countries FROM silver.rights_matrix WHERE provider_id = $1`,
+      [input.providerId],
+      this.pool,
+    )
+    const prevRow = prev.rows[0]
+
+    // Perform the upsert
     await query(
       `INSERT INTO silver.rights_matrix (provider_id, source_countries, destination_countries)
        VALUES ($1, $2, $3)
@@ -133,6 +176,20 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
       [input.providerId, input.sourceCountries, input.destinationCountries],
       this.pool,
     )
+
+    // Audit log for changed fields
+    const changeSource = input.changeSource ?? 'manual'
+    const prevSrc = prevRow?.source_countries ?? []
+    const prevDst = prevRow?.destination_countries ?? []
+
+    if (JSON.stringify(prevSrc) !== JSON.stringify(input.sourceCountries)) {
+      await this.writeAuditLog(input.providerId, 'source_countries', prevSrc, input.sourceCountries, changeSource)
+    }
+    if (JSON.stringify(prevDst) !== JSON.stringify(input.destinationCountries)) {
+      await this.writeAuditLog(input.providerId, 'destination_countries', prevDst, input.destinationCountries, changeSource)
+    }
+
+    await this.touchLastAuditedAt(input.providerId)
   }
 
   async loadStoplistStatuses(): Promise<RightsMatrixStoplistRecord[]> {
@@ -165,6 +222,13 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
   }
 
   async updateGovernance(input: RightsMatrixGovernanceInput): Promise<void> {
+    const prev = await query<{ status: string | null; reviewer: string | null }>(
+      `SELECT status, reviewer FROM silver.rights_matrix WHERE provider_id = $1`,
+      [input.providerId],
+      this.pool,
+    )
+    const prevRow = prev.rows[0]
+
     await query(
       `UPDATE silver.rights_matrix
           SET status = $2,
@@ -175,9 +239,25 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
       [input.providerId, input.status, input.reviewer],
       this.pool,
     )
+
+    if (prevRow?.status !== input.status) {
+      await this.writeAuditLog(input.providerId, 'status', prevRow?.status, input.status, 'governance', input.reviewer)
+    }
+    if (prevRow?.reviewer !== input.reviewer) {
+      await this.writeAuditLog(input.providerId, 'reviewer', prevRow?.reviewer, input.reviewer, 'governance', input.reviewer)
+    }
+
+    await this.touchLastAuditedAt(input.providerId)
   }
 
   async updateQualityMetrics(input: RightsMatrixQualityMetricsInput): Promise<void> {
+    const prev = await query<{ uptime_last_30d: number | null; avg_quote_latency_ms: number | null }>(
+      `SELECT uptime_last_30d, avg_quote_latency_ms FROM silver.rights_matrix WHERE provider_id = $1`,
+      [input.providerId],
+      this.pool,
+    )
+    const prevRow = prev.rows[0]
+
     await query(
       `UPDATE silver.rights_matrix
           SET expected_update_frequency = $2::INTERVAL,
@@ -195,6 +275,15 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
       ],
       this.pool,
     )
+
+    if (prevRow && prevRow.uptime_last_30d !== input.uptimeLast30d) {
+      await this.writeAuditLog(input.providerId, 'uptime_last_30d', prevRow.uptime_last_30d, input.uptimeLast30d, 'quality_metrics_job')
+    }
+    if (prevRow && prevRow.avg_quote_latency_ms !== input.avgQuoteLatencyMs) {
+      await this.writeAuditLog(input.providerId, 'avg_quote_latency_ms', prevRow.avg_quote_latency_ms, input.avgQuoteLatencyMs, 'quality_metrics_job')
+    }
+
+    await this.touchLastAuditedAt(input.providerId)
   }
 
   async loadProvidersEligibleForIndex(

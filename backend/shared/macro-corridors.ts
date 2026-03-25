@@ -45,6 +45,20 @@ const hardCurrencyDestSet = new Set<string>(HARD_CURRENCY_DESTINATIONS)
 
 const SEND_COUNTRY_OVERRIDES: Partial<Record<string, readonly string[]>> = {
   USD: ['US'],
+  EUR: ['DE', 'FR'], // 31 eurozone countries → 2 reps (same ECB rate, same SEPA infra)
+}
+
+/**
+ * Returns the representative source country for a consolidated currency group.
+ * E.g., EUR corridors are consolidated to DE+FR — if sourceCountry is AT (Austria)
+ * and sourceCurrency is EUR, returns 'DE'. Returns null if no remap is needed.
+ */
+export function getMacroRepresentative(sourceCountry: string, sourceCurrency: string): string | null {
+  const override = SEND_COUNTRY_OVERRIDES[sourceCurrency]
+  if (!override) return null
+  const upper = sourceCountry.toUpperCase()
+  if (override.includes(upper)) return null
+  return override[0] as string
 }
 
 const countryByCurrency = new Map<string, Country[]>()

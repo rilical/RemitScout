@@ -4,6 +4,7 @@ import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { ValidationError } from '../../../shared/errors'
+import { remapToMacroCorridor } from '../../../shared/corridor'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
 import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
@@ -63,7 +64,7 @@ export const corridorLimitsRoutes = async (app: FastifyInstance) => {
     const to = normalizeCountry(parsed.data.to)
     const fromCurrency = normalizeCurrency(parsed.data.fromCurrency)
     const toCurrency = normalizeCurrency(parsed.data.toCurrency)
-    const corridorId = `${from}-${to}-${fromCurrency}-${toCurrency}`
+    const corridorId = remapToMacroCorridor(`${from}-${to}-${fromCurrency}-${toCurrency}`)
 
     const fromCountry = getCountryByCode(from)
     const toCountry = getCountryByCode(to)

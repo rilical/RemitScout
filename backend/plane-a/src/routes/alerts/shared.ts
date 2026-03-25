@@ -11,7 +11,7 @@ import {
 import { upsertUsageSnapshot } from '../../services/plan-usage'
 import { getErrorMessage } from '../../types/errors'
 import { getCountryByCode } from '../../../../shared/countries-currencies'
-import { parseCorridorId } from '../../../../shared/corridor'
+import { parseCorridorId, remapToMacroCorridor } from '../../../../shared/corridor'
 import { FIXED_EXCHANGE_RATES } from '../../../../shared/currency-limits'
 import { computeBucketSelection } from '../../../../shared/amount-bucket'
 import {
@@ -291,7 +291,7 @@ export const resolveCorridorIdFromWatchlist = (
   if (targetType !== 'corridor') return null
 
   if (typeof payload.corridorId === 'string' && payload.corridorId.length > 0) {
-    return payload.corridorId.toUpperCase()
+    return remapToMacroCorridor(payload.corridorId.toUpperCase())
   }
 
   const from = typeof payload.from === 'string' ? payload.from.toUpperCase() : null
@@ -307,7 +307,7 @@ export const resolveCorridorIdFromWatchlist = (
 
   if (!fromCurrency || !toCurrency) return null
 
-  return `${from}-${to}-${fromCurrency}-${toCurrency}`
+  return remapToMacroCorridor(`${from}-${to}-${fromCurrency}-${toCurrency}`)
 }
 
 export async function checkCorridorSignalData(

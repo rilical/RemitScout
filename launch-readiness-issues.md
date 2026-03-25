@@ -8,7 +8,7 @@ _Last updated: 2026-02-12_
 |---|---|---|---|---|---|
 | P0-01 | Staging/prod not fully deployed and validated end-to-end | `infrastructure/cdk/lib/remit-scout-stack.ts` | Platform | staging/prod | Open |
 | P0-02 | DB migration must be executed for `webhook_secret` before webhook dispatch is fully reliable | `backend/db/migrations/072_add_webhook_secret.sql` | Backend + Platform | dev/staging/prod | In progress (applied in dev; staging/prod pending) |
-| P0-03 | Full security review artifacts (WAF validation, pentest report, compliance sign-off) missing | `.github/workflows/security-scan.yml`, `infrastructure/cdk/lib/api.ts` | Security + Platform | staging/prod | Open |
+| P0-03 | Full security review artifacts (WAF validation, pentest report, compliance sign-off) missing | `.github/workflows/security.yml`, `infrastructure/cdk/lib/api.ts` | Security + Platform | staging/prod | Open |
 | P0-04 | Launch users/roles need live Supabase + Aurora seeding run in target envs | `backend/scripts/seed-launch-users.ts` | Auth + Platform | dev/staging/prod | In progress (done in dev; staging/prod pending) |
 | P0-05 | Gold indices freshness gate blocks when `fx_rate_history` is stale even if `fx_rates.last_updated` is fresh | `backend/scripts/gold-indices-job.ts` | Backend | all | Fixed in code (fallback freshness check); deploy pending |
 | P0-06 | SES send policy scope too narrow for dev alert-email proof path | `infrastructure/cdk/lib/iam.ts` | Platform + Security | dev | Mitigated (runtime IAM hotfix) + fixed in CDK for dev |
@@ -38,7 +38,7 @@ _Last updated: 2026-02-12_
 | ID | Issue | Evidence | Owner | Env | Status |
 |---|---|---|---|---|---|
 | P2-01 | Supabase plus-address emails can fail in some providers | `backend/scripts/dev-create-enterprise-users.ts` | Auth | dev | Fixed (hyphen aliases) |
-| P2-02 | Security DAST scans disabled in CI | `.github/workflows/security-scan.yml` | Security | staging/prod | Fixed in workflow (requires `ZAP_TARGET_URL`) |
+| P2-02 | Security DAST scans disabled in CI | `.github/workflows/security.yml` | Security | staging/prod | Fixed in workflow (requires `ZAP_TARGET_URL`) |
 | P2-03 | API versioning README still reflected past sunset schedule | `backend/README.md` | Backend | all | Fixed |
 
 ## Dev Today Checklist (Observation Window)

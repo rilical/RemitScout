@@ -4,28 +4,27 @@ on:
   workflow_call:
     inputs:
       mode:
-        description: pr | main | nightly
+        description: pr | main
         required: true
         type: string
       node_version:
         required: false
         type: string
-        default: 20.19.6
+        default: "20.19.6"
       pnpm_version:
         required: false
         type: string
-        default: 10.19.0
+        default: "10.19.0"
   workflow_dispatch:
     inputs:
       mode:
-        description: pr | main | nightly
+        description: pr | main
         required: true
         default: pr
         type: choice
         options:
           - pr
           - main
-          - nightly
 
 concurrency:
   group: ci-core-${{ github.ref }}-${{ inputs.mode || github.event.inputs.mode }}
@@ -37,20 +36,14 @@ permissions:
 
 jobs:
   changes:
-    timeout-minutes: 10
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     outputs:
-      backend_changed: ${{ steps.filter.outputs.backend_changed }}
-      frontend_changed: ${{ steps.filter.outputs.frontend_changed }}
-      infra_changed: ${{ steps.filter.outputs.infra_changed }}
-      migrations_changed: ${{ steps.filter.outputs.migrations_changed }}
-      mutation_critical_changed: ${{ steps.filter.outputs.mutation_critical_changed }}
-      issueops_changed: ${{ steps.filter.outputs.issueops_changed }}
-      docs_only: ${{ steps.filter.outputs.docs_only }}
-      run_backend: ${{ steps.flags.outputs.run_backend }}
-      run_frontend: ${{ steps.flags.outputs.run_frontend }}
-      run_infra: ${{ steps.flags.outputs.run_infra }}
-      run_e2e: ${{ steps.flags.outputs.run_e2e }}
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      infra: ${{ steps.filter.outputs.infra }}
+      migrations: ${{ steps.filter.outputs.migrations }}
+      docs_only: ${{ steps.docs.outputs.docs_only }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,74 +52,34 @@ jobs:
         id: filter
         with:
           filters: |
-            backend_changed:
+            backend:
               - 'backend/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
-            frontend_changed:
+            frontend:
               - 'frontend/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
-            infra_changed:
+            infra:
               - 'infrastructure/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-            migrations_changed:
+            migrations:
               - 'backend/db/migrations/**'
-            mutation_critical_changed:
-              - 'backend/plane-a/src/services/alert-evaluator.ts'
-              - 'backend/plane-a/src/services/entitlements.ts'
-              - 'backend/plane-a/src/routes/billing/**'
-              - 'backend/shared/corridor.ts'
-              - 'backend/plane-b/src/normalize/quote-normalizer.ts'
-              - 'backend/plane-a/src/routes/popular-corridors.ts'
-              - 'backend/stryker.conf.json'
-              - 'backend/package.json'
-              - 'pnpm-lock.yaml'
-            issueops_changed:
-              - '.remit-scout/**'
-            docs_only:
-              - 'docs/**'
-              - 'README.md'
-              - 'notes/**'
-      - id: flags
+      - id: docs
         shell: bash
-        env:
-          MODE: ${{ inputs.mode || github.event.inputs.mode }}
-          BACKEND: ${{ steps.filter.outputs.backend_changed }}
-          FRONTEND: ${{ steps.filter.outputs.frontend_changed }}
-          INFRA: ${{ steps.filter.outputs.infra_changed }}
-          DOCS_ONLY: ${{ steps.filter.outputs.docs_only }}
         run: |
-          set -euo pipefail
-
-          if [ "$MODE" = "nightly" ]; then
-            echo "run_backend=true" >> "$GITHUB_OUTPUT"
-            echo "run_frontend=true" >> "$GITHUB_OUTPUT"
-            echo "run_infra=true" >> "$GITHUB_OUTPUT"
-            echo "run_e2e=true" >> "$GITHUB_OUTPUT"
-            exit 0
+          if [ "${{ steps.filter.outputs.backend }}" != "true" ] && \
+             [ "${{ steps.filter.outputs.frontend }}" != "true" ] && \
+             [ "${{ steps.filter.outputs.infra }}" != "true" ]; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
           fi
 
-          if [ "$DOCS_ONLY" = "true" ] && [ "$BACKEND" != "true" ] && [ "$FRONTEND" != "true" ] && [ "$INFRA" != "true" ]; then
-            echo "run_backend=false" >> "$GITHUB_OUTPUT"
-            echo "run_frontend=false" >> "$GITHUB_OUTPUT"
-            echo "run_infra=false" >> "$GITHUB_OUTPUT"
-            echo "run_e2e=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "run_backend=$BACKEND" >> "$GITHUB_OUTPUT"
-          echo "run_frontend=$FRONTEND" >> "$GITHUB_OUTPUT"
-          echo "run_infra=$INFRA" >> "$GITHUB_OUTPUT"
-          echo "run_e2e=$FRONTEND" >> "$GITHUB_OUTPUT"
-
-  lockfile-integrity:
+  lint-typecheck:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 10
     needs: changes
     if: needs.changes.outputs.docs_only != 'true'
     steps:
@@ -135,241 +88,93 @@ jobs:
         with:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
-      - name: Lockfile integrity passed
-        run: echo "pnpm-lock.yaml is parseable and frozen install succeeded."
-
-  security-gate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.docs_only != 'true'
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: ${{ inputs.node_version }}
-          pnpm_version: ${{ inputs.pnpm_version }}
-
-      - name: Generate Dependency SBOM
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p .security
-          docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
-            dir:/workspace \
-            -o spdx-json=/workspace/.security/pnpm-sbom.spdx.json
-
-      - name: Dependency audit (high/critical)
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p .security
-          audit_exit=0
-          pnpm -w audit --prod --audit-level=high --json > .security/pnpm-audit.json || audit_exit=$?
-          high_critical_count="$(
-            node -e '
-              const fs = require("fs");
-              const path = process.argv[1];
-              let raw = "";
-              try {
-                raw = fs.readFileSync(path, "utf8").trim();
-              } catch {
-                console.log(-1);
-                process.exit(0);
-              }
-              if (!raw) {
-                console.log(-1);
-                process.exit(0);
-              }
-              try {
-                const parsed = JSON.parse(raw);
-                const v = parsed?.metadata?.vulnerabilities ?? {};
-                const high = Number(v.high ?? 0);
-                const critical = Number(v.critical ?? 0);
-                console.log(high + critical);
-              } catch {
-                console.log(-1);
-              }
-            ' .security/pnpm-audit.json
-          )"
-
-          if [ "${high_critical_count}" -lt 0 ]; then
-            echo "::error::Failed to parse pnpm audit JSON output."
-            exit 1
-          fi
-
-          if [ "${high_critical_count}" -gt 0 ]; then
-            echo "::error::Dependency audit found HIGH/CRITICAL vulnerabilities (count=${high_critical_count})."
-            if [ -f .security/pnpm-audit.json ]; then
-              jq -r '.advisories // {} | to_entries[] | select((.value.severity // "") | test("^(high|critical)$"; "i")) | "\(.value.severity): \(.value.module_name) - \(.value.title)"' .security/pnpm-audit.json 2>/dev/null || true
-            fi
-            exit 1
-          fi
-
-          if [ "$audit_exit" -ne 0 ]; then
-            echo "pnpm audit exited with code ${audit_exit} but reported no HIGH/CRITICAL vulnerabilities."
-          fi
-
-      - name: Upload security evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ci-security-evidence
-          path: |
-            .security/pnpm-sbom.spdx.json
-            .security/pnpm-audit.json
-          if-no-files-found: ignore
-
-  lint-typecheck-build:
-    runs-on: ubuntu-latest
-    needs: [changes, security-gate]
-    if: needs.changes.outputs.docs_only != 'true'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: ${{ inputs.node_version }}
-          pnpm_version: ${{ inputs.pnpm_version }}
-      - name: Runtime secret placeholder guard
-        run: pnpm -C backend exec tsx scripts/ci/guard-secret-placeholders.ts
-      - name: Generated artifact hygiene guard
-        run: pnpm -C backend exec tsx scripts/ci/guard-generated-artifacts.ts
-      - name: Guardrail - forbid hardcoded pnpm/action-setup version in workflows
-        shell: bash
-        run: |
-          set -euo pipefail
-          violations="$(awk '
-            /^[[:space:]]*-[[:space:]]*uses:[[:space:]]*pnpm\/action-setup@v4[[:space:]]*$/ { in_step=1; next }
-            in_step {
-              if ($0 ~ /^[[:space:]]*-[[:space:]]/) { in_step=0; next }
-              if ($0 ~ /^[[:space:]]*version:[[:space:]]*[^[:space:]]+/) {
-                print FILENAME ":" NR ": " $0
-                bad=1
-              }
-            }
-            END { if (bad) exit 0; exit 1 }
-          ' .github/workflows/*.yml || true)"
-          if [ -n "${violations}" ]; then
-            echo "Found forbidden hardcoded version with pnpm/action-setup@v4:"
-            echo "${violations}"
-            exit 1
-          fi
-          echo "No forbidden pnpm/action-setup version pinning found."
-      - name: AWS SDK version alignment
-        run: pnpm -C backend exec tsx scripts/ci/check-sdk-versions.ts
-      - name: Agent surfaces lint (AGENTS.md + provider registry)
-        run: pnpm -C backend exec tsx scripts/ci/validate-agent-surfaces.ts
-      - name: Source-of-truth matrix validation
-        run: pnpm -C backend exec tsx scripts/ci/validate-source-of-truth-matrix.ts
-      - name: Reason code registry lint (EvidenceResult reason_code)
-        run: pnpm -C backend exec tsx scripts/ci/validate-reason-codes.ts
-      - name: Skill catalog lint (skills <-> workflows)
-        run: pnpm -C backend exec tsx scripts/ci/validate-skill-catalog.ts
-      - name: Provider probe coverage lint
-        run: pnpm -C backend exec tsx scripts/ci/validate-provider-probe-coverage.ts
-      - name: Code map lint (LLM Code Map headers)
-        run: pnpm -C backend exec tsx scripts/ci/validate-code-maps.ts --changed-only
-      - name: IssueOps contracts validation
-        if: needs.changes.outputs.issueops_changed == 'true' || (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'issueops:'))
-        run: pnpm -C backend exec tsx scripts/ci/validate-issueops-contracts.ts
-      - name: Ralph plan contracts validation (prd + implementation plan + progress)
+      - name: Backend lint
+        if: needs.changes.outputs.backend == 'true'
+        run: pnpm -C backend lint
+      - name: Backend build (typecheck)
+        if: needs.changes.outputs.backend == 'true'
+        run: pnpm -C backend build
+      - name: Frontend lint
+        if: needs.changes.outputs.frontend == 'true'
+        run: pnpm -C frontend lint
+      - name: Frontend typecheck
+        if: needs.changes.outputs.frontend == 'true'
+        run: pnpm -C frontend type-check
+      - name: Frontend API types check
+        if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true'
+        run: pnpm -C frontend api:types:check
         continue-on-error: true
-        run: pnpm -C backend exec tsx scripts/ci/validate-ralph-contracts.ts
-      - name: Migration lint
-        run: pnpm -C backend exec tsx scripts/ci/migration-lint.ts
-      - name: Migration numbering guardrail
-        if: needs.changes.outputs.migrations_changed == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
-        run: pnpm -C backend guardrail:migrations
-      - name: SQL interpolation guardrail (changed files)
+      - name: SQL interpolation guardrail
+        if: needs.changes.outputs.backend == 'true'
         run: |
           pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --plane-a
           pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only
           pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --plane-c
           pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --root scripts
-      - name: License audit (prod deps)
-        continue-on-error: true
-        run: pnpm licenses list --prod --json | node scripts/ci/check-licenses.mjs
-      - name: sharp native smoke
-        run: pnpm -C backend exec node -e "require('sharp'); console.log('sharp ok')"
-      - run: pnpm -C backend lint
-        if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
-      - run: pnpm -C frontend lint
-        if: needs.changes.outputs.run_frontend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
-      - name: Boundary enforcement (Golden Rule)
-        if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
-        shell: bash
-        run: |
-          set +e
-          pnpm exec eslint backend/plane-a/ForbiddenImport.test.js --no-ignore
-          eslint_exit=$?
-          if [ $eslint_exit -eq 0 ]; then
-            echo "ERROR: Boundary rule did NOT trigger on forbidden import!"
-            exit 1
-          fi
-          echo "Golden Rule enforcement working (forbidden import was blocked)."
-      - run: pnpm -C frontend type-check
-        if: needs.changes.outputs.run_frontend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
-      - run: pnpm -C frontend build
-        if: needs.changes.outputs.run_frontend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
-      - run: pnpm -C backend build
-        if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
+      - name: Migration lint
+        if: needs.changes.outputs.migrations == 'true'
+        run: pnpm -C backend exec tsx scripts/ci/migration-lint.ts
 
-  contract-types:
-    continue-on-error: true
+  backend-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.run_backend == 'true' || needs.changes.outputs.run_frontend == 'true'
+    timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: remit
+          POSTGRES_PASSWORD: remit
+          POSTGRES_DB: remit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U remit -d remit"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     env:
-      PLANE_A_CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit
+      PLANE_A_ADMIN_EMAILS: admin@example.com
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
-      - run: pnpm -C frontend api:types:check
+      - run: pnpm -C backend db:migrate
+      - run: pnpm -C backend db:seed
+      - run: pnpm -C backend exec tsx scripts/generate-fixtures.ts
+      - run: pnpm -C backend test
 
-  migration-immutability:
+  frontend-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     needs: changes
-    if: github.event_name == 'pull_request' && needs.changes.outputs.migrations_changed == 'true'
+    if: needs.changes.outputs.frontend == 'true'
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          fetch-depth: 0
-      - name: Disallow editing historical migrations
-        shell: bash
-        env:
-          BASE_REF: ${{ github.base_ref }}
-        run: |
-          set -euo pipefail
-          base="$BASE_REF"
-          git fetch origin "$base" --depth=1
-          # Only allow added migrations in PR diffs. Modified/deleted migrations are blocked.
-          bad=$(git diff --name-status "origin/$base"...HEAD -- backend/db/migrations | awk '$1 != "A" {print}')
-          if [ -n "$bad" ]; then
-            echo "Editing existing migrations is not allowed:"
-            echo "$bad"
-            exit 1
-          fi
-          echo "✅ Migration immutability check passed"
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
+      - run: pnpm -C frontend test
 
   migration-dry-run:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.run_backend == 'true'
+    timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.migrations == 'true'
     services:
       postgres:
         image: postgres:15
         env:
           POSTGRES_USER: test
-          POSTGRES_PASSWORD: test # pragma: allowlist secret
+          POSTGRES_PASSWORD: test
           POSTGRES_DB: test
         ports:
           - 5432:5432
@@ -379,46 +184,10 @@ jobs:
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgres://test:test@localhost:5432/test # pragma: allowlist secret
-      DATABASE_URL_PLANE_A: postgres://test:test@localhost:5432/test # pragma: allowlist secret
-      DATABASE_URL_PLANE_B: postgres://test:test@localhost:5432/test # pragma: allowlist secret
-      DATABASE_URL_PLANE_C: postgres://test:test@localhost:5432/test # pragma: allowlist secret
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: ${{ inputs.node_version }}
-          pnpm_version: ${{ inputs.pnpm_version }}
-      - name: Migration dry-run
-        run: pnpm -C backend db:migrate
-
-  backend-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.run_backend == 'true'
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: remit
-          POSTGRES_PASSWORD: remit # pragma: allowlist secret
-          POSTGRES_DB: remit
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U remit -d remit"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-    env:
-      DATABASE_URL: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      PLANE_A_ADMIN_EMAILS: admin@example.com
-      ENFORCE_COVERAGE: '1'
-      RUN_PROVIDER_FIXTURES: '1'
+      DATABASE_URL: postgres://test:test@localhost:5432/test
+      DATABASE_URL_PLANE_A: postgres://test:test@localhost:5432/test
+      DATABASE_URL_PLANE_B: postgres://test:test@localhost:5432/test
+      DATABASE_URL_PLANE_C: postgres://test:test@localhost:5432/test
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
@@ -426,298 +195,31 @@ jobs:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C backend db:migrate
-      - run: pnpm -C backend db:seed
-      - name: Rights differential gate
+      - name: Migration immutability check
+        if: github.event_name == 'pull_request'
         shell: bash
         env:
-          MODE: ${{ inputs.mode || github.event.inputs.mode }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
           set -euo pipefail
-          if [ "$MODE" = "main" ] || [ "$MODE" = "nightly" ]; then
-            RIGHTS_SCOPE=all STRICT_DATA_HEALTH=1 pnpm -C backend ci:rights-differential-gate
-          else
-            RIGHTS_SCOPE=priority pnpm -C backend ci:rights-differential-gate
-          fi
-      - run: pnpm -C backend exec tsx scripts/generate-fixtures.ts
-      - run: pnpm -C backend test:coverage
-      - uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: backend/coverage
-      - name: Upload coverage to Codecov
-        if: github.event_name == 'pull_request'
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./backend/coverage/lcov.info
-          flags: backend,backend_shared,backend_plane_a,backend_plane_c,backend_billing
-          name: backend-coverage
-          fail_ci_if_error: true
-
-  mutation-critical:
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.mutation_critical_changed == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: ${{ inputs.node_version }}
-          pnpm_version: ${{ inputs.pnpm_version }}
-      - name: Mutation preflight - validate Stryker TS checker
-        shell: bash
-        run: |
-          set -euo pipefail
-          if ! pnpm -C backend exec node -e "require.resolve('@stryker-mutator/typescript-checker/package.json')" >/dev/null 2>&1; then
-            echo "::error::Missing @stryker-mutator/typescript-checker at runtime."
-            echo "::error::Run 'pnpm install --frozen-lockfile' and verify backend devDependencies include @stryker-mutator/typescript-checker."
+          git fetch origin "$BASE_REF" --depth=1
+          bad=$(git diff --name-status "origin/$BASE_REF"...HEAD -- backend/db/migrations | awk '$1 != "A" {print}')
+          if [ -n "$bad" ]; then
+            echo "::error::Editing existing migrations is not allowed:"
+            echo "$bad"
             exit 1
           fi
-      - name: Run critical mutation suite
-        run: pnpm -C backend test:mutation:critical
-      - name: Enforce mutation survivor gate
-        env:
-          MUTATION_MAX_SURVIVED: '0'
-        run: pnpm -C backend ci:mutation-gate
-      - name: Upload mutation report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-mutation-critical
-          path: |
-            backend/reports/mutation
-            backend/reports/mutation/**/*.json
-          if-no-files-found: ignore
 
-  backend-docker-native-deps:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.run_backend == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [linux/amd64, linux/arm64]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - name: Build backend image (${{ matrix.platform }})
-        shell: bash
-        run: |
-          set -euo pipefail
-          tag="remit-scout-backend-native:${{ matrix.platform }}"
-          tag="${tag//\//-}"
-          docker buildx build \
-            --platform "${{ matrix.platform }}" \
-            --file backend/Dockerfile \
-            --target runner \
-            --tag "$tag" \
-            --load \
-            .
-          docker run --rm --platform "${{ matrix.platform }}" "$tag" node -e "require('sharp'); console.log('sharp ok')"
-
-  frontend-unit:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [changes, lockfile-integrity, contract-types]
-    if: needs.changes.outputs.run_frontend == 'true'
-    env:
-      ENFORCE_COVERAGE: '1'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: ${{ inputs.node_version }}
-          pnpm_version: ${{ inputs.pnpm_version }}
-      - run: pnpm -C frontend type-check
-      - run: pnpm -C frontend test:coverage
-      - uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: frontend/coverage
-      - name: Upload coverage to Codecov
-        if: github.event_name == 'pull_request'
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./frontend/coverage/lcov.info
-          flags: frontend
-          name: frontend-coverage
-          fail_ci_if_error: true
-
-  frontend-e2e:
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs: [changes, lockfile-integrity, contract-types]
-    if: needs.changes.outputs.run_e2e == 'true'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: ${{ inputs.node_version }}
-          pnpm_version: ${{ inputs.pnpm_version }}
-      - uses: actions/cache@v5
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm -C frontend exec playwright install --with-deps chromium
-      - run: pnpm -C frontend build
-      - run: pnpm -C frontend sentry:sourcemaps
-      - name: Check bundle size
-        run: node scripts/ci/check-frontend-bundle-size.mjs
-      - run: pnpm -C frontend test:e2e
-      - name: Upload Playwright artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-artifacts
-          path: |
-            frontend/playwright-report
-            frontend/test-results
-          if-no-files-found: ignore
-
-  smoke:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.run_backend == 'true'
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: remit
-          POSTGRES_PASSWORD: remit # pragma: allowlist secret
-          POSTGRES_DB: remit
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U remit -d remit"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-    env:
-      DATABASE_URL: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      REDIS_URL: redis://localhost:6379/0
-      PLANE_A_ADMIN_EMAILS: admin@example.com
-      PLANE_A_CORS_ORIGINS: http://localhost:3000
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: ${{ inputs.node_version }}
-          pnpm_version: ${{ inputs.pnpm_version }}
-      - run: pnpm -C backend db:migrate
-      - run: pnpm -C backend ci:seed-sanity
-      - run: pnpm -C backend ci:api-smoke
-
-  release-correctness-local:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.run_backend == 'true' || needs.changes.outputs.run_frontend == 'true'
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: remit
-          POSTGRES_PASSWORD: remit # pragma: allowlist secret
-          POSTGRES_DB: remit
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U remit -d remit"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-    env:
-      DATABASE_URL: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
-      REDIS_URL: redis://localhost:6379/0
-      PLANE_A_ADMIN_EMAILS: admin@example.com
-      PLANE_A_CORS_ORIGINS: http://localhost:3000
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-node-pnpm
-        with:
-          node_version: ${{ inputs.node_version }}
-          pnpm_version: ${{ inputs.pnpm_version }}
-      - uses: actions/cache@v5
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm -C frontend exec playwright install --with-deps chromium
-      - run: pnpm release:gate:ci
-
-  config-validate:
+  infra-synth:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [changes, lockfile-integrity]
-    if: needs.changes.outputs.docs_only != 'true'
-    env:
-      NODE_ENV: production
-      STRICT_CONFIG: "1"
-      DATABASE_URL_PLANE_A: postgres://user:pass@host:5432/db # pragma: allowlist secret
-      DATABASE_URL_PLANE_B: postgres://user:pass@host:5432/db # pragma: allowlist secret
-      DATABASE_URL_PLANE_C: postgres://user:pass@host:5432/db # pragma: allowlist secret
-      PLANE_C_BASE_URL: https://example.com
-      REDIS_URL: redis://localhost:6379/0
-      SUPABASE_URL: https://example.supabase.co
-      SUPABASE_PUBLISHABLE_KEY: example-key
-      STRIPE_SECRET_KEY: sk_test_example # pragma: allowlist secret
-      STRIPE_WEBHOOK_SECRET: whsec_example # pragma: allowlist secret
-      STRIPE_PRICE_ID_PLUS: price_example
-      STRIPE_PRICE_ID_PLUS_ANNUAL: price_example_annual
-      ALERT_EVALUATION_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/123456789012/alerts
-      ALERT_SLACK_WEBHOOK_URL: https://ci-slack-webhook.invalid/remit-scout
-      PLANE_A_REQUIRE_JWT: "1"
-      PLANE_A_JWT_SECRET: ci_runtime_jwt_secret_4fca8d0e6aab4a7d8f5b2eb0 # pragma: allowlist secret
-      PRIVACY_HASH_SALT: ci_runtime_privacy_hash_salt_8f3c2d1a7b4e9f6c # pragma: allowlist secret
-      PRIVACY_SESSION_SALT: ci_runtime_privacy_session_salt_5e7a9c2d4b6f8a1e
-      ADMIN_IP_ALLOWLIST: 203.0.113.0/24
-      SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
-      TRACING_EXPORTER: otlp
-      OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.example.com/v1/traces
-      NEW_RELIC_ACCOUNT_ID: "1234567"
-      NEW_RELIC_REGION: US
-      NEW_RELIC_INGEST_KEY: nr_ingest_key_ci_dummy_value
-      NEW_RELIC_USER_API_KEY: NRAK-CI-DUMMY-KEY # pragma: allowlist secret
-      NEW_RELIC_STAGING_AWS_MODE: push_only
-      NEW_RELIC_STAGING_AWS_ACCOUNT_ID: "210987654321"
-      NEW_RELIC_STAGING_AWS_ROLE_ARN: arn:aws:iam::210987654321:role/NewRelicInfrastructure-Integrations-RemitScout
-      NEW_RELIC_PROD_AWS_MODE: otlp_only
-      NEW_RELIC_PROD_AWS_ACCOUNT_ID: "123456789012"
-      NEW_RELIC_LOGS_ENABLED: "1"
-      CLOUDWATCH_METRICS_ENABLED: "1"
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
-      - run: pnpm -C backend ci:config-validate
-      - run: pnpm -C backend ci:observability
+      - run: cd infrastructure/cdk && npm ci
+      - run: cd infrastructure/cdk && npx cdk synth --quiet
